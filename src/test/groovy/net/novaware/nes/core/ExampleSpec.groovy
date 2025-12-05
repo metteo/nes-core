@@ -1,3 +1,5 @@
+package net.novaware.nes.core
+
 import spock.lang.Specification
 
 class ExampleSpec extends Specification {
