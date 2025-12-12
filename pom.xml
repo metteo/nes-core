@@ -9,7 +9,8 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.release>25</maven.compiler.release>
+        <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -21,6 +22,7 @@
         <objenesis.version>3.4</objenesis.version>
         <hamcrest.version>3.0</hamcrest.version>
         <surefire.version>3.5.3</surefire.version>
+        <toolchains.version>3.2.0</toolchains.version>
     </properties>
 
 
@@ -79,6 +81,25 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>${toolchains.version}</version>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>${java.version}</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>select-jdk-toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin> <!-- compilation of tests in groovy -->
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
