@@ -16,13 +16,14 @@
 
         <gmaven-plus.version>4.2.1</gmaven-plus.version>
         <groovy.version>4.0.29</groovy.version>
-        <spock.version>2.3-groovy-4.0</spock.version>
-        <junit.version>5.9.1</junit.version>
+        <spock.version>2.4-groovy-4.0</spock.version>
+        <junit.version>5.14.1</junit.version>
         <byte-buddy.version>1.18.1</byte-buddy.version>
         <objenesis.version>3.4</objenesis.version>
         <hamcrest.version>3.0</hamcrest.version>
         <surefire.version>3.5.3</surefire.version>
         <toolchains.version>3.2.0</toolchains.version>
+        <units.version>2.2.3</units.version>
     </properties>
 
 

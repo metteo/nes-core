@@ -1,5 +1,7 @@
 package net.novaware.nes.core.file;
 
+import net.novaware.nes.core.util.Quantity;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -60,6 +62,7 @@ public class NesFile {
 
     public static class Header {
         private int programRom; // TODO: length, with unit?
+        private Quantity programRom2;
         private int videoRom;
         private int mapper; // TODO: enum for supported?
         private int nameTableArrangement; // TODO: enum
