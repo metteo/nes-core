@@ -1,8 +1,5 @@
 package net.novaware.nes.core.cpu.instruction
 
-import net.novaware.nes.core.cpu.instruction.Addressing
-import net.novaware.nes.core.cpu.instruction.Instruction
-import net.novaware.nes.core.cpu.instruction.InstructionGroup
 import spock.lang.Specification
 
 class InstructionSpec extends Specification {
@@ -13,8 +10,13 @@ class InstructionSpec extends Specification {
 
         expect:
         adcImmediate.group() == InstructionGroup.ADD_WITH_CARRY
-        adcImmediate.addressing() == Addressing.IMMEDIATE
+        adcImmediate.addressingMode() == AddressingMode.IMMEDIATE
         adcImmediate.opcode() == (byte) 0x69
         adcImmediate.size() == 2
+    }
+
+    def "should contain correct amount of opcodes"() {
+        expect:
+        Instruction.values().length == 151
     }
 }
