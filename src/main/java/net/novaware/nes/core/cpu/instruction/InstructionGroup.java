@@ -7,18 +7,6 @@ import static net.novaware.nes.core.cpu.instruction.InstructionCategory.*;
 
 public enum InstructionGroup {
 
-    // region Access
-
-    LOAD_A_WITH_MEMORY      ("LDA", ACCESS),
-    STORE_A_IN_MEMORY       ("STA", ACCESS),
-
-    LOAD_X_WITH_MEMORY      ("LDX", ACCESS),
-    STORE_X_IN_MEMORY       ("STX", ACCESS),
-
-    LOAD_Y_WITH_MEMORY      ("LDY", ACCESS),
-    STORE_Y_IN_MEMORY       ("STY", ACCESS),
-
-    // endregion
     // region Arithmetic
 
     ADD_WITH_CARRY          ("ADC", ARITHMETIC),
@@ -34,97 +22,109 @@ public enum InstructionGroup {
     DECREMENT_Y             ("DEY", ARITHMETIC),
 
     // endregion
-    // region Bitwise
+    // region Branching
 
-    BITWISE_AND             ("AND", BITWISE),
-    BITWISE_OR              ("ORA", BITWISE),
-    BITWISE_XOR             ("EOR", BITWISE),
-    BIT_TEST                ("BIT", BITWISE),
+    BRANCH_IF_EQUAL         ("BEQ", BRANCHING),
+    BRANCH_IF_NOT_EQUAL     ("BNE", BRANCHING),
 
-    // endregion
-    // region Branch
+    BRANCH_IF_CARRY_SET     ("BCS", BRANCHING),
+    BRANCH_IF_CARRY_CLR     ("BCC", BRANCHING),
 
-    BRANCH_IF_EQUAL         ("BEQ", BRANCH),
-    BRANCH_IF_NOT_EQUAL     ("BNE", BRANCH),
+    BRANCH_IF_PLUS          ("BPL", BRANCHING),
+    BRANCH_IF_MINUS         ("BMI", BRANCHING),
 
-    BRANCH_IF_CARRY_SET     ("BCS", BRANCH),
-    BRANCH_IF_CARRY_CLR     ("BCC", BRANCH),
-
-    BRANCH_IF_PLUS          ("BPL", BRANCH),
-    BRANCH_IF_MINUS         ("BMI", BRANCH),
-
-    BRANCH_IF_OVERFLOW_SET  ("BVS", BRANCH),
-    BRANCH_IF_OVERFLOW_CLR  ("BVC", BRANCH),
+    BRANCH_IF_OVERFLOW_SET  ("BVS", BRANCHING),
+    BRANCH_IF_OVERFLOW_CLR  ("BVC", BRANCHING),
 
     // endregion
-    // region Compare
+    // region Comparison
 
-    COMPARE_A               ("CMP", COMPARE),
-    COMPARE_X               ("CPX", COMPARE),
-    COMPARE_Y               ("CPY", COMPARE),
-
-    // endregion
-    // region Flags
-
-    SET_CARRY               ("SEC", FLAGS),
-    CLR_CARRY               ("CLC", FLAGS),
-
-    SET_DECIMAL             ("SED", FLAGS),
-    CLR_DECIMAL             ("CLD", FLAGS),
-
-    SET_INTERRUPT_DISABLE   ("SEI", FLAGS),
-    CLR_INTERRUPT_DISABLE   ("CLI", FLAGS),
-
-    CLR_OVERFLOW            ("CLV", FLAGS),
+    COMPARE_A               ("CMP", COMPARISON),
+    COMPARE_X               ("CPX", COMPARISON),
+    COMPARE_Y               ("CPY", COMPARISON),
 
     // endregion
-    // region Interrupt
+    // region Control flow
 
-    BREAK                   ("BRK", INTERRUPT), // software IRQ,
-    RETURN_FROM_INTERRUPT   ("RTI", INTERRUPT),
+    JUMP_TO                 ("JMP", CONTROL_FLOW),
 
-    // endregion
-    // region Jump
-
-    JUMP_TO                 ("JMP", JUMP),
-
-    JUMP_TO_SUBROUTINE      ("JSR", JUMP),
-    RETURN_FROM_SUBROUTINE  ("RTS", JUMP),
+    JUMP_TO_SUBROUTINE      ("JSR", CONTROL_FLOW),
+    RETURN_FROM_SUBROUTINE  ("RTS", CONTROL_FLOW),
 
     // endregion
-    // region Other
+    // region Flag control
 
-    NO_OPERATION            ("NOP", OTHER),
+    SET_CARRY               ("SEC", FLAG_CONTROL),
+    CLR_CARRY               ("CLC", FLAG_CONTROL),
 
-    // endregion
-    // region Shift
+    SET_DECIMAL             ("SED", FLAG_CONTROL), // TODO: not available on nes?
+    CLR_DECIMAL             ("CLD", FLAG_CONTROL), // TODO: not available on nes?
 
-    ARITHMETIC_SHIFT_LEFT   ("ASL", SHIFT),
-    LOGICAL_SHIFT_RIGHT     ("LSR", SHIFT),
+    SET_INTERRUPT_DISABLE   ("SEI", FLAG_CONTROL),
+    CLR_INTERRUPT_DISABLE   ("CLI", FLAG_CONTROL),
 
-    ROTATE_LEFT             ("ROL", SHIFT),
-    ROTATE_RIGHT            ("ROR", SHIFT),
-
-    // endregion
-    // region Stack
-
-    PUSH_A                  ("PHA", STACK),
-    PULL_A                  ("PLA", STACK),
-
-    PUSH_PROC_STATUS_TO_SP  ("PHP", STACK),
-    PULL_PROC_STATUS_FROM_SP("PLP", STACK),
-
-    TRANSFER_SP_TO_X        ("TSX", STACK),
-    TRANSFER_X_TO_SP        ("TXS", STACK),
+    CLR_OVERFLOW            ("CLV", FLAG_CONTROL),
 
     // endregion
-    // region Transfer
+    // region Interrupts
 
-    TRANSFER_A_TO_X         ("TAX", TRANSFER),
-    TRANSFER_X_TO_A         ("TXA", TRANSFER),
+    BREAK                   ("BRK", INTERRUPTS), // software IRQ,
+    RETURN_FROM_INTERRUPT   ("RTI", INTERRUPTS),
 
-    TRANSFER_A_TO_Y         ("TAY", TRANSFER),
-    TRANSFER_Y_TO_A         ("TYA", TRANSFER);
+    // endregion
+    // region Logical
+
+    BITWISE_AND             ("AND", LOGICAL),
+    BITWISE_OR              ("ORA", LOGICAL),
+    BITWISE_XOR             ("EOR", LOGICAL),
+    BIT_TEST                ("BIT", LOGICAL),
+
+    // endregion
+    // region Memory Access
+
+    LOAD_A_WITH_MEMORY      ("LDA", MEMORY_ACCESS),
+    STORE_A_IN_MEMORY       ("STA", MEMORY_ACCESS),
+
+    LOAD_X_WITH_MEMORY      ("LDX", MEMORY_ACCESS),
+    STORE_X_IN_MEMORY       ("STX", MEMORY_ACCESS),
+
+    LOAD_Y_WITH_MEMORY      ("LDY", MEMORY_ACCESS),
+    STORE_Y_IN_MEMORY       ("STY", MEMORY_ACCESS),
+
+    // endregion
+    // region Misc
+
+    NO_OPERATION            ("NOP", MISCELLANEOUS),
+
+    // endregion
+    // region Register transfer
+
+    TRANSFER_A_TO_X         ("TAX", REGISTER_TRANSFER),
+    TRANSFER_X_TO_A         ("TXA", REGISTER_TRANSFER),
+
+    TRANSFER_A_TO_Y         ("TAY", REGISTER_TRANSFER),
+    TRANSFER_Y_TO_A         ("TYA", REGISTER_TRANSFER),
+
+    // endregion
+    // region Shifts & Rotates
+
+    ARITHMETIC_SHIFT_LEFT   ("ASL", SHIFTS_ROTATES),
+    LOGICAL_SHIFT_RIGHT     ("LSR", SHIFTS_ROTATES),
+
+    ROTATE_LEFT             ("ROL", SHIFTS_ROTATES),
+    ROTATE_RIGHT            ("ROR", SHIFTS_ROTATES),
+
+    // endregion
+    // region Stack Operations
+
+    PUSH_A                  ("PHA", STACK_OPS),
+    PULL_A                  ("PLA", STACK_OPS),
+
+    PUSH_PROC_STATUS_TO_SP  ("PHP", STACK_OPS),
+    PULL_PROC_STATUS_FROM_SP("PLP", STACK_OPS),
+
+    TRANSFER_SP_TO_X        ("TSX", STACK_OPS),
+    TRANSFER_X_TO_SP        ("TXS", STACK_OPS);
 
     // endregion
 

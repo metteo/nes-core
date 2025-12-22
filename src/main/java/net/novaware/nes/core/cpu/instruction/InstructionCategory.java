@@ -2,27 +2,27 @@ package net.novaware.nes.core.cpu.instruction;
 
 public enum InstructionCategory {
 
-    ACCESS,
-
     ARITHMETIC,
 
-    BITWISE,
+    BRANCHING,
 
-    BRANCH,
+    COMPARISON,
 
-    COMPARE,
+    CONTROL_FLOW,
 
-    FLAGS,
+    FLAG_CONTROL,
 
-    INTERRUPT,
+    INTERRUPTS,
 
-    JUMP,
+    LOGICAL,
 
-    OTHER,
+    MEMORY_ACCESS,
 
-    SHIFT,
+    MISCELLANEOUS,
 
-    STACK,
+    REGISTER_TRANSFER,
 
-    TRANSFER
+    SHIFTS_ROTATES,
+
+    STACK_OPS
 }
