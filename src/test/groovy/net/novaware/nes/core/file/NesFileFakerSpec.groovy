@@ -1,6 +1,5 @@
 package net.novaware.nes.core.file
 
-
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Hex.b
@@ -11,8 +10,8 @@ class NesFileFakerSpec extends Specification {
         given:
         def params = new NesFileFaker.Params(
                 version: NesFileFaker.Version.iNES,
-                programRomSize: 32 * 1024,
-                videoRomSize: 8 * 1024
+                programRomSize: 2 * 16 * 1024,
+                videoRomSize: 1 * 8 * 1024
         )
 
         when:

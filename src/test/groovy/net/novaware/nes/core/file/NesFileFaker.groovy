@@ -34,8 +34,8 @@ class NesFileFaker {
     }
 
     static enum Orientation {
-        HORIZONTAL,
-        VERTICAL
+        VERTICAL, // 0
+        HORIZONTAL // 1
     }
 
     Result generate(Params params) {
