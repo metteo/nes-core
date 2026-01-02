@@ -18,7 +18,7 @@ class NesFileSpec extends Specification {
         def inputStream = new ByteArrayInputStream(bytes) // magic
 
         when:
-        def file = new NesFile(expectedOrigin, inputStream)
+        def file = new NesFileReader().read(expectedOrigin, inputStream)
 
         then:
         file.origin == expectedOrigin
@@ -40,15 +40,27 @@ class NesFileSpec extends Specification {
         def inputStream = new ByteArrayInputStream(fakeRom.fileData) // no close
 
         when:
-        def nesFile = new NesFile("http://roms.pl", inputStream)
+        def nesFile = new NesFileReader().read("http://roms.pl", inputStream)
         def parsedHeader = nesFile.getHeader()
 
         then:
-        //parsedHeader.nametableOrientation == NesFile.Orientation.HORIZONTAL // faker does not support
-        //parsedHeader.mapperNumber == 15                                     // faker does not support
+        parsedHeader.nametableOrientation == NesFile.Orientation.HORIZONTAL
+        parsedHeader.mapperNumber == 15
         parsedHeader.getProgramRomSize() == new Quantity(params.programRomSize, BYTES)
         parsedHeader.getVideoRomSize() == new Quantity(params.videoRomSize, BYTES)
 
-        // TODO: check if boundaries are OK in prg & chr
+        nesFile.getHeaderBuffer().capacity() == 16
+        nesFile.getHeaderBuffer().get(0) == (byte) 0x4E
+        nesFile.getHeaderBuffer().get(15) == (byte) 0
+
+        nesFile.getTrainerBuffer().capacity() == 0
+
+        nesFile.getProgramRomBuffer().capacity() == params.programRomSize
+        nesFile.getProgramRomBuffer().get(0) == fakeRom.programRomStart
+        nesFile.getProgramRomBuffer().get(params.programRomSize - 1) == fakeRom.programRomEnd
+
+        nesFile.getVideoRomBuffer().capacity() == params.videoRomSize
+        nesFile.getVideoRomBuffer().get(0) == fakeRom.videoRomStart
+        nesFile.getVideoRomBuffer().get(params.videoRomSize - 1) == fakeRom.videoRomEnd
     }
 }
