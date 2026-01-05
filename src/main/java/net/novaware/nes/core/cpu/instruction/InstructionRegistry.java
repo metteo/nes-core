@@ -12,7 +12,7 @@ public class InstructionRegistry {
     }
 
     // TODO: Optional is not very memory friendly in hot code?
-    //@Nullable
+    //@Nullable TODO: include jspecify
     public static Instruction fromOpcode(byte opcode) {
         return OPCODE_MAP[opcode & 0xFF];
     }

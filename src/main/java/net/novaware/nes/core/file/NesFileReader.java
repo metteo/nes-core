@@ -10,6 +10,8 @@ import java.nio.file.Path;
 
 public class NesFileReader {
 
+    // TODO: support both iNES and NES2.0 modes
+
     public NesFile read(Path path) throws IOException { // TODO: throw a business exception
         try (InputStream inputStream = Files.newInputStream(path)) { // TODO: unbuffered
             return read(path.toAbsolutePath().toString(), inputStream);
