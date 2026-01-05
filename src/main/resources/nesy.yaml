@@ -1,0 +1,62 @@
+# NESY Format Configuration - Version 0.1 Draft
+# file name still not decided. config.yaml or metadata.yaml or nes.yml?
+# look at the chip8 rom metadata db on github too
+# Media Type for whole package: application/vnd.nesy.package
+# ------------------------------------------------------------------
+
+format:
+  version: 0.1 # Crucial for future parser compatibility
+
+metadata:
+  title: "Example Game Title"
+  system: "NES / Famicom"
+  author: "Emulator Dev"
+  publisher: "Nintendo"
+  year: 1985
+  notes: "NROM-128 converted to NESY format."
+
+# --- Checksums for Database/Quirks ---
+checksums:
+  # Checksum of the original *source* ROM file (e.g., the original iNES or NES 2.0 file)
+  # This allows emulators to look up known quirks for that specific ROM dump.
+  source_rom:
+    crc32: "A3E1B9C5"
+    md5: "00B4C6A0..."
+    # Can include other relevant checksums (e.g., SHA256)
+
+# --- Media Assets ---
+media:
+  icon: "assets/icon_48x48.png"
+  screenshots:
+    - path: "assets/screenshot_01.png"
+      description: "Title screen"
+    - path: "assets/screenshot_02.png"
+      description: "Gameplay action"
+
+# --- Cartridge Configuration (Emulation Data) ---
+cartridge:
+  mapper: 0 # NROM (Decimal representation)
+  ppu_type: NTSC
+
+  memory:
+    prg_rom:
+      size_kb: 16
+      path: "data/prg.bin"
+
+    chr:
+      type: ROM
+      size_kb: 8
+      path: "data/chr.bin"
+
+    prg_ram:
+      size_kb: 8
+      battery_backed: true
+      path: "data/sram.bin"
+
+  display:
+    mirroring: VERTICAL
+
+  features:
+    trainer:
+      present: false
+      path: "data/trainer.bin"
