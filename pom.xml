@@ -24,6 +24,7 @@
         <surefire.version>3.5.3</surefire.version>
         <toolchains.version>3.2.0</toolchains.version>
         <units.version>2.2.3</units.version>
+        <jspecify.version>1.0.0</jspecify.version>
     </properties>
 
 
@@ -40,6 +41,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>${jspecify.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>

@@ -1,9 +1,7 @@
 package net.novaware.nes.core.file
 
-import net.novaware.nes.core.util.Quantity
-import spock.lang.Specification
 
-import static net.novaware.nes.core.util.Quantity.Unit.BYTES
+import spock.lang.Specification
 
 class NesFileSpec extends Specification {
 
@@ -41,26 +39,25 @@ class NesFileSpec extends Specification {
 
         when:
         def nesFile = new NesFileReader().read("http://roms.pl", inputStream)
-        def parsedHeader = nesFile.getHeader()
 
         then:
-        parsedHeader.nametableOrientation == NesFile.Orientation.HORIZONTAL
-        parsedHeader.mapperNumber == 15
-        parsedHeader.getProgramRomSize() == new Quantity(params.programRomSize, BYTES)
-        parsedHeader.getVideoRomSize() == new Quantity(params.videoRomSize, BYTES)
+        nesFile.mirroring == NesFile.Mirroring.HORIZONTAL
+        nesFile.mapper == (short) 15
+        nesFile.getProgramData().capacity() == params.programRomSize
+        nesFile.getVideoData().capacity() == params.videoRomSize
 
-        nesFile.getHeaderBuffer().capacity() == 16
-        nesFile.getHeaderBuffer().get(0) == (byte) 0x4E
-        nesFile.getHeaderBuffer().get(15) == (byte) 0
+        nesFile.getLegacyHeader().capacity() == 16
+        nesFile.getLegacyHeader().get(0) == (byte) 0x4E
+        nesFile.getLegacyHeader().get(15) == (byte) 0
 
-        nesFile.getTrainerBuffer().capacity() == 0
+        nesFile.getTrainerData().capacity() == 0
 
-        nesFile.getProgramRomBuffer().capacity() == params.programRomSize
-        nesFile.getProgramRomBuffer().get(0) == fakeRom.programRomStart
-        nesFile.getProgramRomBuffer().get(params.programRomSize - 1) == fakeRom.programRomEnd
+        nesFile.getProgramData().capacity() == params.programRomSize
+        nesFile.getProgramData().get(0) == fakeRom.programRomStart
+        nesFile.getProgramData().get(params.programRomSize - 1) == fakeRom.programRomEnd
 
-        nesFile.getVideoRomBuffer().capacity() == params.videoRomSize
-        nesFile.getVideoRomBuffer().get(0) == fakeRom.videoRomStart
-        nesFile.getVideoRomBuffer().get(params.videoRomSize - 1) == fakeRom.videoRomEnd
+        nesFile.getVideoData().capacity() == params.videoRomSize
+        nesFile.getVideoData().get(0) == fakeRom.videoRomStart
+        nesFile.getVideoData().get(params.videoRomSize - 1) == fakeRom.videoRomEnd
     }
 }
