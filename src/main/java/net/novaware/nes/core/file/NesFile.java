@@ -82,7 +82,7 @@ public class NesFile {
     private ByteBuffer trainerData;
 
     /**
-     * Remainder of data after all specified sections in the file
+     * Remainder of data after all specified sections in the file. May contain game title
      */
     private ByteBuffer remainingData;
 
@@ -208,7 +208,7 @@ public class NesFile {
     }
 
     public enum VideoStandard {
-        NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, OTHER
+        NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, DENDY, OTHER
     }
 
 
