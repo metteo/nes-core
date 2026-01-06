@@ -19,4 +19,4 @@ jobs:
           cache: maven
 
       - name: maven
-        run: ./mvnw --batch-mode --update-snapshots clean verify
+        run: mvn --batch-mode --update-snapshots clean verify

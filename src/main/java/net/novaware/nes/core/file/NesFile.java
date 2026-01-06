@@ -4,137 +4,214 @@ import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
+// TODO: convert to an auto value?
 public class NesFile {
 
+    // region Source
+
     /**
-     * "NES\x1a"
-     * `\u001a` is a SUB character, Ctrl+Z, MS-DOS eof
+     * Location the file was loaded from (either disk or url)
      */
-    public static final String MAGIC_STRING = "NES\u001a";
-    public static final byte[] MAGIC_BYTES = MAGIC_STRING.getBytes(UTF_8); // FIXME: mutable!
+    private String origin;
 
-    public static final int HEADER_SIZE = 16;
+    // endregion
+    // region Memory Bus / Control Logic
 
-    public static class Header { // TODO: make mutable to allow construction? or builder?
-        private final Quantity trainerSize;
-        private final Quantity programRomSize;
-        private final Quantity videoRomSize;
-        private final int mapperNumber;
-        private final Orientation nametableOrientation;
+    /**
+     * Number of the mapper
+     */
+    private short mapper;
 
-        public Header(
-                Quantity trainerSize,
-                Quantity programRomSize,
-                Quantity videoRomSize,
-                int mapperNumber,
-                Orientation nametableOrientation
-        ) {
-            this.trainerSize = trainerSize;
-            this.programRomSize = programRomSize;
-            this.videoRomSize = videoRomSize;
-            this.mapperNumber = mapperNumber;
-            this.nametableOrientation = nametableOrientation;
-        }
+    /**
+     * Board bus conflict status
+     */
+    private boolean busConflicts;
 
-        public Quantity getTrainerSize() {
-            return trainerSize;
-        }
+    // endregion
+    // region CPU
 
-        public Quantity getProgramRomSize() {
-            return programRomSize;
-        }
+    /**
+     * Additional memory for the CPU to use
+     * Also PRG-RAM / Work RAM / WRAM
+     */
+    private ProgramMemory programMemory;
 
-        public Quantity getVideoRomSize() {
-            return videoRomSize;
-        }
+    /**
+     * Instructions for the CPU to execute
+     * <br>
+     * PRG-ROM / Program ROM
+     */
+    private ByteBuffer programData;
 
-        public int getMapperNumber() {
-            return mapperNumber;
-        }
+    // endregion
+    // region PPU
 
-        public Orientation getNametableOrientation() {
-            return nametableOrientation;
-        }
-    }
+    /**
+     * Amount of memory CPU fill for the PPU
+     * CHR-RAM / Video RAM / VRAM
+     */
+    private Quantity videoMemory;
 
-    public enum Orientation {
-        VERTICAL, // 0
-        HORIZONTAL, // 1
-    }
+    /**
+     * Graphics data for the PPU to render
+     * CHR-ROM / Character ROM
+     */
+    private ByteBuffer videoData;
+
+    /**
+     * Determines the speed of CPU and color space
+     */
+    private VideoStandard videoStandard;
+
+    /**
+     * Specifies the structure of video data
+     */
+    private Mirroring mirroring;
+
+    // endregion
+    // region Other
+
+    /**
+     * Optional original header read from iNES / NES 2.0 file
+     */
+    private ByteBuffer legacyHeader; // TODO: add method for printing bytes in binary and as string (diskdude!)
+
+    /**
+     * Usually contains mapper register translation and video memory caching code
+     */
+    private ByteBuffer trainerData;
+
+    /**
+     * Remainder of data after all specified sections in the file
+     */
+    private ByteBuffer remainingData;
+
+    // endregion
 
     public NesFile(
             String origin,
-            Header header,
-            ByteBuffer fileBuffer
+
+            short mapper,
+            boolean busConflicts,
+
+            ProgramMemory programMemory,
+            ByteBuffer programData,
+
+            Quantity videoMemory,
+            ByteBuffer videoData,
+            VideoStandard videoStandard,
+            Mirroring mirroring,
+
+            ByteBuffer legacyHeader,
+            ByteBuffer trainerData,
+            ByteBuffer remainingData
     ) {
         this.origin = origin;
-        this.header = header;
-        this.fileBuffer = fileBuffer;
+
+        this.mapper = mapper;
+        this.busConflicts = busConflicts;
+
+        this.programMemory = programMemory;
+        this.programData = programData;
+
+        this.videoMemory = videoMemory;
+        this.videoData = videoData;
+        this.videoStandard = videoStandard;
+        this.mirroring = mirroring;
+
+        this.legacyHeader = legacyHeader;
+        this.trainerData = trainerData;
+        this.remainingData = remainingData;
     }
-
-    private String origin;
-
-    /**
-     * Relevant info parsed from the header section
-     */
-    private Header header;
-
-    /**
-     * Whole file buffer in read only mode
-     */
-    private ByteBuffer fileBuffer;
 
     public String getOrigin() {
         return origin;
     }
 
-    public ByteBuffer toBuffer() {
-        return fileBuffer;
+    public short getMapper() {
+        return mapper;
     }
 
-    public Header getHeader() {
-        return header;
+    public boolean hasBusConflicts() {
+        return busConflicts;
     }
 
-    /**
-     * Whole header spliced from the file
-     */
-    public ByteBuffer getHeaderBuffer() { // FIXME: inefficient if call multiple times
-        return fileBuffer.slice(0, 16);
+    public boolean hasProgramMemory() {
+        return programMemory != null && programMemory.size.amount() > 0;
     }
 
-    /**
-     * Trainer data spliced from the file if available
-     */
-    public ByteBuffer getTrainerBuffer() {
-        final int trainerSize = header.getTrainerSize().getAmount(); // TODO: hard assert the unit to be sure
-        if (trainerSize > 0) {
-            return fileBuffer.slice(16, trainerSize);
-        } else {
-            return ByteBuffer.allocate(0);
-        }
+    public ProgramMemory getProgramMemory() {
+        return programMemory;
     }
 
-    /**
-     * PRG-ROM spliced from the file
-     */
-    public ByteBuffer getProgramRomBuffer() {
-        final int trainerSize = header.getTrainerSize().getAmount();
-        final int programRomSize = header.getProgramRomSize().getAmount();
-
-        return fileBuffer.slice(HEADER_SIZE + trainerSize, programRomSize);
+    public ByteBuffer getProgramData() {
+        return programData;
     }
 
-    /**
-     * CHR-ROM spliced from the file
-     */
-    public ByteBuffer getVideoRomBuffer() {
-        final int trainerSize = header.getTrainerSize().getAmount();
-        final int programRomSize = header.getProgramRomSize().getAmount();
-        final int videoRomSize = header.getVideoRomSize().getAmount();
-
-        return fileBuffer.slice(16 + trainerSize + programRomSize, videoRomSize);
+    public boolean hasVideoMemory() {
+        return videoMemory != null && videoMemory.amount() > 0;
     }
+
+    public Quantity getVideoMemory() {
+        return videoMemory;
+    }
+
+    public boolean hasVideoData() {
+        return videoData != null && videoData.capacity() > 0;
+    }
+
+    public ByteBuffer getVideoData() {
+        return videoData;
+    }
+
+    public VideoStandard getVideoStandard() {
+        return videoStandard;
+    }
+
+    public Mirroring getMirroring() {
+        return mirroring;
+    }
+
+    public boolean hasLegacyHeader() {
+        return legacyHeader != null && legacyHeader.capacity() > 0;
+    }
+
+    public ByteBuffer getLegacyHeader() {
+        return legacyHeader;
+    }
+
+    public boolean hasTrainer() {
+        return trainerData != null && trainerData.capacity() > 0;
+    }
+
+    public ByteBuffer getTrainerData() {
+        return trainerData;
+    }
+
+    public ByteBuffer getRemainingData() {
+        return remainingData;
+    }
+
+    public enum Mirroring {
+        VERTICAL, // 0
+        HORIZONTAL, // 1
+    }
+
+    public record ProgramMemory(Kind kind, Quantity size) {
+
+    }
+
+    public enum Kind {
+        NONE,
+        VOLATILE, // no battery
+        PERSISTENT // battery
+    }
+
+    public enum VideoStandard {
+        NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, OTHER
+    }
+
+
 }
+
+
