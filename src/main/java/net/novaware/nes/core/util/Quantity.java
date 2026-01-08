@@ -6,6 +6,10 @@ public record Quantity(int amount, Unit unit) {
     public static final Quantity ZERO_BYTES = new Quantity(0, Unit.BYTES);
 
     public enum Unit {
-        BYTES
+        BYTES,
+        BANK_512B,
+        BANK_8KB,
+        BANK_16KB,
+        BANK_32KB
     }
 }
