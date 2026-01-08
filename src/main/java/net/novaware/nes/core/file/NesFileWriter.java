@@ -2,11 +2,14 @@ package net.novaware.nes.core.file;
 
 import java.nio.ByteBuffer;
 
-public class NesFileWriter {
-    // TODO: support Archaic / iNES and NES2.0 mode
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 
+public class NesFileWriter extends NesFileHandler {
 
-    public ByteBuffer write(NesFile nesFile) {
+    public ByteBuffer write(NesFile nesFile, NesFileHandler.Version version) {
+        assertArgument(nesFile != null, "nesFile must not be null");
+        assertArgument(version != null, "version must not be null");
+
         throw new RuntimeException("not implemented");
     }
 }

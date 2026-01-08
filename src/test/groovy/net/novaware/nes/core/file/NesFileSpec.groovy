@@ -45,10 +45,8 @@ class NesFileSpec extends Specification {
         def meta = nesFile.meta
         def data = nesFile.data
 
-
-
         then:
-        meta.mirroring() == NesFile.Mirroring.HORIZONTAL
+        meta.layout() == NesFile.Layout.STANDARD_HORIZONTAL
         meta.mapper() == (short) 15
         meta.trainer().amount() == 0
         meta.programData().amount() == params.programRomSize
@@ -67,5 +65,13 @@ class NesFileSpec extends Specification {
         data.video().capacity() == params.videoRomSize
         data.video().get(0) == fakeRom.videoRomStart
         data.video().get(params.videoRomSize - 1) == fakeRom.videoRomEnd
+    }
+
+    def "should properly map layout to bits"() {
+        expect:
+        NesFile.Layout.STANDARD_VERTICAL.bits() == 0b0000
+        NesFile.Layout.STANDARD_HORIZONTAL.bits() == 0b0001
+        NesFile.Layout.ALTERNATIVE_VERTICAL.bits() == 0b1000
+        NesFile.Layout.ALTERNATIVE_HORIZONTAL.bits() == 0b1001
     }
 }

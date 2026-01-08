@@ -1,7 +1,7 @@
 package net.novaware.nes.core.file;
 
 import net.novaware.nes.core.file.NesFile.Kind;
-import net.novaware.nes.core.file.NesFile.Mirroring;
+import net.novaware.nes.core.file.NesFile.Layout;
 import net.novaware.nes.core.file.NesFile.ProgramMemory;
 import net.novaware.nes.core.file.NesFile.VideoStandard;
 import net.novaware.nes.core.util.Hex;
@@ -19,7 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
-import static net.novaware.nes.core.file.NesFile.Mirroring.FOUR_SCREEN;
+import static net.novaware.nes.core.file.NesFile.Layout.ALTERNATIVE_HORIZONTAL;
+import static net.novaware.nes.core.file.NesFile.Layout.ALTERNATIVE_VERTICAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
 
@@ -35,7 +36,7 @@ import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
  *     Otherwise, iNES 0.7 or archaic iNES.
  */
 
-public class NesFileReader {
+public class NesFileReader extends NesFileHandler {
 
     public enum Mode {
         /**
@@ -122,17 +123,17 @@ public class NesFileReader {
 
         // region Flags 6
 
-        Mirroring mirroring = isBitSet(flags6, 0) ? Mirroring.HORIZONTAL : Mirroring.VERTICAL;
+        boolean horizontalLayout = isBitSet(flags6, 0);
+        boolean alternativeLayout = isBitSet(flags6, 3);
+
+        Layout layout = alternativeLayout ?
+                (horizontalLayout ? ALTERNATIVE_HORIZONTAL : ALTERNATIVE_VERTICAL) :
+                (horizontalLayout ? Layout.STANDARD_HORIZONTAL : Layout.STANDARD_VERTICAL);
 
         boolean persistentProgramMemory = isBitSet(flags6, 1);
 
         boolean trainerPresent = isBitSet(flags6, 2);
         int trainerSize = trainerPresent ? TRAINER_DATA_SIZE : 0;
-
-        boolean alternativeMirroring = isBitSet(flags6, 3);
-        if (alternativeMirroring) {
-            mirroring = FOUR_SCREEN; // TODO: or single screen?
-        }
 
         int mapperLo = (flags6 & 0xF0) >> 4;
 
@@ -212,7 +213,7 @@ public class NesFileReader {
                 .videoMemory(videoMemory)
                 .videoData(new Quantity(videoDataSize, Unit.BYTES))
                 .videoStandard(videoStandard2) // TODO: resolve conflicts with videoStandard variable
-                .mirroring(mirroring)
+                .layout(layout)
                 .remainder(new Quantity(0, Unit.BYTES))
                 .build();
 

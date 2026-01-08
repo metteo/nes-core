@@ -2,8 +2,12 @@ package net.novaware.nes.core.file;
 
 import com.google.auto.value.AutoBuilder;
 import net.novaware.nes.core.util.Quantity;
+import net.novaware.nes.core.util.Quantity.Unit;
 
 import java.nio.ByteBuffer;
+
+import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
+import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 public record NesFile (
     String origin,
@@ -24,13 +28,14 @@ public record NesFile (
      * @param mapper number
      * @param busConflicts of the board
      *
-     * @param programMemory additional memory for the CPU to use (also PRG-RAM / Work RAM / WRAM)
+     * @param programMemory additional memory for the CPU to use
+     *                      (also PRG-RAM / Work RAM / WRAM or Save RAM / SRAM)
      * @param programData instructions for the CPU to execute (also PRG-ROM / Program ROM)
      *
      * @param videoMemory amount of memory CPU can fill for the PPU (also CHR-RAM / Video RAM / VRAM)
      * @param videoData graphics data for the PPU to render (also CHR-ROM / Character ROM)
      * @param videoStandard determines the speed of CPU and color space
-     * @param mirroring specifies the arrangement of video data
+     * @param layout specifies the arrangement of video data
      */
 
     public record Meta (
@@ -50,7 +55,7 @@ public record NesFile (
         Quantity videoMemory, // TODO: what size in iNES
         Quantity videoData,
         VideoStandard videoStandard,
-        Mirroring mirroring,
+        Layout layout,
 
         Quantity remainder
     ) {
@@ -71,6 +76,8 @@ public record NesFile (
             Builder system(System system);
 
             Builder mapper(short mapper);
+            default
+            Builder mapper(int mapper) { return mapper((short) mapper); }
             Builder busConflicts(boolean busConflicts);
 
             Builder trainer(Quantity trainer);
@@ -80,9 +87,21 @@ public record NesFile (
             Builder videoMemory(Quantity videoMemory);
             Builder videoData(Quantity videoData);
             Builder videoStandard(VideoStandard videoStandard);
-            Builder mirroring(Mirroring mirroring);
+            Builder layout(Layout layout);
 
             Builder remainder(Quantity remainder);
+
+            default Builder noTitle() { return title(""); }
+            default Builder noInfo() { return info(""); }
+            default Builder noTrainer() { return trainer(new Quantity(0, Unit.BANK_512B)); }
+            default Builder noProgramMemory() {
+                return programMemory(new ProgramMemory(Kind.NONE, new Quantity(0, Unit.BANK_8KB)));
+            }
+            default Builder noProgramData() { return programData(new Quantity(0, Unit.BANK_16KB)); }
+            default Builder noVideoMemory() { return videoMemory(new Quantity(0, Unit.BANK_8KB)); }
+            default Builder noVideoData() { return videoData(new Quantity(0, Unit.BANK_8KB)); }
+            default Builder noVideoStandard() { return videoStandard(VideoStandard.UNKNOWN); }
+            default Builder noRemainder() { return remainder(new Quantity(0, Unit.BYTES)); }
 
             Meta build();
         }
@@ -95,6 +114,8 @@ public record NesFile (
      * @param trainer usually contains mapper register translation and video memory caching code
      * @param program instructions for the CPU to execute (PRG-ROM / Program ROM)
      * @param video graphics data for the PPU to render (CHR-ROM / Character ROM)
+     * @param inst Playchoice-10 INSTruction data displayed on the second screen (8KB)
+     * @param prom Playchoice-10 ProgrammableROM sections for decryption of inst (2x16B) (RP5H01)
      * @param remainder data after all specified sections in the file. May contain game title
      */
     public record Data (
@@ -108,7 +129,7 @@ public record NesFile (
     ) {
 
         private static boolean hasData(ByteBuffer buffer) {
-            return buffer != null && buffer.capacity() > 0;
+            return buffer.capacity() > 0;
         }
 
         public boolean hasHeader() {
@@ -126,23 +147,82 @@ public record NesFile (
         public boolean hasRemainder() {
             return hasData(remainder);
         }
+
+        @AutoBuilder
+        interface Builder {
+            Builder header(ByteBuffer header);
+
+            Builder trainer(ByteBuffer trainer);
+            Builder program(ByteBuffer program);
+            Builder video(ByteBuffer video);
+            Builder inst(ByteBuffer inst);
+            Builder prom(ByteBuffer prom);
+            Builder remainder(ByteBuffer remainder);
+
+            private static ByteBuffer emptyBuffer() { return ByteBuffer.allocate(0); }
+
+            default Builder noHeader() { return header(emptyBuffer()); }
+            default Builder noTrainer() { return trainer(emptyBuffer()); }
+            default Builder noProgram() { return program(emptyBuffer()); }
+            default Builder noVideo() { return video(emptyBuffer()); }
+            default Builder noInst() { return inst(emptyBuffer()); }
+            default Builder noProm() { return prom(emptyBuffer()); }
+            default Builder noRemainder() { return remainder(emptyBuffer()); }
+
+            Data build();
+        }
+    }
+
+    /**
+     * Nametable / Video Memory ... arrangement / mirroring / layout
+     * may map into single or four screen depending on the mapper
+     *
+     * <a href="https://www.nesdev.org/wiki/NES_2.0#Nametable_layout">Nametable layout on nesdev.org</a>
+     */
+    public enum Layout {
+        STANDARD_VERTICAL      (Mirroring.HORIZONTAL, 0b0000),
+        STANDARD_HORIZONTAL    (Mirroring.VERTICAL,   0b0001),
+        ALTERNATIVE_VERTICAL   (Mirroring.HORIZONTAL, 0b1000),
+        ALTERNATIVE_HORIZONTAL (Mirroring.VERTICAL,   0b1001),
+
+        UNKNOWN                (Mirroring.UNKNOWN,    0b0000);
+
+        public static final int BITS_MASK           = 0b1001;
+
+        private final Mirroring mirroring;
+        private final byte bits;
+
+        @SuppressWarnings("unused")
+        Layout(Mirroring mirroring, int bits) {
+            this.mirroring = mirroring;
+            this.bits = ubyte(bits);
+        }
+
+        public Mirroring mirroring() {
+            return mirroring;
+        }
+
+        public int bits() {
+            return uint(bits) & BITS_MASK;
+        }
     }
 
     public enum Mirroring {
-        VERTICAL, // 0
-        HORIZONTAL, // 1
-        SINGLE_SCREEN,
-        FOUR_SCREEN
+        HORIZONTAL,
+        VERTICAL,
+
+        UNKNOWN
     }
 
     public record ProgramMemory(Kind kind, Quantity size) {
+        // TODO: invariants
     }
 
     public enum Kind {
         NONE,
-        UNKNOWN,
         VOLATILE, // no battery
-        PERSISTENT // battery
+        PERSISTENT, // battery
+        UNKNOWN
     }
 
     public enum System {
@@ -160,7 +240,9 @@ public record NesFile (
         /**
          * <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
          */
-        PLAY_CHOICE_10("Nintendo PlayChoice-10", true);
+        PLAY_CHOICE_10("Nintendo PlayChoice-10", true),
+
+        EXTENDED("Extended Console", true/* ? */); // TODO: add more enum values
 
         private String name;
         private boolean arcade;
@@ -172,7 +254,13 @@ public record NesFile (
     }
 
     public enum VideoStandard {
-        NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, DENDY, OTHER
+        NTSC,
+        NTSC_HYBRID,
+        PAL,
+        PAL_HYBRID,
+        DENDY,
+        OTHER,
+        UNKNOWN
     }
 }
 
