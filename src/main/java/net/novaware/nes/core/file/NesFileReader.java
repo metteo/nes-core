@@ -7,6 +7,7 @@ import net.novaware.nes.core.file.NesFile.VideoStandard;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
+import org.jspecify.annotations.NonNull;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -15,11 +16,15 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
+import static net.novaware.nes.core.file.NesFile.Mirroring.FOUR_SCREEN;
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
 
 // TODO: support Archaic iNES and NES 2.0 modes
+// NOTE: NES 2.0 XML Database: https://forums.nesdev.org/viewtopic.php?t=19940
 
 /*
  * Recommended detection procedure:
@@ -31,6 +36,30 @@ import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
  */
 
 public class NesFileReader {
+
+    public enum Mode {
+        /**
+         * Throws an exception for any deviation from the iNES / NES 2.0 specification.
+         */
+        STRICT,
+
+        /** Attempts to parse the file, logging warnings for minor issues
+         * (e.g., truncated CHR) and only throwing exceptions for major,
+         * blocking errors (e.g., corrupt header).
+         */
+        LENIENT
+    }
+
+    public record Result(NesFile nesFile, List<Problem> problems) {
+    }
+
+    public record Problem(Severity severity, String message) {
+    }
+
+    public enum Severity {
+        MINOR,
+        MAJOR
+    }
 
     /**
      * "NES\x1a"
@@ -45,14 +74,17 @@ public class NesFileReader {
     public static final int VIDEO_DATA_MULTIPLIER = 8 * 1024;
     public static final int TRAINER_DATA_SIZE = 512;
 
-    public NesFile read(Path path) { // TODO: test
+    // TODO: add method for parsing header and returning just meta
+
+    public Result read(Path path, Mode mode) throws NesFileReadingException { // TODO: test
+
         try (
             InputStream inputStream = Files.newInputStream(path);
             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
         ) {
-            return read(path.toAbsolutePath().toString(), bufferedInputStream);
+            return read(path.toAbsolutePath().toString(), bufferedInputStream, mode);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read NES file: " + path, e); // TODO: throw a business exception
+            throw new NesFileReadingException("Failed to read NES file: " + path, e);
         }
     }
     
@@ -60,22 +92,14 @@ public class NesFileReader {
      * Reads the input stream and deconstructs it according to header info
      * @param origin file path or url pointing to the file
      * @param inputStream caller is responsible for closing the stream
+     * @param mode strictness of the reader
      */
-    public NesFile read(String origin, InputStream inputStream) throws IOException {
-        if (origin == null || origin.isEmpty()) {
-            throw new IllegalArgumentException("origin must be provided");
-        }
-        if (inputStream == null) {
-            throw new IllegalArgumentException("inputStream must not be null");
-        }
+    public Result read(String origin, InputStream inputStream, Mode mode) throws NesFileReadingException {
+        assertArgument(origin != null && !origin.isEmpty(), "origin must be provided");
+        assertArgument(inputStream != null, "inputStream must be provided");
+        assertArgument(mode != null, "mode must be provided");
 
-        final byte[] inputBytes = inputStream.readAllBytes();
-        var inputBuffer = ByteBuffer.wrap(inputBytes);
-        inputBuffer.order(LITTLE_ENDIAN);
-
-        if (inputBuffer.capacity() < HEADER_SIZE) {
-            throw new IllegalArgumentException("Input data is too short to contain iNES header");
-        }
+        var inputBuffer = readInputStream(origin, inputStream);
 
         var headerBuffer = inputBuffer.slice(0, HEADER_SIZE);
 
@@ -107,7 +131,7 @@ public class NesFileReader {
 
         boolean alternativeMirroring = isBitSet(flags6, 3);
         if (alternativeMirroring) {
-            throw new RuntimeException("alternative mirroring not supported");
+            mirroring = FOUR_SCREEN; // TODO: or single screen?
         }
 
         int mapperLo = (flags6 & 0xF0) >> 4;
@@ -126,11 +150,12 @@ public class NesFileReader {
         boolean ines_0_7_or_archaic = !(archaicNes | ines | nes2);
 
         if (vsUnisystem || playChoice10 || nes2) {
-            throw new RuntimeException("vsUnisystem / playChoice10 / nes2 not supported");
+            throw new NesFileReadingException("vsUnisystem / playChoice10 / nes2 not supported");
+            // FIXME: report a warning
         }
 
         int mapperHi = (flags7 & 0xF0);
-        short mapper = (short) (mapperHi | mapperLo);
+        short mapper = (short) (mapperHi | mapperLo); // TODO: DiskDude! may increase the mapper number by 64!
 
         // endregion
         // region Flags 8
@@ -147,7 +172,7 @@ public class NesFileReader {
 
         int flag9zeroes = (flags9 & 0xFE) >> 1;
         if (flag9zeroes > 0) {
-            throw new RuntimeException("flag9 reserved area not 0s: " + flag9zeroes);
+            throw new NesFileReadingException("flag9 reserved area not 0s: " + flag9zeroes); // TODO: don't throw, see note above
         }
 
         // endregion
@@ -159,10 +184,10 @@ public class NesFileReader {
             case 1 -> VideoStandard.NTSC_HYBRID;
             case 2 -> VideoStandard.PAL;
             case 3 -> VideoStandard.PAL_HYBRID; // TODO: Dendy?
-            default -> VideoStandard.OTHER; // TODO: throw exception?
+            default -> VideoStandard.OTHER; // TODO: report a problem
         };
 
-        boolean programMemoryPresent = !isBitSet(flags10, 4);
+        boolean programMemoryPresent = !isBitSet(flags10, 4); // TODO: may conflict with the size byte, resolve
 
         ProgramMemory programMemory = programMemoryPresent
                 ? new ProgramMemory(
@@ -174,6 +199,25 @@ public class NesFileReader {
         boolean busConflicts = isBitSet(flags10, 5);
 
         // endregion
+
+        NesFile.Meta meta = NesFile.Meta.builder()
+                .title(origin.substring(origin.lastIndexOf('/') + 1))
+                .info("") // TODO: read end of the header
+                .system(NesFile.System.NES)
+                .mapper(mapper)
+                .busConflicts(busConflicts)
+                .trainer(new Quantity(trainerPresent ? 1 : 0, Unit.BANK_512B)) // TODO: figure out a better way for units
+                .programMemory(programMemory)
+                .programData(new Quantity(programDataSize, Unit.BYTES))
+                .videoMemory(videoMemory)
+                .videoData(new Quantity(videoDataSize, Unit.BYTES))
+                .videoStandard(videoStandard2) // TODO: resolve conflicts with videoStandard variable
+                .mirroring(mirroring)
+                .remainder(new Quantity(0, Unit.BYTES))
+                .build();
+
+
+        // FIXME: check if there is enough data before slicing. there are truncated roms out there.
 
         var trainerData = trainerPresent
                 ? inputBuffer.slice(HEADER_SIZE, trainerSize)
@@ -193,20 +237,34 @@ public class NesFileReader {
 
         var remainingData = inputBuffer.slice(expectedDataAmount, inputBufferSize - expectedDataAmount); // TODO: verify
 
-        return new NesFile(
-                origin,
-                mapper,
-                busConflicts,
-                programMemory,
-                programData,
-                videoMemory,
-                videoData,
-                videoStandard2, // TODO: resolve conflicts with videoStandard variable
-                mirroring,
+        NesFile.Data data = new NesFile.Data(
                 headerBuffer.rewind(),
                 trainerData,
+                programData,
+                videoData,
+                ByteBuffer.allocate(0),
+                ByteBuffer.allocate(0),
                 remainingData
         );
+
+        NesFile nesFile = new NesFile(origin, meta, data);
+        return new Result(nesFile, List.of());
+    }
+
+    private static @NonNull ByteBuffer readInputStream(String origin, InputStream inputStream) {
+        final byte[] inputBytes;
+        try {
+            inputBytes = inputStream.readAllBytes();
+        } catch (IOException e) {
+            throw new NesFileReadingException("Unable to read input bytes of: " + origin + " ", e);
+        }
+        var inputBuffer = ByteBuffer.wrap(inputBytes);
+        inputBuffer.order(LITTLE_ENDIAN);
+
+        if (inputBuffer.capacity() < HEADER_SIZE) {
+            throw new NesFileReadingException("Input data is too short to contain iNES header");
+        }
+        return inputBuffer;
     }
 
     private static void validateMagicBytes(ByteBuffer headerBuffer) {
@@ -214,7 +272,7 @@ public class NesFileReader {
         headerBuffer.get(fourBytes);
 
         if (!Arrays.equals(fourBytes, MAGIC_BYTES)) {
-            throw new IllegalArgumentException("Invalid magic bytes: " + Hex.s(fourBytes));
+            throw new NesFileReadingException("Invalid magic bytes: " + Hex.s(fourBytes)); // TODO: don't throw, see note above
         }
     }
 

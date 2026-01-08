@@ -1,217 +1,179 @@
 package net.novaware.nes.core.file;
 
+import com.google.auto.value.AutoBuilder;
 import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
 
-// TODO: convert to an auto value?
-public class NesFile {
-
-    // region Source
-
-    /**
-     * Location the file was loaded from (either disk or url)
-     */
-    private String origin;
-
-    // endregion
-    // region Memory Bus / Control Logic
+public record NesFile (
+    String origin,
+    Meta meta,
+    // TODO: maybe and checksums / hash section so it's possible to lookup info in xml header db or online
+    Data data
+) {
 
     /**
-     * Number of the mapper
+     * Metadata section usually read from NES ROM file.
+     *
+     * @param title of the game possibly found at the end of the file (127-128 bytes),
+     *              defaults to the file name without extension if not available
+     * @param info trailing section of the header if it contains ascii text (e.g. "DiskDude!")
+     *
+     * @param system specifies if the file is for regular NES or arcade variants
+     *
+     * @param mapper number
+     * @param busConflicts of the board
+     *
+     * @param programMemory additional memory for the CPU to use (also PRG-RAM / Work RAM / WRAM)
+     * @param programData instructions for the CPU to execute (also PRG-ROM / Program ROM)
+     *
+     * @param videoMemory amount of memory CPU can fill for the PPU (also CHR-RAM / Video RAM / VRAM)
+     * @param videoData graphics data for the PPU to render (also CHR-ROM / Character ROM)
+     * @param videoStandard determines the speed of CPU and color space
+     * @param mirroring specifies the arrangement of video data
      */
-    private short mapper;
 
-    /**
-     * Board bus conflict status
-     */
-    private boolean busConflicts;
+    public record Meta (
+        String title,
+        String info,
 
-    // endregion
-    // region CPU
+        System system,
 
-    /**
-     * Additional memory for the CPU to use
-     * Also PRG-RAM / Work RAM / WRAM
-     */
-    private ProgramMemory programMemory;
+        short mapper,
+        boolean busConflicts,
 
-    /**
-     * Instructions for the CPU to execute
-     * <br>
-     * PRG-ROM / Program ROM
-     */
-    private ByteBuffer programData;
+        Quantity trainer,
 
-    // endregion
-    // region PPU
+        ProgramMemory programMemory,
+        Quantity programData,
 
-    /**
-     * Amount of memory CPU fill for the PPU
-     * CHR-RAM / Video RAM / VRAM
-     */
-    private Quantity videoMemory;
+        Quantity videoMemory, // TODO: what size in iNES
+        Quantity videoData,
+        VideoStandard videoStandard,
+        Mirroring mirroring,
 
-    /**
-     * Graphics data for the PPU to render
-     * CHR-ROM / Character ROM
-     */
-    private ByteBuffer videoData;
-
-    /**
-     * Determines the speed of CPU and color space
-     */
-    private VideoStandard videoStandard;
-
-    /**
-     * Specifies the structure of video data
-     */
-    private Mirroring mirroring;
-
-    // endregion
-    // region Other
-
-    /**
-     * Optional original header read from iNES / NES 2.0 file
-     */
-    private ByteBuffer legacyHeader; // TODO: add method for printing bytes in binary and as string (diskdude!)
-
-    /**
-     * Usually contains mapper register translation and video memory caching code
-     */
-    private ByteBuffer trainerData;
-
-    /**
-     * Remainder of data after all specified sections in the file. May contain game title
-     */
-    private ByteBuffer remainingData;
-
-    // endregion
-
-    public NesFile(
-            String origin,
-
-            short mapper,
-            boolean busConflicts,
-
-            ProgramMemory programMemory,
-            ByteBuffer programData,
-
-            Quantity videoMemory,
-            ByteBuffer videoData,
-            VideoStandard videoStandard,
-            Mirroring mirroring,
-
-            ByteBuffer legacyHeader,
-            ByteBuffer trainerData,
-            ByteBuffer remainingData
+        Quantity remainder
     ) {
-        this.origin = origin;
 
-        this.mapper = mapper;
-        this.busConflicts = busConflicts;
+        public static Builder builder() {
+            return new AutoBuilder_NesFile_Meta_Builder();
+        }
 
-        this.programMemory = programMemory;
-        this.programData = programData;
+        public static Builder builder(Meta meta) {
+            return new AutoBuilder_NesFile_Meta_Builder(meta);
+        }
 
-        this.videoMemory = videoMemory;
-        this.videoData = videoData;
-        this.videoStandard = videoStandard;
-        this.mirroring = mirroring;
+        @AutoBuilder
+        public interface Builder {
+            Builder title(String title);
+            Builder info(String info);
 
-        this.legacyHeader = legacyHeader;
-        this.trainerData = trainerData;
-        this.remainingData = remainingData;
+            Builder system(System system);
+
+            Builder mapper(short mapper);
+            Builder busConflicts(boolean busConflicts);
+
+            Builder trainer(Quantity trainer);
+
+            Builder programMemory(ProgramMemory programMemory);
+            Builder programData(Quantity programData);
+            Builder videoMemory(Quantity videoMemory);
+            Builder videoData(Quantity videoData);
+            Builder videoStandard(VideoStandard videoStandard);
+            Builder mirroring(Mirroring mirroring);
+
+            Builder remainder(Quantity remainder);
+
+            Meta build();
+        }
     }
 
-    public String getOrigin() {
-        return origin;
-    }
+    /**
+     * NES File split into distinct data sections
+     *
+     * @param header optional original header read from iNES / NES 2.0 file
+     * @param trainer usually contains mapper register translation and video memory caching code
+     * @param program instructions for the CPU to execute (PRG-ROM / Program ROM)
+     * @param video graphics data for the PPU to render (CHR-ROM / Character ROM)
+     * @param remainder data after all specified sections in the file. May contain game title
+     */
+    public record Data (
+        ByteBuffer header,
+        ByteBuffer trainer,
+        ByteBuffer program,
+        ByteBuffer video,
+        ByteBuffer inst,
+        ByteBuffer prom,
+        ByteBuffer remainder
+    ) {
 
-    public short getMapper() {
-        return mapper;
-    }
+        private static boolean hasData(ByteBuffer buffer) {
+            return buffer != null && buffer.capacity() > 0;
+        }
 
-    public boolean hasBusConflicts() {
-        return busConflicts;
-    }
+        public boolean hasHeader() {
+            return hasData(header);
+        }
 
-    public boolean hasProgramMemory() {
-        return programMemory != null && programMemory.size.amount() > 0;
-    }
+        public boolean hasTrainer() {
+            return hasData(trainer);
+        }
 
-    public ProgramMemory getProgramMemory() {
-        return programMemory;
-    }
+        public boolean hasVideo() {
+            return hasData(video);
+        }
 
-    public ByteBuffer getProgramData() {
-        return programData;
-    }
-
-    public boolean hasVideoMemory() {
-        return videoMemory != null && videoMemory.amount() > 0;
-    }
-
-    public Quantity getVideoMemory() {
-        return videoMemory;
-    }
-
-    public boolean hasVideoData() {
-        return videoData != null && videoData.capacity() > 0;
-    }
-
-    public ByteBuffer getVideoData() {
-        return videoData;
-    }
-
-    public VideoStandard getVideoStandard() {
-        return videoStandard;
-    }
-
-    public Mirroring getMirroring() {
-        return mirroring;
-    }
-
-    public boolean hasLegacyHeader() {
-        return legacyHeader != null && legacyHeader.capacity() > 0;
-    }
-
-    public ByteBuffer getLegacyHeader() {
-        return legacyHeader;
-    }
-
-    public boolean hasTrainer() {
-        return trainerData != null && trainerData.capacity() > 0;
-    }
-
-    public ByteBuffer getTrainerData() {
-        return trainerData;
-    }
-
-    public ByteBuffer getRemainingData() {
-        return remainingData;
+        public boolean hasRemainder() {
+            return hasData(remainder);
+        }
     }
 
     public enum Mirroring {
         VERTICAL, // 0
         HORIZONTAL, // 1
+        SINGLE_SCREEN,
+        FOUR_SCREEN
     }
 
     public record ProgramMemory(Kind kind, Quantity size) {
-
     }
 
     public enum Kind {
         NONE,
+        UNKNOWN,
         VOLATILE, // no battery
         PERSISTENT // battery
+    }
+
+    public enum System {
+
+        /**
+         * <a href="https://www.mariowiki.com/Nintendo_Entertainment_System">Nintendo Entertainment System</a>
+         */
+        NES("Nintendo Entertainment System", false),
+
+        /**
+         * <a href="https://www.mariowiki.com/VS._System">VS.System</a>
+         */
+        VS_SYSTEM("VS.System", true),
+
+        /**
+         * <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
+         */
+        PLAY_CHOICE_10("Nintendo PlayChoice-10", true);
+
+        private String name;
+        private boolean arcade;
+
+        System(String name, boolean arcade) {
+            this.name = name;
+            this.arcade = arcade;
+        }
     }
 
     public enum VideoStandard {
         NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, DENDY, OTHER
     }
-
-
 }
 
 
