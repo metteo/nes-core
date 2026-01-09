@@ -47,7 +47,7 @@ public record NesFile (
         short mapper,
         boolean busConflicts,
 
-        Quantity trainer,
+        Quantity trainer, // FIXME: should be trainerData? or trainerMemory
 
         ProgramMemory programMemory,
         Quantity programData,
@@ -179,7 +179,7 @@ public record NesFile (
      *
      * <a href="https://www.nesdev.org/wiki/NES_2.0#Nametable_layout">Nametable layout on nesdev.org</a>
      */
-    public enum Layout {
+    public enum Layout { // FIXME: ScreenLayout? like V, H, 4, 1, D, L, 3V, 3H, 1F
         STANDARD_VERTICAL      (Mirroring.HORIZONTAL, 0b0000),
         STANDARD_HORIZONTAL    (Mirroring.VERTICAL,   0b0001),
         ALTERNATIVE_VERTICAL   (Mirroring.HORIZONTAL, 0b1000),
@@ -225,31 +225,37 @@ public record NesFile (
         UNKNOWN
     }
 
-    public enum System {
+    /**
+     * Enumeration of systems supported by iNES / NES 2.0 spec
+     *
+     * @see <a href="https://www.mariowiki.com/Nintendo_Entertainment_System">Nintendo Entertainment System</a>
+     * @see <a href="https://www.mariowiki.com/VS._System">VS.System</a>
+     * @see <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
+     * @see <a href="https://www.nesdev.org/wiki/NES_2.0#Extended_Console_Type">Extended Console</a>
+     */
+    public enum System { // FIXME: rename, clashes with java.lang.System
 
-        /**
-         * <a href="https://www.mariowiki.com/Nintendo_Entertainment_System">Nintendo Entertainment System</a>
-         */
-        NES("Nintendo Entertainment System", false),
+        NES("NES",                      0b00),
+        VS_SYSTEM("VS.System",          0b01),
+        PLAY_CHOICE_10("PlayChoice-10", 0b10),
+        EXTENDED("Extended Console",    0b11); // TODO: add more enum values
 
-        /**
-         * <a href="https://www.mariowiki.com/VS._System">VS.System</a>
-         */
-        VS_SYSTEM("VS.System", true),
+        public static final int BITS_MASK           = 0b1001;
 
-        /**
-         * <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
-         */
-        PLAY_CHOICE_10("Nintendo PlayChoice-10", true),
+        private final String displayName;
+        private final byte bits;
 
-        EXTENDED("Extended Console", true/* ? */); // TODO: add more enum values
+        System(String displayName, int bits) {
+            this.displayName = displayName;
+            this.bits = ubyte(bits);
+        }
 
-        private String name;
-        private boolean arcade;
+        public String displayName() {
+            return displayName;
+        }
 
-        System(String name, boolean arcade) {
-            this.name = name;
-            this.arcade = arcade;
+        public int bits() {
+            return uint(bits) & BITS_MASK;
         }
     }
 

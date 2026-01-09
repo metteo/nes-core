@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.file.NesFileHeader.Archaic_iNES.*
 import static net.novaware.nes.core.file.NesFileHeader.Modern_iNES.*
-import static net.novaware.nes.core.file.NesFileHeader.Shared_iNES.*
+import static net.novaware.nes.core.file.NesFileHeader.Unofficial_iNES.*
 import static net.novaware.nes.core.util.UnsignedTypes.uint
 
 class NesFileHeaderSpec extends Specification {
@@ -43,9 +43,20 @@ class NesFileHeaderSpec extends Specification {
         byte10 |= uint(PROGRAM_MEMORY_PRESENT_BIT)
         byte10 |= uint(VIDEO_STANDARD_2_BITS)
 
-
         expect:
         byte9 == 0xFF
+        byte10 == 0xFF
+    }
+
+    def "should pass byte cross checks for Unofficial_iNES" () {
+        given:
+
+        def byte10 = 0
+        byte10 |= uint(BYTE_10_RESERVED_BITS)
+        byte10 |= uint(PROGRAM_MEMORY_PRESENT_BIT)
+        byte10 |= uint(VIDEO_STANDARD_2_BITS)
+
+        expect:
         byte10 == 0xFF
     }
 }

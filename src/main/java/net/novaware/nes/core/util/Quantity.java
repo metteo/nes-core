@@ -5,6 +5,8 @@ public record Quantity(int amount, Unit unit) {
 
     public static final Quantity ZERO_BYTES = new Quantity(0, Unit.BYTES);
 
+    // TODO: assert that amount is positive!
+
     public enum Unit {
         BYTES,
         BANK_512B,
