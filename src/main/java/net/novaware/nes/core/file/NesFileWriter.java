@@ -97,14 +97,7 @@ public class NesFileWriter extends NesFileHandler {
 
     private int toBytes(Quantity quantity) {
         if (quantity == null) { return 0; }
-        int amount = quantity.amount();
-        return switch (quantity.unit()) {
-            case BYTES -> amount;
-            case BANK_512B -> amount * 512;
-            case BANK_8KB -> amount * 8 * 1024;
-            case BANK_16KB -> amount * 16 * 1024;
-            case BANK_32KB -> amount * 32 * 1024;
-        };
+        return quantity.toBytes();
     }
 
     private void putBuffer(ByteBuffer dst, ByteBuffer src) {

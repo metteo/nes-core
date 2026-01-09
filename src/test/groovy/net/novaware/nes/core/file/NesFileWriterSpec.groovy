@@ -13,9 +13,54 @@ import static net.novaware.nes.core.file.NesFile.System.EXTENDED
 import static net.novaware.nes.core.file.NesFile.System.VS_SYSTEM
 import static net.novaware.nes.core.file.NesFile.VideoStandard.NTSC
 import static net.novaware.nes.core.file.NesFile.VideoStandard.PAL
+import static net.novaware.nes.core.file.NesFileBuilder.marioBros
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
 class NesFileWriterSpec extends Specification {
+
+    def "should write mario bros file"() {
+        given:
+        NesFile marioBros = marioBros().build()
+
+        def headerSize = NesFileHandler.HEADER_SIZE
+        def programSize = marioBros.meta().programData().toBytes()
+        def videoSize = marioBros.meta().videoData().toBytes()
+
+        def headerStart = 0
+        def programStart = headerStart + headerSize
+        def videoStart = programStart + programSize
+        def videoEnd = videoStart + videoSize - 1
+
+        def writer = new NesFileWriter()
+
+        when:
+        def buffer = writer.write(marioBros, NesFileWriter.Version.MODERN_iNES)
+
+        then:
+        buffer.limit() == headerSize + programSize + videoSize
+
+        def maybeMagic = new byte[4]
+        buffer.get(maybeMagic)
+
+        maybeMagic == NesFileReader.MAGIC_BYTES
+
+        buffer.get(4) == 1 as byte // 16KB PRG
+        buffer.get(5) == 1 as byte // 8KB CHR
+
+        def maybeZeroes = new byte[10]
+        buffer.get(6, maybeZeroes)
+
+        verifyEach(maybeZeroes.toList()) {it == 0}
+
+        buffer.get(programStart) == marioBros.data().program().get(0)
+        buffer.get(videoStart - 1) == marioBros.data().program().get(programSize - 1)
+
+        buffer.get(videoStart) == marioBros.data().video().get(0)
+        buffer.get(videoEnd) == marioBros.data().video().get(videoSize - 1)
+    }
+
+    // TODO: write small test with single bit assertions to check if they set / unset correctly
+    // TODO: write a test that verifies all Data section a in a proper place
 
     def "should write simple iNES file"() {
 
@@ -52,6 +97,7 @@ class NesFileWriterSpec extends Specification {
 
         when:
         def buffer = writer.write(nesFile, NesFileWriter.Version.MODERN_iNES)
+
 
         then:
         buffer.limit() == 16 + 3 * 16384 + 2 * 8192

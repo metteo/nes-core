@@ -39,6 +39,7 @@ public record NesFile (
      */
 
     public record Meta (
+        // FIXME: create constructor validating all the values are not null! Objects.requireNonNull to the rescue!
         String title,
         String info,
 
@@ -148,8 +149,16 @@ public record NesFile (
             return hasData(remainder);
         }
 
+        public static Data.Builder builder() {
+            return new AutoBuilder_NesFile_Data_Builder();
+        }
+
+        public static Data.Builder builder(Data data) {
+            return new AutoBuilder_NesFile_Data_Builder(data);
+        }
+
         @AutoBuilder
-        interface Builder {
+        public interface Builder {
             Builder header(ByteBuffer header);
 
             Builder trainer(ByteBuffer trainer);
