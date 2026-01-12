@@ -1,19 +1,20 @@
 package net.novaware.nes.core.file.ines
 
+import net.novaware.nes.core.file.NesData
 import net.novaware.nes.core.file.NesFile
+import net.novaware.nes.core.file.NesHash
+import net.novaware.nes.core.file.NesMeta
 import net.novaware.nes.core.util.Quantity
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
 
-import static net.novaware.nes.core.file.NesFile.Data
-import static net.novaware.nes.core.file.NesFile.Layout.ALTERNATIVE_VERTICAL
-import static net.novaware.nes.core.file.NesFile.Layout.STANDARD_HORIZONTAL
-import static net.novaware.nes.core.file.NesFile.Meta
-import static net.novaware.nes.core.file.NesFile.System.EXTENDED
-import static net.novaware.nes.core.file.NesFile.System.VS_SYSTEM
-import static net.novaware.nes.core.file.NesFile.VideoStandard.NTSC
-import static net.novaware.nes.core.file.NesFile.VideoStandard.PAL
+import static net.novaware.nes.core.file.NesMeta.Layout.ALTERNATIVE_VERTICAL
+import static net.novaware.nes.core.file.NesMeta.Layout.STANDARD_HORIZONTAL
+import static net.novaware.nes.core.file.NesMeta.System.EXTENDED
+import static net.novaware.nes.core.file.NesMeta.System.VS_SYSTEM
+import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC
+import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
@@ -25,7 +26,7 @@ class NesFileWriterSpec extends Specification {
 
         def headerSize = NesFileHandler.HEADER_SIZE // TODO: check actual header size :)
         def programSize = marioBros.meta().programData().toBytes()
-        def videoSize = marioBros.meta().videoData().toBytes()
+        def videoSize = marioBros.meta().videoData().size().toBytes()
 
         def headerStart = 0
         def programStart = headerStart + headerSize
@@ -67,33 +68,31 @@ class NesFileWriterSpec extends Specification {
 
         // TODO: create a test builder for NesFile object
         given:
-        def meta = Meta.builder()
+        def meta = NesMeta.builder()
             .noTitle()
             .noInfo()
             .system(EXTENDED)
             .mapper(53)
-            .layout(STANDARD_HORIZONTAL)
             .busConflicts(false)
-            .trainer(new Quantity(1, BANK_512B))
             .noProgramMemory()
+            .trainer(new Quantity(1, BANK_512B))
             .programData(new Quantity(3, BANK_16KB))
             .noVideoMemory()
-            .videoData(new Quantity(2, BANK_8KB))
+            .videoData(new NesMeta.VideoData(STANDARD_HORIZONTAL, new Quantity(2, BANK_8KB)))
             .videoStandard(NTSC)
-            .noRemainder()
+            .noFooter()
             .build()
 
-        def data = new Data(
+        def data = new NesData(
             ByteBuffer.allocate(0),
             ByteBuffer.allocate(0),
             ByteBuffer.allocate(3 * 16384),
             ByteBuffer.allocate(2 * 8192),
             ByteBuffer.allocate(0),
-            ByteBuffer.allocate(0),
             ByteBuffer.allocate(0)
         )
 
-        def nesFile = new NesFile("test.nes", meta, data, NesFile.Hash.empty())
+        def nesFile = new NesFile(URI.create("file://test.nes"), meta, data, NesHash.empty())
         def writer = new NesFileWriter()
 
         when:
@@ -125,35 +124,33 @@ class NesFileWriterSpec extends Specification {
     // FIXME: get rid of duplication like this. test object builders and fixtures are way to go.
     def "should write another simple iNES file"() {
         given:
-        def meta = Meta.builder()
+        def meta = NesMeta.builder()
                 .noTitle()
                 .noInfo()
                 .system(VS_SYSTEM)
                 .mapper(202)
-                .layout(ALTERNATIVE_VERTICAL)
                 .busConflicts(false)
                 .noTrainer()
-                .programMemory(new NesFile.ProgramMemory(
-                        NesFile.Kind.PERSISTENT, new Quantity(252, BANK_8KB)
+                .programMemory(new NesMeta.ProgramMemory(
+                        NesMeta.Kind.PERSISTENT, new Quantity(252, BANK_8KB)
                 ))
                 .programData(new Quantity(3, BANK_16KB))
                 .noVideoMemory()
-                .videoData(new Quantity(2, BANK_8KB))
+                .videoData(new NesMeta.VideoData(ALTERNATIVE_VERTICAL, new Quantity(2, BANK_8KB)))
                 .videoStandard(PAL)
-                .noRemainder()
+                .noFooter()
                 .build()
 
-        def data = new Data(
+        def data = new NesData(
                 ByteBuffer.allocate(0),
                 ByteBuffer.allocate(0),
                 ByteBuffer.allocate(3 * 16384),
                 ByteBuffer.allocate(2 * 8192),
                 ByteBuffer.allocate(0),
-                ByteBuffer.allocate(0),
                 ByteBuffer.allocate(0)
         )
 
-        def nesFile = new NesFile("test.nes", meta, data, NesFile.Hash.empty())
+        def nesFile = new NesFile(URI.create("file://test.nes"), meta, data, NesHash.empty())
         def writer = new NesFileWriter()
 
         when:

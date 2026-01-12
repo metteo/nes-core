@@ -1,7 +1,8 @@
 package net.novaware.nes.core.file.ines
 
-import net.novaware.nes.core.file.NesFile
+
 import net.novaware.nes.core.file.NesFileFaker
+import net.novaware.nes.core.file.NesMeta
 import spock.lang.Specification
 
 import static net.novaware.nes.core.file.ines.NesFileReader.Mode.LENIENT
@@ -11,7 +12,7 @@ class NesFileReaderSpec extends Specification {
 
     def "should persist origin of the file" () {
         given:
-        def expectedOrigin = "/home/user/file.nes"
+        def expectedOrigin = "file:///home/user/file.nes"
 
         def magic = new byte[] { 0x4E, 0x45, 0x53, 0x1A }
         def bytes = new byte[16]
@@ -23,7 +24,7 @@ class NesFileReaderSpec extends Specification {
         def result = new NesFileReader().read(expectedOrigin, inputStream, LENIENT)
 
         then:
-        result.nesFile().origin() == expectedOrigin
+        result.nesFile().origin() == URI.create(expectedOrigin)
     }
 
     def "should parse faked file"() {
@@ -48,11 +49,11 @@ class NesFileReaderSpec extends Specification {
         def data = nesFile.data
 
         then:
-        meta.layout() == NesFile.Layout.STANDARD_HORIZONTAL
+        meta.videoData().layout() == NesMeta.Layout.STANDARD_HORIZONTAL
         meta.mapper() == (short) 15
         meta.trainer().amount() == 0
         meta.programData().amount() == params.programRomSize
-        meta.videoData().amount() == params.videoRomSize
+        meta.videoData().size().amount() == params.videoRomSize
 
         data.header().capacity() == 16
         data.header().get(0) == (byte) 0x4E

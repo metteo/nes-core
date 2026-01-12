@@ -1,0 +1,98 @@
+package net.novaware.nes.core.file;
+
+import com.google.auto.value.AutoBuilder;
+
+import java.nio.ByteBuffer;
+
+/**
+ * NES File split into distinct data sections
+ *
+ * @param header    optional original header read from iNES / NES 2.0 file
+ * @param trainer   usually contains mapper register translation and video memory caching code
+ * @param program   instructions for the CPU to execute (PRG-ROM / Program ROM)
+ * @param video     graphics data for the PPU to render (CHR-ROM / Character ROM)
+ * @param inst      PlayChoice-10 INSTruction & ProgrammableROM for the second screen (8KB+2x16B)
+ * @param footer    data after all specified sections in the file. May contain game title
+ */
+public record NesData(
+        ByteBuffer header, // NOTE: header type and version would be useful?
+        ByteBuffer trainer,
+        ByteBuffer program,
+        ByteBuffer video,
+        ByteBuffer inst,
+        ByteBuffer footer
+) {
+
+    private static boolean hasData(ByteBuffer buffer) {
+        return buffer.capacity() > 0;
+    }
+
+    public boolean hasHeader() {
+        return hasData(header);
+    }
+
+    public boolean hasTrainer() {
+        return hasData(trainer);
+    }
+
+    public boolean hasVideo() {
+        return hasData(video);
+    }
+
+    public boolean hasFooter() {
+        return hasData(footer);
+    }
+
+    public static Builder builder() {
+        return new AutoBuilder_NesData_Builder();
+    }
+
+    public static Builder builder(NesData data) {
+        return new AutoBuilder_NesData_Builder(data);
+    }
+
+    @AutoBuilder
+    public interface Builder {
+        Builder header(ByteBuffer header);
+
+        Builder trainer(ByteBuffer trainer);
+
+        Builder program(ByteBuffer program);
+
+        Builder video(ByteBuffer video);
+
+        Builder inst(ByteBuffer instruction);
+
+        Builder footer(ByteBuffer footer);
+
+        private static ByteBuffer emptyBuffer() {
+            return ByteBuffer.allocate(0);
+        }
+
+        default Builder noHeader() {
+            return header(emptyBuffer());
+        }
+
+        default Builder noTrainer() {
+            return trainer(emptyBuffer());
+        }
+
+        default Builder noProgram() {
+            return program(emptyBuffer());
+        }
+
+        default Builder noVideo() {
+            return video(emptyBuffer());
+        }
+
+        default Builder noInst() {
+            return inst(emptyBuffer());
+        }
+
+        default Builder noFooter() {
+            return footer(emptyBuffer());
+        }
+
+        NesData build();
+    }
+}

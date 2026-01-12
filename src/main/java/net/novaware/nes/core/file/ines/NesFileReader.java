@@ -1,10 +1,13 @@
 package net.novaware.nes.core.file.ines;
 
+import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
-import net.novaware.nes.core.file.NesFile.Kind;
-import net.novaware.nes.core.file.NesFile.Layout;
-import net.novaware.nes.core.file.NesFile.ProgramMemory;
-import net.novaware.nes.core.file.NesFile.VideoStandard;
+import net.novaware.nes.core.file.NesMeta.Layout;
+import net.novaware.nes.core.file.NesMeta.ProgramMemory;
+import net.novaware.nes.core.file.NesMeta.VideoData;
+import net.novaware.nes.core.file.NesMeta.VideoStandard;
+import net.novaware.nes.core.file.NesHash;
+import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
@@ -13,6 +16,7 @@ import org.jspecify.annotations.NonNull;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,8 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
-import static net.novaware.nes.core.file.NesFile.Layout.ALTERNATIVE_HORIZONTAL;
-import static net.novaware.nes.core.file.NesFile.Layout.ALTERNATIVE_VERTICAL;
+import static net.novaware.nes.core.file.NesMeta.Layout.ALTERNATIVE_HORIZONTAL;
+import static net.novaware.nes.core.file.NesMeta.Layout.ALTERNATIVE_VERTICAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
 
@@ -87,7 +91,7 @@ public class NesFileReader extends NesFileHandler {
             return read(path.toAbsolutePath().toString(), bufferedInputStream, mode);
         } catch (IOException e) {
             throw new NesFileReadingException("Failed to read NES file: " + path, e);
-        }
+        } // TODO: catch illegal argument / state exceptions and wrap in NesFileReadingException
     }
     
     /**
@@ -129,7 +133,7 @@ public class NesFileReader extends NesFileHandler {
 
         Layout layout = alternativeLayout ?
                 (horizontalLayout ? ALTERNATIVE_HORIZONTAL : ALTERNATIVE_VERTICAL) :
-                (horizontalLayout ? Layout.STANDARD_HORIZONTAL : Layout.STANDARD_VERTICAL);
+                (horizontalLayout ? NesMeta.Layout.STANDARD_HORIZONTAL : NesMeta.Layout.STANDARD_VERTICAL);
 
         boolean persistentProgramMemory = isBitSet(flags6, 1);
 
@@ -170,7 +174,7 @@ public class NesFileReader extends NesFileHandler {
         // endregion
         // region Flags 9
 
-        VideoStandard videoStandard = isBitSet(flags9, 0) ? VideoStandard.PAL : VideoStandard.NTSC;
+        VideoStandard videoStandard = isBitSet(flags9, 0) ? NesMeta.VideoStandard.PAL : NesMeta.VideoStandard.NTSC;
 
         int flag9zeroes = (flags9 & 0xFE) >> 1;
         if (flag9zeroes > 0) {
@@ -182,40 +186,39 @@ public class NesFileReader extends NesFileHandler {
 
         int videoStandardBits = flags10 & 0b11;
         VideoStandard videoStandard2 = switch (videoStandardBits) {
-            case 0 -> VideoStandard.NTSC;
-            case 1 -> VideoStandard.NTSC_HYBRID;
-            case 2 -> VideoStandard.PAL;
-            case 3 -> VideoStandard.PAL_HYBRID; // TODO: Dendy?
-            default -> VideoStandard.OTHER; // TODO: report a problem
+            case 0 -> NesMeta.VideoStandard.NTSC;
+            case 1 -> NesMeta.VideoStandard.NTSC_HYBRID;
+            case 2 -> NesMeta.VideoStandard.PAL;
+            case 3 -> NesMeta.VideoStandard.PAL_HYBRID; // TODO: Dendy?
+            default -> NesMeta.VideoStandard.OTHER; // TODO: report a problem
         };
 
         boolean programMemoryPresent = !isBitSet(flags10, 4); // TODO: may conflict with the size byte, resolve
 
         ProgramMemory programMemory = programMemoryPresent
                 ? new ProgramMemory(
-                    persistentProgramMemory ? Kind.PERSISTENT : Kind.VOLATILE,
+                    persistentProgramMemory ? NesMeta.Kind.PERSISTENT : NesMeta.Kind.VOLATILE,
                     new Quantity(programMemorySize, Unit.BYTES)
                 )
-                : new ProgramMemory(Kind.NONE, ZERO_BYTES);
+                : new ProgramMemory(NesMeta.Kind.NONE, ZERO_BYTES);
 
         boolean busConflicts = isBitSet(flags10, 5);
 
         // endregion
 
-        NesFile.Meta meta = NesFile.Meta.builder()
+        NesMeta meta = NesMeta.builder()
                 .title(origin.substring(origin.lastIndexOf('/') + 1))
                 .info("") // TODO: read end of the header
-                .system(NesFile.System.NES)
+                .system(NesMeta.System.NES)
                 .mapper(mapper)
                 .busConflicts(busConflicts)
                 .trainer(new Quantity(trainerPresent ? 1 : 0, Unit.BANK_512B)) // TODO: figure out a better way for units
                 .programMemory(programMemory)
                 .programData(new Quantity(programDataSize, Unit.BYTES))
                 .videoMemory(videoMemory)
-                .videoData(new Quantity(videoDataSize, Unit.BYTES))
+                .videoData(new VideoData(layout, new Quantity(videoDataSize, Unit.BYTES)))
                 .videoStandard(videoStandard2) // TODO: resolve conflicts with videoStandard variable
-                .layout(layout)
-                .remainder(new Quantity(0, Unit.BYTES))
+                .footer(new Quantity(0, Unit.BYTES))
                 .build();
 
 
@@ -239,17 +242,16 @@ public class NesFileReader extends NesFileHandler {
 
         var remainingData = inputBuffer.slice(expectedDataAmount, inputBufferSize - expectedDataAmount); // TODO: verify
 
-        NesFile.Data data = new NesFile.Data(
+        NesData data = new NesData(
                 headerBuffer.rewind(),
                 trainerData,
                 programData,
                 videoData,
                 ByteBuffer.allocate(0),
-                ByteBuffer.allocate(0),
                 remainingData
         );
 
-        NesFile nesFile = new NesFile(origin, meta, data, NesFile.Hash.empty());
+        NesFile nesFile = new NesFile(URI.create(origin), meta, data, NesHash.empty());
         return new Result(nesFile, List.of());
     }
 

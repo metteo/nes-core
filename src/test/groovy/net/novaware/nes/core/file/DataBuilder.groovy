@@ -1,22 +1,21 @@
 package net.novaware.nes.core.file
 
-import net.novaware.nes.core.file.ines.NesFileHandler;
+import net.novaware.nes.core.file.ines.NesFileHandler
 
 import java.nio.ByteBuffer
 
-import static java.nio.ByteBuffer.allocate;
+import static java.nio.ByteBuffer.allocate
 
 class DataBuilder {
 
-    private static Random random = new Random();
+    private static Random random = new Random()
 
     private ByteBuffer header;
     private ByteBuffer trainer;
     private ByteBuffer program;
     private ByteBuffer video;
     private ByteBuffer inst;
-    private ByteBuffer prom;
-    private ByteBuffer remainder;
+    private ByteBuffer footer;
 
     // TODO: add methods that fake the data, possibly replacing NesFileFaker all together
     //       or one combo method that accepts Meta and takes sizing from it.
@@ -35,8 +34,7 @@ class DataBuilder {
                 .program(emptyBuffer())
                 .video(emptyBuffer())
                 .inst(emptyBuffer())
-                .prom(emptyBuffer())
-                .remainder(emptyBuffer())
+                .footer(emptyBuffer())
     }
 
     static DataBuilder marioBros() {
@@ -46,16 +44,15 @@ class DataBuilder {
     }
 
     static DataBuilder randomData(MetaBuilder metaBuilder) {
-        NesFile.Meta meta = metaBuilder.build()
-        boolean playChoice10 = meta.system() == NesFile.System.PLAY_CHOICE_10
+        NesMeta meta = metaBuilder.build()
+        boolean playChoice10 = meta.system() == NesMeta.System.PLAY_CHOICE_10
 
         return new DataBuilder().header(allocate(NesFileHandler.HEADER_SIZE))
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
-                .video(randomBuffer(meta.videoData().toBytes()))
-                .inst(playChoice10 ? randomBuffer(8 * 1024) : emptyBuffer())
-                .prom(playChoice10 ? randomBuffer(2 * 16) : emptyBuffer())
-                .remainder(randomBuffer(meta.remainder().toBytes())) // TODO: use meta.title to fill?
+                .video(randomBuffer(meta.videoData().size().toBytes()))
+                .inst(playChoice10 ? randomBuffer(8 * 1024 + 2 * 16) : emptyBuffer())
+                .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
     }
 
     DataBuilder header(ByteBuffer header) {
@@ -83,25 +80,19 @@ class DataBuilder {
         return this;
     }
 
-    DataBuilder prom(ByteBuffer prom) {
-        this.prom = prom;
+    DataBuilder footer(ByteBuffer footer) {
+        this.footer = footer;
         return this;
     }
 
-    DataBuilder remainder(ByteBuffer remainder) {
-        this.remainder = remainder;
-        return this;
-    }
-
-    NesFile.Data build() {
-        return NesFile.Data.builder()
+    NesData build() {
+        return NesData.builder()
                 .header(header)
                 .trainer(trainer)
                 .program(program)
                 .video(video)
                 .inst(inst)
-                .prom(prom)
-                .remainder(remainder)
+                .footer(footer)
                 .build();
     }
 }

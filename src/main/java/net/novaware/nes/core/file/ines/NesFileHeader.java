@@ -1,16 +1,15 @@
 package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.file.NesFile;
-import net.novaware.nes.core.file.NesFile.Meta;
-import net.novaware.nes.core.file.NesFile.ProgramMemory;
-import net.novaware.nes.core.file.NesFile.VideoStandard;
+import net.novaware.nes.core.file.NesMeta;
+import net.novaware.nes.core.file.NesMeta.ProgramMemory;
+import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.file.ines.NesFileHandler.Version;
 import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
 
-import static net.novaware.nes.core.file.NesFile.System.EXTENDED;
-import static net.novaware.nes.core.file.NesFile.System.NES;
+import static net.novaware.nes.core.file.NesMeta.System.EXTENDED;
+import static net.novaware.nes.core.file.NesMeta.System.NES;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
@@ -74,7 +73,7 @@ public class NesFileHeader {
             return header.put(ubyte(videoData.amount()));
         }
 
-        public static ByteBuffer putFlag6(ByteBuffer header, Meta meta) {
+        public static ByteBuffer putFlag6(ByteBuffer header, NesMeta meta) {
             assertState(header.position() == 6, "buffer not at position 6");
 
             Quantity trainer = meta.trainer();
@@ -82,9 +81,9 @@ public class NesFileHeader {
             assertArgument(trainer.amount() <= 1, "trainer size exceeded");
 
             int mapperLoBits = (uint(meta.mapper()) & 0x0F) << 4;
-            int layoutBits = meta.layout().bits();
+            int layoutBits = meta.videoData().layout().bits();
             int trainerBit = meta.trainer().amount() == 1 ? uint(TRAINER_BIT) : 0;
-            int batteryBit = meta.programMemory().kind() == NesFile.Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
+            int batteryBit = meta.programMemory().kind() == NesMeta.Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
 
             byte flag6 = ubyte(mapperLoBits | layoutBits | trainerBit | batteryBit);
 
@@ -106,12 +105,12 @@ public class NesFileHeader {
 
         // endregion
 
-        public static ByteBuffer putFlag7(ByteBuffer header, Meta meta, Version version) {
+        public static ByteBuffer putFlag7(ByteBuffer header, NesMeta meta, Version version) {
             assertState(header.position() == 7, "buffer not at position 7");
             // TODO: better assertions
 
-            final NesFile.System system = meta.system();
-            final NesFile.System versionAwareSystem = version.compareTo(Version.NES_2_0) < 0 && system == EXTENDED
+            final NesMeta.System system = meta.system();
+            final NesMeta.System versionAwareSystem = version.compareTo(Version.NES_2_0) < 0 && system == EXTENDED
                     ? NES // default to NES for older versions
                     : system;
 
@@ -168,7 +167,7 @@ public class NesFileHeader {
             assertState(header.position() == 9, "buffer not at position 9");
 
             // TODO: what about dual standard games?
-            byte flag9 = videoStandard == VideoStandard.PAL ? ubyte(1) : ubyte(0);
+            byte flag9 = videoStandard == NesMeta.VideoStandard.PAL ? ubyte(1) : ubyte(0);
 
             return header.put(flag9);
         }

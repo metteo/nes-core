@@ -4,11 +4,11 @@ import net.novaware.nes.core.test.TestDataBuilder;
 
 class NesFileBuilder implements TestDataBuilder<NesFile> {
 
-    public static final String DEFAULT_ORIGIN = "/home/user/Mario_Bros.nes";
+    public static final URI DEFAULT_ORIGIN = URI.create("file:///home/user/Mario_Bros.nes")
 
-    private String origin = DEFAULT_ORIGIN;
-    private MetaBuilder meta = MetaBuilder.marioBros();
-    private DataBuilder data = DataBuilder.marioBros();
+    private URI origin = DEFAULT_ORIGIN
+    private MetaBuilder meta = MetaBuilder.marioBros()
+    private DataBuilder data = DataBuilder.marioBros()
 
     static NesFileBuilder marioBros() {
         return new NesFileBuilder();
@@ -21,7 +21,7 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
             .data(DataBuilder.randomData(meta));
     }
 
-    NesFileBuilder origin(String origin) {
+    NesFileBuilder origin(URI origin) {
         this.origin = origin;
         return this;
     }
@@ -38,6 +38,7 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
 
     @Override
     NesFile build() {
-        return new NesFile(origin, meta.build(), data.build(), NesFile.Hash.empty());
+        // TODO: calculate hash based on data
+        return new NesFile(origin, meta.build(), data.build(), NesHash.empty())
     }
 }

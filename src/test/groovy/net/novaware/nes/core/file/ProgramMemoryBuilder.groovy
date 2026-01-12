@@ -3,26 +3,26 @@ package net.novaware.nes.core.file
 import net.novaware.nes.core.test.TestDataBuilder;
 import net.novaware.nes.core.util.QuantityBuilder;
 
-class ProgramMemoryBuilder implements TestDataBuilder<NesFile.ProgramMemory> {
+class ProgramMemoryBuilder implements TestDataBuilder<NesMeta.ProgramMemory> {
 
-    private NesFile.Kind kind;
+    private NesMeta.Kind kind;
     private QuantityBuilder quantity;
 
     static ProgramMemoryBuilder none() {
         return new ProgramMemoryBuilder()
-                .kind(NesFile.Kind.NONE)
+                .kind(NesMeta.Kind.NONE)
                 .quantity(QuantityBuilder.banks8kb(0));
 
     }
 
     static ProgramMemoryBuilder battery8kb(int amount) {
         return new ProgramMemoryBuilder()
-                .kind(NesFile.Kind.PERSISTENT)
+                .kind(NesMeta.Kind.PERSISTENT)
                 .quantity(QuantityBuilder.banks8kb(amount));
 
     }
 
-    ProgramMemoryBuilder kind(NesFile.Kind kind) {
+    ProgramMemoryBuilder kind(NesMeta.Kind kind) {
         this.kind = kind;
         return this;
     }
@@ -33,7 +33,7 @@ class ProgramMemoryBuilder implements TestDataBuilder<NesFile.ProgramMemory> {
     }
 
     @Override
-    NesFile.ProgramMemory build() {
-        return new NesFile.ProgramMemory(kind, quantity.build());
+    NesMeta.ProgramMemory build() {
+        return new NesMeta.ProgramMemory(kind, quantity.build());
     }
 }
