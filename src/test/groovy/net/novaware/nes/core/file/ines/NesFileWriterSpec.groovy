@@ -24,7 +24,7 @@ class NesFileWriterSpec extends Specification {
         given:
         NesFile marioBros = marioBros().build()
 
-        def headerSize = NesFileHandler.HEADER_SIZE // TODO: check actual header size :)
+        def headerSize = NesHeader.SIZE // TODO: check actual header size :)
         def programSize = marioBros.meta().programData().toBytes()
         def videoSize = marioBros.meta().videoData().size().toBytes()
 
@@ -36,7 +36,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(marioBros, NesFileWriter.Version.MODERN_iNES)
+        def buffer = writer.write(marioBros, NesHeader.Version.MODERN_iNES)
 
         then:
         buffer.limit() == headerSize + programSize + videoSize
@@ -44,7 +44,7 @@ class NesFileWriterSpec extends Specification {
         def maybeMagic = new byte[4]
         buffer.get(maybeMagic)
 
-        maybeMagic == NesFileReader.MAGIC_BYTES
+        maybeMagic == NesHeaderReader.MAGIC_BYTES
 
         buffer.get(4) == 1 as byte // 16KB PRG
         buffer.get(5) == 1 as byte // 8KB CHR
@@ -96,7 +96,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, NesFileWriter.Version.MODERN_iNES)
+        def buffer = writer.write(nesFile, NesHeader.Version.MODERN_iNES)
 
 
         then:
@@ -154,7 +154,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, NesFileWriter.Version.MODERN_iNES)
+        def buffer = writer.write(nesFile, NesHeader.Version.MODERN_iNES)
 
         then:
         buffer.limit() == 16 + 3 * 16384 + 2 * 8192
@@ -187,7 +187,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        writer.write(null, NesFileWriter.Version.MODERN_iNES)
+        writer.write(null, NesHeader.Version.MODERN_iNES)
 
         then:
         def e = thrown(IllegalArgumentException)

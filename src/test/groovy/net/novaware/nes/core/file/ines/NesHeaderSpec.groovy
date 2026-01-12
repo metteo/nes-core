@@ -2,12 +2,12 @@ package net.novaware.nes.core.file.ines
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.file.ines.NesFileHeader.Archaic_iNES.*
-import static net.novaware.nes.core.file.ines.NesFileHeader.Modern_iNES.*
-import static net.novaware.nes.core.file.ines.NesFileHeader.Unofficial_iNES.*
+import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.*
+import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.*
+import static net.novaware.nes.core.file.ines.NesHeader.Unofficial_iNES.*
 import static net.novaware.nes.core.util.UnsignedTypes.uint
 
-class NesFileHeaderSpec extends Specification {
+class NesHeaderSpec extends Specification {
 
     def "should pass byte cross checks for Archaic_iNES" () {
         given:

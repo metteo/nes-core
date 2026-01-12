@@ -3,7 +3,6 @@ package net.novaware.nes.core.file.ines;
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.NesMeta.ProgramMemory;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
-import net.novaware.nes.core.file.ines.NesFileHandler.Version;
 import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
@@ -24,7 +23,22 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
  * <a href="https://www.nesdev.org/wiki/INES">iNES on nesdev.org</a>
  * <a href="https://www.nesdev.org/wiki/NES_2.0">NES 2.0 on nesdev.org</a>
  */
-public class NesFileHeader {
+public class NesHeader {
+
+    public static final int SIZE = 16;
+
+    public enum Version {
+        // TODO: add field with ordering and methods to compare versions. somehow allow to derive one version from another?
+        ARCHAIC_iNES,
+
+        NES_0_7,
+
+        MODERN_iNES,
+
+        UNOFFICIAL_iNES, // flag 10: tv-system pal/ntsc/dual, prg-ram present/not, board conflicts: yes/no
+
+        NES_2_0
+    }
 
     public static class Archaic_iNES {
 

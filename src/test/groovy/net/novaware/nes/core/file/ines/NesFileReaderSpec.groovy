@@ -12,7 +12,7 @@ class NesFileReaderSpec extends Specification {
 
     def "should persist origin of the file" () {
         given:
-        def expectedOrigin = "file:///home/user/file.nes"
+        def expectedOrigin = URI.create("file:///home/user/file.nes") // TODO: may not work on win
 
         def magic = new byte[] { 0x4E, 0x45, 0x53, 0x1A }
         def bytes = new byte[16]
@@ -24,7 +24,7 @@ class NesFileReaderSpec extends Specification {
         def result = new NesFileReader().read(expectedOrigin, inputStream, LENIENT)
 
         then:
-        result.nesFile().origin() == URI.create(expectedOrigin)
+        result.nesFile().origin() == expectedOrigin
     }
 
     def "should parse faked file"() {
@@ -43,7 +43,7 @@ class NesFileReaderSpec extends Specification {
         def inputStream = new ByteArrayInputStream(fakeRom.fileData) // no close
 
         when:
-        def result = new NesFileReader().read("http://roms.pl", inputStream, STRICT)
+        def result = new NesFileReader().read(URI.create("file:///home/user/fake.nes"), inputStream, STRICT)
         def nesFile = result.nesFile()
         def meta = nesFile.meta
         def data = nesFile.data

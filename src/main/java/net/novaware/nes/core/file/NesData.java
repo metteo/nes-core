@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
  * @param trainer   usually contains mapper register translation and video memory caching code
  * @param program   instructions for the CPU to execute (PRG-ROM / Program ROM)
  * @param video     graphics data for the PPU to render (CHR-ROM / Character ROM)
- * @param inst      PlayChoice-10 INSTruction & ProgrammableROM for the second screen (8KB+2x16B)
+ * @param misc      misc data depending on the console / mapper
  * @param footer    data after all specified sections in the file. May contain game title
  */
 public record NesData(
@@ -19,7 +19,7 @@ public record NesData(
         ByteBuffer trainer,
         ByteBuffer program,
         ByteBuffer video,
-        ByteBuffer inst,
+        ByteBuffer misc,
         ByteBuffer footer
 ) {
 
@@ -61,7 +61,7 @@ public record NesData(
 
         Builder video(ByteBuffer video);
 
-        Builder inst(ByteBuffer instruction);
+        Builder misc(ByteBuffer misc);
 
         Builder footer(ByteBuffer footer);
 
@@ -85,8 +85,8 @@ public record NesData(
             return video(emptyBuffer());
         }
 
-        default Builder noInst() {
-            return inst(emptyBuffer());
+        default Builder noMisc() {
+            return misc(emptyBuffer());
         }
 
         default Builder noFooter() {

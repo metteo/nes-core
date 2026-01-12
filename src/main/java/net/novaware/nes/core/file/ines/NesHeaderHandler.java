@@ -1,5 +1,4 @@
 package net.novaware.nes.core.file.ines;
 
-public abstract class NesFileHandler {
-
+public abstract class NesHeaderHandler {
 }

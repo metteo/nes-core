@@ -14,7 +14,7 @@ class DataBuilder {
     private ByteBuffer trainer;
     private ByteBuffer program;
     private ByteBuffer video;
-    private ByteBuffer inst;
+    private ByteBuffer misc;
     private ByteBuffer footer;
 
     // TODO: add methods that fake the data, possibly replacing NesFileFaker all together
@@ -33,7 +33,7 @@ class DataBuilder {
                 .trainer(emptyBuffer())
                 .program(emptyBuffer())
                 .video(emptyBuffer())
-                .inst(emptyBuffer())
+                .misc(emptyBuffer())
                 .footer(emptyBuffer())
     }
 
@@ -51,7 +51,7 @@ class DataBuilder {
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
                 .video(randomBuffer(meta.videoData().size().toBytes()))
-                .inst(playChoice10 ? randomBuffer(8 * 1024 + 2 * 16) : emptyBuffer())
+                .misc(playChoice10 ? randomBuffer(8 * 1024 + 2 * 16) : emptyBuffer())
                 .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
     }
 
@@ -75,8 +75,8 @@ class DataBuilder {
         return this;
     }
 
-    DataBuilder inst(ByteBuffer inst) {
-        this.inst = inst;
+    DataBuilder misc(ByteBuffer misc) {
+        this.misc = misc;
         return this;
     }
 
@@ -91,7 +91,7 @@ class DataBuilder {
                 .trainer(trainer)
                 .program(program)
                 .video(video)
-                .inst(inst)
+                .misc(misc)
                 .footer(footer)
                 .build();
     }

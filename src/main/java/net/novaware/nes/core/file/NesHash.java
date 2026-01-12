@@ -14,7 +14,7 @@ import java.util.Map;
  * @param trainer hash
  * @param program hash
  * @param video   hash
- * @param inst    hash of PlayChoice-10 payload (inst and prom)
+ * @param inst    hash of PlayChoice-10 payload (misc and prom)
  */
 public record NesHash(
         Map<Algorithm, String> file,

@@ -1,6 +1,7 @@
 package net.novaware.nes.core.file
 
-class NesFileFaker {
+class NesFileFaker { // TODO: rewrite this class to generate random NesFile (meta, data, hash)
+                     //       use test data builders to construct the objects and writer to get binary if needed
 
     static class Params {
         Version version
