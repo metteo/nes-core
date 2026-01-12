@@ -1,5 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.ines;
 
+import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesFile.Kind;
 import net.novaware.nes.core.file.NesFile.Layout;
 import net.novaware.nes.core.file.NesFile.ProgramMemory;

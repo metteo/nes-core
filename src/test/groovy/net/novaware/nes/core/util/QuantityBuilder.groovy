@@ -1,6 +1,6 @@
 package net.novaware.nes.core.util;
 
-import net.novaware.nes.core.file.TestDataBuilder;
+import net.novaware.nes.core.test.TestDataBuilder;
 
 class QuantityBuilder extends AutoBuilder_Quantity_Builder implements TestDataBuilder<Quantity> {
 

@@ -1,5 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file
 
+import net.novaware.nes.core.test.TestDataBuilder;
 import net.novaware.nes.core.util.QuantityBuilder;
 
 class ProgramMemoryBuilder implements TestDataBuilder<NesFile.ProgramMemory> {

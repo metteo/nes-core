@@ -1,7 +1,8 @@
 package net.novaware.nes.core.file;
 
 import net.novaware.nes.core.file.NesFile.Layout;
-import net.novaware.nes.core.file.NesFile.VideoStandard;
+import net.novaware.nes.core.file.NesFile.VideoStandard
+import net.novaware.nes.core.test.TestDataBuilder;
 import net.novaware.nes.core.util.QuantityBuilder;
 
 import static net.novaware.nes.core.file.NesFile.System.NES

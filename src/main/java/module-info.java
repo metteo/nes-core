@@ -3,5 +3,12 @@ module net.novaware.nes.core {
     requires auto.value.annotations;
 
     // FIXME: uncomment for local IJ testing or use cp based launch configurations (for single tests)
-    // opens net.novaware.nes.core.util;
+    /*
+    opens net.novaware.nes.core.file;
+    opens net.novaware.nes.core.file.ines;
+    opens net.novaware.nes.core.file.nesy;
+    opens net.novaware.nes.core.file.pasofami;
+    opens net.novaware.nes.core.file.unif;
+    opens net.novaware.nes.core.util;
+    */
 }

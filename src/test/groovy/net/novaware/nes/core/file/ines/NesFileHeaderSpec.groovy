@@ -1,10 +1,10 @@
-package net.novaware.nes.core.file
+package net.novaware.nes.core.file.ines
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.file.NesFileHeader.Archaic_iNES.*
-import static net.novaware.nes.core.file.NesFileHeader.Modern_iNES.*
-import static net.novaware.nes.core.file.NesFileHeader.Unofficial_iNES.*
+import static net.novaware.nes.core.file.ines.NesFileHeader.Archaic_iNES.*
+import static net.novaware.nes.core.file.ines.NesFileHeader.Modern_iNES.*
+import static net.novaware.nes.core.file.ines.NesFileHeader.Unofficial_iNES.*
 import static net.novaware.nes.core.util.UnsignedTypes.uint
 
 class NesFileHeaderSpec extends Specification {

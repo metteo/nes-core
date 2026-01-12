@@ -1,4 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.ines;
+
+import net.novaware.nes.core.file.NesFile;
 
 import java.nio.ByteBuffer;
 import java.util.List;

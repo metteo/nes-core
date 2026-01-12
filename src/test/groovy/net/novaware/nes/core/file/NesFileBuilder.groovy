@@ -1,4 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file
+
+import net.novaware.nes.core.test.TestDataBuilder;
 
 class NesFileBuilder implements TestDataBuilder<NesFile> {
 

@@ -1,4 +1,4 @@
-package net.novaware.nes.core.file
+package net.novaware.nes.core.file.ines
 
 import spock.lang.Specification
 

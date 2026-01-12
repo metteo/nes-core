@@ -253,6 +253,8 @@ public record NesFile (
      * Sections of Data passed through MessageDigest / hashing functions
      * Useful for metadata lookup in XML header DB / online or data verification
      *
+     * TODO: In case of multiple hash values for the same algorithm?
+     *
      * @param file of a whole file (if unheadered) or some relevant sections
      *             like program and video (if headered)
      * @param trainer hash

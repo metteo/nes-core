@@ -48,7 +48,7 @@ class NesFileFaker {
         byte mirroring = params.nametable == Orientation.HORIZONTAL ? 0b1 : 0b0
         byte flag6 = (byte) (mapper | trainer | mirroring)
 
-        // FIXME: move the assembly of the file into the writer, here keep only generation and NesFile creation
+        // FIXME: move the assembly of the header / file into the header/writer, here keep only generation and NesFile creation
         byte[] header = [
                 0x4E, 0x45, 0x53, 0x1a,
                 (byte)(params.programRomSize / 16 / 1024),

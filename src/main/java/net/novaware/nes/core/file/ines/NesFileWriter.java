@@ -1,9 +1,10 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.ines;
 
+import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesFile.Data;
 import net.novaware.nes.core.file.NesFile.Meta;
-import net.novaware.nes.core.file.NesFileHeader.Archaic_iNES;
-import net.novaware.nes.core.file.NesFileHeader.Shared_iNES;
+import net.novaware.nes.core.file.ines.NesFileHeader.Archaic_iNES;
+import net.novaware.nes.core.file.ines.NesFileHeader.Shared_iNES;
 import net.novaware.nes.core.util.Quantity;
 import org.jspecify.annotations.NonNull;
 

@@ -1,18 +1,16 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.ines;
 
+import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesFile.Meta;
 import net.novaware.nes.core.file.NesFile.ProgramMemory;
 import net.novaware.nes.core.file.NesFile.VideoStandard;
-import net.novaware.nes.core.file.NesFileHandler.Version;
+import net.novaware.nes.core.file.ines.NesFileHandler.Version;
 import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
 
-import static net.novaware.nes.core.file.NesFile.Kind.NONE;
 import static net.novaware.nes.core.file.NesFile.System.EXTENDED;
 import static net.novaware.nes.core.file.NesFile.System.NES;
-import static net.novaware.nes.core.file.NesFile.System.PLAY_CHOICE_10;
-import static net.novaware.nes.core.file.NesFile.System.VS_SYSTEM;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
