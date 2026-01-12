@@ -5,15 +5,78 @@ import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
+/**
+ * There is some intended duplication in this record:
+ * <ul>
+ *     <li>
+ *         <code>meta</code> & <code>data.header</code> fields -
+ *         When reading a file header field is populated with an
+ *         original version of the header if available and then
+ *         parsed into meta section.
+ *         Later if the whole file needs to be saved the original
+ *         header will be used instead of parsed section to
+ *         preserve it.
+ *         It's possible original header when read was in old
+ *         version and user may want to upgrade it.
+ *         In such case a converter will use the meta section to
+ *         create new header and replace the old one in data section.
+ *         It's possible there is no header (.unh file). In such
+ *         case it's necessary to get meta info from external
+ *         source (xml, online) and possibly generate a header.
+ *     </li>
+ *     <li>
+ *         <code>meta.title</code> & <code>data.remainder</code> -
+ *         When reading a file trailing section may contain the
+ *         title of the software. Such information is put in
+ *         title field but only the ASCII printable part.
+ *         The original trailing data is stored in data.remainder
+ *         If there is no trailing data the title is derived from
+ *         the origin part (file name without the extension)
+ *         Later if the whole file needs to be saved the original
+ *         footer will be used instead of parsed section to
+ *         preserve it.
+ *         The trailing data in the file is non-standard and
+ *         user may want to clear it out or on the other hand
+ *         add it based on the file name or other information.
+ *     </li>
+ *     <li>
+ *         sizes in meta and sizes of buffers in data sections -
+ *         the process of reading the files is executed in stages
+ *         First, the fixed size header is read and parsed.
+ *         This gives the information about the rest of data.
+ *         Different slicing points are calculated and added
+ *         in meta for later use.
+ *         Second, different sections of the file are sliced
+ *         into dedicated buffers and stored in data.
+ *         Third, hash values are calculated and stored in
+ *         hash section.
+ *
+ *         In case of headerless file:
+ *         First hash whole file and look up meta info about it
+ *         Second, slice out sections of the file
+ *         Third, hash data sections
+ *         Fourth, verify integrity against looked up info.
+ *
+ *         In case of generated file meta section acts as a
+ *         blueprint how random data section should be
+ *         generated. Hash section is calculated afterward.
+ *     </li>
+ * </ul>
+ * @param origin location of the file (file system or online)
+ * @param meta information required to interpret the data
+ * @param data different parts of a NES software
+ * @param hash results used to identify the software
+ */
 public record NesFile (
     String origin,
     Meta meta,
-    // TODO: maybe and checksums / hash section so it's possible to lookup info in xml header db or online
-    Data data
+    Data data,
+    Hash hash
 ) {
 
     /**
@@ -28,6 +91,8 @@ public record NesFile (
      * @param mapper number
      * @param busConflicts of the board
      *
+     * @param trainer size / presence, usually 0 / 512 bytes
+     *
      * @param programMemory additional memory for the CPU to use
      *                      (also PRG-RAM / Work RAM / WRAM or Save RAM / SRAM)
      * @param programData instructions for the CPU to execute (also PRG-ROM / Program ROM)
@@ -36,6 +101,8 @@ public record NesFile (
      * @param videoData graphics data for the PPU to render (also CHR-ROM / Character ROM)
      * @param videoStandard determines the speed of CPU and color space
      * @param layout specifies the arrangement of video data
+     *
+     * @param remainder size of the footer? probably kept for generation / write back purposes
      */
 
     public record Meta (
@@ -124,7 +191,7 @@ public record NesFile (
         ByteBuffer trainer,
         ByteBuffer program,
         ByteBuffer video,
-        ByteBuffer inst,
+        ByteBuffer inst, // TODO: consider play choice subsection for inst and prom
         ByteBuffer prom,
         ByteBuffer remainder
     ) {
@@ -166,7 +233,7 @@ public record NesFile (
             Builder video(ByteBuffer video);
             Builder inst(ByteBuffer inst);
             Builder prom(ByteBuffer prom);
-            Builder remainder(ByteBuffer remainder);
+            Builder remainder(ByteBuffer remainder); // TODO: rename to footer
 
             private static ByteBuffer emptyBuffer() { return ByteBuffer.allocate(0); }
 
@@ -180,6 +247,45 @@ public record NesFile (
 
             Data build();
         }
+    }
+
+    /**
+     * Sections of Data passed through MessageDigest / hashing functions
+     * Useful for metadata lookup in XML header DB / online or data verification
+     *
+     * @param file of a whole file (if unheadered) or some relevant sections
+     *             like program and video (if headered)
+     * @param trainer hash
+     * @param program hash
+     * @param video hash
+     * @param inst hash
+     * @param prom hash
+     */
+    public record Hash (
+        Map<HashAlgorithm, String> file,
+
+        Map<HashAlgorithm, String> trainer,
+        Map<HashAlgorithm, String> program,
+        Map<HashAlgorithm, String> video,
+        Map<HashAlgorithm, String> inst,
+        Map<HashAlgorithm, String> prom
+    ) {
+
+        public static Hash empty() {
+            return new Hash(Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
+        }
+    }
+
+    /**
+     * Common message digest / integrity algorithms used to identify NES files
+     *
+     */
+    public enum HashAlgorithm {
+        SUM16, // sum of all bytes modulo 16 in hex
+        CRC32, // in hex
+        MD5,
+        SHA1,
+        SHA256
     }
 
     /**

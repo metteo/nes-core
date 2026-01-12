@@ -10,7 +10,6 @@ import org.jspecify.annotations.NonNull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static net.novaware.nes.core.file.NesFileReader.HEADER_SIZE;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 
 public class NesFileWriter extends NesFileHandler {
@@ -21,6 +20,7 @@ public class NesFileWriter extends NesFileHandler {
 
         Meta meta = nesFile.meta();
 
+        // TODO: writer should use data.header instead. Converter will update / create header from Meta
         ByteBuffer header = writeHeader(version, meta);
 
         Data data = nesFile.data();

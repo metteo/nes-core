@@ -22,7 +22,7 @@ class NesFileWriterSpec extends Specification {
         given:
         NesFile marioBros = marioBros().build()
 
-        def headerSize = NesFileHandler.HEADER_SIZE
+        def headerSize = NesFileHandler.HEADER_SIZE // TODO: check actual header size :)
         def programSize = marioBros.meta().programData().toBytes()
         def videoSize = marioBros.meta().videoData().toBytes()
 
@@ -92,7 +92,7 @@ class NesFileWriterSpec extends Specification {
             ByteBuffer.allocate(0)
         )
 
-        def nesFile = new NesFile("test.nes", meta, data)
+        def nesFile = new NesFile("test.nes", meta, data, NesFile.Hash.empty())
         def writer = new NesFileWriter()
 
         when:
@@ -152,7 +152,7 @@ class NesFileWriterSpec extends Specification {
                 ByteBuffer.allocate(0)
         )
 
-        def nesFile = new NesFile("test.nes", meta, data)
+        def nesFile = new NesFile("test.nes", meta, data, NesFile.Hash.empty())
         def writer = new NesFileWriter()
 
         when:

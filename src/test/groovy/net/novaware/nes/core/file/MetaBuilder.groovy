@@ -4,7 +4,9 @@ import net.novaware.nes.core.file.NesFile.Layout;
 import net.novaware.nes.core.file.NesFile.VideoStandard;
 import net.novaware.nes.core.util.QuantityBuilder;
 
-import static net.novaware.nes.core.file.NesFile.System.NES;
+import static net.novaware.nes.core.file.NesFile.System.NES
+import static net.novaware.nes.core.file.NesFile.System.PLAY_CHOICE_10
+import static net.novaware.nes.core.file.ProgramMemoryBuilder.battery8kb;
 import static net.novaware.nes.core.file.ProgramMemoryBuilder.none;
 import static net.novaware.nes.core.util.QuantityBuilder.banks16kb;
 import static net.novaware.nes.core.util.QuantityBuilder.banks512b;
@@ -33,7 +35,7 @@ class MetaBuilder implements TestDataBuilder<NesFile.Meta> {
     private QuantityBuilder remainder;
 
     static MetaBuilder marioBros() {
-        return new MetaBuilder().title("Mario Bros.")
+        new MetaBuilder().title("Mario Bros.")
                 .info("DiskDude!")
                 .system(NES)
                 .mapper(0)
@@ -45,7 +47,23 @@ class MetaBuilder implements TestDataBuilder<NesFile.Meta> {
                 .videoData(banks8kb(1))
                 .videoStandard(VideoStandard.NTSC)
                 .layout(Layout.STANDARD_VERTICAL)
-                .remainder(bytes(0));
+                .remainder(bytes(0))
+    }
+
+    static MetaBuilder complexMeta() {
+        new MetaBuilder().title("Complex")
+                .info("astra")
+                .system(PLAY_CHOICE_10)
+                .mapper(252)
+                .busConflicts(true)
+                .trainer(banks512b(1))
+                .programMemory(battery8kb(3))
+                .programData(banks16kb(5))
+                .videoMemory(banks8kb(7))
+                .videoData(banks8kb(9))
+                .videoStandard(VideoStandard.PAL)
+                .layout(Layout.ALTERNATIVE_HORIZONTAL)
+                .remainder(bytes(127))
     }
 
     MetaBuilder title(String title) {

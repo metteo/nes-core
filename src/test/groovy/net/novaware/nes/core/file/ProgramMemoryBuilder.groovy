@@ -14,6 +14,13 @@ class ProgramMemoryBuilder implements TestDataBuilder<NesFile.ProgramMemory> {
 
     }
 
+    static ProgramMemoryBuilder battery8kb(int amount) {
+        return new ProgramMemoryBuilder()
+                .kind(NesFile.Kind.PERSISTENT)
+                .quantity(QuantityBuilder.banks8kb(amount));
+
+    }
+
     ProgramMemoryBuilder kind(NesFile.Kind kind) {
         this.kind = kind;
         return this;

@@ -12,6 +12,13 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
         return new NesFileBuilder();
     }
 
+    static NesFileBuilder complexNesFile() {
+        def meta = MetaBuilder.complexMeta()
+        return new NesFileBuilder()
+            .meta(meta)
+            .data(DataBuilder.randomData(meta));
+    }
+
     NesFileBuilder origin(String origin) {
         this.origin = origin;
         return this;
@@ -29,6 +36,6 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
 
     @Override
     NesFile build() {
-        return new NesFile(origin, meta.build(), data.build());
+        return new NesFile(origin, meta.build(), data.build(), NesFile.Hash.empty());
     }
 }

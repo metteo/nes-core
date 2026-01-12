@@ -248,7 +248,7 @@ public class NesFileReader extends NesFileHandler {
                 remainingData
         );
 
-        NesFile nesFile = new NesFile(origin, meta, data);
+        NesFile nesFile = new NesFile(origin, meta, data, NesFile.Hash.empty());
         return new Result(nesFile, List.of());
     }
 
