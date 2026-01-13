@@ -14,7 +14,7 @@ import static net.novaware.nes.core.util.QuantityBuilder.banks512b
 import static net.novaware.nes.core.util.QuantityBuilder.banks8kb
 import static net.novaware.nes.core.util.QuantityBuilder.bytes
 
-class MetaBuilder implements TestDataBuilder<NesMeta> {
+class NesMetaBuilder implements TestDataBuilder<NesMeta> {
 
     private String title
     private String info
@@ -34,8 +34,8 @@ class MetaBuilder implements TestDataBuilder<NesMeta> {
 
     private QuantityBuilder footer
 
-    static MetaBuilder marioBros() {
-        new MetaBuilder().title("Mario Bros.")
+    static NesMetaBuilder marioBros() {
+        new NesMetaBuilder().title("Mario Bros.")
                 .info("DiskDude!")
                 .system(NES)
                 .mapper(0)
@@ -49,8 +49,8 @@ class MetaBuilder implements TestDataBuilder<NesMeta> {
                 .footer(bytes(0))
     }
 
-    static MetaBuilder complexMeta() {
-        new MetaBuilder().title("Complex")
+    static NesMetaBuilder complexMeta() {
+        new NesMetaBuilder().title("Complex")
                 .info("astra")
                 .system(PLAY_CHOICE_10)
                 .mapper(252)
@@ -64,62 +64,62 @@ class MetaBuilder implements TestDataBuilder<NesMeta> {
                 .footer(bytes(127))
     }
 
-    MetaBuilder title(String title) {
+    NesMetaBuilder title(String title) {
         this.title = title;
         return this;
     }
 
-    MetaBuilder info(String info) {
+    NesMetaBuilder info(String info) {
         this.info = info;
         return this;
     }
 
-    MetaBuilder system(NesMeta.System system) {
+    NesMetaBuilder system(NesMeta.System system) {
         this.system = system;
         return this;
     }
 
-    MetaBuilder mapper(int mapper) {
+    NesMetaBuilder mapper(int mapper) {
         this.mapper = (short) mapper;
         return this;
     }
 
-    MetaBuilder busConflicts(boolean busConflicts) {
+    NesMetaBuilder busConflicts(boolean busConflicts) {
         this.busConflicts = busConflicts;
         return this;
     }
 
-    MetaBuilder trainer(QuantityBuilder trainer) {
+    NesMetaBuilder trainer(QuantityBuilder trainer) {
         this.trainer = trainer;
         return this;
     }
 
-    MetaBuilder programMemory(ProgramMemoryBuilder programMemory) {
+    NesMetaBuilder programMemory(ProgramMemoryBuilder programMemory) {
         this.programMemory = programMemory;
         return this;
     }
 
-    MetaBuilder programData(QuantityBuilder programData) {
+    NesMetaBuilder programData(QuantityBuilder programData) {
         this.programData = programData;
         return this;
     }
 
-    MetaBuilder videoMemory(QuantityBuilder videoMemory) {
+    NesMetaBuilder videoMemory(QuantityBuilder videoMemory) {
         this.videoMemory = videoMemory;
         return this;
     }
 
-    MetaBuilder videoData(VideoDataBuilder videoData) {
+    NesMetaBuilder videoData(VideoDataBuilder videoData) {
         this.videoData = videoData;
         return this;
     }
 
-    MetaBuilder videoStandard(VideoStandard videoStandard) {
+    NesMetaBuilder videoStandard(VideoStandard videoStandard) {
         this.videoStandard = videoStandard;
         return this;
     }
 
-    MetaBuilder footer(QuantityBuilder footer) {
+    NesMetaBuilder footer(QuantityBuilder footer) {
         this.footer = footer
         return this
     }

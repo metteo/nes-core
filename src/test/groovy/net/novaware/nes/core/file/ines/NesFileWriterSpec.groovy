@@ -16,6 +16,7 @@ import static net.novaware.nes.core.file.NesMeta.System.VS_SYSTEM
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
+import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.MAGIC_NUMBER
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
 class NesFileWriterSpec extends Specification {
@@ -44,7 +45,7 @@ class NesFileWriterSpec extends Specification {
         def maybeMagic = new byte[4]
         buffer.get(maybeMagic)
 
-        maybeMagic == NesHeaderReader.MAGIC_BYTES
+        maybeMagic == MAGIC_NUMBER.numbers()
 
         buffer.get(4) == 1 as byte // 16KB PRG
         buffer.get(5) == 1 as byte // 8KB CHR

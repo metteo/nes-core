@@ -7,18 +7,18 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
     public static final URI DEFAULT_ORIGIN = URI.create("file:///home/user/Mario_Bros.nes")
 
     private URI origin = DEFAULT_ORIGIN
-    private MetaBuilder meta = MetaBuilder.marioBros()
-    private DataBuilder data = DataBuilder.marioBros()
+    private NesMetaBuilder meta = NesMetaBuilder.marioBros()
+    private NesDataBuilder data = NesDataBuilder.marioBros()
 
     static NesFileBuilder marioBros() {
         return new NesFileBuilder();
     }
 
     static NesFileBuilder complexNesFile() {
-        def meta = MetaBuilder.complexMeta()
+        def meta = NesMetaBuilder.complexMeta()
         return new NesFileBuilder()
             .meta(meta)
-            .data(DataBuilder.randomData(meta));
+            .data(NesDataBuilder.randomData(meta));
     }
 
     NesFileBuilder origin(URI origin) {
@@ -26,12 +26,12 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
         return this;
     }
 
-    NesFileBuilder meta(MetaBuilder meta) {
+    NesFileBuilder meta(NesMetaBuilder meta) {
         this.meta = meta;
         return this;
     }
 
-    NesFileBuilder data(DataBuilder data) {
+    NesFileBuilder data(NesDataBuilder data) {
         this.data = data;
         return this;
     }

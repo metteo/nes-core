@@ -156,6 +156,16 @@ public record NesMeta(
             this.bits = ubyte(bits);
         }
 
+        public static Layout fromBits(int bits) {
+            for (Layout layout : values()) {
+                if (uint(layout.bits) == bits) {
+                    return layout;
+                }
+            }
+
+            return UNKNOWN;
+        }
+
         public Mirroring mirroring() {
             return mirroring;
         }
@@ -190,8 +200,8 @@ public record NesMeta(
     public enum System { // FIXME: rename, clashes with java.lang.System
 
         NES("NES",                      0b00),
-        VS_SYSTEM("VS.System",          0b01),
-        PLAY_CHOICE_10("PlayChoice-10", 0b10),
+        VS_SYSTEM("VS.System",          0b01), // Vs. games have a coin slot and different palettes.
+        PLAY_CHOICE_10("PlayChoice-10", 0b10), // 8 KB of Hint Screen data stored after CHR data
         EXTENDED("Extended Console",    0b11); // TODO: add more enum values
 
         public static final int BITS_MASK           = 0b1001;

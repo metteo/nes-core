@@ -19,7 +19,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
         NesHeader.Archaic_iNES.putVideoData(header, meta.videoData().size());
         // TODO: throw error if archaic ines and mapper > 15?
 
-        NesHeader.Archaic_iNES.putFlag6(header, meta);
+        NesHeader.Archaic_iNES.putByte6(header, meta);
 
         if (version == NesHeader.Version.ARCHAIC_iNES) {
             NesHeader.Archaic_iNES.putInfo(header, meta.info());

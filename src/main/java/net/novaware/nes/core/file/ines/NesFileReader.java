@@ -20,15 +20,13 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
 // TODO: support Archaic iNES and NES 2.0 modes
 // NOTE: NES 2.0 XML Database: https://forums.nesdev.org/viewtopic.php?t=19940
 
-/*
- * Recommended detection procedure:
- *
- *     If byte 7 AND $0C = $08, and the size taking into account byte 9 does not exceed the actual size of the ROM image, then NES 2.0.
- *     If byte 7 AND $0C = $04, archaic iNES.
- *     If byte 7 AND $0C = $00, and bytes 12-15 are all 0, then iNES.
- *     Otherwise, iNES 0.7 or archaic iNES.
+/**
+ * Steps:
+ *  1. Scanning for magic numbers and version
+ *  2. Reading the header for metadata
+ *  3. Slicing the data sections
+ *  4. Hashing the data sections
  */
-
 public class NesFileReader extends NesFileHandler {
 
     public enum Mode {
@@ -80,7 +78,7 @@ public class NesFileReader extends NesFileHandler {
      */
     public Result read(URI origin, InputStream inputStream, Mode mode) throws NesFileReadingException {
         assertArgument(origin != null, "origin must be provided");
-        assertArgument(origin.getScheme().equals("file"), "origin must be a file URI");
+        assertArgument("file".equals(origin.getScheme()), "origin must be a file URI");
         assertArgument(inputStream != null, "inputStream must be provided");
         assertArgument(mode != null, "mode must be provided");
 

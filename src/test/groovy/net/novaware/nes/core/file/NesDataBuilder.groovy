@@ -1,12 +1,14 @@
 package net.novaware.nes.core.file
 
 import net.novaware.nes.core.file.ines.NesFileHandler
+import net.novaware.nes.core.file.ines.NesHeader
+import net.novaware.nes.core.test.TestDataBuilder
 
 import java.nio.ByteBuffer
 
 import static java.nio.ByteBuffer.allocate
 
-class DataBuilder {
+class NesDataBuilder implements TestDataBuilder<NesData> {
 
     private static Random random = new Random()
 
@@ -28,8 +30,8 @@ class DataBuilder {
         return ByteBuffer.wrap(buffer);
     }
 
-    static DataBuilder emptyData() {
-        return new DataBuilder().header(emptyBuffer())
+    static NesDataBuilder emptyData() {
+        return new NesDataBuilder().header(emptyBuffer())
                 .trainer(emptyBuffer())
                 .program(emptyBuffer())
                 .video(emptyBuffer())
@@ -37,17 +39,17 @@ class DataBuilder {
                 .footer(emptyBuffer())
     }
 
-    static DataBuilder marioBros() {
+    static NesDataBuilder marioBros() {
         return emptyData()
                 .program(randomBuffer(16 * 1024))
                 .video(randomBuffer(8 * 1024));
     }
 
-    static DataBuilder randomData(MetaBuilder metaBuilder) {
+    static NesDataBuilder randomData(NesMetaBuilder metaBuilder) {
         NesMeta meta = metaBuilder.build()
         boolean playChoice10 = meta.system() == NesMeta.System.PLAY_CHOICE_10
 
-        return new DataBuilder().header(allocate(NesFileHandler.HEADER_SIZE))
+        return new NesDataBuilder().header(allocate(NesHeader.SIZE))
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
                 .video(randomBuffer(meta.videoData().size().toBytes()))
@@ -55,32 +57,32 @@ class DataBuilder {
                 .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
     }
 
-    DataBuilder header(ByteBuffer header) {
+    NesDataBuilder header(ByteBuffer header) {
         this.header = header;
         return this;
     }
 
-    DataBuilder trainer(ByteBuffer trainer) {
+    NesDataBuilder trainer(ByteBuffer trainer) {
         this.trainer = trainer;
         return this;
     }
 
-    DataBuilder program(ByteBuffer program) {
+    NesDataBuilder program(ByteBuffer program) {
         this.program = program;
         return this;
     }
 
-    DataBuilder video(ByteBuffer video) {
+    NesDataBuilder video(ByteBuffer video) {
         this.video = video;
         return this;
     }
 
-    DataBuilder misc(ByteBuffer misc) {
+    NesDataBuilder misc(ByteBuffer misc) {
         this.misc = misc;
         return this;
     }
 
-    DataBuilder footer(ByteBuffer footer) {
+    NesDataBuilder footer(ByteBuffer footer) {
         this.footer = footer;
         return this;
     }

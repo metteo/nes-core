@@ -52,8 +52,8 @@ class NesFileReaderSpec extends Specification {
         meta.videoData().layout() == NesMeta.Layout.STANDARD_HORIZONTAL
         meta.mapper() == (short) 15
         meta.trainer().amount() == 0
-        meta.programData().amount() == params.programRomSize
-        meta.videoData().size().amount() == params.videoRomSize
+        meta.programData().toBytes() == params.programRomSize
+        meta.videoData().size().toBytes() == params.videoRomSize
 
         data.header().capacity() == 16
         data.header().get(0) == (byte) 0x4E
