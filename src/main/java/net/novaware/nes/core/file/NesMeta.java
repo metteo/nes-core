@@ -204,7 +204,7 @@ public record NesMeta(
         PLAY_CHOICE_10("PlayChoice-10", 0b10), // 8 KB of Hint Screen data stored after CHR data
         EXTENDED("Extended Console",    0b11); // TODO: add more enum values
 
-        public static final int BITS_MASK           = 0b1001;
+        public static final int BITS_MASK = 0b11;
 
         private final String displayName;
         private final byte bits;

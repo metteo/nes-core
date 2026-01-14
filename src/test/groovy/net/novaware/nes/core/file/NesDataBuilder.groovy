@@ -26,7 +26,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     private static ByteBuffer randomBuffer(int size) {
         byte[] buffer = new byte[size];
-        random.nextBytes(buffer);
+        random.nextBytes(buffer); // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
         return ByteBuffer.wrap(buffer);
     }
 

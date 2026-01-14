@@ -10,8 +10,6 @@ import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
 
-import static net.novaware.nes.core.file.NesMeta.System.EXTENDED;
-import static net.novaware.nes.core.file.NesMeta.System.NES;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
@@ -178,19 +176,22 @@ public class NesHeader {
         // endregion
 
         public static ByteBuffer putFlag7(ByteBuffer header, NesMeta meta, Version version) {
-            assertState(header.position() == 7, "buffer not at position 7");
+            return putFlag7(header, meta.system(), meta.mapper(), version);
+        }
+
+        // TODO: flag7 is system specific as it turns out,
+        //  should be created from scratch for NES 2.0
+        //  archaic nes doesn't support this
+        //  nes 0.7 only mapper hi bits
+        public static ByteBuffer putFlag7(ByteBuffer header, NesMeta.System system, short mapper, Version version) {
+            assertState(header.position() == BYTE_7, "buffer not at position 7");
             // TODO: better assertions
 
-            final NesMeta.System system = meta.system();
-            final NesMeta.System versionAwareSystem = version.compareTo(Version.NES_2_0) < 0 && system == EXTENDED
-                    ? NES // default to NES for older versions
-                    : system;
+            int systemBits = system.bits();
+            int versionBits = 0;
+            int mapperHiBits = uint(mapper) & 0xF0;
 
-            int systemBits = versionAwareSystem.bits();
-            int nes20 = version == Version.NES_2_0 ? 0b10 : 0; // TODO: should follow detection procedure from reader
-            int mapperHiBits = (uint(meta.mapper()) & 0xF0);
-
-            byte flags7 = ubyte(mapperHiBits | nes20 | systemBits);
+            byte flags7 = ubyte(mapperHiBits | versionBits | systemBits);
 
             return header.put(flags7);
         }

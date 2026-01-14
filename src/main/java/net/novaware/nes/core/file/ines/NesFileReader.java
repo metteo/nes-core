@@ -3,6 +3,7 @@ package net.novaware.nes.core.file.ines;
 import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesHash;
+import net.novaware.nes.core.file.Problem;
 import org.jspecify.annotations.NonNull;
 
 import java.io.BufferedInputStream;
@@ -12,6 +13,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
@@ -45,14 +47,6 @@ public class NesFileReader extends NesFileHandler {
     public record Result(NesFile nesFile, List<Problem> problems) {
     }
 
-    public record Problem(Severity severity, String message) {
-    }
-
-    public enum Severity {
-        MINOR,
-        MAJOR
-    }
-
     // TODO: add method for parsing header and returning just meta
 
     public Result read(URI origin, Mode mode) throws NesFileReadingException { // TODO: test
@@ -61,7 +55,7 @@ public class NesFileReader extends NesFileHandler {
         assertArgument(mode != null, "mode must be provided");
 
         try (
-                InputStream inputStream = Files.newInputStream(Paths.get(origin));
+            InputStream inputStream = Files.newInputStream(Paths.get(origin));
             BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
         ) {
             return read(origin, bufferedInputStream, mode);
@@ -87,7 +81,12 @@ public class NesFileReader extends NesFileHandler {
         final var headerSize = NesHeader.SIZE;
         var headerBuffer = inputBuffer.slice(0, headerSize);
 
-        var headerReader = new NesHeaderReader();
+        var headerScanner = new NesHeaderScanner();
+        var headerScanResult = headerScanner.scan(headerBuffer);
+
+        // TODO: report if not GAME_NES
+
+        var headerReader = new NesHeaderReader(headerScanResult.version());
         var headerResult = headerReader.read(origin, headerBuffer, mode);
         var meta = headerResult.meta();
 
@@ -124,8 +123,12 @@ public class NesFileReader extends NesFileHandler {
                 remainingData
         );
 
+        var allProblems = new ArrayList<Problem>();
+        allProblems.addAll(headerScanResult.problems());
+        allProblems.addAll(headerResult.problems());
+
         NesFile nesFile = new NesFile(origin, meta, data, NesHash.empty());
-        return new Result(nesFile, headerResult.problems());
+        return new Result(nesFile, allProblems);
     }
 
     private static @NonNull ByteBuffer readInputStream(URI origin, InputStream inputStream) {

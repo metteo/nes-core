@@ -1,8 +1,7 @@
 package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
-import net.novaware.nes.core.file.ines.NesHeader.Version;
-import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.Quantity;
 
 import java.net.URI;
@@ -11,33 +10,31 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.novaware.nes.core.file.ines.NesFileReader.Severity.MAJOR;
-import static net.novaware.nes.core.file.ines.NesFileReader.Severity.MINOR;
-import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.getMagic;
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
 import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.getByte7;
 import static net.novaware.nes.core.util.Quantity.ZERO_BYTES;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 public class NesHeaderReader extends NesHeaderHandler {
 
-    public record Result(NesMeta meta, List<NesFileReader.Problem> problems) {
+    private final NesHeader.Version version;
+
+    public NesHeaderReader(NesHeader.Version version) {
+        this.version = version;
+    }
+
+    public record Result(NesMeta meta, List<Problem> problems) {
     }
 
     public Result read(URI origin, ByteBuffer headerBuffer, NesFileReader.Mode mode) {
-        List<NesFileReader.Problem> problems = new ArrayList<>();
+        List<Problem> problems = new ArrayList<>();
 
-        readMagicNumber(problems, headerBuffer);
+        headerBuffer.position(4); // TODO: temporary, use indexed methods
 
         Quantity programData = NesHeader.Archaic_iNES.getProgramData(headerBuffer);
         Quantity videoDataSize = NesHeader.Archaic_iNES.getVideoData(headerBuffer);
         NesHeader.Archaic_iNES.Byte6 byte6 = NesHeader.Archaic_iNES.getByte6(headerBuffer);
 
         NesHeader.Shared_iNES.Byte7 byte7 = getByte7(headerBuffer);
-
-        headerBuffer.position(BYTE_7); // TODO: detect version in stream instead of jumping around?
-        Version version = detectVersion(headerBuffer);
-        headerBuffer.position(8); // TODO: define constant
 
         byte flags8 = headerBuffer.get();
         byte flags9 = headerBuffer.get();
@@ -116,53 +113,6 @@ public class NesHeaderReader extends NesHeaderHandler {
                 .build();
 
         return new Result(meta, problems);
-    }
-
-    Version detectVersion(ByteBuffer header) {
-        int versionBits = getByte7(header).versionBits();
-
-        byte[] bytes12to15 = new byte[4];
-        header.get(12, bytes12to15);
-
-        if (versionBits == 0b10) { // TODO: & size taking into account byte 9 does not exceed the actual size of the ROM image
-            return Version.NES_2_0;
-        }
-
-        if (versionBits == 0b00 && allZeros(bytes12to15)) {
-            return Version.MODERN_iNES;
-        }
-
-        byte[] bytes7to15 = new byte[9];
-        header.get(7, bytes7to15);
-        String maybeDiskDude = new String(bytes7to15);
-
-        if (maybeDiskDude.equals("DiskDude!") || versionBits == 0b01) { // full string or just part of D
-            return Version.ARCHAIC_iNES;
-        }
-
-        return Version.NES_0_7;
-    }
-
-    private boolean allZeros(byte[] bytes) {
-        for (byte b : bytes) {
-            if (uint(b) != 0) { return false; }
-        }
-
-        return true;
-    }
-
-
-
-    /* package */ static void readMagicNumber(List<NesFileReader.Problem> problems, ByteBuffer headerBuffer) {
-        byte[] fourBytes = getMagic(headerBuffer);
-
-        int matchPercent = NesHeader.Archaic_iNES.MAGIC_NUMBER.matchesPartially(fourBytes);
-        assert matchPercent >= 0 && matchPercent <= 100 : "wrap percentage in a record"; // TODO: do it
-        if (0 <= matchPercent && matchPercent < 75) {
-            problems.add(new NesFileReader.Problem(MAJOR, "Less than 75% of magic number is matching: " + Hex.s(fourBytes)));
-        } else if (75 <= matchPercent && matchPercent < 100) {
-            problems.add(new NesFileReader.Problem(MINOR, "More than 75% of magic number is matching: " + Hex.s(fourBytes)));
-        }
     }
 
     private static boolean isBitSet(byte b, int bitIndex) {

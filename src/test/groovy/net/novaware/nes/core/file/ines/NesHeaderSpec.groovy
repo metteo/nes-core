@@ -9,14 +9,16 @@ import java.nio.ByteBuffer
 import static net.novaware.nes.core.file.NesMeta.Kind.PERSISTENT
 import static net.novaware.nes.core.file.NesMeta.Kind.VOLATILE
 import static net.novaware.nes.core.file.NesMeta.Layout.*
+import static net.novaware.nes.core.file.NesMeta.System.*
 import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.*
-
-import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.*
+import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.BYTE_9_RESERVED_BITS
+import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.VIDEO_STANDARD_BITS
+import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.*
 import static net.novaware.nes.core.file.ines.NesHeader.Unofficial_iNES.*
-import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB
-import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B
-import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.file.ines.NesHeader.Version.MODERN_iNES
+import static net.novaware.nes.core.file.ines.NesHeader.Version.NES_2_0
+import static net.novaware.nes.core.util.Quantity.Unit.*
+import static net.novaware.nes.core.util.UnsignedTypes.*
 
 class NesHeaderSpec extends Specification {
 
@@ -133,6 +135,29 @@ class NesHeaderSpec extends Specification {
         3      | STANDARD_HORIZONTAL    | 0       | VOLATILE
         9      | ALTERNATIVE_HORIZONTAL | 1       | VOLATILE
         15     | STANDARD_VERTICAL      | 0       | PERSISTENT
+    }
+    
+    def "should put and then get byte 7" () {
+        given:
+        ByteBuffer header = headerBuffer()
+
+        when:
+        header.position(BYTE_7)
+        putFlag7(header, system, (short) mapper, version)
+        header.position(BYTE_7)
+        Byte7 actual = getByte7(header)
+
+        then:
+        ubyte(actual.systemTypeBits()) == system.bits()
+        ushort(actual.mapperHi()) == ushort(mapper & 0xF0)
+        ubyte(actual.versionBits()) == (byte) (version == NES_2_0 ? 0b10 : 0)
+
+        where:
+        system         | mapper | version
+        NES            | 0      | MODERN_iNES
+        VS_SYSTEM      | 16     | MODERN_iNES
+        PLAY_CHOICE_10 | 129    | MODERN_iNES
+        EXTENDED       | 255    | MODERN_iNES
     }
 
     static def headerBuffer() {
