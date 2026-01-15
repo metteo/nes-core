@@ -44,7 +44,8 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
         return emptyData()
                 // TODO: possibly header too
                 .program(randomBuffer(16 * 1024))
-                .video(randomBuffer(8 * 1024));
+                .video(randomBuffer(8 * 1024))
+                // TODO: and footer
     }
 
     static NesDataBuilder randomData(NesMetaBuilder metaBuilder) {

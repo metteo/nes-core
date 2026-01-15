@@ -114,7 +114,8 @@ public class NesFileReader extends NesFileHandler {
             throw new IllegalArgumentException("File is truncated. Expected " + expectedDataAmount + " bytes but got " + inputBufferSize);
         }
 
-        var remainingData = inputBuffer.slice(expectedDataAmount, inputBufferSize - expectedDataAmount); // TODO: verify
+        int remainingDataSize = inputBufferSize - expectedDataAmount;
+        var remainingData = inputBuffer.slice(expectedDataAmount, remainingDataSize);
 
         NesData data = new NesData(
                 headerBuffer.rewind(),
@@ -125,22 +126,13 @@ public class NesFileReader extends NesFileHandler {
                 remainingData
         );
 
-        // TODO: move to NesFooterWriter
-        byte[] titleBytes = new byte[remainingData.capacity()];
-        remainingData.get(titleBytes).rewind();
-        String title = new String(titleBytes, StandardCharsets.US_ASCII).trim();
-
-        if (!title.isEmpty()) {
-            meta = NesMeta.builder(meta)
-                    .title(title)
-                    .build();
-        }
+        var metaWithMaybeTitle = new NesFooterReader().read(remainingData, meta);
 
         var allProblems = new ArrayList<Problem>();
         allProblems.addAll(headerScanResult.problems());
         allProblems.addAll(headerResult.problems());
 
-        NesFile nesFile = new NesFile(origin, meta, data, NesHash.empty());
+        NesFile nesFile = new NesFile(origin, metaWithMaybeTitle, data, NesHash.empty());
         return new Result(nesFile, allProblems);
     }
 

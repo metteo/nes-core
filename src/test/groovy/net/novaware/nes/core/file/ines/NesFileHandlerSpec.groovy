@@ -21,11 +21,7 @@ class NesFileHandlerSpec extends Specification {
         // TODO: maybe should be part of the builder
         archaicBuilder.data()
                 .header(new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), archaicBuilder.meta().build()))
-                .footer(ByteBuffer.allocate(127)
-                        .order(ByteOrder.LITTLE_ENDIAN)
-                        .put("Mario Bros.".getBytes(StandardCharsets.US_ASCII)) // TODO: move to NesFooterWriter
-                        .rewind()
-                )
+                .footer(new NesFooterWriter().write("Mario Bros.", 127))
 
         NesFile archaicFile = archaicBuilder.build()
 
