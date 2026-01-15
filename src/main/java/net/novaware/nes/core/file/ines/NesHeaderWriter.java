@@ -30,20 +30,24 @@ public class NesHeaderWriter extends NesHeaderHandler {
         }
 
         if (version.compareTo(NesHeader.Version.ARCHAIC_iNES) > 0) {
-            NesHeader.Shared_iNES.putFlag7(header, meta, version);
+            NesHeader.Shared_iNES.putByte7(header, meta, version);
         }
 
         if (version == NesHeader.Version.MODERN_iNES) {
-            NesHeader.Modern_iNES.putProgramMemory(header, meta.programMemory());
+            NesHeader.Modern_iNES.putProgramMemory(header, meta.programMemory().size());
             NesHeader.Modern_iNES.putVideoStandard(header, meta.videoStandard());
         }
 
         if (version == NesHeader.Version.UNOFFICIAL_iNES) {
-            // TODO: flag10
+            NesHeader.Unofficial_iNES.Byte10 byte10 = new NesHeader.Unofficial_iNES.Byte10(
+                    meta.busConflicts(),
+                    meta.programMemory().kind() != NesMeta.Kind.NONE,
+                    meta.videoStandard());
+            NesHeader.Unofficial_iNES.putByte10(header, byte10);
         }
 
         if (version == NesHeader.Version.NES_2_0) {
-            // TODO: flag8 in nes 2.0
+            // TODO: flags in nes 2.0
         }
 
         // 10-15: Padding

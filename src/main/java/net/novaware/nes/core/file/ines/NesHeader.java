@@ -4,7 +4,6 @@ import net.novaware.nes.core.file.MagicNumber;
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.NesMeta.Layout;
-import net.novaware.nes.core.file.NesMeta.ProgramMemory;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
 
@@ -175,15 +174,15 @@ public class NesHeader {
 
         // endregion
 
-        public static ByteBuffer putFlag7(ByteBuffer header, NesMeta meta, Version version) {
-            return putFlag7(header, meta.system(), meta.mapper(), version);
+        public static ByteBuffer putByte7(ByteBuffer header, NesMeta meta, Version version) {
+            return putByte7(header, meta.system(), meta.mapper(), version);
         }
 
         // TODO: flag7 is system specific as it turns out,
         //  should be created from scratch for NES 2.0
         //  archaic nes doesn't support this
         //  nes 0.7 only mapper hi bits
-        public static ByteBuffer putFlag7(ByteBuffer header, NesMeta.System system, short mapper, Version version) {
+        public static ByteBuffer putByte7(ByteBuffer header, NesMeta.System system, short mapper, Version version) {
             assertState(header.position() == BYTE_7, "buffer not at position 7");
             // TODO: better assertions
 
@@ -217,48 +216,60 @@ public class NesHeader {
 
         // region Byte 8
 
+        public static final int  BYTE_8              = 8;
         public static final byte PROGRAM_MEMORY_SIZE = ubyte(0xFF);
 
         // endregion
         // region Byte 9
 
+        public static final int  BYTE_9               = 9;
         public static final byte BYTE_9_RESERVED_BITS = ubyte(0b1111_1110);
         public static final byte VIDEO_STANDARD_BITS  = ubyte(0b0000_0001);
 
         // endregion
 
-        /** flag8 */
-        public static ByteBuffer putProgramMemory(ByteBuffer header, ProgramMemory programMemory) {
+        public static ByteBuffer putProgramMemory(ByteBuffer header, Quantity programMemory) {
             assertState(header.position() == 8, "buffer not at position 8");
+            assertArgument(programMemory.unit() == BANK_8KB, "program memory size not in 8KB units");
+            assertArgument(programMemory.amount() <= uint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
 
-            final Quantity size = programMemory.size();
+            byte byte8 = ubyte(programMemory.amount());
 
-            switch (programMemory.kind()) {
-                case PERSISTENT:
-                case VOLATILE:
-                case UNKNOWN: // we don't know if volatile or persistent, but we know the size
-                    assertArgument(size.unit() == BANK_8KB, "program memory size not in 8KB units");
-                    assertArgument(size.amount() <= uint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
-                    break;
-                case NONE:
-                default:
-                    assertArgument(size.amount() == 0, "program memory size should be 0");
-                    break;
-            }
-
-            byte flag8 = ubyte(size.amount());
-
-            return header.put(flag8);
+            return header.put(byte8);
         }
 
-        /** flag9 */
+        public static Quantity getProgramMemory(ByteBuffer header) {
+            assertState(header.position() == BYTE_8, "buffer not at position 8");
+
+            int byte8 = uint(header.get());
+            // TODO: consider moving this up one level and report as problem to fix instead of defaulting to 1
+            int amount = Math.max(byte8, 1); // Value 0 infers 8 KB for compatibility
+
+            return new Quantity(amount, BANK_8KB);
+        }
+
         public static ByteBuffer putVideoStandard(ByteBuffer header, VideoStandard videoStandard) {
             assertState(header.position() == 9, "buffer not at position 9");
 
             // TODO: what about dual standard games?
-            byte flag9 = videoStandard == NesMeta.VideoStandard.PAL ? ubyte(1) : ubyte(0);
+            byte byte9 = videoStandard == VideoStandard.PAL ? ubyte(1) : ubyte(0);
 
-            return header.put(flag9);
+            return header.put(byte9);
+        }
+
+        public static VideoStandard getVideoStandard(ByteBuffer header) {
+            assertState(header.position() == BYTE_9, "buffer not at position 9");
+
+            int byte9 = uint(header.get());
+
+            int reservedBits = (byte9 & uint(BYTE_9_RESERVED_BITS)) >> 1;
+            VideoStandard videoStandard = (byte9 & uint(VIDEO_STANDARD_BITS)) == 1
+                    ? VideoStandard.PAL
+                    : VideoStandard.NTSC;
+
+            assertState(reservedBits == 0, "reserved bits not 0"); // TODO: maybe report as Problem?
+
+            return videoStandard;
         }
     }
 
@@ -266,10 +277,61 @@ public class NesHeader {
 
         // region Byte 10
 
+        public static final int  BYTE_10                    = 10;
         public static final byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
-        public static final byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0011_0000);
+        public static final byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
+        public static final byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
         public static final byte VIDEO_STANDARD_2_BITS      = ubyte(0b0000_0011);
 
+        public record Byte10(boolean busConflicts, boolean programMemoryPresent, VideoStandard videoStandard) {
+        }
+
+        public static ByteBuffer putByte10(ByteBuffer header, Byte10 byte10) {
+            assertState(header.position() == BYTE_10, "buffer not at position 10");
+
+            int busConflictsBit = byte10.busConflicts() ? uint(BUS_CONFLICTS_BIT) : 0;
+            int programMemoryPresentBit = byte10.programMemoryPresent() ? uint(PROGRAM_MEMORY_PRESENT_BIT) : 0;
+            int videoStandardBits = switch (byte10.videoStandard()) {
+                case NTSC -> 0;
+                case NTSC_HYBRID -> 1;
+                case PAL -> 2;
+                case PAL_HYBRID -> 3;
+                default -> {
+                    assertArgument(false, "Unsupported video standard for Unofficial_iNES byte 10: " + byte10.videoStandard());
+                    yield 0; // Should not be reached due to assertion
+                }
+            };
+
+            byte flag10 = ubyte(busConflictsBit | programMemoryPresentBit | videoStandardBits);
+
+            return header.put(flag10);
+        }
+
+        public static Byte10 getByte10(ByteBuffer header) {
+            assertState(header.position() == BYTE_10, "buffer not at position 10");
+
+            int byte10 = uint(header.get());
+
+            int reservedBits = (byte10 & uint(BYTE_10_RESERVED_BITS));
+            int busConflictsBit = (byte10 & uint(BUS_CONFLICTS_BIT)) >> 5;
+            int programMemoryPresentBit = (byte10 & uint(PROGRAM_MEMORY_PRESENT_BIT)) >> 4;
+            int videoStandardBits = byte10 & uint(VIDEO_STANDARD_2_BITS);
+
+            assertState(reservedBits == 0, "reserved bits not 0"); // TODO: maybe report as Problem?
+
+            NesMeta.VideoStandard videoStandard = switch (videoStandardBits) {
+                case 0 -> NesMeta.VideoStandard.NTSC;
+                case 1 -> NesMeta.VideoStandard.NTSC_HYBRID;
+                case 2 -> NesMeta.VideoStandard.PAL;
+                case 3 -> NesMeta.VideoStandard.PAL_HYBRID; // TODO: Dendy?
+                default -> NesMeta.VideoStandard.OTHER; // TODO: report a problem
+            };
+
+            boolean busConflicts = busConflictsBit == 1;
+            boolean programMemoryPresent = programMemoryPresentBit == 1; // TODO: default to true?
+
+            return new Byte10(busConflicts, programMemoryPresent, videoStandard);
+        }
         // endregion
     }
 
