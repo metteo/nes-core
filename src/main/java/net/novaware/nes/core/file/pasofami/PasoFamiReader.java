@@ -1,4 +1,4 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.pasofami;
 
 public class PasoFamiReader {
     // .chr - video data

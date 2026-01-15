@@ -1,6 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.file.NesFileReader.Problem;
+import net.novaware.nes.core.file.Problem;
 
 import java.util.List;
 

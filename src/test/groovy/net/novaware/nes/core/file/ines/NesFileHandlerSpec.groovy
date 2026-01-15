@@ -1,0 +1,7 @@
+package net.novaware.nes.core.file.ines
+
+import spock.lang.Specification
+
+class NesFileHandlerSpec extends Specification {
+    // TODO: move the reader / writer tests here. keep NesFileSpec for validation etc
+}

@@ -1,178 +1,95 @@
 package net.novaware.nes.core.file;
 
-import com.google.auto.value.AutoBuilder;
-import net.novaware.nes.core.util.Quantity;
+import java.net.URI;
 
-import java.nio.ByteBuffer;
+import static java.util.Objects.requireNonNull;
 
+/**
+ * There is some intended duplication in this record:
+ * <ul>
+ *     <li>
+ *         <code>meta</code> & <code>data.header</code> fields -
+ *         When reading a file header field is populated with an
+ *         original version of the header if available and then
+ *         parsed into meta section.
+ *         Later if the whole file needs to be saved the original
+ *         header will be used instead of parsed section to
+ *         preserve it.
+ *         It's possible original header when read was in old
+ *         version and user may want to upgrade it.
+ *         In such case a converter will use the meta section to
+ *         create new header and replace the old one in data section.
+ *         It's possible there is no header (.unh file). In such
+ *         case it's necessary to get meta info from external
+ *         source (xml, online) and possibly generate a header.
+ *     </li>
+ *     <li>
+ *         <code>meta.title</code> & <code>data.footer</code> -
+ *         When reading a file trailing section may contain the
+ *         title of the software. Such information is put in
+ *         title field but only the ASCII printable part.
+ *         The original trailing data is stored in data.footer
+ *         If there is no trailing data the title is derived from
+ *         the origin part (file name without the extension).
+ *         Later if the whole file needs to be saved, the original
+ *         footer will be used instead of parsed section.
+ *         The trailing data in the file is non-standard and
+ *         user may want to clear it out or on the other hand
+ *         add it based on the file name or other information.
+ *     </li>
+ *     <li>
+ *         sizes in meta and sizes of buffers in data sections -
+ *         the process of reading the files is executed in stages
+ *         First, the fixed size header is read and parsed.
+ *         This gives the information about the rest of data.
+ *         Different slicing points are calculated and added
+ *         in meta for later use.
+ *         Second, different sections of the file are sliced
+ *         into dedicated buffers and stored in data.
+ *         Third, hash values are calculated and stored in
+ *         hash section.
+ *
+ *         In case of headerless file:
+ *         First hash whole file and look up meta info about it
+ *         Second, slice out sections of the file
+ *         Third, hash data sections
+ *         Fourth, verify integrity against looked up info.
+ *
+ *         In case of generated file meta section acts as a
+ *         blueprint how random data section should be
+ *         generated. Hash section is calculated afterward.
+ *     </li>
+ * </ul>
+ *
+ * It's possible to have a file without data section.
+ * In such case it was initialized from offline / online metadata DB
+ * and can be used to identify unheadered files or to fill missing
+ * parts of existing files.
+ *
+ * @param origin location of the file (scheme decides if local or remote)
+ * @param meta information required to interpret the data
+ * @param data different parts of a NES software
+ * @param hash results used to identify the software
+ */
 public record NesFile (
-    String origin,
-    Meta meta,
-    // TODO: maybe and checksums / hash section so it's possible to lookup info in xml header db or online
-    Data data
+    URI origin,
+    NesMeta meta,
+    NesData data,
+    NesHash hash
 ) {
 
-    /**
-     * Metadata section usually read from NES ROM file.
-     *
-     * @param title of the game possibly found at the end of the file (127-128 bytes),
-     *              defaults to the file name without extension if not available
-     * @param info trailing section of the header if it contains ascii text (e.g. "DiskDude!")
-     *
-     * @param system specifies if the file is for regular NES or arcade variants
-     *
-     * @param mapper number
-     * @param busConflicts of the board
-     *
-     * @param programMemory additional memory for the CPU to use (also PRG-RAM / Work RAM / WRAM)
-     * @param programData instructions for the CPU to execute (also PRG-ROM / Program ROM)
-     *
-     * @param videoMemory amount of memory CPU can fill for the PPU (also CHR-RAM / Video RAM / VRAM)
-     * @param videoData graphics data for the PPU to render (also CHR-ROM / Character ROM)
-     * @param videoStandard determines the speed of CPU and color space
-     * @param mirroring specifies the arrangement of video data
-     */
-
-    public record Meta (
-        String title,
-        String info,
-
-        System system,
-
-        short mapper,
-        boolean busConflicts,
-
-        Quantity trainer,
-
-        ProgramMemory programMemory,
-        Quantity programData,
-
-        Quantity videoMemory, // TODO: what size in iNES
-        Quantity videoData,
-        VideoStandard videoStandard,
-        Mirroring mirroring,
-
-        Quantity remainder
+    public NesFile(
+        URI origin,
+        NesMeta meta,
+        NesData data,
+        NesHash hash
     ) {
+        this.origin = requireNonNull(origin, "origin must not be null");
+        this.meta = requireNonNull(meta, "meta must not be null");
+        this.data = requireNonNull(data, "data must not be null");
+        this.hash = requireNonNull(hash, "hash must not be null");
 
-        public static Builder builder() {
-            return new AutoBuilder_NesFile_Meta_Builder();
-        }
-
-        public static Builder builder(Meta meta) {
-            return new AutoBuilder_NesFile_Meta_Builder(meta);
-        }
-
-        @AutoBuilder
-        public interface Builder {
-            Builder title(String title);
-            Builder info(String info);
-
-            Builder system(System system);
-
-            Builder mapper(short mapper);
-            Builder busConflicts(boolean busConflicts);
-
-            Builder trainer(Quantity trainer);
-
-            Builder programMemory(ProgramMemory programMemory);
-            Builder programData(Quantity programData);
-            Builder videoMemory(Quantity videoMemory);
-            Builder videoData(Quantity videoData);
-            Builder videoStandard(VideoStandard videoStandard);
-            Builder mirroring(Mirroring mirroring);
-
-            Builder remainder(Quantity remainder);
-
-            Meta build();
-        }
-    }
-
-    /**
-     * NES File split into distinct data sections
-     *
-     * @param header optional original header read from iNES / NES 2.0 file
-     * @param trainer usually contains mapper register translation and video memory caching code
-     * @param program instructions for the CPU to execute (PRG-ROM / Program ROM)
-     * @param video graphics data for the PPU to render (CHR-ROM / Character ROM)
-     * @param remainder data after all specified sections in the file. May contain game title
-     */
-    public record Data (
-        ByteBuffer header,
-        ByteBuffer trainer,
-        ByteBuffer program,
-        ByteBuffer video,
-        ByteBuffer inst,
-        ByteBuffer prom,
-        ByteBuffer remainder
-    ) {
-
-        private static boolean hasData(ByteBuffer buffer) {
-            return buffer != null && buffer.capacity() > 0;
-        }
-
-        public boolean hasHeader() {
-            return hasData(header);
-        }
-
-        public boolean hasTrainer() {
-            return hasData(trainer);
-        }
-
-        public boolean hasVideo() {
-            return hasData(video);
-        }
-
-        public boolean hasRemainder() {
-            return hasData(remainder);
-        }
-    }
-
-    public enum Mirroring {
-        VERTICAL, // 0
-        HORIZONTAL, // 1
-        SINGLE_SCREEN,
-        FOUR_SCREEN
-    }
-
-    public record ProgramMemory(Kind kind, Quantity size) {
-    }
-
-    public enum Kind {
-        NONE,
-        UNKNOWN,
-        VOLATILE, // no battery
-        PERSISTENT // battery
-    }
-
-    public enum System {
-
-        /**
-         * <a href="https://www.mariowiki.com/Nintendo_Entertainment_System">Nintendo Entertainment System</a>
-         */
-        NES("Nintendo Entertainment System", false),
-
-        /**
-         * <a href="https://www.mariowiki.com/VS._System">VS.System</a>
-         */
-        VS_SYSTEM("VS.System", true),
-
-        /**
-         * <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
-         */
-        PLAY_CHOICE_10("Nintendo PlayChoice-10", true);
-
-        private String name;
-        private boolean arcade;
-
-        System(String name, boolean arcade) {
-            this.name = name;
-            this.arcade = arcade;
-        }
-    }
-
-    public enum VideoStandard {
-        NTSC, NTSC_HYBRID, PAL, PAL_HYBRID, DENDY, OTHER
+        // TODO: validate different section against each other, or not?
     }
 }
 
