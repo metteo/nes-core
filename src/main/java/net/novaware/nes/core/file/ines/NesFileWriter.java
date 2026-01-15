@@ -23,7 +23,7 @@ public class NesFileWriter extends NesFileHandler {
         NesMeta meta = nesFile.meta();
 
         // TODO: writer should use data.header instead. Converter will update / create header from Meta
-        ByteBuffer header = new NesHeaderWriter().write(version, meta);
+        ByteBuffer header = new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), meta);
 
         NesData data = nesFile.data();
 

@@ -12,6 +12,7 @@ module net.novaware.nes.core {
     opens net.novaware.nes.core.file.nesy;
     opens net.novaware.nes.core.file.pasofami;
     opens net.novaware.nes.core.file.unif;
+    opens net.novaware.nes.core.net;
     opens net.novaware.nes.core.util;
     */
 }

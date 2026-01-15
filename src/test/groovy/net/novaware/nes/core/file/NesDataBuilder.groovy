@@ -1,12 +1,13 @@
 package net.novaware.nes.core.file
 
-import net.novaware.nes.core.file.ines.NesFileHandler
+
 import net.novaware.nes.core.file.ines.NesHeader
 import net.novaware.nes.core.test.TestDataBuilder
 
 import java.nio.ByteBuffer
 
 import static java.nio.ByteBuffer.allocate
+import static java.nio.ByteOrder.LITTLE_ENDIAN
 
 class NesDataBuilder implements TestDataBuilder<NesData> {
 
@@ -22,12 +23,12 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
     // TODO: add methods that fake the data, possibly replacing NesFileFaker all together
     //       or one combo method that accepts Meta and takes sizing from it.
 
-    private static ByteBuffer emptyBuffer() { return allocate(0); }
+    private static ByteBuffer emptyBuffer() { return allocate(0).order(LITTLE_ENDIAN) }
 
     private static ByteBuffer randomBuffer(int size) {
         byte[] buffer = new byte[size];
         random.nextBytes(buffer); // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
-        return ByteBuffer.wrap(buffer);
+        return ByteBuffer.wrap(buffer).order(LITTLE_ENDIAN)
     }
 
     static NesDataBuilder emptyData() {
@@ -41,6 +42,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     static NesDataBuilder marioBros() {
         return emptyData()
+                // TODO: possibly header too
                 .program(randomBuffer(16 * 1024))
                 .video(randomBuffer(8 * 1024));
     }

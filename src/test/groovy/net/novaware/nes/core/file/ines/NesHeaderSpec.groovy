@@ -162,17 +162,16 @@ class NesHeaderSpec extends Specification {
 
         when:
         header.position(BYTE_8)
-        putProgramMemory(header, banks8kb(inAmount).build())
+        putProgramMemory(header, banks8kb(amount).build())
         header.position(BYTE_8)
         Quantity programMemory = getProgramMemory(header)
 
         then:
-        programMemory.amount() == outAmount
+        programMemory.amount() == amount
         programMemory.unit() == BANK_8KB
 
-        where:     // v- default to 8KB if 0
-        inAmount  << [0, 1, 2, 128, 255]
-        outAmount << [1, 1, 2, 128, 255]
+        where:
+        amount << [0, 1, 2, 128, 255]
     }
 
     def "should put and then get video standard" () {

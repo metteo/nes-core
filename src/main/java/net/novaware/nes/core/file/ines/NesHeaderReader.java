@@ -1,6 +1,7 @@
 package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
+import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.Quantity;
 
@@ -31,14 +32,33 @@ public class NesHeaderReader extends NesHeaderHandler {
         Quantity programData = NesHeader.Archaic_iNES.getProgramData(headerBuffer);
         Quantity videoDataSize = NesHeader.Archaic_iNES.getVideoData(headerBuffer);
         NesHeader.Archaic_iNES.Byte6 byte6 = NesHeader.Archaic_iNES.getByte6(headerBuffer);
-        NesHeader.Shared_iNES.Byte7 byte7 = NesHeader.Shared_iNES.getByte7(headerBuffer);
-        Quantity programMemorySize = NesHeader.Modern_iNES.getProgramMemory(headerBuffer);
-        NesMeta.VideoStandard videoStandard = NesHeader.Modern_iNES.getVideoStandard(headerBuffer);
-        NesHeader.Unofficial_iNES.Byte10 byte10 = NesHeader.Unofficial_iNES.getByte10(headerBuffer);
+
+        NesHeader.Shared_iNES.Byte7 byte7       = null;
+        Quantity programMemorySize              = null;
+        NesMeta.VideoStandard videoStandard     = null;
+        NesHeader.Unofficial_iNES.Byte10 byte10 = null;
+
+        String info = "";
+
+        if (version.compareTo(NesHeader.Version.ARCHAIC_iNES) > 0) { // TODO: if-else depending on version is very bad, improve
+            byte7       = NesHeader.Shared_iNES.getByte7(headerBuffer);
+            programMemorySize              = NesHeader.Modern_iNES.getProgramMemory(headerBuffer); // TODO: report as problem to fix instead of defaulting to 1
+            videoStandard     = NesHeader.Modern_iNES.getVideoStandard(headerBuffer);
+            byte10 = NesHeader.Unofficial_iNES.getByte10(headerBuffer);
+        } else {
+            byte7 = new NesHeader.Shared_iNES.Byte7((short) 0, (byte) 0, (byte) 0);
+            programMemorySize = new Quantity(0, Quantity.Unit.BANK_8KB);
+            videoStandard = NesMeta.VideoStandard.NTSC;
+            byte10 = new NesHeader.Unofficial_iNES.Byte10(false, false, NesMeta.VideoStandard.NTSC);
+
+            info = NesHeader.Archaic_iNES.getInfo(headerBuffer);
+        }
+
 
         byte[] padding = new byte[5]; // TODO: verify 0s for iNES
         headerBuffer.get(padding);
 
+        headerBuffer.rewind();
 
         int mapperHi = uint(byte7.mapperHi()); // TODO: ignore hi if Archaic iNES
         int mapperLo = uint(byte6.mapper());
@@ -46,12 +66,12 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         NesMeta meta = NesMeta.builder()
                 .title(Paths.get(origin).getFileName().toString()) // TODO: remove extension?
-                .info("") // TODO: read end of the header
+                .info(info)
                 .system(NesMeta.System.NES)
                 .mapper(mapper)
                 .busConflicts(byte10.busConflicts())
                 .trainer(byte6.trainer())
-                .programMemory(new NesMeta.ProgramMemory(byte6.kind(), programMemorySize))
+                .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : byte6.kind(), programMemorySize))
                 .programData(programData)
                 .videoMemory(new Quantity(videoDataSize.amount() == 0 ? 1 : 0, Quantity.Unit.BANK_8KB))
                 .videoData(new NesMeta.VideoData(byte6.layout(), videoDataSize))

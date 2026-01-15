@@ -1,44 +1,51 @@
 package net.novaware.nes.core.file
 
-import net.novaware.nes.core.test.TestDataBuilder;
+import net.novaware.nes.core.net.UriBuilder
+import net.novaware.nes.core.test.TestDataBuilder
 
 class NesFileBuilder implements TestDataBuilder<NesFile> {
 
-    public static final URI DEFAULT_ORIGIN = URI.create("file:///home/user/Mario_Bros.nes")
-
-    private URI origin = DEFAULT_ORIGIN
+    private UriBuilder origin = UriBuilder.marioBros()
     private NesMetaBuilder meta = NesMetaBuilder.marioBros()
     private NesDataBuilder data = NesDataBuilder.marioBros()
 
     static NesFileBuilder marioBros() {
-        return new NesFileBuilder();
+        return new NesFileBuilder()
     }
 
     static NesFileBuilder complexNesFile() {
         def meta = NesMetaBuilder.complexMeta()
         return new NesFileBuilder()
             .meta(meta)
-            .data(NesDataBuilder.randomData(meta));
+            .data(NesDataBuilder.randomData(meta))
     }
 
-    NesFileBuilder origin(URI origin) {
-        this.origin = origin;
-        return this;
+    NesFileBuilder origin(UriBuilder origin) {
+        this.origin = origin
+        return this
     }
 
     NesFileBuilder meta(NesMetaBuilder meta) {
-        this.meta = meta;
-        return this;
+        this.meta = meta
+        return this
+    }
+
+    NesMetaBuilder meta() {
+        return this.meta
     }
 
     NesFileBuilder data(NesDataBuilder data) {
-        this.data = data;
-        return this;
+        this.data = data
+        return this
+    }
+
+    NesDataBuilder data() {
+        return this.data
     }
 
     @Override
     NesFile build() {
         // TODO: calculate hash based on data
-        return new NesFile(origin, meta.build(), data.build(), NesHash.empty())
+        return new NesFile(origin.build(), meta.build(), data.build(), NesHash.empty())
     }
 }

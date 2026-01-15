@@ -8,6 +8,7 @@ import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Asserts.assertState;
@@ -156,9 +157,40 @@ public class NesHeader {
             );
         }
 
+        // region Byte 7-15 only archaic TODO: improve the info methods and test better
+
         public static ByteBuffer putInfo(ByteBuffer header, String info) {
+            assertArgument(info.length() < 10, "info too long to fit in the header");
+
+            final byte[] infoBytes = info.getBytes(StandardCharsets.US_ASCII);
+
+            for (int i = infoBytes.length - 1, j = header.capacity() - 1; i >= 0; i--, j--) {
+                header.put(j, infoBytes[i]);
+            }
+
             return header;
         }
+
+        public static String getInfo(ByteBuffer header) {
+            assertState(header.position() >= 7, "buffer not at position 7+");
+
+            byte[] infoBytes = new byte[NesHeader.SIZE - 7];
+
+            // NOTE: may arrive at some random printable character, doesn't mean it's an info text
+            for(int i = 0; i < infoBytes.length; i++) {
+                final byte b = header.get(i + 7);
+
+                if (32 <= b && b < 127) {
+                    infoBytes[i] = b;
+                } else {
+                    infoBytes[i] = ' '; // any nonprintable char into space
+                }
+            }
+
+            return new String(infoBytes, StandardCharsets.US_ASCII).trim();
+        }
+
+        // endregion
     }
 
     public static class Shared_iNES extends Archaic_iNES {
@@ -242,10 +274,8 @@ public class NesHeader {
             assertState(header.position() == BYTE_8, "buffer not at position 8");
 
             int byte8 = uint(header.get());
-            // TODO: consider moving this up one level and report as problem to fix instead of defaulting to 1
-            int amount = Math.max(byte8, 1); // Value 0 infers 8 KB for compatibility
 
-            return new Quantity(amount, BANK_8KB);
+            return new Quantity(byte8, BANK_8KB);
         }
 
         public static ByteBuffer putVideoStandard(ByteBuffer header, VideoStandard videoStandard) {

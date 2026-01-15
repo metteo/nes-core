@@ -5,6 +5,7 @@ import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.Hex;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,8 @@ public class NesHeaderScanner extends NesHeaderHandler {
         final MagicNumber magicNumber = detectMagicNumber(problems, headerBuffer);
         headerBuffer.position(BYTE_7);
         final NesHeader.Version version = detectVersion(headerBuffer);
+
+        headerBuffer.rewind();
 
         return new Result(magicNumber, version, problems);
     }
@@ -68,9 +71,10 @@ public class NesHeaderScanner extends NesHeaderHandler {
 
         byte[] bytes7to15 = new byte[9];
         header.get(7, bytes7to15);
-        String maybeDiskDude = new String(bytes7to15);
+        String maybeDiskDude = new String(bytes7to15, StandardCharsets.US_ASCII);
 
         if (maybeDiskDude.equals("DiskDude!") || versionBits == 0b01) { // full string or just part of D
+            // TODO: what about astra and other "vendors", maybe detect header trailing text in general
             return NesHeader.Version.ARCHAIC_iNES;
         }
 
