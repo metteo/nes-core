@@ -40,7 +40,7 @@ public record NesMeta(
 
         System system,
 
-        short mapper,
+        short mapper, // TODO: switch to int
         // byte subMapper, // TODO: uncomment when adding NES 2.0 parsing
         boolean busConflicts,
 

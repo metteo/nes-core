@@ -3,6 +3,7 @@ package net.novaware.nes.core.file
 
 import net.novaware.nes.core.file.ines.NesHeader
 import net.novaware.nes.core.test.TestDataBuilder
+import net.novaware.nes.core.util.UByteBuffer
 
 import java.nio.ByteBuffer
 
@@ -13,7 +14,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     private static Random random = new Random()
 
-    private ByteBuffer header;
+    private UByteBuffer header;
     private ByteBuffer trainer;
     private ByteBuffer program;
     private ByteBuffer video;
@@ -32,7 +33,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
     }
 
     static NesDataBuilder emptyData() {
-        return new NesDataBuilder().header(emptyBuffer())
+        return new NesDataBuilder().header(UByteBuffer.empty())
                 .trainer(emptyBuffer())
                 .program(emptyBuffer())
                 .video(emptyBuffer())
@@ -52,7 +53,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
         NesMeta meta = metaBuilder.build()
         boolean playChoice10 = meta.system() == NesMeta.System.PLAY_CHOICE_10
 
-        return new NesDataBuilder().header(allocate(NesHeader.SIZE))
+        return new NesDataBuilder().header(UByteBuffer.allocate(NesHeader.SIZE))
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
                 .video(randomBuffer(meta.videoData().size().toBytes()))
@@ -60,7 +61,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
                 .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
     }
 
-    NesDataBuilder header(ByteBuffer header) {
+    NesDataBuilder header(UByteBuffer header) {
         this.header = header;
         return this;
     }

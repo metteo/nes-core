@@ -3,8 +3,8 @@ package net.novaware.nes.core.file.ines;
 import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesHash;
-import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.Problem;
+import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 
 import java.io.BufferedInputStream;
@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class NesFileReader extends NesFileHandler {
         var inputBuffer = readInputStream(origin, inputStream);
 
         final var headerSize = NesHeader.SIZE;
-        var headerBuffer = inputBuffer.slice(0, headerSize);
+        var headerBuffer = UByteBuffer.of(inputBuffer.slice(0, headerSize));
 
         var headerScanner = new NesHeaderScanner();
         var headerScanResult = headerScanner.scan(headerBuffer);

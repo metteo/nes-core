@@ -4,6 +4,7 @@ import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.util.Quantity;
+import net.novaware.nes.core.util.UByteBuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,7 +24,7 @@ public class NesFileWriter extends NesFileHandler {
         NesMeta meta = nesFile.meta();
 
         // TODO: writer should use data.header instead. Converter will update / create header from Meta
-        ByteBuffer header = new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), meta);
+        UByteBuffer header = new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), meta);
 
         NesData data = nesFile.data();
 
@@ -39,7 +40,7 @@ public class NesFileWriter extends NesFileHandler {
         ByteBuffer out = ByteBuffer.allocate(totalSize);
         out.order(ByteOrder.LITTLE_ENDIAN);
 
-        putBuffer(out, header);
+        putBuffer(out, header.unwrap());
         putBuffer(out, data.trainer());
         putBuffer(out, data.program());
         putBuffer(out, data.video());

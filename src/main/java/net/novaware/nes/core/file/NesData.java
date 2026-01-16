@@ -1,6 +1,7 @@
 package net.novaware.nes.core.file;
 
 import com.google.auto.value.AutoBuilder;
+import net.novaware.nes.core.util.UByteBuffer;
 
 import java.nio.ByteBuffer;
 
@@ -15,7 +16,7 @@ import java.nio.ByteBuffer;
  * @param footer    data after all specified sections in the file. May contain game title
  */
 public record NesData(
-        ByteBuffer header, // NOTE: header type and version would be useful?
+        UByteBuffer header, // NOTE: header type and version would be useful?
         ByteBuffer trainer,
         ByteBuffer program,
         ByteBuffer video,
@@ -28,7 +29,7 @@ public record NesData(
     }
 
     public boolean hasHeader() {
-        return hasData(header);
+        return hasData(header.unwrap());
     }
 
     public boolean hasTrainer() {
@@ -53,7 +54,7 @@ public record NesData(
 
     @AutoBuilder
     public interface Builder {
-        Builder header(ByteBuffer header);
+        Builder header(UByteBuffer header);
 
         Builder trainer(ByteBuffer trainer);
 
@@ -70,7 +71,7 @@ public record NesData(
         }
 
         default Builder noHeader() {
-            return header(emptyBuffer());
+            return header(UByteBuffer.empty());
         }
 
         default Builder noTrainer() {

@@ -4,10 +4,11 @@ import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.Quantity;
+import net.novaware.nes.core.util.UByteBuffer;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.NonNull;
 
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class NesHeaderReader extends NesHeaderHandler {
     public record Result(NesMeta meta, List<Problem> problems) {
     }
 
-    public Result read(@NonNull URI origin, ByteBuffer headerBuffer, NesFileReader.Mode mode) {
+    public Result read(@NonNull URI origin, UByteBuffer headerBuffer, NesFileReader.Mode mode) {
         List<Problem> problems = new ArrayList<>();
 
         headerBuffer.position(4); // TODO: temporary, use indexed methods
@@ -57,7 +58,7 @@ public class NesHeaderReader extends NesHeaderHandler {
         }
 
 
-        byte[] padding = new byte[5]; // TODO: verify 0s for iNES
+        @Unsigned byte[] padding = new byte[5]; // TODO: verify 0s for iNES
         headerBuffer.get(padding);
 
         headerBuffer.rewind();

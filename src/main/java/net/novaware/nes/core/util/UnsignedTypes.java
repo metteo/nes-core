@@ -2,8 +2,6 @@ package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.nio.ByteBuffer;
-
 public class UnsignedTypes {
 
     public static final /*@Unsigned*/ short USHORT_0 = ushort(0x0000);
@@ -35,11 +33,5 @@ public class UnsignedTypes {
 
     public static /*@Unsigned*/ byte ubyte(short s) {
         return (byte) s;
-    }
-
-    // FIXME: temporary, create a UByteBuffer or something
-    @SuppressWarnings("signedness")
-    public static ByteBuffer ubytes(ByteBuffer buffer, int index, @Unsigned byte[] dst) {
-        return buffer.get(index, dst);
     }
 }

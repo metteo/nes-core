@@ -1,6 +1,9 @@
 package net.novaware.nes.core.file;
 
+import org.checkerframework.checker.signedness.qual.Unsigned;
+
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 public enum MagicNumber {
 
@@ -23,7 +26,7 @@ public enum MagicNumber {
         this.symbols = symbols;
     }
 
-    public byte[] numbers() {
+    public @Unsigned byte[] numbers() {
         return symbols.getBytes(US_ASCII);
     }
 
@@ -32,11 +35,11 @@ public enum MagicNumber {
      * @param bytes to match
      * @return percent of bytes that match (0-100%)
      */
-    public int matchesPartially(byte[] bytes) {
-        byte[] magicBytes = numbers();
+    public int matchesPartially(@Unsigned byte[] bytes) {
+        @Unsigned byte[] magicBytes = numbers();
         int matches = 0;
         for (int i = 0; i < Math.min(bytes.length, magicBytes.length); i++) {
-            if (bytes[i] == magicBytes[i]) {
+            if (uint(bytes[i]) == uint(magicBytes[i])) {
                 matches++;
             }
         }
@@ -44,7 +47,7 @@ public enum MagicNumber {
         return (int) ((double) matches / magicBytes.length * 100);
     }
 
-    public boolean matches(byte[] bytes) {
+    public boolean matches(@Unsigned byte[] bytes) {
         return matchesPartially(bytes) == 100;
     }
 }

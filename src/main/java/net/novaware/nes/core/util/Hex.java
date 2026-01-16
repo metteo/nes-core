@@ -1,5 +1,7 @@
 package net.novaware.nes.core.util;
 
+import org.checkerframework.checker.signedness.qual.Unsigned;
+
 import java.util.HexFormat;
 
 // XXX: Test utility, should be in test source root but jpms got in a way
@@ -15,7 +17,8 @@ public class Hex {
         return (byte) input;
     }
 
-    public static String s(byte[] input) {
+    @SuppressWarnings("signedness")
+    public static String s(@Unsigned byte[] input) {
         return hexFormat.formatHex(input);
     }
 

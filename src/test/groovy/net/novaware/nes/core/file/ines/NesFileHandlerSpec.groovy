@@ -5,8 +5,6 @@ import net.novaware.nes.core.file.NesFileBuilder
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.charset.StandardCharsets
 
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
 import static net.novaware.nes.core.file.ines.NesHeader.Version.ARCHAIC_iNES

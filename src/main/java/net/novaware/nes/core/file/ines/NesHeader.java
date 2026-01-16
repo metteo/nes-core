@@ -6,9 +6,9 @@ import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
+import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
@@ -18,8 +18,6 @@ import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
-import static org.checkerframework.checker.signedness.util.SignednessUtil.getUnsigned;
-import static org.checkerframework.checker.signedness.util.SignednessUtil.putUnsigned;
 
 /**
  * Bits, Bytes and Logical Ops off the header
@@ -48,22 +46,22 @@ public class NesHeader {
 
         // region Bytes 0-3
 
-        public static final int  BYTE_0 = 0;
+        public static final int BYTE_0 = 0;
         public static final MagicNumber MAGIC_NUMBER = MagicNumber.GAME_NES;
 
         // endregion
         // region Bytes 4-5
 
-        public static final int  BYTE_4 = 4;
+        public static final int BYTE_4 = 4;
         public static final @Unsigned byte PROGRAM_DATA_SIZE = ubyte(0xFF);
 
-        public static final int  BYTE_5 = 5;
+        public static final int BYTE_5 = 5;
         public static final @Unsigned byte VIDEO_DATA_SIZE   = ubyte(0xFF);
 
         // endregion
         // region Byte 6
 
-        public static final int  BYTE_6 = 6;
+        public static final int BYTE_6 = 6;
         public static final @Unsigned byte MAPPER_LO_BITS = ubyte(0b1111_0000);
         public static final @Unsigned byte LAYOUT_BITS    = ubyte(0b0000_1001);
         public static final @Unsigned byte TRAINER_BIT    = ubyte(0b0000_0100);
@@ -73,51 +71,51 @@ public class NesHeader {
 
         // endregion
 
-        public static ByteBuffer putMagic(ByteBuffer header) {
+        public static UByteBuffer putMagic(UByteBuffer header) {
             assertState(header.position() == 0, "buffer not at position 0");
 
             return header.put(MAGIC_NUMBER.numbers());
         }
 
-        public static byte[] getMagic(ByteBuffer headerBuffer) {
+        public static @Unsigned byte[] getMagic(UByteBuffer headerBuffer) {
             assertState(headerBuffer.position() == BYTE_0, "buffer not at position 0");
-            byte[] fourBytes = new byte[4];
+            @Unsigned byte[] fourBytes = new byte[4];
             headerBuffer.get(fourBytes);
 
             return fourBytes;
         }
 
-        public static ByteBuffer putProgramData(ByteBuffer header, Quantity programData) {
+        public static UByteBuffer putProgramData(UByteBuffer header, Quantity programData) {
             assertState(header.position() == BYTE_4, "buffer not at position 4");
             assertArgument(programData.unit() == BANK_16KB, "program data size not in 16KB units");
             assertArgument(programData.amount() <= uint(PROGRAM_DATA_SIZE), "program data size exceeded");
 
-            return putUnsigned(header, ubyte(programData.amount()));
+            return header.putAsByte(programData.amount());
         }
         
-        public static Quantity getProgramData(ByteBuffer header) {
+        public static Quantity getProgramData(UByteBuffer header) {
             assertState(header.position() == BYTE_4, "buffer not at position 4");
             
-            byte byte4 = getUnsigned(header);
-            return new Quantity(uint(byte4), BANK_16KB);
+            int byte4 = header.getAsInt();
+            return new Quantity(byte4, BANK_16KB);
         }
 
-        public static ByteBuffer putVideoData(ByteBuffer header, Quantity videoData) {
+        public static UByteBuffer putVideoData(UByteBuffer header, Quantity videoData) {
             assertState(header.position() == BYTE_5, "buffer not at position 5");
             assertArgument(videoData.unit() == BANK_8KB, "video data size not in 8KB units");
             assertArgument(videoData.amount() <= uint(VIDEO_DATA_SIZE), "video data size exceeded");
 
-            return putUnsigned(header, ubyte(videoData.amount()));
+            return header.putAsByte(videoData.amount());
         }
         
-        public static Quantity getVideoData(ByteBuffer header) {
+        public static Quantity getVideoData(UByteBuffer header) {
             assertState(header.position() == BYTE_5, "buffer not at position 5");
 
-            @Unsigned byte byte5 = getUnsigned(header);
-            return new Quantity(uint(byte5), BANK_8KB);
+            int byte5 = header.getAsInt();
+            return new Quantity(byte5, BANK_8KB);
         }
 
-        public static ByteBuffer putByte6(ByteBuffer header, NesMeta meta) {
+        public static UByteBuffer putByte6(UByteBuffer header, NesMeta meta) {
             return putByte6(header, new Byte6(
                     meta.mapper(),
                     meta.videoData().layout(),
@@ -126,7 +124,7 @@ public class NesHeader {
             ));
         }
 
-        public static ByteBuffer putByte6(ByteBuffer header, Byte6 meta) {
+        public static UByteBuffer putByte6(UByteBuffer header, Byte6 meta) {
             assertState(header.position() == BYTE_6, "buffer not at position 6");
 
             Quantity trainer = meta.trainer();
@@ -138,15 +136,15 @@ public class NesHeader {
             int trainerBit = meta.trainer().amount() == 1 ? uint(TRAINER_BIT) : 0;
             int batteryBit = meta.kind() == Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
 
-            byte flag6 = ubyte(mapperLoBits | layoutBits | trainerBit | batteryBit);
+            int flag6 = mapperLoBits | layoutBits | trainerBit | batteryBit;
 
-            return putUnsigned(header, flag6);
+            return header.putAsByte(flag6);
         }
 
-        static Byte6 getByte6(ByteBuffer header) {
+        static Byte6 getByte6(UByteBuffer header) {
             assertState(header.position() == BYTE_6, "buffer not at position 6");
 
-            int byte6 = uint(getUnsigned(header));
+            int byte6 = header.getAsInt();
             int mapperBits = (byte6 & uint(MAPPER_LO_BITS)) >> 4;
             int layoutBits = (byte6 & uint(LAYOUT_BITS));
             int trainerBit = (byte6 & uint(TRAINER_BIT)) >> 2;
@@ -162,10 +160,10 @@ public class NesHeader {
 
         // region Byte 7-15 only archaic TODO: improve the info methods and test better
 
-        public static ByteBuffer putInfo(ByteBuffer header, String info) {
+        public static UByteBuffer putInfo(UByteBuffer header, String info) {
             assertArgument(info.length() < 10, "info too long to fit in the header");
 
-            final byte[] infoBytes = info.getBytes(StandardCharsets.US_ASCII);
+            final @Unsigned byte[] infoBytes = info.getBytes(StandardCharsets.US_ASCII);
 
             for (int i = infoBytes.length - 1, j = header.capacity() - 1; i >= 0; i--, j--) {
                 header.put(j, infoBytes[i]);
@@ -174,17 +172,17 @@ public class NesHeader {
             return header;
         }
 
-        public static String getInfo(ByteBuffer header) {
+        public static String getInfo(UByteBuffer header) {
             assertState(header.position() >= 7, "buffer not at position 7+");
 
-            byte[] infoBytes = new byte[NesHeader.SIZE - 7];
+            @Unsigned byte[] infoBytes = new byte[NesHeader.SIZE - 7];
 
             // NOTE: may arrive at some random printable character, doesn't mean it's an info text
             for(int i = 0; i < infoBytes.length; i++) {
-                final byte b = header.get(i + 7);
+                final int b = header.getAsInt(i + 7);
 
                 if (32 <= b && b < 127) {
-                    infoBytes[i] = b;
+                    infoBytes[i] = ubyte(b);
                 } else {
                     infoBytes[i] = ' '; // any nonprintable char into space
                 }
@@ -209,7 +207,7 @@ public class NesHeader {
 
         // endregion
 
-        public static ByteBuffer putByte7(ByteBuffer header, NesMeta meta, Version version) {
+        public static UByteBuffer putByte7(UByteBuffer header, NesMeta meta, Version version) {
             return putByte7(header, meta.system(), meta.mapper(), version);
         }
 
@@ -217,7 +215,7 @@ public class NesHeader {
         //  should be created from scratch for NES 2.0
         //  archaic nes doesn't support this
         //  nes 0.7 only mapper hi bits
-        public static ByteBuffer putByte7(ByteBuffer header, NesMeta.System system, short mapper, Version version) {
+        public static UByteBuffer putByte7(UByteBuffer header, NesMeta.System system, short mapper, Version version) {
             assertState(header.position() == BYTE_7, "buffer not at position 7");
             // TODO: better assertions
 
@@ -225,15 +223,15 @@ public class NesHeader {
             int versionBits = 0;
             int mapperHiBits = uint(mapper) & 0xF0;
 
-            @Unsigned byte flags7 = ubyte(mapperHiBits | versionBits | systemBits);
+            int flags7 = mapperHiBits | versionBits | systemBits;
 
-            return putUnsigned(header, flags7);
+            return header.putAsByte(flags7);
         }
 
-        public static Byte7 getByte7(ByteBuffer header) {
+        public static Byte7 getByte7(UByteBuffer header) {
             assertState(header.position() == BYTE_7, "buffer not at position 7");
 
-            int byte7 = uint(getUnsigned(header));
+            int byte7 = header.getAsInt();
 
             int mapperHiBits = (byte7 & uint(MAPPER_HI_BITS));
             int versionBits = (byte7 & uint(VERSION_BITS)) >> 2;
@@ -251,49 +249,49 @@ public class NesHeader {
 
         // region Byte 8
 
-        public static final int  BYTE_8              = 8;
+        public static final int BYTE_8 = 8;
         public static final @Unsigned byte PROGRAM_MEMORY_SIZE = ubyte(0xFF);
 
         // endregion
         // region Byte 9
 
-        public static final int  BYTE_9               = 9;
+        public static final int BYTE_9 = 9;
         public static final @Unsigned byte BYTE_9_RESERVED_BITS = ubyte(0b1111_1110);
         public static final @Unsigned byte VIDEO_STANDARD_BITS  = ubyte(0b0000_0001);
 
         // endregion
 
-        public static ByteBuffer putProgramMemory(ByteBuffer header, Quantity programMemory) {
+        public static UByteBuffer putProgramMemory(UByteBuffer header, Quantity programMemory) {
             assertState(header.position() == 8, "buffer not at position 8");
             assertArgument(programMemory.unit() == BANK_8KB, "program memory size not in 8KB units");
             assertArgument(programMemory.amount() <= uint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
 
-            @Unsigned byte byte8 = ubyte(programMemory.amount());
+            int byte8 = programMemory.amount();
 
-            return putUnsigned(header, byte8);
+            return header.putAsByte(byte8);
         }
 
-        public static Quantity getProgramMemory(ByteBuffer header) {
+        public static Quantity getProgramMemory(UByteBuffer header) {
             assertState(header.position() == BYTE_8, "buffer not at position 8");
 
-            int byte8 = uint(getUnsigned(header));
+            int byte8 = header.getAsInt();
 
             return new Quantity(byte8, BANK_8KB);
         }
 
-        public static ByteBuffer putVideoStandard(ByteBuffer header, VideoStandard videoStandard) {
+        public static UByteBuffer putVideoStandard(UByteBuffer header, VideoStandard videoStandard) {
             assertState(header.position() == 9, "buffer not at position 9");
 
             // TODO: what about dual standard games?
-            byte byte9 = videoStandard == VideoStandard.PAL ? ubyte(1) : ubyte(0);
+            int byte9 = videoStandard == VideoStandard.PAL ? 1 : 0;
 
-            return putUnsigned(header, byte9);
+            return header.putAsByte(byte9);
         }
 
-        public static VideoStandard getVideoStandard(ByteBuffer header) {
+        public static VideoStandard getVideoStandard(UByteBuffer header) {
             assertState(header.position() == BYTE_9, "buffer not at position 9");
 
-            int byte9 = uint(getUnsigned(header));
+            int byte9 = header.getAsInt();
 
             int reservedBits = (byte9 & uint(BYTE_9_RESERVED_BITS)) >> 1;
             VideoStandard videoStandard = (byte9 & uint(VIDEO_STANDARD_BITS)) == 1
@@ -310,7 +308,7 @@ public class NesHeader {
 
         // region Byte 10
 
-        public static final int  BYTE_10                    = 10;
+        public static final int BYTE_10 = 10;
         public static final @Unsigned byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
         public static final @Unsigned byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
         public static final @Unsigned byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
@@ -319,7 +317,7 @@ public class NesHeader {
         public record Byte10(boolean busConflicts, boolean programMemoryPresent, VideoStandard videoStandard) {
         }
 
-        public static ByteBuffer putByte10(ByteBuffer header, Byte10 byte10) {
+        public static UByteBuffer putByte10(UByteBuffer header, Byte10 byte10) {
             assertState(header.position() == BYTE_10, "buffer not at position 10");
 
             int busConflictsBit = byte10.busConflicts() ? uint(BUS_CONFLICTS_BIT) : 0;
@@ -335,15 +333,15 @@ public class NesHeader {
                 }
             };
 
-            @Unsigned byte flag10 = ubyte(busConflictsBit | programMemoryPresentBit | videoStandardBits);
+            int flag10 = busConflictsBit | programMemoryPresentBit | videoStandardBits;
 
-            return putUnsigned(header, flag10);
+            return header.putAsByte(flag10);
         }
 
-        public static Byte10 getByte10(ByteBuffer header) {
+        public static Byte10 getByte10(UByteBuffer header) {
             assertState(header.position() == BYTE_10, "buffer not at position 10");
 
-            int byte10 = uint(getUnsigned(header));
+            int byte10 = header.getAsInt();
 
             int reservedBits = (byte10 & uint(BYTE_10_RESERVED_BITS));
             int busConflictsBit = (byte10 & uint(BUS_CONFLICTS_BIT)) >> 5;

@@ -2,9 +2,9 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.ines.NesHeader.Version;
+import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static java.util.Objects.requireNonNull;
@@ -22,10 +22,10 @@ public class NesHeaderWriter extends NesHeaderHandler {
             this.includeInfo = includeInfo;
         }
     }
-    public @NonNull ByteBuffer write(Params params, NesMeta meta) {
+    public @NonNull UByteBuffer write(Params params, NesMeta meta) {
         // TODO: validate inputs
 
-        ByteBuffer header = ByteBuffer.allocate(SIZE);
+        UByteBuffer header = UByteBuffer.allocate(SIZE);
         header.order(ByteOrder.LITTLE_ENDIAN);
 
         NesHeader.Archaic_iNES.putMagic(header);

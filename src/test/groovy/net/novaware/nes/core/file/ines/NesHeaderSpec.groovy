@@ -2,9 +2,8 @@ package net.novaware.nes.core.file.ines
 
 import net.novaware.nes.core.file.NesMeta
 import net.novaware.nes.core.util.Quantity
+import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
-
-import java.nio.ByteBuffer
 
 import static net.novaware.nes.core.file.NesMeta.Kind.PERSISTENT
 import static net.novaware.nes.core.file.NesMeta.Kind.VOLATILE
@@ -71,7 +70,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get program data size" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         when:
         header.position(BYTE_4)
@@ -89,7 +88,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get video data size" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         when:
         header.position(BYTE_5)
@@ -107,7 +106,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get byte 6"() {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         Byte6 expected = new Byte6(
                 (short) mapper,
@@ -135,7 +134,7 @@ class NesHeaderSpec extends Specification {
     
     def "should put and then get byte 7" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         when:
         header.position(BYTE_7)
@@ -158,7 +157,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get program memory size" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         when:
         header.position(BYTE_8)
@@ -176,7 +175,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get video standard" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         when:
         header.position(BYTE_9)
@@ -193,7 +192,7 @@ class NesHeaderSpec extends Specification {
 
     def "should put and then get unofficial byte10" () {
         given:
-        ByteBuffer header = headerBuffer()
+        def header = headerBuffer()
 
         Byte10 expected = new Byte10(busConflicts, programMemoryPresent, videoStandard)
 
@@ -217,6 +216,6 @@ class NesHeaderSpec extends Specification {
     }
 
     static def headerBuffer() {
-        ByteBuffer.allocate(NesHeader.SIZE)
+        UByteBuffer.allocate(NesHeader.SIZE)
     }
 }
