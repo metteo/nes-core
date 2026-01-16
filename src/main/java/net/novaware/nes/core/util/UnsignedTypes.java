@@ -4,13 +4,13 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 public class UnsignedTypes {
 
-    public static final /*@Unsigned*/ short USHORT_0 = ushort(0x0000);
+    public static final @Unsigned short USHORT_0 = ushort(0x0000);
     public static final @Unsigned byte UBYTE_0 = ubyte(0x00);
 
-    public static final /*@Unsigned*/ short USHORT_MAX_VALUE = ushort(0xFFFF);
+    public static final @Unsigned short USHORT_MAX_VALUE = ushort(0xFFFF);
     public static final @Unsigned byte UBYTE_MAX_VALUE = ubyte(0xFF);
 
-    public static /*@Unsigned*/ int uint(short s) {
+    public static int uint(@Unsigned short s) {
         return s & 0xFFFF;
     }
 
@@ -18,11 +18,12 @@ public class UnsignedTypes {
         return b & 0xFF;
     }
 
-    public static /*@Unsigned*/ short ushort(int i) {
+    @SuppressWarnings("signedness")
+    public static @Unsigned short ushort(int i) {
         return (short) i;
     }
 
-    public static /*@Unsigned*/ short ushort(byte b) {
+    public static @Unsigned short ushort(@Unsigned byte b) {
         return (short) (b & 0xFF);
     }
 
@@ -31,7 +32,8 @@ public class UnsignedTypes {
         return (byte) i;
     }
 
-    public static /*@Unsigned*/ byte ubyte(short s) {
+    @SuppressWarnings("signedness")
+    public static @Unsigned byte ubyte(short s) {
         return (byte) s;
     }
 }

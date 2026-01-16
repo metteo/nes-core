@@ -13,6 +13,7 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <gmaven-plus.version>4.2.1</gmaven-plus.version>
         <groovy.version>4.0.29</groovy.version>
@@ -28,6 +29,10 @@
         <auto-value.version>1.11.0</auto-value.version>
         <checker.version>3.53.0</checker.version>
         <maven-compiler.version>3.13.0</maven-compiler.version>
+
+        <jpms.name>net.novaware.nes.core</jpms.name>
+        <jpms.opens>--add-opens ${jpms.name}/${jpms.name}</jpms.opens>
+        <argLine/>
     </properties>
 
 
@@ -44,25 +49,20 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
+        <dependency> <!-- universal nullness annotations -->
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
             <version>${jspecify.version}</version>
         </dependency>
 
-        <!-- Annotations from the Checker Framework: nullness, interning, locking, ... -->
-        <dependency>
+
+        <dependency> <!-- Annotations from the Checker Framework: nullness, signedness, ... -->
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
             <version>${checker.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>checker-util</artifactId>
-            <version>${checker.version}</version>
-        </dependency>
 
-        <dependency>
+        <dependency> <!-- auto builder for records -->
             <groupId>com.google.auto.value</groupId>
             <artifactId>auto-value-annotations</artifactId>
             <version>${auto-value.version}</version>
@@ -133,6 +133,15 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId> <!-- see also checker profile -->
                 <configuration>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>-Xmaxerrs</arg><arg>10000</arg>
+                        <arg>-Xmaxwarns</arg><arg>10000</arg>
+
+                        <arg>-Xpkginfo:always</arg><!-- prevents recompile -->
+                        <arg>-g:lines,vars,source</arg>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>com.google.auto.value</groupId>
@@ -175,7 +184,39 @@
                         <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
                         <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
                     </statelessTestsetReporter>
+                    <!-- NOTE: required for running single test classes / methods in IJ  -->
+                    <!-- causes: WARNING: Unknown module: net.novaware.nes.core specified to - -add-opens -->
+                    <argLine>
+                        @{argLine}
+                        ${jpms.opens}=ALL-UNNAMED
+                        ${jpms.opens}.cpu=ALL-UNNAMED
+                        ${jpms.opens}.cpu.instruction=ALL-UNNAMED
+                        ${jpms.opens}.file=ALL-UNNAMED
+                        ${jpms.opens}.file.ines=ALL-UNNAMED
+                        ${jpms.opens}.file.nesy=ALL-UNNAMED
+                        ${jpms.opens}.file.pasofami=ALL-UNNAMED
+                        ${jpms.opens}.file.unif=ALL-UNNAMED
+                        ${jpms.opens}.net=ALL-UNNAMED
+                        ${jpms.opens}.util=ALL-UNNAMED
+                    </argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.gaul</groupId>
+                <artifactId>modernizer-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <javaVersion>25</javaVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>modernizer</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>modernizer</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -223,13 +264,15 @@
                                 <annotationProcessor>org.checkerframework.checker.index.IndexChecker</annotationProcessor>
                             </annotationProcessors>
                             <compilerArgs>
-                                <arg>-Xmaxerrs</arg>
-                                <arg>10000</arg>
-                                <arg>-Xmaxwarns</arg>
-                                <arg>10000</arg>
+                                <arg>-Xmaxerrs</arg><arg>10000</arg>
+                                <arg>-Xmaxwarns</arg><arg>10000</arg>
                                 <!-- <arg>-Awarns</arg> --> <!-- -Awarns turns type-checking errors into warnings. -->
 
                                 <arg>-AskipDefs=\.AutoBuilder*</arg> <!-- generated by auto value -->
+
+                                <arg>-Xpkginfo:always</arg><!-- prevents recompile -->
+                                <arg>-g:lines,vars,source</arg>
+                                <arg>-parameters</arg>
                             </compilerArgs>
                         </configuration>
                     </plugin>

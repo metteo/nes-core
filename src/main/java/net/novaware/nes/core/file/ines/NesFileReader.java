@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,8 +56,8 @@ public class NesFileReader extends NesFileHandler {
         assertArgument(mode != null, "mode must be provided");
 
         try (
-            InputStream inputStream = Files.newInputStream(Paths.get(origin));
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
+                InputStream inputStream = Files.newInputStream(Path.of(origin));
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
         ) {
             return read(origin, bufferedInputStream, mode);
         } catch (IOException e) {

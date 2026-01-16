@@ -7,8 +7,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
 
-// TODO: add trunction checks? e.g. if putting int as byte
+import static net.novaware.nes.core.util.Asserts.assertArgument;
+
 public class UByteBuffer {
+
+    private static final boolean ASSERT = true;
 
     private final ByteBuffer buffer;
 
@@ -83,6 +86,8 @@ public class UByteBuffer {
 
     @SuppressWarnings("signedness")
     public UByteBuffer putAsByte(int i) {
+        if (ASSERT) { assertArgument(0 <= i && i < 256, "i must fit into ubyte"); }
+
         put((byte) i);
         return this;
     }

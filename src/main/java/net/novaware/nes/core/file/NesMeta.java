@@ -2,6 +2,7 @@ package net.novaware.nes.core.file;
 
 import com.google.auto.value.AutoBuilder;
 import net.novaware.nes.core.util.Quantity;
+import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
@@ -40,7 +41,7 @@ public record NesMeta(
 
         System system,
 
-        short mapper, // TODO: switch to int
+        @Signed short mapper, // TODO: switch to int
         // byte subMapper, // TODO: uncomment when adding NES 2.0 parsing
         boolean busConflicts,
 

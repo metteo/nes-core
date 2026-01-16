@@ -10,11 +10,8 @@ import org.jspecify.annotations.NonNull;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 public class NesHeaderReader extends NesHeaderHandler {
 
@@ -63,8 +60,8 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         headerBuffer.rewind();
 
-        int mapperHi = uint(byte7.mapperHi()); // TODO: ignore hi if Archaic iNES
-        int mapperLo = uint(byte6.mapper());
+        int mapperHi = byte7.mapperHi(); // TODO: ignore hi if Archaic iNES
+        int mapperLo = byte6.mapper();
         short mapper = (short) (mapperHi | mapperLo);
 
         NesMeta meta = NesMeta.builder()
@@ -86,7 +83,7 @@ public class NesHeaderReader extends NesHeaderHandler {
     }
 
     private @NonNull String toTitle(@NonNull URI origin) {
-        Path fileName = Paths.get(origin).getFileName();
+        Path fileName = Path.of(origin).getFileName();
 
         return fileName != null ? fileName.toString() : "";
     }

@@ -7,6 +7,7 @@ import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
+import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.charset.StandardCharsets;
@@ -67,7 +68,7 @@ public class NesHeader {
         public static final @Unsigned byte TRAINER_BIT    = ubyte(0b0000_0100);
         public static final @Unsigned byte BATTERY_BIT    = ubyte(0b0000_0010);
 
-        public record Byte6(short mapper, Layout layout, Quantity trainer, Kind kind){}
+        public record Byte6(@Signed short mapper, Layout layout, Quantity trainer, Kind kind){}
 
         // endregion
 
@@ -131,7 +132,7 @@ public class NesHeader {
             assertArgument(trainer.unit() == BANK_512B, "trainer size not in 512KB units");
             assertArgument(trainer.amount() <= 1, "trainer size exceeded");
 
-            int mapperLoBits = (uint(meta.mapper()) & 0x0F) << 4;
+            int mapperLoBits = (meta.mapper() & 0x0F) << 4;
             int layoutBits = meta.layout().bits();
             int trainerBit = meta.trainer().amount() == 1 ? uint(TRAINER_BIT) : 0;
             int batteryBit = meta.kind() == Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
@@ -221,7 +222,7 @@ public class NesHeader {
 
             int systemBits = system.bits();
             int versionBits = 0;
-            int mapperHiBits = uint(mapper) & 0xF0;
+            int mapperHiBits = mapper & 0xF0;
 
             int flags7 = mapperHiBits | versionBits | systemBits;
 
