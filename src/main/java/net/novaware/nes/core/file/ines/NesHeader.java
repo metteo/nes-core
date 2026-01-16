@@ -6,6 +6,7 @@ import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,8 @@ import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static org.checkerframework.checker.signedness.util.SignednessUtil.getUnsigned;
+import static org.checkerframework.checker.signedness.util.SignednessUtil.putUnsigned;
 
 /**
  * Bits, Bytes and Logical Ops off the header
@@ -52,19 +55,19 @@ public class NesHeader {
         // region Bytes 4-5
 
         public static final int  BYTE_4 = 4;
-        public static final byte PROGRAM_DATA_SIZE = ubyte(0xFF);
+        public static final @Unsigned byte PROGRAM_DATA_SIZE = ubyte(0xFF);
 
         public static final int  BYTE_5 = 5;
-        public static final byte VIDEO_DATA_SIZE   = ubyte(0xFF);
+        public static final @Unsigned byte VIDEO_DATA_SIZE   = ubyte(0xFF);
 
         // endregion
         // region Byte 6
 
         public static final int  BYTE_6 = 6;
-        public static final byte MAPPER_LO_BITS = ubyte(0b1111_0000);
-        public static final byte LAYOUT_BITS    = ubyte(0b0000_1001);
-        public static final byte TRAINER_BIT    = ubyte(0b0000_0100);
-        public static final byte BATTERY_BIT    = ubyte(0b0000_0010);
+        public static final @Unsigned byte MAPPER_LO_BITS = ubyte(0b1111_0000);
+        public static final @Unsigned byte LAYOUT_BITS    = ubyte(0b0000_1001);
+        public static final @Unsigned byte TRAINER_BIT    = ubyte(0b0000_0100);
+        public static final @Unsigned byte BATTERY_BIT    = ubyte(0b0000_0010);
 
         public record Byte6(short mapper, Layout layout, Quantity trainer, Kind kind){}
 
@@ -89,13 +92,13 @@ public class NesHeader {
             assertArgument(programData.unit() == BANK_16KB, "program data size not in 16KB units");
             assertArgument(programData.amount() <= uint(PROGRAM_DATA_SIZE), "program data size exceeded");
 
-            return header.put(ubyte(programData.amount()));
+            return putUnsigned(header, ubyte(programData.amount()));
         }
         
         public static Quantity getProgramData(ByteBuffer header) {
             assertState(header.position() == BYTE_4, "buffer not at position 4");
             
-            byte byte4 = header.get();
+            byte byte4 = getUnsigned(header);
             return new Quantity(uint(byte4), BANK_16KB);
         }
 
@@ -104,13 +107,13 @@ public class NesHeader {
             assertArgument(videoData.unit() == BANK_8KB, "video data size not in 8KB units");
             assertArgument(videoData.amount() <= uint(VIDEO_DATA_SIZE), "video data size exceeded");
 
-            return header.put(ubyte(videoData.amount()));
+            return putUnsigned(header, ubyte(videoData.amount()));
         }
         
         public static Quantity getVideoData(ByteBuffer header) {
             assertState(header.position() == BYTE_5, "buffer not at position 5");
 
-            byte byte5 = header.get();
+            @Unsigned byte byte5 = getUnsigned(header);
             return new Quantity(uint(byte5), BANK_8KB);
         }
 
@@ -137,13 +140,13 @@ public class NesHeader {
 
             byte flag6 = ubyte(mapperLoBits | layoutBits | trainerBit | batteryBit);
 
-            return header.put(flag6);
+            return putUnsigned(header, flag6);
         }
 
         static Byte6 getByte6(ByteBuffer header) {
             assertState(header.position() == BYTE_6, "buffer not at position 6");
 
-            int byte6 = uint(header.get());
+            int byte6 = uint(getUnsigned(header));
             int mapperBits = (byte6 & uint(MAPPER_LO_BITS)) >> 4;
             int layoutBits = (byte6 & uint(LAYOUT_BITS));
             int trainerBit = (byte6 & uint(TRAINER_BIT)) >> 2;
@@ -197,12 +200,12 @@ public class NesHeader {
 
         // region Byte 7
 
-        public static final int  BYTE_7           = 7;
-        public static final byte MAPPER_HI_BITS   = ubyte(0b1111_0000);
-        public static final byte VERSION_BITS     = ubyte(0b0000_1100);
-        public static final byte SYSTEM_TYPE_BITS = ubyte(0b0000_0011);
+        public static final int  BYTE_7 = 7;
+        public static final @Unsigned byte MAPPER_HI_BITS   = ubyte(0b1111_0000);
+        public static final @Unsigned byte VERSION_BITS     = ubyte(0b0000_1100);
+        public static final @Unsigned byte SYSTEM_TYPE_BITS = ubyte(0b0000_0011);
 
-        public record Byte7(short mapperHi, byte versionBits, byte systemTypeBits) {}
+        public record Byte7(short mapperHi, @Unsigned byte versionBits, @Unsigned byte systemTypeBits) {}
 
         // endregion
 
@@ -222,15 +225,15 @@ public class NesHeader {
             int versionBits = 0;
             int mapperHiBits = uint(mapper) & 0xF0;
 
-            byte flags7 = ubyte(mapperHiBits | versionBits | systemBits);
+            @Unsigned byte flags7 = ubyte(mapperHiBits | versionBits | systemBits);
 
-            return header.put(flags7);
+            return putUnsigned(header, flags7);
         }
 
         public static Byte7 getByte7(ByteBuffer header) {
             assertState(header.position() == BYTE_7, "buffer not at position 7");
 
-            int byte7 = uint(header.get());
+            int byte7 = uint(getUnsigned(header));
 
             int mapperHiBits = (byte7 & uint(MAPPER_HI_BITS));
             int versionBits = (byte7 & uint(VERSION_BITS)) >> 2;
@@ -249,14 +252,14 @@ public class NesHeader {
         // region Byte 8
 
         public static final int  BYTE_8              = 8;
-        public static final byte PROGRAM_MEMORY_SIZE = ubyte(0xFF);
+        public static final @Unsigned byte PROGRAM_MEMORY_SIZE = ubyte(0xFF);
 
         // endregion
         // region Byte 9
 
         public static final int  BYTE_9               = 9;
-        public static final byte BYTE_9_RESERVED_BITS = ubyte(0b1111_1110);
-        public static final byte VIDEO_STANDARD_BITS  = ubyte(0b0000_0001);
+        public static final @Unsigned byte BYTE_9_RESERVED_BITS = ubyte(0b1111_1110);
+        public static final @Unsigned byte VIDEO_STANDARD_BITS  = ubyte(0b0000_0001);
 
         // endregion
 
@@ -265,15 +268,15 @@ public class NesHeader {
             assertArgument(programMemory.unit() == BANK_8KB, "program memory size not in 8KB units");
             assertArgument(programMemory.amount() <= uint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
 
-            byte byte8 = ubyte(programMemory.amount());
+            @Unsigned byte byte8 = ubyte(programMemory.amount());
 
-            return header.put(byte8);
+            return putUnsigned(header, byte8);
         }
 
         public static Quantity getProgramMemory(ByteBuffer header) {
             assertState(header.position() == BYTE_8, "buffer not at position 8");
 
-            int byte8 = uint(header.get());
+            int byte8 = uint(getUnsigned(header));
 
             return new Quantity(byte8, BANK_8KB);
         }
@@ -284,13 +287,13 @@ public class NesHeader {
             // TODO: what about dual standard games?
             byte byte9 = videoStandard == VideoStandard.PAL ? ubyte(1) : ubyte(0);
 
-            return header.put(byte9);
+            return putUnsigned(header, byte9);
         }
 
         public static VideoStandard getVideoStandard(ByteBuffer header) {
             assertState(header.position() == BYTE_9, "buffer not at position 9");
 
-            int byte9 = uint(header.get());
+            int byte9 = uint(getUnsigned(header));
 
             int reservedBits = (byte9 & uint(BYTE_9_RESERVED_BITS)) >> 1;
             VideoStandard videoStandard = (byte9 & uint(VIDEO_STANDARD_BITS)) == 1
@@ -308,10 +311,10 @@ public class NesHeader {
         // region Byte 10
 
         public static final int  BYTE_10                    = 10;
-        public static final byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
-        public static final byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
-        public static final byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
-        public static final byte VIDEO_STANDARD_2_BITS      = ubyte(0b0000_0011);
+        public static final @Unsigned byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
+        public static final @Unsigned byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
+        public static final @Unsigned byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
+        public static final @Unsigned byte VIDEO_STANDARD_2_BITS      = ubyte(0b0000_0011);
 
         public record Byte10(boolean busConflicts, boolean programMemoryPresent, VideoStandard videoStandard) {
         }
@@ -332,15 +335,15 @@ public class NesHeader {
                 }
             };
 
-            byte flag10 = ubyte(busConflictsBit | programMemoryPresentBit | videoStandardBits);
+            @Unsigned byte flag10 = ubyte(busConflictsBit | programMemoryPresentBit | videoStandardBits);
 
-            return header.put(flag10);
+            return putUnsigned(header, flag10);
         }
 
         public static Byte10 getByte10(ByteBuffer header) {
             assertState(header.position() == BYTE_10, "buffer not at position 10");
 
-            int byte10 = uint(header.get());
+            int byte10 = uint(getUnsigned(header));
 
             int reservedBits = (byte10 & uint(BYTE_10_RESERVED_BITS));
             int busConflictsBit = (byte10 & uint(BUS_CONFLICTS_BIT)) >> 5;
@@ -369,56 +372,56 @@ public class NesHeader {
 
         // region Byte 8
 
-        public static final byte MAPPER_MSB_BITS  = ubyte(0b0000_1111);
-        public static final byte SUB_MAPPER_BITS  = ubyte(0b1111_0000);
+        public static final @Unsigned byte MAPPER_MSB_BITS  = ubyte(0b0000_1111);
+        public static final @Unsigned byte SUB_MAPPER_BITS  = ubyte(0b1111_0000);
 
         // endregion
         // region Byte 9
 
-        public static final byte VIDEO_DATA_SIZE_MSB_BITS   = ubyte(0b1111_0000);
-        public static final byte PROGRAM_DATA_SIZE_MSB_BITS = ubyte(0b0000_1111);
+        public static final @Unsigned byte VIDEO_DATA_SIZE_MSB_BITS   = ubyte(0b1111_0000);
+        public static final @Unsigned byte PROGRAM_DATA_SIZE_MSB_BITS = ubyte(0b0000_1111);
 
         // endregion
         // region Byte 10
 
-        public static final byte PROGRAM_STORAGE_SIZE_SHIFT_BITS  = ubyte(0b1111_0000);
-        public static final byte PROGRAM_MEMORY_SIZE_SHIFT_BITS   = ubyte(0b0000_1111);
+        public static final @Unsigned byte PROGRAM_STORAGE_SIZE_SHIFT_BITS  = ubyte(0b1111_0000);
+        public static final @Unsigned byte PROGRAM_MEMORY_SIZE_SHIFT_BITS   = ubyte(0b0000_1111);
 
         // endregion
         // region Byte 11
 
-        public static final byte VIDEO_STORAGE_SIZE_SHIFT_BITS  = ubyte(0b1111_0000);
-        public static final byte VIDEO_MEMORY_SIZE_SHIFT_BITS   = ubyte(0b0000_1111);
+        public static final @Unsigned byte VIDEO_STORAGE_SIZE_SHIFT_BITS  = ubyte(0b1111_0000);
+        public static final @Unsigned byte VIDEO_MEMORY_SIZE_SHIFT_BITS   = ubyte(0b0000_1111);
 
         // endregion
         // region Byte 12
 
-        public static final byte BYTE_12_RESERVED_BITS = ubyte(0b1111_1100);
-        public static final byte VIDEO_STANDARD_BITS   = ubyte(0b0000_0011);
+        public static final @Unsigned byte BYTE_12_RESERVED_BITS = ubyte(0b1111_1100);
+        public static final @Unsigned byte VIDEO_STANDARD_BITS   = ubyte(0b0000_0011);
 
         // endregion
         // region Byte 13A VS.System details
 
-        public static final byte VS_SYSTEM_SUBTYPE_BITS = ubyte(0b1111_0000);
-        public static final byte VS_SYSTEM_VIDEO_BITS   = ubyte(0b0000_1111);
+        public static final @Unsigned byte VS_SYSTEM_SUBTYPE_BITS = ubyte(0b1111_0000);
+        public static final @Unsigned byte VS_SYSTEM_VIDEO_BITS   = ubyte(0b0000_1111);
 
         // endregion
         // region Byte 13B Ext. Console details
 
-        public static final byte BYTE_13B_RESERVED_BITS   = ubyte(0b1111_0000);
-        public static final byte EXT_CONSOLE_SUBTYPE_BITS = ubyte(0b0000_1111);
+        public static final @Unsigned byte BYTE_13B_RESERVED_BITS   = ubyte(0b1111_0000);
+        public static final @Unsigned byte EXT_CONSOLE_SUBTYPE_BITS = ubyte(0b0000_1111);
 
         // endregion
         // region Byte 14
 
-        public static final byte BYTE_14_RESERVED_BITS = ubyte(0b1111_1100);
-        public static final byte MISC_ROMS_BITS        = ubyte(0b0000_0011);
+        public static final @Unsigned byte BYTE_14_RESERVED_BITS = ubyte(0b1111_1100);
+        public static final @Unsigned byte MISC_ROMS_BITS        = ubyte(0b0000_0011);
 
         // endregion
         // region Byte 15
 
-        public static final byte BYTE_15_RESERVED_BITS         = ubyte(0b1100_0000);
-        public static final byte DEFAULT_EXPANSION_DEVICE_BITS = ubyte(0b0011_1111);
+        public static final @Unsigned byte BYTE_15_RESERVED_BITS         = ubyte(0b1100_0000);
+        public static final @Unsigned byte DEFAULT_EXPANSION_DEVICE_BITS = ubyte(0b0011_1111);
 
         // endregion
     }

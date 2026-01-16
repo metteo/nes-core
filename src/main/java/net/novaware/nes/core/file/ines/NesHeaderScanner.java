@@ -2,7 +2,9 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.MagicNumber;
 import net.novaware.nes.core.file.Problem;
+import net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.Byte7;
 import net.novaware.nes.core.util.Hex;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +16,7 @@ import static net.novaware.nes.core.file.Problem.Severity.MINOR;
 import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.getMagic;
 import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
 import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.getByte7;
+import static net.novaware.nes.core.util.UnsignedTypes.ubytes;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 /**
@@ -56,10 +59,11 @@ public class NesHeaderScanner extends NesHeaderHandler {
     }
 
     /* package */ NesHeader.Version detectVersion(ByteBuffer header) {
-        int versionBits = getByte7(header).versionBits();
+        Byte7 byte7 = getByte7(header);
+        int versionBits = uint(byte7.versionBits());
 
-        byte[] bytes12to15 = new byte[4];
-        header.get(12, bytes12to15);
+        @Unsigned byte[] bytes12to15 = new byte[4];
+        ubytes(header, 12, bytes12to15);
 
         if (versionBits == 0b10) { // TODO: & size taking into account byte 9 does not exceed the actual size of the ROM image
             return NesHeader.Version.NES_2_0;
@@ -81,8 +85,8 @@ public class NesHeaderScanner extends NesHeaderHandler {
         return NesHeader.Version.NES_0_7;
     }
 
-    private boolean allZeros(byte[] bytes) {
-        for (byte b : bytes) {
+    private boolean allZeros(@Unsigned byte[] bytes) {
+        for (@Unsigned byte b : bytes) {
             if (uint(b) != 0) { return false; }
         }
 

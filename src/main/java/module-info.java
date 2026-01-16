@@ -1,6 +1,10 @@
 module net.novaware.nes.core {
-    requires org.jspecify;
     requires auto.value.annotations;
+    requires java.compiler; // @j.a.p.Generated
+
+    requires org.jspecify;
+    requires org.checkerframework.checker.qual;
+    requires org.checkerframework.checker.util;
 
     // FIXME: uncomment for local IJ testing or use cp based launch configurations (for single tests)
     /*

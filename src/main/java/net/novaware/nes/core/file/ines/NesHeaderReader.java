@@ -4,9 +4,11 @@ import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.NesMeta.Kind;
 import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.Quantity;
+import org.jspecify.annotations.NonNull;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ public class NesHeaderReader extends NesHeaderHandler {
     public record Result(NesMeta meta, List<Problem> problems) {
     }
 
-    public Result read(URI origin, ByteBuffer headerBuffer, NesFileReader.Mode mode) {
+    public Result read(@NonNull URI origin, ByteBuffer headerBuffer, NesFileReader.Mode mode) {
         List<Problem> problems = new ArrayList<>();
 
         headerBuffer.position(4); // TODO: temporary, use indexed methods
@@ -65,7 +67,7 @@ public class NesHeaderReader extends NesHeaderHandler {
         short mapper = (short) (mapperHi | mapperLo);
 
         NesMeta meta = NesMeta.builder()
-                .title(Paths.get(origin).getFileName().toString()) // TODO: remove extension?
+                .title(toTitle(origin)) // TODO: remove extension?
                 .info(info)
                 .system(NesMeta.System.NES)
                 .mapper(mapper)
@@ -80,5 +82,11 @@ public class NesHeaderReader extends NesHeaderHandler {
                 .build();
 
         return new Result(meta, problems);
+    }
+
+    private @NonNull String toTitle(@NonNull URI origin) {
+        Path fileName = Paths.get(origin).getFileName();
+
+        return fileName != null ? fileName.toString() : "";
     }
 }
