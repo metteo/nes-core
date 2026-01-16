@@ -4,6 +4,7 @@ import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesHash;
 import net.novaware.nes.core.file.Problem;
+import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 
 import java.io.BufferedInputStream;
@@ -12,7 +13,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +56,8 @@ public class NesFileReader extends NesFileHandler {
         assertArgument(mode != null, "mode must be provided");
 
         try (
-            InputStream inputStream = Files.newInputStream(Paths.get(origin));
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
+                InputStream inputStream = Files.newInputStream(Path.of(origin));
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)
         ) {
             return read(origin, bufferedInputStream, mode);
         } catch (IOException e) {
@@ -79,7 +80,7 @@ public class NesFileReader extends NesFileHandler {
         var inputBuffer = readInputStream(origin, inputStream);
 
         final var headerSize = NesHeader.SIZE;
-        var headerBuffer = inputBuffer.slice(0, headerSize);
+        var headerBuffer = UByteBuffer.of(inputBuffer.slice(0, headerSize));
 
         var headerScanner = new NesHeaderScanner();
         var headerScanResult = headerScanner.scan(headerBuffer);
@@ -112,7 +113,8 @@ public class NesFileReader extends NesFileHandler {
             throw new IllegalArgumentException("File is truncated. Expected " + expectedDataAmount + " bytes but got " + inputBufferSize);
         }
 
-        var remainingData = inputBuffer.slice(expectedDataAmount, inputBufferSize - expectedDataAmount); // TODO: verify
+        int remainingDataSize = inputBufferSize - expectedDataAmount;
+        var remainingData = inputBuffer.slice(expectedDataAmount, remainingDataSize);
 
         NesData data = new NesData(
                 headerBuffer.rewind(),
@@ -123,11 +125,13 @@ public class NesFileReader extends NesFileHandler {
                 remainingData
         );
 
+        var metaWithMaybeTitle = new NesFooterReader().read(remainingData, meta);
+
         var allProblems = new ArrayList<Problem>();
         allProblems.addAll(headerScanResult.problems());
         allProblems.addAll(headerResult.problems());
 
-        NesFile nesFile = new NesFile(origin, meta, data, NesHash.empty());
+        NesFile nesFile = new NesFile(origin, metaWithMaybeTitle, data, NesHash.empty());
         return new Result(nesFile, allProblems);
     }
 

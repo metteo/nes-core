@@ -5,6 +5,7 @@ import net.novaware.nes.core.file.NesFile
 import net.novaware.nes.core.file.NesHash
 import net.novaware.nes.core.file.NesMeta
 import net.novaware.nes.core.util.Quantity
+import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
@@ -85,7 +86,7 @@ class NesFileWriterSpec extends Specification {
             .build()
 
         def data = new NesData(
-            ByteBuffer.allocate(0),
+            UByteBuffer.empty(),
             ByteBuffer.allocate(0),
             ByteBuffer.allocate(3 * 16384),
             ByteBuffer.allocate(2 * 8192),
@@ -143,7 +144,7 @@ class NesFileWriterSpec extends Specification {
                 .build()
 
         def data = new NesData(
-                ByteBuffer.allocate(0),
+                UByteBuffer.empty(),
                 ByteBuffer.allocate(0),
                 ByteBuffer.allocate(3 * 16384),
                 ByteBuffer.allocate(2 * 8192),

@@ -46,7 +46,7 @@ class NesMetaBuilder implements TestDataBuilder<NesMeta> {
                 .videoMemory(banks8kb(0))
                 .videoData(VideoDataBuilder.vertical(1))
                 .videoStandard(VideoStandard.NTSC)
-                .footer(bytes(0))
+                .footer(bytes(127))
     }
 
     static NesMetaBuilder complexMeta() {

@@ -2,6 +2,8 @@ package net.novaware.nes.core.file;
 
 import com.google.auto.value.AutoBuilder;
 import net.novaware.nes.core.util.Quantity;
+import org.checkerframework.checker.signedness.qual.Signed;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
@@ -39,7 +41,7 @@ public record NesMeta(
 
         System system,
 
-        short mapper,
+        @Signed short mapper, // TODO: switch to int
         // byte subMapper, // TODO: uncomment when adding NES 2.0 parsing
         boolean busConflicts,
 
@@ -148,7 +150,7 @@ public record NesMeta(
         public static final int BITS_MASK           = 0b1001;
 
         private final Mirroring mirroring;
-        private final byte bits;
+        private final @Unsigned byte bits;
 
         @SuppressWarnings("unused")
         Layout(Mirroring mirroring, int bits) {
@@ -207,7 +209,7 @@ public record NesMeta(
         public static final int BITS_MASK = 0b11;
 
         private final String displayName;
-        private final byte bits;
+        private final @Unsigned byte bits;
 
         System(String displayName, int bits) {
             this.displayName = displayName;

@@ -2,9 +2,12 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.MagicNumber;
 import net.novaware.nes.core.file.Problem;
+import net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.Byte7;
 import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.util.UByteBuffer;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,18 +31,20 @@ public class NesHeaderScanner extends NesHeaderHandler {
     ) {
     }
 
-    public Result scan(ByteBuffer headerBuffer) {
+    public Result scan(UByteBuffer headerBuffer) {
         final List<Problem> problems = new ArrayList<>();
         final MagicNumber magicNumber = detectMagicNumber(problems, headerBuffer);
         headerBuffer.position(BYTE_7);
         final NesHeader.Version version = detectVersion(headerBuffer);
 
+        headerBuffer.rewind();
+
         return new Result(magicNumber, version, problems);
     }
 
     // TODO: Go through all magic numbers and select the one with highest match percentage
-    /* package */ MagicNumber detectMagicNumber(List<Problem> problems, ByteBuffer headerBuffer) {
-        byte[] fourBytes = getMagic(headerBuffer);
+    /* package */ MagicNumber detectMagicNumber(List<Problem> problems, UByteBuffer headerBuffer) {
+        @Unsigned byte[] fourBytes = getMagic(headerBuffer);
 
         int matchPercent = NesHeader.Archaic_iNES.MAGIC_NUMBER.matchesPartially(fourBytes);
         assert matchPercent >= 0 && matchPercent <= 100 : "wrap percentage in a record"; // TODO: do it
@@ -52,10 +57,11 @@ public class NesHeaderScanner extends NesHeaderHandler {
         return MagicNumber.GAME_NES;
     }
 
-    /* package */ NesHeader.Version detectVersion(ByteBuffer header) {
-        int versionBits = getByte7(header).versionBits();
+    /* package */ NesHeader.Version detectVersion(UByteBuffer header) {
+        Byte7 byte7 = getByte7(header);
+        int versionBits = uint(byte7.versionBits());
 
-        byte[] bytes12to15 = new byte[4];
+        @Unsigned byte[] bytes12to15 = new byte[4];
         header.get(12, bytes12to15);
 
         if (versionBits == 0b10) { // TODO: & size taking into account byte 9 does not exceed the actual size of the ROM image
@@ -66,19 +72,20 @@ public class NesHeaderScanner extends NesHeaderHandler {
             return NesHeader.Version.MODERN_iNES;
         }
 
-        byte[] bytes7to15 = new byte[9];
+        @Unsigned byte[] bytes7to15 = new byte[9];
         header.get(7, bytes7to15);
-        String maybeDiskDude = new String(bytes7to15);
+        String maybeDiskDude = new String(bytes7to15, StandardCharsets.US_ASCII);
 
         if (maybeDiskDude.equals("DiskDude!") || versionBits == 0b01) { // full string or just part of D
+            // TODO: what about astra and other "vendors", maybe detect header trailing text in general
             return NesHeader.Version.ARCHAIC_iNES;
         }
 
         return NesHeader.Version.NES_0_7;
     }
 
-    private boolean allZeros(byte[] bytes) {
-        for (byte b : bytes) {
+    private boolean allZeros(@Unsigned byte[] bytes) {
+        for (@Unsigned byte b : bytes) {
             if (uint(b) != 0) { return false; }
         }
 

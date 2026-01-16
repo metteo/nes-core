@@ -157,7 +157,7 @@ public enum InstructionGroup {
         instances().stream()
                 .sorted(comparing(InstructionGroup::mnemonic))
                 .map(InstructionGroup::toMnemonicWithDescription)
-                .forEach(System.out::println);
+                .forEach(s -> System.out.println(s)); // NOTE: lambda will cause checker "Incompatible receiver type"
     }
 
     private static String toMnemonicWithDescription(InstructionGroup ig) {

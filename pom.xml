@@ -13,6 +13,7 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <gmaven-plus.version>4.2.1</gmaven-plus.version>
         <groovy.version>4.0.29</groovy.version>
@@ -26,6 +27,12 @@
         <units.version>2.2.3</units.version>
         <jspecify.version>1.0.0</jspecify.version>
         <auto-value.version>1.11.0</auto-value.version>
+        <checker.version>3.53.0</checker.version>
+        <maven-compiler.version>3.13.0</maven-compiler.version>
+
+        <jpms.name>net.novaware.nes.core</jpms.name>
+        <jpms.opens>--add-opens ${jpms.name}/${jpms.name}</jpms.opens>
+        <argLine/>
     </properties>
 
 
@@ -42,13 +49,20 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
+        <dependency> <!-- universal nullness annotations -->
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
             <version>${jspecify.version}</version>
         </dependency>
 
-        <dependency>
+
+        <dependency> <!-- Annotations from the Checker Framework: nullness, signedness, ... -->
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <version>${checker.version}</version>
+        </dependency>
+
+        <dependency> <!-- auto builder for records -->
             <groupId>com.google.auto.value</groupId>
             <artifactId>auto-value-annotations</artifactId>
             <version>${auto-value.version}</version>
@@ -117,8 +131,17 @@
             </plugin>
 
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
+                <artifactId>maven-compiler-plugin</artifactId> <!-- see also checker profile -->
                 <configuration>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>-Xmaxerrs</arg><arg>10000</arg>
+                        <arg>-Xmaxwarns</arg><arg>10000</arg>
+
+                        <arg>-Xpkginfo:always</arg><!-- prevents recompile -->
+                        <arg>-g:lines,vars,source</arg>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>com.google.auto.value</groupId>
@@ -161,9 +184,130 @@
                         <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
                         <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
                     </statelessTestsetReporter>
+                    <!-- NOTE: required for running single test classes / methods in IJ  -->
+                    <!-- causes: WARNING: Unknown module: net.novaware.nes.core specified to - -add-opens -->
+                    <argLine>
+                        @{argLine}
+                        ${jpms.opens}=ALL-UNNAMED
+                        ${jpms.opens}.cpu=ALL-UNNAMED
+                        ${jpms.opens}.cpu.instruction=ALL-UNNAMED
+                        ${jpms.opens}.file=ALL-UNNAMED
+                        ${jpms.opens}.file.ines=ALL-UNNAMED
+                        ${jpms.opens}.file.nesy=ALL-UNNAMED
+                        ${jpms.opens}.file.pasofami=ALL-UNNAMED
+                        ${jpms.opens}.file.unif=ALL-UNNAMED
+                        ${jpms.opens}.net=ALL-UNNAMED
+                        ${jpms.opens}.util=ALL-UNNAMED
+                    </argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.gaul</groupId>
+                <artifactId>modernizer-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <javaVersion>25</javaVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>modernizer</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>modernizer</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
+
+
+    <profiles>
+        <profile>
+            <id>checker</id>
+            <!-- If you omit the activation block, run mvn with "-P checker" to run checkers. -->
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${maven-compiler.version}</version>
+                        <configuration>
+                            <fork>true</fork> <!-- Must fork or else JVM arguments are ignored. -->
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>com.google.auto.value</groupId>
+                                    <artifactId>auto-value</artifactId>
+                                    <version>${auto-value.version}</version>
+                                </path>
+                                <path>
+                                    <groupId>org.checkerframework</groupId>
+                                    <artifactId>checker</artifactId>
+                                    <version>${checker.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                            <annotationProcessors>
+                                <annotationProcessor>com.google.auto.value.processor.AutoBuilderProcessor</annotationProcessor>
+
+                                <!-- Add all the checkers you want to enable here -->
+                                <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.optional.OptionalChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.calledmethods.CalledMethodsChecker</annotationProcessor>
+<!--                            <annotationProcessor>org.checkerframework.checker.lock.LockChecker</annotationProcessor> -->
+                                <annotationProcessor>org.checkerframework.checker.fenum.FenumChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.formatter.FormatterChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.signedness.SignednessChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.index.IndexChecker</annotationProcessor>
+                            </annotationProcessors>
+                            <compilerArgs>
+                                <arg>-Xmaxerrs</arg><arg>10000</arg>
+                                <arg>-Xmaxwarns</arg><arg>10000</arg>
+                                <!-- <arg>-Awarns</arg> --> <!-- -Awarns turns type-checking errors into warnings. -->
+
+                                <arg>-AskipDefs=\.AutoBuilder*</arg> <!-- generated by auto value -->
+
+                                <arg>-Xpkginfo:always</arg><!-- prevents recompile -->
+                                <arg>-g:lines,vars,source</arg>
+                                <arg>-parameters</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>checker-jdk9+</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <compilerArgs combine.children="append">
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

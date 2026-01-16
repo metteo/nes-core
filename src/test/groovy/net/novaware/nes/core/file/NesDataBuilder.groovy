@@ -1,18 +1,20 @@
 package net.novaware.nes.core.file
 
-import net.novaware.nes.core.file.ines.NesFileHandler
+
 import net.novaware.nes.core.file.ines.NesHeader
 import net.novaware.nes.core.test.TestDataBuilder
+import net.novaware.nes.core.util.UByteBuffer
 
 import java.nio.ByteBuffer
 
 import static java.nio.ByteBuffer.allocate
+import static java.nio.ByteOrder.LITTLE_ENDIAN
 
 class NesDataBuilder implements TestDataBuilder<NesData> {
 
     private static Random random = new Random()
 
-    private ByteBuffer header;
+    private UByteBuffer header;
     private ByteBuffer trainer;
     private ByteBuffer program;
     private ByteBuffer video;
@@ -22,16 +24,16 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
     // TODO: add methods that fake the data, possibly replacing NesFileFaker all together
     //       or one combo method that accepts Meta and takes sizing from it.
 
-    private static ByteBuffer emptyBuffer() { return allocate(0); }
+    private static ByteBuffer emptyBuffer() { return allocate(0).order(LITTLE_ENDIAN) }
 
     private static ByteBuffer randomBuffer(int size) {
         byte[] buffer = new byte[size];
         random.nextBytes(buffer); // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
-        return ByteBuffer.wrap(buffer);
+        return ByteBuffer.wrap(buffer).order(LITTLE_ENDIAN)
     }
 
     static NesDataBuilder emptyData() {
-        return new NesDataBuilder().header(emptyBuffer())
+        return new NesDataBuilder().header(UByteBuffer.empty())
                 .trainer(emptyBuffer())
                 .program(emptyBuffer())
                 .video(emptyBuffer())
@@ -41,15 +43,17 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     static NesDataBuilder marioBros() {
         return emptyData()
+                // TODO: possibly header too
                 .program(randomBuffer(16 * 1024))
-                .video(randomBuffer(8 * 1024));
+                .video(randomBuffer(8 * 1024))
+                // TODO: and footer
     }
 
     static NesDataBuilder randomData(NesMetaBuilder metaBuilder) {
         NesMeta meta = metaBuilder.build()
         boolean playChoice10 = meta.system() == NesMeta.System.PLAY_CHOICE_10
 
-        return new NesDataBuilder().header(allocate(NesHeader.SIZE))
+        return new NesDataBuilder().header(UByteBuffer.allocate(NesHeader.SIZE))
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
                 .video(randomBuffer(meta.videoData().size().toBytes()))
@@ -57,7 +61,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
                 .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
     }
 
-    NesDataBuilder header(ByteBuffer header) {
+    NesDataBuilder header(UByteBuffer header) {
         this.header = header;
         return this;
     }
