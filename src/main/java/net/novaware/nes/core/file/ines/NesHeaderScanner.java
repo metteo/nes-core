@@ -2,7 +2,6 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.MagicNumber;
 import net.novaware.nes.core.file.Problem;
-import net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.Byte7;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -14,8 +13,7 @@ import java.util.List;
 import static net.novaware.nes.core.file.Problem.Severity.MAJOR;
 import static net.novaware.nes.core.file.Problem.Severity.MINOR;
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMagic;
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.getByte7;
+import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.getVersion;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
 /**
@@ -34,7 +32,6 @@ public class NesHeaderScanner extends NesHeaderHandler {
     public Result scan(UByteBuffer headerBuffer) {
         final List<Problem> problems = new ArrayList<>();
         final MagicNumber magicNumber = detectMagicNumber(problems, headerBuffer);
-        headerBuffer.position(BYTE_7);
         final NesHeader.Version version = detectVersion(headerBuffer);
 
         headerBuffer.rewind();
@@ -58,8 +55,7 @@ public class NesHeaderScanner extends NesHeaderHandler {
     }
 
     /* package */ NesHeader.Version detectVersion(UByteBuffer header) {
-        Byte7 byte7 = getByte7(header);
-        int versionBits = uint(byte7.versionBits());
+        int versionBits = getVersion(header);
 
         @Unsigned byte[] bytes12to15 = new byte[4];
         header.get(12, bytes12to15);

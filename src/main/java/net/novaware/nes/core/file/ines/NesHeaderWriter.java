@@ -8,8 +8,8 @@ import org.jspecify.annotations.NonNull;
 import java.nio.ByteOrder;
 
 import static java.util.Objects.requireNonNull;
+import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.BYTE_8;
 import static net.novaware.nes.core.file.ines.NesHeader.SIZE;
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
 
 public class NesHeaderWriter extends NesHeaderHandler {
 
@@ -30,6 +30,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
         header.order(ByteOrder.LITTLE_ENDIAN);
 
         ArchaicHeaderBuffer archaicHeader = new ArchaicHeaderBuffer(header);
+        ModernHeaderBuffer modernHeader = new ModernHeaderBuffer(header);
 
         archaicHeader.putMagic()
                 .putProgramData(meta.programData())
@@ -49,13 +50,14 @@ public class NesHeaderWriter extends NesHeaderHandler {
             // TODO: iNES 0.7 with mapper hi only on 7th
         }
 
-        header.position(BYTE_7); // TODO: temporary until all is buffer
-
         if (version.compareTo(Version.ARCHAIC_iNES) > 0) {
-            NesHeader.Shared_iNES.putByte7(header, meta, version);
+            modernHeader.putSystem(meta.system())
+                    .putVersion(0b00)
+                    .putMapper(meta.mapper());
         }
 
         if (version == Version.MODERN_iNES) {
+            header.position(BYTE_8); // TODO: temporary until all is buffer
             NesHeader.Modern_iNES.putProgramMemory(header, meta.programMemory().size());
             NesHeader.Modern_iNES.putVideoStandard(header, meta.videoStandard());
         }

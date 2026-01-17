@@ -35,58 +35,7 @@ public class NesHeader {
         NES_2_0
     }
 
-    public static class Shared_iNES {
-
-        // region Byte 7
-
-        public static final int  BYTE_7 = 7;
-        public static final @Unsigned byte MAPPER_HI_BITS   = ubyte(0b1111_0000);
-        public static final @Unsigned byte VERSION_BITS     = ubyte(0b0000_1100);
-        public static final @Unsigned byte SYSTEM_TYPE_BITS = ubyte(0b0000_0011);
-
-        public record Byte7(short mapperHi, @Unsigned byte versionBits, @Unsigned byte systemTypeBits) {}
-
-        // endregion
-
-        public static UByteBuffer putByte7(UByteBuffer header, NesMeta meta, Version version) {
-            return putByte7(header, meta.system(), meta.mapper(), version);
-        }
-
-        // TODO: flag7 is system specific as it turns out,
-        //  should be created from scratch for NES 2.0
-        //  archaic nes doesn't support this
-        //  nes 0.7 only mapper hi bits
-        public static UByteBuffer putByte7(UByteBuffer header, NesMeta.System system, short mapper, Version version) {
-            assertState(header.position() == BYTE_7, "buffer not at position 7");
-            // TODO: better assertions
-
-            int systemBits = system.bits();
-            int versionBits = 0;
-            int mapperHiBits = mapper & 0xF0;
-
-            int flags7 = mapperHiBits | versionBits | systemBits;
-
-            return header.putAsByte(flags7);
-        }
-
-        public static Byte7 getByte7(UByteBuffer header) {
-            assertState(header.position() == BYTE_7, "buffer not at position 7");
-
-            int byte7 = header.getAsInt();
-
-            int mapperHiBits = (byte7 & uint(MAPPER_HI_BITS));
-            int versionBits = (byte7 & uint(VERSION_BITS)) >> 2;
-            int systemTypeBits = byte7 & uint(SYSTEM_TYPE_BITS);
-
-            return new Byte7(
-                    (short) mapperHiBits,
-                    ubyte(versionBits),
-                    ubyte(systemTypeBits)
-            );
-        }
-    }
-
-    public static class Modern_iNES extends Shared_iNES {
+    public static class Modern_iNES {
 
         // region Byte 8
 
@@ -207,7 +156,7 @@ public class NesHeader {
         // endregion
     }
 
-    public static class NES_2_0 extends Shared_iNES {
+    public static class NES_2_0 {
 
         // region Byte 8
 

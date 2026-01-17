@@ -5,29 +5,14 @@ import net.novaware.nes.core.util.Quantity
 import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
 
-import static net.novaware.nes.core.file.NesMeta.System.*
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.*
 import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.*
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.*
 import static net.novaware.nes.core.file.ines.NesHeader.Unofficial_iNES.*
-import static net.novaware.nes.core.file.ines.NesHeader.Version.MODERN_iNES
-import static net.novaware.nes.core.file.ines.NesHeader.Version.NES_2_0
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB
 import static net.novaware.nes.core.util.QuantityBuilder.banks8kb
 import static net.novaware.nes.core.util.UnsignedTypes.*
 
 class NesHeaderSpec extends Specification {
-
-    def "should pass byte cross checks for Shared_iNES" () {
-        given:
-        def byte7 = 0
-        byte7 |= uint(MAPPER_HI_BITS)
-        byte7 |= uint(VERSION_BITS)
-        byte7 |= uint(SYSTEM_TYPE_BITS)
-
-        expect:
-        byte7 == 0xFF
-    }
 
     def "should pass byte cross checks for Modern_iNES" () {
         given:
@@ -50,29 +35,6 @@ class NesHeaderSpec extends Specification {
 
         expect:
         byte10 == 0xFF
-    }
-    
-    def "should put and then get byte 7" () {
-        given:
-        def header = headerBuffer()
-
-        when:
-        header.position(BYTE_7)
-        putByte7(header, system, (short) mapper, version)
-        header.position(BYTE_7)
-        Byte7 actual = getByte7(header)
-
-        then:
-        ubyte(actual.systemTypeBits()) == system.bits()
-        ushort(actual.mapperHi()) == ushort(mapper & 0xF0)
-        ubyte(actual.versionBits()) == (byte) (version == NES_2_0 ? 0b10 : 0)
-
-        where:
-        system         | mapper | version
-        NES            | 0      | MODERN_iNES
-        VS_SYSTEM      | 16     | MODERN_iNES
-        PLAY_CHOICE_10 | 129    | MODERN_iNES
-        EXTENDED       | 255    | MODERN_iNES
     }
 
     def "should put and then get program memory size" () {

@@ -8,7 +8,7 @@ import spock.lang.Specification
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 import static net.novaware.nes.core.file.MagicNumber.GAME_NES
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7
+import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_7
 import static net.novaware.nes.core.file.ines.NesHeader.Version.*
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
 

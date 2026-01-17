@@ -42,7 +42,7 @@ public class ArchaicHeaderBuffer {
 
     // endregion
 
-    protected final UByteBuffer header;
+    private final UByteBuffer header;
 
     public ArchaicHeaderBuffer(UByteBuffer header) {
         assertArgument(header != null, "header cannot be null");
