@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
+
 public class NesHeaderReader extends NesHeaderHandler {
 
     private final NesHeader.Version version;
@@ -29,9 +31,17 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         headerBuffer.position(4); // TODO: temporary, use indexed methods
 
-        Quantity programData = NesHeader.Archaic_iNES.getProgramData(headerBuffer);
-        Quantity videoDataSize = NesHeader.Archaic_iNES.getVideoData(headerBuffer);
-        NesHeader.Archaic_iNES.Byte6 byte6 = NesHeader.Archaic_iNES.getByte6(headerBuffer);
+        ArchaicHeaderBuffer archaicHeader = new ArchaicHeaderBuffer(headerBuffer);
+
+        Quantity programData = archaicHeader.getProgramData();
+        Quantity videoDataSize = archaicHeader.getVideoData();
+        int mapperLo = archaicHeader.getMapper();
+        Quantity trainer = archaicHeader.getTrainer();
+        NesMeta.Layout layout = archaicHeader.getMemoryLayout();
+        NesMeta.Kind kind = archaicHeader.getMemoryKind();
+
+        headerBuffer.position(BYTE_7); // TODO: temporary until all is buffer
+
 
         NesHeader.Shared_iNES.Byte7 byte7       = null;
         Quantity programMemorySize              = null;
@@ -51,7 +61,7 @@ public class NesHeaderReader extends NesHeaderHandler {
             videoStandard = NesMeta.VideoStandard.NTSC;
             byte10 = new NesHeader.Unofficial_iNES.Byte10(false, false, NesMeta.VideoStandard.NTSC);
 
-            info = NesHeader.Archaic_iNES.getInfo(headerBuffer);
+            info = archaicHeader.getInfo();
         }
 
 
@@ -61,7 +71,6 @@ public class NesHeaderReader extends NesHeaderHandler {
         headerBuffer.rewind();
 
         int mapperHi = byte7.mapperHi(); // TODO: ignore hi if Archaic iNES
-        int mapperLo = byte6.mapper();
         short mapper = (short) (mapperHi | mapperLo);
 
         NesMeta meta = NesMeta.builder()
@@ -70,11 +79,11 @@ public class NesHeaderReader extends NesHeaderHandler {
                 .system(NesMeta.System.NES)
                 .mapper(mapper)
                 .busConflicts(byte10.busConflicts())
-                .trainer(byte6.trainer())
-                .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : byte6.kind(), programMemorySize))
+                .trainer(trainer)
+                .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : kind, programMemorySize))
                 .programData(programData)
                 .videoMemory(new Quantity(videoDataSize.amount() == 0 ? 1 : 0, Quantity.Unit.BANK_8KB))
-                .videoData(new NesMeta.VideoData(byte6.layout(), videoDataSize))
+                .videoData(new NesMeta.VideoData(layout, videoDataSize))
                 .videoStandard(videoStandard)
                 .footer(new Quantity(0, Quantity.Unit.BYTES))
                 .build();

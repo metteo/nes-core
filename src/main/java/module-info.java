@@ -4,4 +4,6 @@ module net.novaware.nes.core {
 
     requires org.jspecify;
     requires org.checkerframework.checker.qual;
+
+    // TODO: tests in maven are running in classpath mode
 }

@@ -1,5 +1,6 @@
 package net.novaware.nes.core.file.ines
 
+import net.novaware.nes.core.file.MagicNumber
 import net.novaware.nes.core.file.NesData
 import net.novaware.nes.core.file.NesFile
 import net.novaware.nes.core.file.NesHash
@@ -17,7 +18,6 @@ import static net.novaware.nes.core.file.NesMeta.System.VS_SYSTEM
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
-import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.MAGIC_NUMBER
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
 class NesFileWriterSpec extends Specification {
@@ -46,7 +46,7 @@ class NesFileWriterSpec extends Specification {
         def maybeMagic = new byte[4]
         buffer.get(maybeMagic)
 
-        maybeMagic == MAGIC_NUMBER.numbers()
+        maybeMagic == MagicNumber.GAME_NES.numbers()
 
         buffer.get(4) == 1 as byte // 16KB PRG
         buffer.get(5) == 1 as byte // 8KB CHR
@@ -178,10 +178,6 @@ class NesFileWriterSpec extends Specification {
 
         // Flags 9:      0b0000_000T where T - TV System (0 - NTSC, 1 - PAL)
         buffer.get(9) == 0b0000_0001 as byte
-    }
-
-    static byte ubyte(char c) {
-        (byte) c
     }
 
     def "should throw exception when nesFile is null"() {

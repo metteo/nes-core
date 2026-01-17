@@ -72,10 +72,14 @@ class NesHeaderScannerSpec extends Specification {
 
         NesMeta marioBros = NesMetaBuilder.marioBros().build()
 
-        NesHeader.Archaic_iNES.putMagic(header)
-        NesHeader.Archaic_iNES.putProgramData(header, marioBros.programData())
-        NesHeader.Archaic_iNES.putVideoData(header, marioBros.videoData().size())
-        NesHeader.Archaic_iNES.putByte6(header, marioBros)
+        new ArchaicHeaderBuffer(header)
+                .putMagic()
+                .putProgramData(marioBros.programData())
+                .putVideoData(marioBros.videoData().size())
+                .putTrainer(marioBros.trainer())
+                .putMapper(marioBros.mapper())
+                .putMemoryKind(marioBros.programMemory().kind())
+                .putMemoryLayout(marioBros.videoData().layout())
         // bytes 7-15 are 0s
 
         header
@@ -99,8 +103,7 @@ class NesHeaderScannerSpec extends Specification {
         given:
         def headerBuffer = headerBuffer()
 
-        NesHeader.Archaic_iNES.putMagic(headerBuffer)
-                .position(0)
+        new ArchaicHeaderBuffer(headerBuffer).putMagic()
 
         List<Problem> problems = []
 
@@ -115,7 +118,7 @@ class NesHeaderScannerSpec extends Specification {
         given:
         def headerBuffer = headerBuffer()
 
-        NesHeader.Archaic_iNES.putMagic(headerBuffer)
+        new ArchaicHeaderBuffer(headerBuffer).putMagic()
         headerBuffer.put(1, ubyte(0x46)) // 'F'
                 .position(0)
 

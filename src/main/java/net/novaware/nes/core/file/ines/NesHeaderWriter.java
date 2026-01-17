@@ -9,6 +9,7 @@ import java.nio.ByteOrder;
 
 import static java.util.Objects.requireNonNull;
 import static net.novaware.nes.core.file.ines.NesHeader.SIZE;
+import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
 
 public class NesHeaderWriter extends NesHeaderHandler {
 
@@ -28,22 +29,27 @@ public class NesHeaderWriter extends NesHeaderHandler {
         UByteBuffer header = UByteBuffer.allocate(SIZE);
         header.order(ByteOrder.LITTLE_ENDIAN);
 
-        NesHeader.Archaic_iNES.putMagic(header);
-        NesHeader.Archaic_iNES.putProgramData(header, meta.programData());
-        NesHeader.Archaic_iNES.putVideoData(header, meta.videoData().size());
-        // TODO: throw error if archaic ines and mapper > 15?
+        ArchaicHeaderBuffer archaicHeader = new ArchaicHeaderBuffer(header);
 
-        NesHeader.Archaic_iNES.putByte6(header, meta);
+        archaicHeader.putMagic()
+                .putProgramData(meta.programData())
+                .putVideoData(meta.videoData().size())
+                .putMapper(meta.mapper() & 0xF) // TODO: temporary, modern header buffer will accept bigger range.
+                .putMemoryLayout(meta.videoData().layout())
+                .putTrainer(meta.trainer())
+                .putMemoryKind(meta.programMemory().kind());
 
         final Version version = params.version();
 
         if (version == Version.ARCHAIC_iNES && params.includeInfo()) {
-            NesHeader.Archaic_iNES.putInfo(header, meta.info());
+            archaicHeader.putInfo(meta.info());
         }
 
         if (version == Version.NES_0_7) {
             // TODO: iNES 0.7 with mapper hi only on 7th
         }
+
+        header.position(BYTE_7); // TODO: temporary until all is buffer
 
         if (version.compareTo(Version.ARCHAIC_iNES) > 0) {
             NesHeader.Shared_iNES.putByte7(header, meta, version);

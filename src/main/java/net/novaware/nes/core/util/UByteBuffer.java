@@ -86,7 +86,7 @@ public class UByteBuffer {
 
     @SuppressWarnings("signedness")
     public UByteBuffer putAsByte(int i) {
-        if (ASSERT) { assertArgument(0 <= i && i < 256, "i must fit into ubyte"); }
+        if (ASSERT) { assertUByteRange(i); }
 
         put((byte) i);
         return this;
@@ -96,6 +96,18 @@ public class UByteBuffer {
     public UByteBuffer put(int index, @Unsigned byte b) {
         buffer.put(index, b);
         return this;
+    }
+
+    @SuppressWarnings("signedness")
+    public UByteBuffer putAsByte(int index, int i) {
+        if (ASSERT) { assertUByteRange(i); }
+
+        buffer.put(index, (byte) i);
+        return this;
+    }
+
+    private void assertUByteRange(int i) {
+        assertArgument(0 <= i && i < 256, "i must fit into ubyte");
     }
 
     @SuppressWarnings("signedness")

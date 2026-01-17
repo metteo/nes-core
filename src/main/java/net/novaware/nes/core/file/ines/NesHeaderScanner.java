@@ -13,7 +13,7 @@ import java.util.List;
 
 import static net.novaware.nes.core.file.Problem.Severity.MAJOR;
 import static net.novaware.nes.core.file.Problem.Severity.MINOR;
-import static net.novaware.nes.core.file.ines.NesHeader.Archaic_iNES.getMagic;
+import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMagic;
 import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7;
 import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.getByte7;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
@@ -46,7 +46,7 @@ public class NesHeaderScanner extends NesHeaderHandler {
     /* package */ MagicNumber detectMagicNumber(List<Problem> problems, UByteBuffer headerBuffer) {
         @Unsigned byte[] fourBytes = getMagic(headerBuffer);
 
-        int matchPercent = NesHeader.Archaic_iNES.MAGIC_NUMBER.matchesPartially(fourBytes);
+        int matchPercent = MagicNumber.GAME_NES.matchesPartially(fourBytes);
         assert matchPercent >= 0 && matchPercent <= 100 : "wrap percentage in a record"; // TODO: do it
         if (0 <= matchPercent && matchPercent < 75) {
             problems.add(new Problem(MAJOR, "Less than 75% of magic number is matching: " + Hex.s(fourBytes)));

@@ -1,21 +1,13 @@
 package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.file.MagicNumber;
 import net.novaware.nes.core.file.NesMeta;
-import net.novaware.nes.core.file.NesMeta.Kind;
-import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.file.NesMeta.VideoStandard;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
-import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
-
-import java.nio.charset.StandardCharsets;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Asserts.assertState;
-import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
-import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
@@ -43,159 +35,7 @@ public class NesHeader {
         NES_2_0
     }
 
-    public static class Archaic_iNES {
-
-        // region Bytes 0-3
-
-        public static final int BYTE_0 = 0;
-        public static final MagicNumber MAGIC_NUMBER = MagicNumber.GAME_NES;
-
-        // endregion
-        // region Bytes 4-5
-
-        public static final int BYTE_4 = 4;
-        public static final @Unsigned byte PROGRAM_DATA_SIZE = ubyte(0xFF);
-
-        public static final int BYTE_5 = 5;
-        public static final @Unsigned byte VIDEO_DATA_SIZE   = ubyte(0xFF);
-
-        // endregion
-        // region Byte 6
-
-        public static final int BYTE_6 = 6;
-        public static final @Unsigned byte MAPPER_LO_BITS = ubyte(0b1111_0000);
-        public static final @Unsigned byte LAYOUT_BITS    = ubyte(0b0000_1001);
-        public static final @Unsigned byte TRAINER_BIT    = ubyte(0b0000_0100);
-        public static final @Unsigned byte BATTERY_BIT    = ubyte(0b0000_0010);
-
-        public record Byte6(@Signed short mapper, Layout layout, Quantity trainer, Kind kind){}
-
-        // endregion
-
-        public static UByteBuffer putMagic(UByteBuffer header) {
-            assertState(header.position() == 0, "buffer not at position 0");
-
-            return header.put(MAGIC_NUMBER.numbers());
-        }
-
-        public static @Unsigned byte[] getMagic(UByteBuffer headerBuffer) {
-            assertState(headerBuffer.position() == BYTE_0, "buffer not at position 0");
-            @Unsigned byte[] fourBytes = new byte[4];
-            headerBuffer.get(fourBytes);
-
-            return fourBytes;
-        }
-
-        public static UByteBuffer putProgramData(UByteBuffer header, Quantity programData) {
-            assertState(header.position() == BYTE_4, "buffer not at position 4");
-            assertArgument(programData.unit() == BANK_16KB, "program data size not in 16KB units");
-            assertArgument(programData.amount() <= uint(PROGRAM_DATA_SIZE), "program data size exceeded");
-
-            return header.putAsByte(programData.amount());
-        }
-        
-        public static Quantity getProgramData(UByteBuffer header) {
-            assertState(header.position() == BYTE_4, "buffer not at position 4");
-            
-            int byte4 = header.getAsInt();
-            return new Quantity(byte4, BANK_16KB);
-        }
-
-        public static UByteBuffer putVideoData(UByteBuffer header, Quantity videoData) {
-            assertState(header.position() == BYTE_5, "buffer not at position 5");
-            assertArgument(videoData.unit() == BANK_8KB, "video data size not in 8KB units");
-            assertArgument(videoData.amount() <= uint(VIDEO_DATA_SIZE), "video data size exceeded");
-
-            return header.putAsByte(videoData.amount());
-        }
-        
-        public static Quantity getVideoData(UByteBuffer header) {
-            assertState(header.position() == BYTE_5, "buffer not at position 5");
-
-            int byte5 = header.getAsInt();
-            return new Quantity(byte5, BANK_8KB);
-        }
-
-        public static UByteBuffer putByte6(UByteBuffer header, NesMeta meta) {
-            return putByte6(header, new Byte6(
-                    meta.mapper(),
-                    meta.videoData().layout(),
-                    meta.trainer(),
-                    meta.programMemory().kind()
-            ));
-        }
-
-        public static UByteBuffer putByte6(UByteBuffer header, Byte6 meta) {
-            assertState(header.position() == BYTE_6, "buffer not at position 6");
-
-            Quantity trainer = meta.trainer();
-            assertArgument(trainer.unit() == BANK_512B, "trainer size not in 512KB units");
-            assertArgument(trainer.amount() <= 1, "trainer size exceeded");
-
-            int mapperLoBits = (meta.mapper() & 0x0F) << 4;
-            int layoutBits = meta.layout().bits();
-            int trainerBit = meta.trainer().amount() == 1 ? uint(TRAINER_BIT) : 0;
-            int batteryBit = meta.kind() == Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
-
-            int flag6 = mapperLoBits | layoutBits | trainerBit | batteryBit;
-
-            return header.putAsByte(flag6);
-        }
-
-        static Byte6 getByte6(UByteBuffer header) {
-            assertState(header.position() == BYTE_6, "buffer not at position 6");
-
-            int byte6 = header.getAsInt();
-            int mapperBits = (byte6 & uint(MAPPER_LO_BITS)) >> 4;
-            int layoutBits = (byte6 & uint(LAYOUT_BITS));
-            int trainerBit = (byte6 & uint(TRAINER_BIT)) >> 2;
-            int batteryBit = (byte6 & uint(BATTERY_BIT)) >> 1;
-
-            return new Byte6(
-                (short) mapperBits,
-                Layout.fromBits(layoutBits),
-                new Quantity(trainerBit, BANK_512B),
-                batteryBit == 0 ? Kind.VOLATILE : Kind.PERSISTENT
-            );
-        }
-
-        // region Byte 7-15 only archaic TODO: improve the info methods and test better
-
-        public static UByteBuffer putInfo(UByteBuffer header, String info) {
-            assertArgument(info.length() < 10, "info too long to fit in the header");
-
-            final @Unsigned byte[] infoBytes = info.getBytes(StandardCharsets.US_ASCII);
-
-            for (int i = infoBytes.length - 1, j = header.capacity() - 1; i >= 0; i--, j--) {
-                header.put(j, infoBytes[i]);
-            }
-
-            return header;
-        }
-
-        public static String getInfo(UByteBuffer header) {
-            assertState(header.position() >= 7, "buffer not at position 7+");
-
-            @Unsigned byte[] infoBytes = new byte[NesHeader.SIZE - 7];
-
-            // NOTE: may arrive at some random printable character, doesn't mean it's an info text
-            for(int i = 0; i < infoBytes.length; i++) {
-                final int b = header.getAsInt(i + 7);
-
-                if (32 <= b && b < 127) {
-                    infoBytes[i] = ubyte(b);
-                } else {
-                    infoBytes[i] = ' '; // any nonprintable char into space
-                }
-            }
-
-            return new String(infoBytes, StandardCharsets.US_ASCII).trim();
-        }
-
-        // endregion
-    }
-
-    public static class Shared_iNES extends Archaic_iNES {
+    public static class Shared_iNES {
 
         // region Byte 7
 
