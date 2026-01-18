@@ -1,7 +1,6 @@
 package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
-import net.novaware.nes.core.file.ines.NesHeader.Version;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 
@@ -13,11 +12,11 @@ import static net.novaware.nes.core.file.ines.NesHeader.SIZE;
 public class NesHeaderWriter extends NesHeaderHandler {
 
     public record Params(
-            Version version,
+            NesFileVersion version,
             boolean includeInfo // TODO: prefer enum or bitfield instead of boolean
     ) {
 
-        public Params(Version version, boolean includeInfo) {
+        public Params(NesFileVersion version, boolean includeInfo) {
             this.version = requireNonNull(version);
             this.includeInfo = includeInfo;
         }
@@ -39,34 +38,34 @@ public class NesHeaderWriter extends NesHeaderHandler {
                 .putTrainer(meta.trainer())
                 .putMemoryKind(meta.programMemory().kind());
 
-        final Version version = params.version();
+        final NesFileVersion version = params.version();
 
-        if (version == Version.ARCHAIC_iNES && params.includeInfo()) {
+        if (version == NesFileVersion.ARCHAIC && params.includeInfo()) {
             archaicHeader.putInfo(meta.info());
         }
 
-        if (version == Version.NES_0_7) {
+        if (version == NesFileVersion.ARCHAIC_0_7) {
             // TODO: iNES 0.7 with mapper hi only on 7th
         }
 
-        if (version.compareTo(Version.ARCHAIC_iNES) > 0) {
+        if (version.compareTo(NesFileVersion.ARCHAIC) > 0) {
             modernHeader.putSystem(meta.system())
                     .putVersion(0b00)
                     .putMapper(meta.mapper());
         }
 
-        if (version == Version.MODERN_iNES) {
+        if (version == NesFileVersion.MODERN) {
             modernHeader.putProgramMemory(meta.programMemory().size())
                     .putVideoStandard(meta.videoStandard());
         }
 
-        if (version == Version.UNOFFICIAL_iNES) {
+        if (version == NesFileVersion.MODERN_1_7) {
             modernHeader.putBusConflicts(meta.busConflicts())
                     .putProgramMemoryPresent(meta.programMemory().kind() != NesMeta.Kind.NONE)
                     .putVideoStandardExt(meta.videoStandard());
         }
 
-        if (version == Version.NES_2_0) {
+        if (version == NesFileVersion.FUTURE) {
             // TODO: flags in nes 2.0
         }
 

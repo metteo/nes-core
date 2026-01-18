@@ -9,7 +9,7 @@ import spock.lang.Specification
 import static java.nio.charset.StandardCharsets.US_ASCII
 import static net.novaware.nes.core.file.MagicNumber.GAME_NES
 import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_7
-import static net.novaware.nes.core.file.ines.NesHeader.Version.*
+import static net.novaware.nes.core.file.ines.NesFileVersion.*
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
 
 class NesHeaderScannerSpec extends Specification {
@@ -26,7 +26,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == ARCHAIC_iNES
+        version == ARCHAIC
     }
 
     def "should detect archaic header with DiskDude!" () {
@@ -39,7 +39,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == ARCHAIC_iNES
+        version == ARCHAIC
     }
 
     def "should detect modern header"() {
@@ -51,7 +51,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == MODERN_iNES
+        version == MODERN
     }
 
     def "should detect 2.0 header without size checks" () {
@@ -64,7 +64,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == NES_2_0
+        version == FUTURE
     }
 
     static UByteBuffer baseMarioBros() {
@@ -147,6 +147,6 @@ class NesHeaderScannerSpec extends Specification {
         def result = new NesHeaderScanner().scan(headerBuffer)
 
         then:
-        result == new NesHeaderScanner.Result(GAME_NES, MODERN_iNES, [])
+        result == new NesHeaderScanner.Result(GAME_NES, MODERN, [])
     }
 }

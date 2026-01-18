@@ -2,32 +2,31 @@ package net.novaware.nes.core.file.ines;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static java.util.Collections.reverse;
 
-// TODO: convert to enum or make separate subclasses if switch is required
-public sealed interface NesFileVersion
-        extends Comparable<NesFileVersion>
-        permits NesFileVersion.Impl
-{
-    NesFileVersion UNKNOWN     = of("Unknown",       "?.?.?",   -1, false, null);
+public enum NesFileVersion implements Comparable<NesFileVersion> {
 
-    NesFileVersion ARCHAIC     = of("Archaic iNES",  "0.6.8",   68,  true, null);
-    NesFileVersion ARCHAIC_0_7 = of("iNES 0.7",      "0.7.4",   74,  true, ARCHAIC);     // MapperHi
+    UNKNOWN    ("Unknown",       "?.?.?",   -1, false,   -1, null       ),
 
-    NesFileVersion MODERN      = of("The iNES",      "1.7.5", 1075,  true, ARCHAIC_0_7); // VS.System
-    NesFileVersion MODERN_1_3  = of("iNES 1.3",      "1.7.6", 1076, false, MODERN);      // PlayChoice-10 bit, Version (future)
-    NesFileVersion MODERN_1_5  = of("iNES 1.5",      "1.9.1", 1091,  true, MODERN_1_3);  // PRG RAM size, TV System
-    NesFileVersion MODERN_1_7  = of("iNES 1.7",     "1.10.4", 1104, false, MODERN_1_5);  // PRG RAM presence, TV System (multi), Bus Conflicts
+    ARCHAIC    ("Archaic iNES",  "0.6.8",   68,  true, 1996, null       ),
+    ARCHAIC_0_7("iNES 0.7",      "0.7.4",   74,  true, 1997, ARCHAIC    ), // MapperHi
 
-    NesFileVersion FUTURE      = of("NES 2.0",      "2.15.6", 2156,  true, MODERN_1_3);  // Bytes 7-15 revisited
+    MODERN     ("The iNES",      "1.7.5", 1075,  true, 1998, ARCHAIC_0_7), // VS.System
+    MODERN_1_3 ("iNES 1.3",      "1.7.6", 1076, false, 2000, MODERN     ), // PlayChoice-10 bit, Version (future)
+    MODERN_1_5 ("iNES 1.5",      "1.9.1", 1091,  true, 2003, MODERN_1_3 ), // PRG RAM size, TV System
+    MODERN_1_7 ("iNES 1.7",     "1.10.4", 1104, false, 2005, MODERN_1_5 ), // PRG RAM presence, TV System (multi), Bus Conflicts
+
+    FUTURE     ("NES 2.0",      "2.15.6", 2156,  true, 2006, MODERN     ); // Bytes 7-15 revisited
 
     /**
      * Name used in nesdev.org wiki. Variants beyond iNES are
      * specific to this code (not in common use)
      */
-    String name();
+    private final String displayName;
 
     /**
      * Textual version similar to semantic versioning
@@ -42,70 +41,75 @@ public sealed interface NesFileVersion
      * <p>
      * 1.7.6 means: modern header with byte 7 used up to 6 bits
      */
-    String textual();
+    private final String textual;
 
     /**
      * Numeric variant which can be compared
      */
-    int numeric();
+    private final int numeric;
 
     /**
      * False if the version is unofficial (the bits)
      */
-    boolean official();
+    private final boolean official;
+
+    /**
+     * Estimated year of release (@Gemieni, I'm looking at you :))
+     */
+    private final int releaseYear;
 
     /**
      * The previous version. iNES and NES 2.0 diverged at some point.
      */
-    @Nullable NesFileVersion parent(); // TODO: fix the nullability
+    private final @Nullable NesFileVersion parent;
 
-    private static NesFileVersion of(String name, String textual, int numeric, boolean official, @Nullable NesFileVersion parent) {
-        return new Impl(name, textual, numeric, official, parent);
+    private static final List<NesFileVersion> VALUE_LIST;
+
+    static {
+        List<NesFileVersion> values = new ArrayList<>(List.of(values()));
+        values.remove(UNKNOWN);
+
+        VALUE_LIST = List.copyOf(values);
+    }
+    public static final Comparator<NesFileVersion> COMPARATOR_NUMERIC = Comparator.comparing(NesFileVersion::numeric);
+
+    public static List<NesFileVersion> valueList() {
+        return VALUE_LIST;
     }
 
-    static List<NesFileVersion> values() {
-        return List.of(ARCHAIC, ARCHAIC_0_7, MODERN, MODERN_1_3, MODERN_1_5, MODERN_1_7, FUTURE);
+    NesFileVersion(
+            String displayName,
+            String textual,
+            int numeric,
+            boolean official,
+            int releaseYear,
+            @Nullable NesFileVersion parent
+    ) {
+        this.displayName = displayName;
+        this.textual = textual;
+        this.numeric = numeric;
+        this.official = official;
+        this.releaseYear = releaseYear;
+        this.parent = parent;
     }
 
-    // TODO: implement method that follows the parent chain and returns versions in ascending order
+    public String displayName() { return displayName; }
+    public String textual() { return textual; }
+    public int numeric() { return numeric; }
+    public boolean isOfficial() { return official; }
+    public int releaseYear() { return releaseYear; }
+    public @Nullable NesFileVersion parent() { return parent; }
 
-    final class Impl implements NesFileVersion {
+    public List<NesFileVersion> getHistory() {
+        List<NesFileVersion> history = new ArrayList<>();
 
-        private final String name;
-        private final String textual;
-        private final int numeric;
-        private final boolean official;
-        private final @Nullable NesFileVersion parent;
-
-        Impl(
-                String name,
-                String textual,
-                int numeric,
-                boolean official,
-                @Nullable NesFileVersion parent
-        ) {
-            this.name = name;
-            this.textual = textual;
-            this.numeric = numeric;
-            this.official = official;
-            this.parent = parent;
+        NesFileVersion current = this;
+        while (current != null && !history.contains(current)) { // no infinite loop if parent==this by mistake
+            history.add(current);
+            current = current.parent;
         }
 
-        @Override public String name() { return name; }
-        @Override public String textual() { return textual; }
-        @Override public int numeric() { return numeric; }
-        @Override public boolean official() { return official; }
-        @Override public @Nullable NesFileVersion parent() { return parent; }
-
-        // TODO: hashCode & equals
-        // TODO: ordinal
-        // TODO:
-
-        @Override
-        public int compareTo(NesFileVersion that) {
-            assertArgument(that != null, "that must not be null");
-
-            return Integer.compare(this.numeric, that.numeric());
-        }
+        reverse(history);
+        return history;
     }
 }

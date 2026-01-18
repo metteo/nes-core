@@ -7,14 +7,14 @@ import spock.lang.Specification
 import java.nio.ByteBuffer
 
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
-import static net.novaware.nes.core.file.ines.NesHeader.Version.ARCHAIC_iNES
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
 
 class NesFileHandlerSpec extends Specification {
 
     def "should write and then read back an archaic variant" () {
         given:
         NesFileBuilder archaicBuilder = marioBros()
-        NesHeader.Version version = ARCHAIC_iNES
+        NesFileVersion version = ARCHAIC
 
         // TODO: maybe should be part of the builder
         archaicBuilder.data()

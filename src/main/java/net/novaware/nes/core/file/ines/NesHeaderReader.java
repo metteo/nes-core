@@ -15,9 +15,9 @@ import java.util.List;
 
 public class NesHeaderReader extends NesHeaderHandler {
 
-    private final NesHeader.Version version;
+    private final NesFileVersion version;
 
-    public NesHeaderReader(NesHeader.Version version) {
+    public NesHeaderReader(NesFileVersion version) {
         this.version = version;
     }
 
@@ -45,7 +45,7 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         String info = "";
 
-        if (version.compareTo(NesHeader.Version.ARCHAIC_iNES) > 0) { // TODO: if-else depending on version is very bad, improve
+        if (version.compareTo(NesFileVersion.ARCHAIC) > 0) { // TODO: if-else depending on version is very bad, improve
             mapper = modernHeader.getMapper();
 
             programMemorySize = modernHeader.getProgramMemory(); // TODO: report as problem to fix instead of defaulting to 1

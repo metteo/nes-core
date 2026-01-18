@@ -17,7 +17,7 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
  */
 public class NesFileWriter extends NesFileHandler {
 
-    public ByteBuffer write(NesFile nesFile, NesHeader.Version version) { // TODO: remove the version. write header as is.
+    public ByteBuffer write(NesFile nesFile, NesFileVersion version) { // TODO: remove the version. write header as is.
         assertArgument(nesFile != null, "nesFile must not be null");
         assertArgument(version != null, "version must not be null");
 

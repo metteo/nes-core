@@ -18,6 +18,7 @@ import static net.novaware.nes.core.file.NesMeta.System.VS_SYSTEM
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
+import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
 class NesFileWriterSpec extends Specification {
@@ -38,7 +39,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(marioBros, NesHeader.Version.MODERN_iNES)
+        def buffer = writer.write(marioBros, MODERN)
 
         then:
         buffer.limit() == headerSize + programSize + videoSize
@@ -98,7 +99,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, NesHeader.Version.MODERN_iNES)
+        def buffer = writer.write(nesFile, MODERN)
 
 
         then:
@@ -156,7 +157,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, NesHeader.Version.MODERN_iNES)
+        def buffer = writer.write(nesFile, MODERN)
 
         then:
         buffer.limit() == 16 + 3 * 16384 + 2 * 8192
@@ -185,7 +186,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        writer.write(null, NesHeader.Version.MODERN_iNES)
+        writer.write(null, MODERN)
 
         then:
         def e = thrown(IllegalArgumentException)

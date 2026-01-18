@@ -24,7 +24,7 @@ public class NesHeaderScanner extends NesHeaderHandler {
 
     public record Result(
             MagicNumber magicNumber,
-            NesHeader.Version version,
+            NesFileVersion version,
             List<Problem> problems
     ) {
     }
@@ -32,7 +32,7 @@ public class NesHeaderScanner extends NesHeaderHandler {
     public Result scan(UByteBuffer headerBuffer) {
         final List<Problem> problems = new ArrayList<>();
         final MagicNumber magicNumber = detectMagicNumber(problems, headerBuffer);
-        final NesHeader.Version version = detectVersion(headerBuffer);
+        final NesFileVersion version = detectVersion(headerBuffer);
 
         headerBuffer.rewind();
 
@@ -54,18 +54,18 @@ public class NesHeaderScanner extends NesHeaderHandler {
         return MagicNumber.GAME_NES;
     }
 
-    /* package */ NesHeader.Version detectVersion(UByteBuffer header) {
-        int versionBits = getVersion(header);
+    /* package */ NesFileVersion detectVersion(UByteBuffer header) {
+        int versionBits = getVersion(header); // TODO: consider moving this method here
 
         @Unsigned byte[] bytes12to15 = new byte[4];
         header.get(12, bytes12to15);
 
         if (versionBits == 0b10) { // TODO: & size taking into account byte 9 does not exceed the actual size of the ROM image
-            return NesHeader.Version.NES_2_0;
+            return NesFileVersion.FUTURE;
         }
 
         if (versionBits == 0b00 && allZeros(bytes12to15)) {
-            return NesHeader.Version.MODERN_iNES;
+            return NesFileVersion.MODERN;
         }
 
         @Unsigned byte[] bytes7to15 = new byte[9];
@@ -74,10 +74,10 @@ public class NesHeaderScanner extends NesHeaderHandler {
 
         if (maybeDiskDude.equals("DiskDude!") || versionBits == 0b01) { // full string or just part of D
             // TODO: what about astra and other "vendors", maybe detect header trailing text in general
-            return NesHeader.Version.ARCHAIC_iNES;
+            return NesFileVersion.ARCHAIC;
         }
 
-        return NesHeader.Version.NES_0_7;
+        return NesFileVersion.ARCHAIC_0_7;
     }
 
     private boolean allZeros(@Unsigned byte[] bytes) {
