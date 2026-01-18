@@ -160,7 +160,7 @@ public record NesMeta(
 
         public static Layout fromBits(int bits) {
             for (Layout layout : values()) {
-                if (uint(layout.bits) == bits) {
+                if (uint(layout.bits) == (bits & BITS_MASK)) {
                     return layout;
                 }
             }
@@ -204,7 +204,9 @@ public record NesMeta(
         NES("NES",                      0b00),
         VS_SYSTEM("VS.System",          0b01), // Vs. games have a coin slot and different palettes.
         PLAY_CHOICE_10("PlayChoice-10", 0b10), // 8 KB of Hint Screen data stored after CHR data
-        EXTENDED("Extended Console",    0b11); // TODO: add more enum values
+        EXTENDED("Extended Console",    0b11), // TODO: add more enum values
+
+        UNKNOWN("Unknown",              0xFF); // TODO: what to do with you?
 
         public static final int BITS_MASK = 0b11;
 
@@ -222,6 +224,16 @@ public record NesMeta(
 
         public int bits() {
             return uint(bits) & BITS_MASK;
+        }
+
+        public static System fromBits(int bits) { // NOTE: modern nes only, 2.0 will need extension
+            for (System system : values()) {
+                if (uint(system.bits) == (bits & BITS_MASK)) {
+                    return system;
+                }
+            }
+
+            return UNKNOWN;
         }
     }
 

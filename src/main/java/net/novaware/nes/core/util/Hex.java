@@ -4,7 +4,6 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.HexFormat;
 
-// XXX: Test utility, should be in test source root but jpms got in a way
 public class Hex {
 
     private static final HexFormat hexFormat = HexFormat.ofDelimiter(" ");

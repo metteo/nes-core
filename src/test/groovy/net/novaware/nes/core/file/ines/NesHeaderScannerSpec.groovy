@@ -8,8 +8,8 @@ import spock.lang.Specification
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 import static net.novaware.nes.core.file.MagicNumber.GAME_NES
-import static net.novaware.nes.core.file.ines.NesHeader.Shared_iNES.BYTE_7
-import static net.novaware.nes.core.file.ines.NesHeader.Version.*
+import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_7
+import static net.novaware.nes.core.file.ines.NesFileVersion.*
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
 
 class NesHeaderScannerSpec extends Specification {
@@ -26,7 +26,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == ARCHAIC_iNES
+        version == ARCHAIC
     }
 
     def "should detect archaic header with DiskDude!" () {
@@ -39,7 +39,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == ARCHAIC_iNES
+        version == ARCHAIC
     }
 
     def "should detect modern header"() {
@@ -51,7 +51,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == MODERN_iNES
+        version == MODERN
     }
 
     def "should detect 2.0 header without size checks" () {
@@ -64,7 +64,7 @@ class NesHeaderScannerSpec extends Specification {
         def version = detectVersion(headerBuffer)
 
         then:
-        version == NES_2_0
+        version == FUTURE
     }
 
     static UByteBuffer baseMarioBros() {
@@ -72,10 +72,14 @@ class NesHeaderScannerSpec extends Specification {
 
         NesMeta marioBros = NesMetaBuilder.marioBros().build()
 
-        NesHeader.Archaic_iNES.putMagic(header)
-        NesHeader.Archaic_iNES.putProgramData(header, marioBros.programData())
-        NesHeader.Archaic_iNES.putVideoData(header, marioBros.videoData().size())
-        NesHeader.Archaic_iNES.putByte6(header, marioBros)
+        new ArchaicHeaderBuffer(header)
+                .putMagic()
+                .putProgramData(marioBros.programData())
+                .putVideoData(marioBros.videoData().size())
+                .putTrainer(marioBros.trainer())
+                .putMapper(marioBros.mapper())
+                .putMemoryKind(marioBros.programMemory().kind())
+                .putMemoryLayout(marioBros.videoData().layout())
         // bytes 7-15 are 0s
 
         header
@@ -99,8 +103,7 @@ class NesHeaderScannerSpec extends Specification {
         given:
         def headerBuffer = headerBuffer()
 
-        NesHeader.Archaic_iNES.putMagic(headerBuffer)
-                .position(0)
+        new ArchaicHeaderBuffer(headerBuffer).putMagic()
 
         List<Problem> problems = []
 
@@ -115,7 +118,7 @@ class NesHeaderScannerSpec extends Specification {
         given:
         def headerBuffer = headerBuffer()
 
-        NesHeader.Archaic_iNES.putMagic(headerBuffer)
+        new ArchaicHeaderBuffer(headerBuffer).putMagic()
         headerBuffer.put(1, ubyte(0x46)) // 'F'
                 .position(0)
 
@@ -144,6 +147,6 @@ class NesHeaderScannerSpec extends Specification {
         def result = new NesHeaderScanner().scan(headerBuffer)
 
         then:
-        result == new NesHeaderScanner.Result(GAME_NES, MODERN_iNES, [])
+        result == new NesHeaderScanner.Result(GAME_NES, MODERN, [])
     }
 }

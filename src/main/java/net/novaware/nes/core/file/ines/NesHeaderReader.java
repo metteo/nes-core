@@ -15,9 +15,9 @@ import java.util.List;
 
 public class NesHeaderReader extends NesHeaderHandler {
 
-    private final NesHeader.Version version;
+    private final NesFileVersion version;
 
-    public NesHeaderReader(NesHeader.Version version) {
+    public NesHeaderReader(NesFileVersion version) {
         this.version = version;
     }
 
@@ -29,29 +29,34 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         headerBuffer.position(4); // TODO: temporary, use indexed methods
 
-        Quantity programData = NesHeader.Archaic_iNES.getProgramData(headerBuffer);
-        Quantity videoDataSize = NesHeader.Archaic_iNES.getVideoData(headerBuffer);
-        NesHeader.Archaic_iNES.Byte6 byte6 = NesHeader.Archaic_iNES.getByte6(headerBuffer);
+        ArchaicHeaderBuffer archaicHeader = new ArchaicHeaderBuffer(headerBuffer);
+        ModernHeaderBuffer modernHeader = new ModernHeaderBuffer(headerBuffer);
 
-        NesHeader.Shared_iNES.Byte7 byte7       = null;
-        Quantity programMemorySize              = null;
-        NesMeta.VideoStandard videoStandard     = null;
-        NesHeader.Unofficial_iNES.Byte10 byte10 = null;
+        Quantity programData = archaicHeader.getProgramData();
+        Quantity videoDataSize = archaicHeader.getVideoData();
+        int mapper = archaicHeader.getMapper();
+        Quantity trainer = archaicHeader.getTrainer();
+        NesMeta.Layout layout = archaicHeader.getMemoryLayout();
+        NesMeta.Kind kind = archaicHeader.getMemoryKind();
+
+        Quantity programMemorySize;
+        NesMeta.VideoStandard videoStandard;
+        boolean busConflicts;
 
         String info = "";
 
-        if (version.compareTo(NesHeader.Version.ARCHAIC_iNES) > 0) { // TODO: if-else depending on version is very bad, improve
-            byte7       = NesHeader.Shared_iNES.getByte7(headerBuffer);
-            programMemorySize              = NesHeader.Modern_iNES.getProgramMemory(headerBuffer); // TODO: report as problem to fix instead of defaulting to 1
-            videoStandard     = NesHeader.Modern_iNES.getVideoStandard(headerBuffer);
-            byte10 = NesHeader.Unofficial_iNES.getByte10(headerBuffer);
+        if (version.compareTo(NesFileVersion.ARCHAIC) > 0) { // TODO: if-else depending on version is very bad, improve
+            mapper = modernHeader.getMapper();
+
+            programMemorySize = modernHeader.getProgramMemory(); // TODO: report as problem to fix instead of defaulting to 1
+            videoStandard     = modernHeader.getVideoStandard();
+            busConflicts = modernHeader.getBusConflicts();
         } else {
-            byte7 = new NesHeader.Shared_iNES.Byte7((short) 0, (byte) 0, (byte) 0);
             programMemorySize = new Quantity(0, Quantity.Unit.BANK_8KB);
             videoStandard = NesMeta.VideoStandard.NTSC;
-            byte10 = new NesHeader.Unofficial_iNES.Byte10(false, false, NesMeta.VideoStandard.NTSC);
+            busConflicts = false;
 
-            info = NesHeader.Archaic_iNES.getInfo(headerBuffer);
+            info = archaicHeader.getInfo();
         }
 
 
@@ -60,21 +65,17 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         headerBuffer.rewind();
 
-        int mapperHi = byte7.mapperHi(); // TODO: ignore hi if Archaic iNES
-        int mapperLo = byte6.mapper();
-        short mapper = (short) (mapperHi | mapperLo);
-
         NesMeta meta = NesMeta.builder()
                 .title(toTitle(origin)) // TODO: remove extension?
                 .info(info)
                 .system(NesMeta.System.NES)
                 .mapper(mapper)
-                .busConflicts(byte10.busConflicts())
-                .trainer(byte6.trainer())
-                .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : byte6.kind(), programMemorySize))
+                .busConflicts(busConflicts)
+                .trainer(trainer)
+                .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : kind, programMemorySize))
                 .programData(programData)
                 .videoMemory(new Quantity(videoDataSize.amount() == 0 ? 1 : 0, Quantity.Unit.BANK_8KB))
-                .videoData(new NesMeta.VideoData(byte6.layout(), videoDataSize))
+                .videoData(new NesMeta.VideoData(layout, videoDataSize))
                 .videoStandard(videoStandard)
                 .footer(new Quantity(0, Quantity.Unit.BYTES))
                 .build();
