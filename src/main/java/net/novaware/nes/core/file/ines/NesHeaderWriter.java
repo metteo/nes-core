@@ -8,7 +8,6 @@ import org.jspecify.annotations.NonNull;
 import java.nio.ByteOrder;
 
 import static java.util.Objects.requireNonNull;
-import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.BYTE_8;
 import static net.novaware.nes.core.file.ines.NesHeader.SIZE;
 
 public class NesHeaderWriter extends NesHeaderHandler {
@@ -57,17 +56,14 @@ public class NesHeaderWriter extends NesHeaderHandler {
         }
 
         if (version == Version.MODERN_iNES) {
-            header.position(BYTE_8); // TODO: temporary until all is buffer
-            NesHeader.Modern_iNES.putProgramMemory(header, meta.programMemory().size());
-            NesHeader.Modern_iNES.putVideoStandard(header, meta.videoStandard());
+            modernHeader.putProgramMemory(meta.programMemory().size())
+                    .putVideoStandard(meta.videoStandard());
         }
 
         if (version == Version.UNOFFICIAL_iNES) {
-            NesHeader.Unofficial_iNES.Byte10 byte10 = new NesHeader.Unofficial_iNES.Byte10(
-                    meta.busConflicts(),
-                    meta.programMemory().kind() != NesMeta.Kind.NONE,
-                    meta.videoStandard());
-            NesHeader.Unofficial_iNES.putByte10(header, byte10);
+            modernHeader.putBusConflicts(meta.busConflicts())
+                    .putProgramMemoryPresent(meta.programMemory().kind() != NesMeta.Kind.NONE)
+                    .putVideoStandardExt(meta.videoStandard());
         }
 
         if (version == Version.NES_2_0) {

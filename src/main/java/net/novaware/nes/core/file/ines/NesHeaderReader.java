@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.novaware.nes.core.file.ines.NesHeader.Modern_iNES.BYTE_8;
-
 public class NesHeaderReader extends NesHeaderHandler {
 
     private final NesHeader.Version version;
@@ -41,22 +39,22 @@ public class NesHeaderReader extends NesHeaderHandler {
         NesMeta.Layout layout = archaicHeader.getMemoryLayout();
         NesMeta.Kind kind = archaicHeader.getMemoryKind();
 
-        Quantity programMemorySize              = null;
-        NesMeta.VideoStandard videoStandard     = null;
-        NesHeader.Unofficial_iNES.Byte10 byte10 = null;
+        Quantity programMemorySize;
+        NesMeta.VideoStandard videoStandard;
+        boolean busConflicts;
 
         String info = "";
 
         if (version.compareTo(NesHeader.Version.ARCHAIC_iNES) > 0) { // TODO: if-else depending on version is very bad, improve
             mapper = modernHeader.getMapper();
-            headerBuffer.position(BYTE_8); // TODO: temporary until all is buffer
-            programMemorySize              = NesHeader.Modern_iNES.getProgramMemory(headerBuffer); // TODO: report as problem to fix instead of defaulting to 1
-            videoStandard     = NesHeader.Modern_iNES.getVideoStandard(headerBuffer);
-            byte10 = NesHeader.Unofficial_iNES.getByte10(headerBuffer);
+
+            programMemorySize = modernHeader.getProgramMemory(); // TODO: report as problem to fix instead of defaulting to 1
+            videoStandard     = modernHeader.getVideoStandard();
+            busConflicts = modernHeader.getBusConflicts();
         } else {
             programMemorySize = new Quantity(0, Quantity.Unit.BANK_8KB);
             videoStandard = NesMeta.VideoStandard.NTSC;
-            byte10 = new NesHeader.Unofficial_iNES.Byte10(false, false, NesMeta.VideoStandard.NTSC);
+            busConflicts = false;
 
             info = archaicHeader.getInfo();
         }
@@ -72,7 +70,7 @@ public class NesHeaderReader extends NesHeaderHandler {
                 .info(info)
                 .system(NesMeta.System.NES)
                 .mapper(mapper)
-                .busConflicts(byte10.busConflicts())
+                .busConflicts(busConflicts)
                 .trainer(trainer)
                 .programMemory(new NesMeta.ProgramMemory(programMemorySize.amount() == 0 ? Kind.NONE : kind, programMemorySize))
                 .programData(programData)

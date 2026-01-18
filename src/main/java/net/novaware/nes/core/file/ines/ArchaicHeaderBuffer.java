@@ -15,6 +15,12 @@ import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
+/**
+ * Archaic iNES compatible header buffer
+ * <p>
+ * <a href="https://www.nesdev.org/wiki/INES">iNES on nesdev.org</a><br>
+ * <a href="https://fms.komkon.org/EMUL8/NES.html#LABM">.NES File Format on fms.komkon.org</a>
+ */
 public class ArchaicHeaderBuffer {
 
     // region Bytes 0-3
