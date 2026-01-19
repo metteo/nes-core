@@ -18,6 +18,11 @@ class VideoDataBuilder implements TestDataBuilder<NesMeta.VideoData> {
 
     }
 
+    static VideoDataBuilder horizontal(int amount) {
+        return videoData(NesMeta.Layout.STANDARD_HORIZONTAL, amount);
+
+    }
+
     static VideoDataBuilder videoData(NesMeta.Layout layout, int amount) {
         return new VideoDataBuilder()
                 .layout(layout)

@@ -1,5 +1,6 @@
 package net.novaware.nes.core.file.ines;
 
+import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
@@ -9,7 +10,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
  * <p>
  * <a href="https://www.nesdev.org/wiki/NES_2.0">NES 2.0 on nesdev.org</a>
  */
-public class FutureHeaderBuffer {
+public class FutureHeaderBuffer extends BaseHeaderBuffer {
 
     // region Byte 7
 
@@ -73,4 +74,8 @@ public class FutureHeaderBuffer {
     public static final @Unsigned byte DEFAULT_EXPANSION_DEVICE_BITS = ubyte(0b0011_1111);
 
     // endregion
+
+    public FutureHeaderBuffer(UByteBuffer header) {
+        super(header);
+    }
 }

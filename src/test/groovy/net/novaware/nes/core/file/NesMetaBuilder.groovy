@@ -34,6 +34,10 @@ class NesMetaBuilder implements TestDataBuilder<NesMeta> {
 
     private QuantityBuilder footer
 
+    static NesMetaBuilder nesMeta() {
+        new NesMetaBuilder()
+    }
+
     static NesMetaBuilder marioBros() {
         new NesMetaBuilder().title("Mario Bros.")
                 .info("DiskDude!")

@@ -5,8 +5,8 @@ import net.novaware.nes.core.file.NesFileFaker
 import net.novaware.nes.core.file.NesMeta
 import spock.lang.Specification
 
-import static net.novaware.nes.core.file.ines.NesFileReader.Mode.LENIENT
-import static net.novaware.nes.core.file.ines.NesFileReader.Mode.STRICT
+import static net.novaware.nes.core.file.ReaderMode.LENIENT
+import static net.novaware.nes.core.file.ReaderMode.STRICT
 
 class NesFileReaderSpec extends Specification {
 

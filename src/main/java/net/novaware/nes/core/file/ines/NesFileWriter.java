@@ -17,14 +17,27 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
  */
 public class NesFileWriter extends NesFileHandler {
 
-    public ByteBuffer write(NesFile nesFile, NesFileVersion version) { // TODO: remove the version. write header as is.
+    public record Params(
+            NesFileVersion version,
+            boolean includeInfo, // TODO: think about bitfield or enum instead
+            boolean includeTitle
+    ) {
+
+    }
+
+    public ByteBuffer write(NesFile nesFile, Params params) { // TODO: remove the version. write header as is.
         assertArgument(nesFile != null, "nesFile must not be null");
-        assertArgument(version != null, "version must not be null");
+        assertArgument(params != null, "params must not be null");
 
         NesMeta meta = nesFile.meta();
 
         // TODO: writer should use data.header instead. Converter will update / create header from Meta
-        UByteBuffer header = new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), meta);
+        UByteBuffer header = new NesHeaderWriter()
+                .write(meta, new NesHeaderWriter.Params(params.version, params.includeInfo));
+
+        // TODO: writer should use data.footer instead. Converter will update / create footer from meta.
+        ByteBuffer footer = new NesFooterWriter()
+                .write(meta.title(), meta.footer().toBytes());
 
         NesData data = nesFile.data();
 
@@ -35,7 +48,7 @@ public class NesFileWriter extends NesFileHandler {
 
         int totalSize = header.capacity() + trainerSize + prgSize + chrSize; // base
         totalSize += data.misc().capacity(); // 0 or 8KB+2x16B
-        totalSize += data.footer().capacity(); // 0 or more
+        totalSize += params.includeTitle ? footer.capacity() : 0; // 0 or more
 
         ByteBuffer out = ByteBuffer.allocate(totalSize);
         out.order(ByteOrder.LITTLE_ENDIAN);
@@ -45,7 +58,7 @@ public class NesFileWriter extends NesFileHandler {
         putBuffer(out, data.program());
         putBuffer(out, data.video());
         putBuffer(out, data.misc());
-        putBuffer(out, data.footer());
+        putBuffer(out, params.includeTitle ? footer : ByteBuffer.allocate(0).order(ByteOrder.LITTLE_ENDIAN)); // data.footer()); // TODO: see above about using data.footer
 
         return out.flip();
     }

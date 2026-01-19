@@ -6,11 +6,15 @@ import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.function.IntPredicate;
+
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_HYBRID;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.OTHER;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_HYBRID;
+import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMapperLo;
+import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.putMapperLo;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
@@ -26,7 +30,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
  * <a href="https://www.nesdev.org/iNES.txt">iNES format by rvu (2000)</a><br>
  * <a href="https://www.nesdev.org/neshdr20.txt">iNES Header/Format by VmprHntrD (1998)</a>
  */
-public class ModernHeaderBuffer {
+public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     // region Byte 7
 
@@ -55,63 +59,25 @@ public class ModernHeaderBuffer {
     public static final @Unsigned byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
     public static final @Unsigned byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
     public static final @Unsigned byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
-    public static final @Unsigned byte VIDEO_STANDARD_2_BITS      = ubyte(0b0000_0011);
+    public static final @Unsigned byte VIDEO_STANDARD_EXT_BITS    = ubyte(0b0000_0011);
 
     // endregion
 
-    private final UByteBuffer header;
-
-    /**
-     * Reuse some parsing, composition over inheritance FTW
-     */
-    private final ArchaicHeaderBuffer archaicHeader;
-
     public ModernHeaderBuffer(UByteBuffer header) {
-        assertArgument(header != null, "header cannot be null");
-        assertArgument(header.capacity() == NesHeader.SIZE, "header must be " + NesHeader.SIZE + " bytes");
-
-        this.header = header;
-        this.archaicHeader = new ArchaicHeaderBuffer(header);
+        super(header);
     }
 
-    public UByteBuffer unwrap() {
-        return header;
-    }
-
-    public ModernHeaderBuffer putMagic() {
-        archaicHeader.putMagic();
-        return this;
-    }
-
-    public @Unsigned byte[] getMagic() {
-        return archaicHeader.getMagic();
-    }
-
-    public ModernHeaderBuffer putProgramData(Quantity programData) {
-        archaicHeader.putProgramData(programData);
-        return this;
-    }
-
-    public Quantity getProgramData() {
-        return archaicHeader.getProgramData();
-    }
-
-    public ModernHeaderBuffer putVideoData(Quantity videoData) {
-        archaicHeader.putVideoData(videoData);
-        return this;
-    }
-
-    public Quantity getVideoData() {
-        return archaicHeader.getVideoData();
+    public IntPredicate getMapperRange() {
+        return mapper -> 0 <= mapper && mapper <= 0xFF;
     }
 
     public ModernHeaderBuffer putMapper(int mapper) {
-        assertArgument(mapper >= 0 && mapper <= 255, "Archaic mapper must be 0-255");
+        assertArgument(getMapperRange().test(mapper), "Modern mapper must be 0-255");
 
         int mapperLo = mapper & 0x0F;
         int mapperHi = mapper & 0xF0;
 
-        archaicHeader.putMapper(mapperLo);
+        putMapperLo(header, mapperLo);
         this.putMapperHi(mapperHi);
 
         return this;
@@ -129,10 +95,10 @@ public class ModernHeaderBuffer {
     }
 
     public int getMapper() {
-        int mapperLo = archaicHeader.getMapper();
         int mapperHi = getMapperHi();
+        int mapperLo = getMapperLo(header);
 
-        return mapperLo | mapperHi;
+        return mapperHi | mapperLo;
     }
 
     private int getMapperHi() {
@@ -235,9 +201,9 @@ public class ModernHeaderBuffer {
         int byte10 = header.getAsInt(BYTE_10);
 
         int cleared = byte10 & ~uint(BUS_CONFLICTS_BIT);
-        int bit = busConflicts ? uint(BUS_CONFLICTS_BIT) : 0;
+        int busConflictsBit = busConflicts ? uint(BUS_CONFLICTS_BIT) : 0;
 
-        header.putAsByte(BYTE_10, cleared | bit);
+        header.putAsByte(BYTE_10, cleared | busConflictsBit);
 
         return this;
     }
@@ -245,18 +211,18 @@ public class ModernHeaderBuffer {
     public boolean getBusConflicts() {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int bit = byte10 & uint(BUS_CONFLICTS_BIT);
+        int busConflictsBit = byte10 & uint(BUS_CONFLICTS_BIT);
 
-        return bit != 0;
+        return busConflictsBit != 0;
     }
 
     public ModernHeaderBuffer putProgramMemoryPresent(boolean present) {
         int byte10 = header.getAsInt(BYTE_10);
 
         int cleared = byte10 & ~uint(PROGRAM_MEMORY_PRESENT_BIT);
-        int bit = present ? uint(PROGRAM_MEMORY_PRESENT_BIT) : 0;
+        int presenceBit = present ? uint(PROGRAM_MEMORY_PRESENT_BIT) : 0;
 
-        header.putAsByte(BYTE_10, cleared | bit);
+        header.putAsByte(BYTE_10, cleared | presenceBit);
 
         return this;
     }
@@ -273,9 +239,9 @@ public class ModernHeaderBuffer {
         assertArgument(videoStandard != null, "video standard cannot be null");
 
         int byte10 = header.getAsInt(BYTE_10);
-        int cleared = byte10 & ~uint(VIDEO_STANDARD_2_BITS);
+        int cleared = byte10 & ~uint(VIDEO_STANDARD_EXT_BITS);
 
-        int bit = switch(videoStandard) {
+        int bit = switch(videoStandard) { // TODO: consider moving to the enum
             case NTSC -> 0b00;
             case NTSC_HYBRID -> 0b01;
             case PAL -> 0b10;
@@ -290,7 +256,7 @@ public class ModernHeaderBuffer {
 
     public VideoStandard getVideoStandardExt() {
         int byte10 = header.getAsInt(BYTE_10);
-        int bits = (byte10 & uint(VIDEO_STANDARD_2_BITS));
+        int bits = (byte10 & uint(VIDEO_STANDARD_EXT_BITS));
 
         return switch (bits) {
             case 0 -> NTSC;

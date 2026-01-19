@@ -67,14 +67,14 @@ class ArchaicHeaderBufferSpec extends Specification {
 
         when:
         header.putMapper(mapper)
-                .putMemoryLayout(layout)
+                .putVideoMemoryLayout(layout)
                 .putTrainer(trainerSize)
-                .putMemoryKind(kind)
+                .putProgramMemoryKind(kind)
 
         def actualMapper = header.getMapper()
-        def actualLayout = header.getMemoryLayout()
+        def actualLayout = header.getVideoMemoryLayout()
         def actualTrainer = header.getTrainer()
-        def actualKind = header.getMemoryKind()
+        def actualKind = header.getProgramMemoryKind()
 
         then:
         actualMapper == mapper

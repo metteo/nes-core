@@ -40,7 +40,7 @@ class ModernHeaderBufferSpec extends Specification {
         byte10 |= uint(BYTE_10_RESERVED_BITS)
         byte10 |= uint(BUS_CONFLICTS_BIT)
         byte10 |= uint(PROGRAM_MEMORY_PRESENT_BIT)
-        byte10 |= uint(VIDEO_STANDARD_2_BITS)
+        byte10 |= uint(VIDEO_STANDARD_EXT_BITS)
 
         expect:
         byte10 == 0xFF

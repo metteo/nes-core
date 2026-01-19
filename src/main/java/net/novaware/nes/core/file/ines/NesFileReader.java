@@ -4,6 +4,7 @@ import net.novaware.nes.core.file.NesData;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesHash;
 import net.novaware.nes.core.file.Problem;
+import net.novaware.nes.core.file.ReaderMode;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 
@@ -32,25 +33,12 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
  */
 public class NesFileReader extends NesFileHandler {
 
-    public enum Mode {
-        /**
-         * Throws an exception for any deviation from the iNES / NES 2.0 specification.
-         */
-        STRICT,
-
-        /** Attempts to parse the file, logging warnings for minor issues
-         * (e.g., truncated CHR) and only throwing exceptions for major,
-         * blocking errors (e.g., corrupt header).
-         */
-        LENIENT
-    }
-
     public record Result(NesFile nesFile, List<Problem> problems) {
     }
 
     // TODO: add method for parsing header and returning just meta
 
-    public Result read(URI origin, Mode mode) throws NesFileReadingException { // TODO: test
+    public Result read(URI origin, ReaderMode mode) throws NesFileReadingException { // TODO: test
         assertArgument(origin != null, "origin must be provided");
         assertArgument(origin.getScheme().equals("file"), "origin must be a file URI");
         assertArgument(mode != null, "mode must be provided");
@@ -71,7 +59,7 @@ public class NesFileReader extends NesFileHandler {
      * @param inputStream caller is responsible for closing the stream
      * @param mode strictness of the reader
      */
-    public Result read(URI origin, InputStream inputStream, Mode mode) throws NesFileReadingException {
+    public Result read(URI origin, InputStream inputStream, ReaderMode mode) throws NesFileReadingException {
         assertArgument(origin != null, "origin must be provided");
         assertArgument("file".equals(origin.getScheme()), "origin must be a file URI");
         assertArgument(inputStream != null, "inputStream must be provided");
@@ -87,8 +75,9 @@ public class NesFileReader extends NesFileHandler {
 
         // TODO: report if not GAME_NES
 
-        var headerReader = new NesHeaderReader(headerScanResult.version());
-        var headerResult = headerReader.read(origin, headerBuffer, mode);
+        var headerReader = new NesHeaderReader();
+        var headerReaderParams = new NesHeaderReader.Params(headerScanResult.version(), mode);
+        var headerResult = headerReader.read(headerBuffer, headerReaderParams);
         var meta = headerResult.meta();
 
         // FIXME: check if there is enough data before slicing. there are truncated roms out there.
@@ -125,7 +114,7 @@ public class NesFileReader extends NesFileHandler {
                 remainingData
         );
 
-        var metaWithMaybeTitle = new NesFooterReader().read(remainingData, meta);
+        var metaWithMaybeTitle = new NesFooterReader().read(remainingData, meta); // TODO: or default to file name without extension toTitle(URI)
 
         var allProblems = new ArrayList<Problem>();
         allProblems.addAll(headerScanResult.problems());
@@ -133,6 +122,12 @@ public class NesFileReader extends NesFileHandler {
 
         NesFile nesFile = new NesFile(origin, metaWithMaybeTitle, data, NesHash.empty());
         return new Result(nesFile, allProblems);
+    }
+
+    private @NonNull String toTitle(@NonNull URI origin) {
+        Path fileName = Path.of(origin).getFileName();
+
+        return fileName != null ? fileName.toString() : "";
     }
 
     private static @NonNull ByteBuffer readInputStream(URI origin, InputStream inputStream) {

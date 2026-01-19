@@ -19,6 +19,7 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL
 import static net.novaware.nes.core.file.NesFileBuilder.marioBros
 import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN
+import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_7
 import static net.novaware.nes.core.util.Quantity.Unit.*
 
 class NesFileWriterSpec extends Specification {
@@ -39,7 +40,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(marioBros, MODERN)
+        def buffer = writer.write(marioBros, new NesFileWriter.Params(MODERN, false, false))
 
         then:
         buffer.limit() == headerSize + programSize + videoSize
@@ -55,7 +56,7 @@ class NesFileWriterSpec extends Specification {
         def maybeZeroes = new byte[10]
         buffer.get(6, maybeZeroes)
 
-        verifyEach(maybeZeroes.toList()) {it == 0}
+        verifyEach(maybeZeroes.toList()) {it == 0 }
 
         buffer.get(programStart) == marioBros.data().program().get(0)
         buffer.get(videoStart - 1) == marioBros.data().program().get(programSize - 1)
@@ -99,7 +100,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, MODERN)
+        def buffer = writer.write(nesFile, new NesFileWriter.Params(MODERN, false, false))
 
 
         then:
@@ -157,7 +158,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        def buffer = writer.write(nesFile, MODERN)
+        def buffer = writer.write(nesFile, new NesFileWriter.Params(MODERN_1_7, false, false))
 
         then:
         buffer.limit() == 16 + 3 * 16384 + 2 * 8192
@@ -186,7 +187,7 @@ class NesFileWriterSpec extends Specification {
         def writer = new NesFileWriter()
 
         when:
-        writer.write(null, MODERN)
+        writer.write(null, new NesFileWriter.Params(MODERN, false, false))
 
         then:
         def e = thrown(IllegalArgumentException)

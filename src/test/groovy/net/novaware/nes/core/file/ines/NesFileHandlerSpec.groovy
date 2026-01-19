@@ -2,6 +2,7 @@ package net.novaware.nes.core.file.ines
 
 import net.novaware.nes.core.file.NesFile
 import net.novaware.nes.core.file.NesFileBuilder
+import net.novaware.nes.core.file.ReaderMode
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
@@ -18,18 +19,18 @@ class NesFileHandlerSpec extends Specification {
 
         // TODO: maybe should be part of the builder
         archaicBuilder.data()
-                .header(new NesHeaderWriter().write(new NesHeaderWriter.Params(version, true), archaicBuilder.meta().build()))
+                .header(new NesHeaderWriter().write(archaicBuilder.meta().build(), new NesHeaderWriter.Params(version, true)))
                 .footer(new NesFooterWriter().write("Mario Bros.", 127))
 
         NesFile archaicFile = archaicBuilder.build()
 
         when:
-        ByteBuffer fileBuffer = new NesFileWriter().write(archaicFile, version)
+        ByteBuffer fileBuffer = new NesFileWriter().write(archaicFile, new NesFileWriter.Params(version, true, true))
 
         NesFileReader.Result result = new NesFileReader().read(
                 archaicFile.origin(),
                 new ByteArrayInputStream(fileBuffer.array()),
-                NesFileReader.Mode.LENIENT
+                ReaderMode.LENIENT
         )
 
         then:
