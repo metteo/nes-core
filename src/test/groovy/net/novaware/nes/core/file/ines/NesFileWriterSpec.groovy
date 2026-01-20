@@ -75,7 +75,7 @@ class NesFileWriterSpec extends Specification {
         def meta = NesMeta.builder()
             .noTitle()
             .noInfo()
-            .system(EXTENDED)
+            .system(VS_SYSTEM)
             .mapper(53)
             .busConflicts(false)
             .noProgramMemory()
@@ -119,7 +119,7 @@ class NesFileWriterSpec extends Specification {
         buffer.get(6) == 0b0101_0101 as byte
 
         // Flags 7:      0bMMMM_NNPV where M - mapper hi, NN - NES 2.0, P - playchoice-10, V - vs. system
-        buffer.get(7) == 0b0011_0011 as byte
+        buffer.get(7) == 0b0011_0001 as byte
         
         // Flags 9:      0b0000_000T where T - TV System (0 - NTSC, 1 - PAL)
         buffer.get(9) == 0b0000_0000 as byte

@@ -6,6 +6,9 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
+import static net.novaware.nes.core.file.NesMeta.System.EXTENDED;
+import static net.novaware.nes.core.file.NesMeta.System.NES;
+import static net.novaware.nes.core.file.NesMeta.System.PLAY_CHOICE_10;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 
 public class NesHeaderWriter extends NesHeaderHandler {
@@ -68,22 +71,28 @@ public class NesHeaderWriter extends NesHeaderHandler {
         }
 
         if (versions.contains(NesFileVersion.MODERN)) {
-            modernHeader.putSystem(meta.system()); // TODO: except playchoice
+            NesMeta.System nesOrVs = meta.system() == PLAY_CHOICE_10 || meta.system() == EXTENDED
+                    ? NES // fallback to NES // TODO: report a problem that information can't be encoded
+                    : meta.system();
+            modernHeader.putSystem(nesOrVs);
         }
 
         if (versions.contains(NesFileVersion.MODERN_1_3)) {
-            modernHeader.putSystem(meta.system()) // TODO: including playchoice
+            NesMeta.System noExtended = meta.system() == EXTENDED
+                    ? NES // fallback to NES // TODO: report a problem that information can't be encoded
+                    : meta.system();
+            modernHeader.putSystem(noExtended)
                     .putVersion(0b00);
         }
 
         if (versions.contains(NesFileVersion.MODERN_1_5)) {
             modernHeader.putProgramMemory(meta.programMemory().size())
-                    .putVideoStandard(meta.videoStandard());
+                    .putVideoStandard(meta.videoStandard()); // TODO: report a problem if video standard dual or dendy
         }
 
         if (versions.contains(NesFileVersion.MODERN_1_7)) {
             modernHeader.putBusConflicts(meta.busConflicts())
-                    .putProgramMemoryPresent(meta.programMemory().kind() != NesMeta.Kind.NONE)
+                    .putProgramMemoryAbsent(meta.programMemory().kind() == NesMeta.Kind.NONE)
                     .putVideoStandardExt(meta.videoStandard());
         }
 

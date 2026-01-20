@@ -58,7 +58,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public static final int BYTE_10 = 10;
     public static final @Unsigned byte BYTE_10_RESERVED_BITS      = ubyte(0b1100_1100);
     public static final @Unsigned byte BUS_CONFLICTS_BIT          = ubyte(0b0010_0000);
-    public static final @Unsigned byte PROGRAM_MEMORY_PRESENT_BIT = ubyte(0b0001_0000);
+    public static final @Unsigned byte PROGRAM_MEMORY_ABSENT_BIT  = ubyte(0b0001_0000);
     public static final @Unsigned byte VIDEO_STANDARD_EXT_BITS    = ubyte(0b0000_0011);
 
     // endregion
@@ -172,9 +172,9 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         int cleared = byte9 & ~uint(VIDEO_STANDARD_BITS);
 
         int bit = switch(videoStandard) {
-            default   -> 0b0;
-            case NTSC -> 0b0;
-            case PAL  -> 0b1;
+            default              -> 0b0;
+            case NTSC, NTSC_DUAL -> 0b0;
+            case PAL, PAL_DUAL   -> 0b1;
         };
 
         header.putAsByte(BYTE_9, cleared | bit);
@@ -216,21 +216,21 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         return busConflictsBit != 0;
     }
 
-    public ModernHeaderBuffer putProgramMemoryPresent(boolean present) {
+    public ModernHeaderBuffer putProgramMemoryAbsent(boolean absent) {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int cleared = byte10 & ~uint(PROGRAM_MEMORY_PRESENT_BIT);
-        int presenceBit = present ? uint(PROGRAM_MEMORY_PRESENT_BIT) : 0;
+        int cleared = byte10 & ~uint(PROGRAM_MEMORY_ABSENT_BIT);
+        int absenceBit = absent ? uint(PROGRAM_MEMORY_ABSENT_BIT) : 0;
 
-        header.putAsByte(BYTE_10, cleared | presenceBit);
+        header.putAsByte(BYTE_10, cleared | absenceBit);
 
         return this;
     }
 
-    public boolean getProgramMemoryPresent() {
+    public boolean isProgramMemoryAbsent() {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int bit = byte10 & uint(PROGRAM_MEMORY_PRESENT_BIT);
+        int bit = byte10 & uint(PROGRAM_MEMORY_ABSENT_BIT);
 
         return bit != 0;
     }

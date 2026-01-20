@@ -101,7 +101,7 @@ public class NesHeaderReader extends NesHeaderHandler {
 
         if (versions.contains(MODERN_1_7)) {
             busConflicts = modernHeader.getBusConflicts();
-            programMemoryKind = modernHeader.getProgramMemoryPresent() ? programMemoryKind : Kind.NONE; // TODO: will clear battery :(
+            programMemoryKind = modernHeader.isProgramMemoryAbsent() ? programMemoryKind : Kind.NONE; // TODO: will clear battery :(
             videoStandard = modernHeader.getVideoStandardExt(); // TODO: overrides previous!
         }
 
