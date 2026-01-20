@@ -1,7 +1,9 @@
 package net.novaware.nes.core.file
 
 import net.novaware.nes.core.test.TestDataBuilder;
-import net.novaware.nes.core.util.QuantityBuilder;
+import net.novaware.nes.core.util.QuantityBuilder
+
+import static net.novaware.nes.core.util.QuantityBuilder.banks8kb;
 
 class ProgramMemoryBuilder implements TestDataBuilder<NesMeta.ProgramMemory> {
 
@@ -11,14 +13,20 @@ class ProgramMemoryBuilder implements TestDataBuilder<NesMeta.ProgramMemory> {
     static ProgramMemoryBuilder none() {
         return new ProgramMemoryBuilder()
                 .kind(NesMeta.Kind.NONE)
-                .quantity(QuantityBuilder.banks8kb(0));
+                .quantity(banks8kb(0));
 
     }
 
     static ProgramMemoryBuilder battery8kb(int amount) {
         return new ProgramMemoryBuilder()
                 .kind(NesMeta.Kind.PERSISTENT)
-                .quantity(QuantityBuilder.banks8kb(amount));
+                .quantity(banks8kb(amount));
+    }
+
+    static ProgramMemoryBuilder volatile8kb(int amount) {
+        return new ProgramMemoryBuilder()
+                .kind(NesMeta.Kind.VOLATILE)
+                .quantity(banks8kb(amount));
 
     }
 

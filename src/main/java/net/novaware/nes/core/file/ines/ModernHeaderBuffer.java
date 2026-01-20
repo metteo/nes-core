@@ -8,11 +8,11 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.function.IntPredicate;
 
+import static net.novaware.nes.core.file.NesMeta.VideoStandard.DENDY;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC;
-import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_HYBRID;
-import static net.novaware.nes.core.file.NesMeta.VideoStandard.OTHER;
+import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_DUAL;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL;
-import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_HYBRID;
+import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_DUAL;
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMapperLo;
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.putMapperLo;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
@@ -166,15 +166,15 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public ModernHeaderBuffer putVideoStandard(VideoStandard videoStandard) {
         assertArgument(videoStandard != null, "video standard cannot be null");
-        // TODO: validate the input for allowed values and ???
+        // TODO: validate the input for allowed values: NTSC, PAL, UNKNOWN
 
         int byte9 = header.getAsInt(BYTE_9);
         int cleared = byte9 & ~uint(VIDEO_STANDARD_BITS);
 
         int bit = switch(videoStandard) {
+            default   -> 0b0;
             case NTSC -> 0b0;
-            case PAL, NTSC_HYBRID -> 0b1;
-            default -> 0b0;
+            case PAL  -> 0b1;
         };
 
         header.putAsByte(BYTE_9, cleared | bit);
@@ -237,16 +237,17 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public ModernHeaderBuffer putVideoStandardExt(VideoStandard videoStandard) {
         assertArgument(videoStandard != null, "video standard cannot be null");
+        assertArgument(videoStandard != DENDY, "video standard cannot be Dendy");
 
         int byte10 = header.getAsInt(BYTE_10);
         int cleared = byte10 & ~uint(VIDEO_STANDARD_EXT_BITS);
 
         int bit = switch(videoStandard) { // TODO: consider moving to the enum
-            case NTSC -> 0b00;
-            case NTSC_HYBRID -> 0b01;
-            case PAL -> 0b10;
-            case PAL_HYBRID -> 0b11;
-            default -> 0b0;
+            default        -> 0b00;
+            case NTSC      -> 0b00;
+            case NTSC_DUAL -> 0b01;
+            case PAL       -> 0b10;
+            case PAL_DUAL  -> 0b11;
         };
 
         header.putAsByte(BYTE_10, cleared | bit);
@@ -259,11 +260,11 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         int bits = (byte10 & uint(VIDEO_STANDARD_EXT_BITS));
 
         return switch (bits) {
-            case 0 -> NTSC;
-            case 1 -> NTSC_HYBRID;
-            case 2 -> PAL;
-            case 3 -> PAL_HYBRID;
-            default -> OTHER;
+            default   -> NTSC;
+            case 0b00 -> NTSC;
+            case 0b01 -> NTSC_DUAL;
+            case 0b10 -> PAL;
+            case 0b11 -> PAL_DUAL;
         };
     }
 

@@ -184,7 +184,7 @@ class ModernHeaderBufferSpec extends Specification {
         actual == videoStandardExt
 
         where:
-        videoStandardExt << [NTSC, NTSC_HYBRID, PAL, PAL_HYBRID] // TODO: what about dendy, etc
+        videoStandardExt << [NTSC, NTSC_DUAL, PAL, PAL_DUAL]
     }
 
     def "should get byte10 reserved bits" () {
