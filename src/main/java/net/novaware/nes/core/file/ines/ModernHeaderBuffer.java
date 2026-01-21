@@ -35,7 +35,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     // region Byte 7
 
     public static final int  BYTE_7 = 7;
-    public static final @Unsigned byte MAPPER_HI_BITS   = ubyte(0b1111_0000); // "iNES 0.7"
+    public static final @Unsigned byte MAPPER_HI_BITS   = ArchaicHeaderBuffer.MAPPER_HI_BITS;
     public static final @Unsigned byte VERSION_BITS     = ubyte(0b0000_1100);
     public static final @Unsigned byte SYSTEM_TYPE_BITS = ubyte(0b0000_0011);
 
@@ -65,46 +65,6 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public ModernHeaderBuffer(UByteBuffer header) {
         super(header);
-    }
-
-    public IntPredicate getMapperRange() {
-        return mapper -> 0 <= mapper && mapper <= 0xFF;
-    }
-
-    public ModernHeaderBuffer putMapper(int mapper) {
-        assertArgument(getMapperRange().test(mapper), "Modern mapper must be 0-255");
-
-        int mapperLo = mapper & 0x0F;
-        int mapperHi = mapper & 0xF0;
-
-        putMapperLo(header, mapperLo);
-        this.putMapperHi(mapperHi);
-
-        return this;
-    }
-
-    private void putMapperHi(int mapper) {
-        assertArgument((mapper & ~uint(MAPPER_HI_BITS)) == 0,
-                "mapper hi bits must be in their target position");
-
-        int byte7 = header.getAsInt(BYTE_7);
-        int cleared = byte7 & ~uint(MAPPER_HI_BITS);
-        int bits = mapper & uint(MAPPER_HI_BITS);
-
-        header.putAsByte(BYTE_7, cleared | bits);
-    }
-
-    public int getMapper() {
-        int mapperHi = getMapperHi();
-        int mapperLo = getMapperLo(header);
-
-        return mapperHi | mapperLo;
-    }
-
-    private int getMapperHi() {
-        int byte7 = header.getAsInt(BYTE_7);
-
-        return (byte7 & uint(MAPPER_HI_BITS));
     }
 
     public ModernHeaderBuffer putSystem(NesMeta.System system) {
@@ -166,7 +126,9 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public ModernHeaderBuffer putVideoStandard(VideoStandard videoStandard) {
         assertArgument(videoStandard != null, "video standard cannot be null");
-        // TODO: validate the input for allowed values: NTSC, PAL, UNKNOWN
+        // TODO: expose allowed values: NTSC, PAL, UNKNOWN,
+        //  so it can be reported higher it's not possible
+        //  to encode like getMapperRange predicate
 
         int byte9 = header.getAsInt(BYTE_9);
         int cleared = byte9 & ~uint(VIDEO_STANDARD_BITS);

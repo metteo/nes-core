@@ -68,7 +68,7 @@ public class NesHeaderReader extends NesHeaderHandler {
             programData = archaicHeader.getProgramData();
             layout = archaicHeader.getVideoMemoryLayout();
             videoData = archaicHeader.getVideoData();
-            mapper = archaicHeader.getMapper();
+            mapper = archaicHeader.getMapper(ARCHAIC);
             trainer = archaicHeader.getTrainer();
             programMemoryKind = archaicHeader.getProgramMemoryKind();
 
@@ -79,8 +79,7 @@ public class NesHeaderReader extends NesHeaderHandler {
         }
 
         if (versions.contains(ARCHAIC_0_7)) {
-            // FIXME: wtf? why modern?
-            mapper = modernHeader.getMapper(); // TODO: do we want to set the mapper 3 times (archaic, 0.7, 2.0)? possibly other fields too.
+            mapper = archaicHeader.getMapper(ARCHAIC_0_7); // TODO: do we want to set the mapper 3 times (archaic, 0.7, 2.0)? possibly other fields too.
 
             // TODO: read shorter info?
         }

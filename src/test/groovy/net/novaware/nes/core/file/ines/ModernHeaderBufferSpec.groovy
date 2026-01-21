@@ -46,21 +46,6 @@ class ModernHeaderBufferSpec extends Specification {
         byte10 == 0xFF
     }
 
-    def "should put and then get mapper with hi bits" () {
-        given:
-        def header = headerBuffer()
-
-        when:
-        header.putMapper(mapper)
-        def actualMapper = header.getMapper()
-
-        then:
-        actualMapper == mapper
-
-        where:
-        mapper << [0, 1, 2, 15, 16, 129, 255]
-    }
-
     def "should put and then get system type" () {
         given:
         def header = headerBuffer()

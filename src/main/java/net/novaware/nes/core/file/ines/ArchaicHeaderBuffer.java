@@ -8,8 +8,11 @@ import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.function.IntPredicate;
 
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
@@ -47,6 +50,13 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     public static final @Unsigned byte LAYOUT_BITS    = ubyte(0b0000_1001);
     public static final @Unsigned byte TRAINER_BIT    = ubyte(0b0000_0100);
     public static final @Unsigned byte BATTERY_BIT    = ubyte(0b0000_0010);
+
+    // endregion
+    // region Byte 7 (iNES 0.7)
+
+    public static final int  BYTE_7 = 7;
+    public static final @Unsigned byte MAPPER_HI_BITS       = ubyte(0b1111_0000);
+    public static final @Unsigned byte BYTE_7_RESERVED_BITS = ubyte(0b0000_1111);
 
     // endregion
 
@@ -100,8 +110,14 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
         return new Quantity(byte5, BANK_8KB);
     }
 
-    public IntPredicate getMapperRange() {
-        return mapper -> 0 <= mapper && mapper <= 0xF;
+    public IntPredicate getMapperRange(NesFileVersion version) {
+        assertArchaicVersion(version);
+
+        return switch(version) {
+            case ARCHAIC -> mapper -> 0 <= mapper && mapper <= 0xF;
+            case ARCHAIC_0_7 -> mapper -> 0 <= mapper && mapper <= 0xFF;
+            default -> throw archaicAssertionError();
+        };
     }
 
     /* package */ static UByteBuffer putMapperLo(UByteBuffer header, int mapper) {
@@ -113,10 +129,34 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
         return header.putAsByte(BYTE_6, cleared | shifted);
     }
 
-    public ArchaicHeaderBuffer putMapper(int mapper) {
-        assertArgument(getMapperRange().test(mapper), "Archaic mapper must be 0-15");
+    /* package */ static UByteBuffer putMapperHi(UByteBuffer header, int mapper) {
+        assertArgument((mapper & ~uint(MAPPER_HI_BITS)) == 0,
+                "mapper hi bits must be in their target position");
 
-        putMapperLo(header, mapper);
+        int byte7 = header.getAsInt(BYTE_7);
+        int cleared = byte7 & ~uint(MAPPER_HI_BITS);
+        int bits = mapper & uint(MAPPER_HI_BITS);
+
+        return header.putAsByte(BYTE_7, cleared | bits);
+    }
+
+    public ArchaicHeaderBuffer putMapper(NesFileVersion version, int mapper) {
+        assertArchaicVersion(version);
+
+        switch(version) {
+            case ARCHAIC:
+                assertArgument(getMapperRange(version).test(mapper), "Archaic mapper must be 0-15");
+                putMapperLo(header, mapper);
+                break;
+            case ARCHAIC_0_7:
+                assertArgument(getMapperRange(version).test(mapper), "iNES 0.7 mapper must be 0-255");
+
+                putMapperLo(header, mapper & 0x0F);
+                putMapperHi(header, mapper & 0xF0);
+                break;
+
+            default: throw archaicAssertionError();
+        }
 
         return this;
     }
@@ -127,8 +167,34 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
         return (byte6 & uint(MAPPER_LO_BITS)) >> 4;
     }
 
-    public int getMapper() {
-        return getMapperLo(header);
+    /* package */ static int getMapperHi(UByteBuffer header) {
+        int byte7 = header.getAsInt(BYTE_7);
+
+        return (byte7 & uint(MAPPER_HI_BITS));
+    }
+
+    public int getMapper(NesFileVersion version) {
+        assertArchaicVersion(version);
+
+        return switch(version) {
+            case ARCHAIC -> getMapperLo(header);
+            case ARCHAIC_0_7 -> getMapperHi(header) | getMapperLo(header);
+            default -> throw archaicAssertionError();
+        };
+    }
+
+    private AssertionError archaicAssertionError() throws AssertionError {
+        return new AssertionError("unreachable, check method version assertion");
+    }
+
+    private void assertArchaicVersion(NesFileVersion version) {
+        assertArgument(List.of(ARCHAIC, ARCHAIC_0_7).contains(version), "version must be one of archaic ones");
+    }
+
+    public int getByte7Reserved() { // TODO: report if not 0
+        int byte7 = header.getAsInt(BYTE_7);
+
+        return (byte7 & uint(BYTE_7_RESERVED_BITS));
     }
 
     public ArchaicHeaderBuffer putVideoMemoryLayout(Layout layout) {

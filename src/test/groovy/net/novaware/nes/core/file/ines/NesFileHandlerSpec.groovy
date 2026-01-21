@@ -19,7 +19,7 @@ class NesFileHandlerSpec extends Specification {
 
         // TODO: maybe should be part of the builder
         archaicBuilder.data()
-                .header(new NesHeaderWriter().write(archaicBuilder.meta().build(), new NesHeaderWriter.Params(version, true)))
+                .header(new NesHeaderWriter().write(archaicBuilder.meta().build(), new NesHeaderWriter.Params(version, true)).header())
                 .footer(new NesFooterWriter().write("Mario Bros.", 127))
 
         NesFile archaicFile = archaicBuilder.build()

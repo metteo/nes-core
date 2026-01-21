@@ -54,7 +54,7 @@ class NesHeaderWriterSpec extends Specification {
         def params = new NesHeaderWriter.Params(ARCHAIC, false)
 
         when:
-        def header = writer.write(meta, params)
+        def header = writer.write(meta, params).header()
 
         then:
         header.capacity() == 16
@@ -82,7 +82,7 @@ class NesHeaderWriterSpec extends Specification {
         def params = new NesHeaderWriter.Params(ARCHAIC_0_7, false)
 
         when:
-        def header = writer.write(meta, params)
+        def header = writer.write(meta, params).header()
 
         then:
         header.capacity() == 16
@@ -114,7 +114,7 @@ class NesHeaderWriterSpec extends Specification {
         def params = new NesHeaderWriter.Params(version, false)
 
         when:
-        def header = writer.write(meta, params)
+        def header = writer.write(meta, params).header()
 
         then:
         header.capacity() == 16
@@ -158,39 +158,40 @@ class NesHeaderWriterSpec extends Specification {
         def params = new NesHeaderWriter.Params(MODERN_1_5, false)
 
         when:
-        def header = writer.write(meta, params)
+        def header = writer.write(meta, params).header()
 
         then:
         header.capacity() == 16
 
         getMagic(header) == GAME_NES.numbers()
 
-        header.getAsInt(BYTE_4) == 11
-        header.getAsInt(BYTE_5) == 13
+        with (header) {
+            getAsInt(BYTE_4) == 11
+            getAsInt(BYTE_5) == 13
 
-        //                        0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
-        s(header.get(BYTE_6)) == "0b0110_1001"
+            //                 0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
+            s(get(BYTE_6)) == "0b0110_1001"
 
-        //                        0bMMMM_00ss - Mapper hi, s - system (nes / vs / playchoice)
-        s(header.get(BYTE_7)) == "0b1010_0000"
+            //                 0bMMMM_00ss - Mapper hi, s - system (nes / vs / playchoice)
+            s(get(BYTE_7)) == "0b1010_0000"
 
-        s(header.get(BYTE_8)) == byte8
-        s(header.get(BYTE_9)) == byte9
-
+            s(get(BYTE_8)) == byte8
+            s(get(BYTE_9)) == byte9
+        }
         verifyEach(getRemainingData(BYTE_10, header).toList()) {it == 0 }
 
         where:
         programMemory | videoStandard | byte8         | byte9
     //                                  "0bmmmm_mmmm" | "0b0000_000v", m - prgMem size, v - video standard
-        0             | NTSC          | "0b0000_0000" | "0b0000_0000"
-        0             | PAL           | "0b0000_0000" | "0b0000_0001"
-        0             | NTSC_DUAL     | "0b0000_0000" | "0b0000_0000"
-        0             | PAL_DUAL      | "0b0000_0000" | "0b0000_0001"
-        0             | DENDY         | "0b0000_0000" | "0b0000_0000" // ignore dendy
-        0             | UNKNOWN       | "0b0000_0000" | "0b0000_0000" // ignore unknown
-        0             | PAL           | "0b0000_0000" | "0b0000_0001"
-        1             | NTSC          | "0b0000_0001" | "0b0000_0000"
-        4             | NTSC          | "0b0000_0100" | "0b0000_0000"
+        0             | NTSC          | ZERO          | "0b0000_0000"
+        0             | PAL           | ZERO          | "0b0000_0001"
+        0             | NTSC_DUAL     | ZERO          | "0b0000_0000"
+        0             | PAL_DUAL      | ZERO          | "0b0000_0001"
+        0             | DENDY         | ZERO          | "0b0000_0000" // ignore dendy
+        0             | UNKNOWN       | ZERO          | "0b0000_0000" // ignore unknown
+
+        1             | NTSC          | "0b0000_0001" | ZERO
+        4             | NTSC          | "0b0000_0100" | ZERO
     //  4x 8KB is usual max
     }
 
@@ -211,21 +212,23 @@ class NesHeaderWriterSpec extends Specification {
         def params = new NesHeaderWriter.Params(MODERN_1_7, false)
 
         when:
-        def header = writer.write(meta, params)
+        def header = writer.write(meta, params).header()
 
-        then: // TODO: consider using with(header) {} block
+        then:
         header.capacity() == 16
 
         getMagic(header) == GAME_NES.numbers()
 
-        header.getAsInt(BYTE_4) == 14
-        header.getAsInt(BYTE_5) == 15
+        with (header) {
+            getAsInt(BYTE_4) == 14
+            getAsInt(BYTE_5) == 15
 
-        s(header.get(BYTE_6)) == "0b0110_1001"
-        s(header.get(BYTE_7)) == "0b1010_0000"
-        s(header.get(BYTE_8)) == ZERO
-        s(header.get(BYTE_9)) == byte9
-        s(header.get(BYTE_10)) == byte10
+            s(get(BYTE_6)) == "0b0110_1001"
+            s(get(BYTE_7)) == "0b1010_0000"
+            s(get(BYTE_8)) == ZERO
+            s(get(BYTE_9)) == byte9
+            s(get(BYTE_10)) == byte10
+        }
 
         verifyEach(getRemainingData(BYTE_11, header).toList()) {it == 0 }
 
@@ -237,6 +240,7 @@ class NesHeaderWriterSpec extends Specification {
         false        | false        | PAL           | "0b0000_0001" | "0b0000_0010"
         false        | false        | NTSC_DUAL     | "0b0000_0000" | "0b0000_0001"
         false        | false        | PAL_DUAL      | "0b0000_0001" | "0b0000_0011"
+
         true         | false        | NTSC          | "0b0000_0000" | "0b0010_0000"
         false        | true         | NTSC          | "0b0000_0000" | "0b0001_0000"
     }
@@ -280,7 +284,7 @@ class NesHeaderWriterSpec extends Specification {
     }
 
     static byte[] getRemainingData(int startByte, UByteBuffer header) {
-        def maybeZeroes = new byte[16 - startByte]
+        def maybeZeroes = new byte[NesHeader.SIZE - startByte]
         header.get(startByte, maybeZeroes)
         maybeZeroes
     }

@@ -33,7 +33,7 @@ public class NesFileWriter extends NesFileHandler {
 
         // TODO: writer should use data.header instead. Converter will update / create header from Meta
         UByteBuffer header = new NesHeaderWriter()
-                .write(meta, new NesHeaderWriter.Params(params.version, params.includeInfo));
+                .write(meta, new NesHeaderWriter.Params(params.version, params.includeInfo)).header();
 
         // TODO: writer should use data.footer instead. Converter will update / create footer from meta.
         ByteBuffer footer = new NesFooterWriter()

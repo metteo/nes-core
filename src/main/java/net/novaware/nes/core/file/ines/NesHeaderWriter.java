@@ -1,35 +1,55 @@
 package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
+import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.util.UByteBuffer;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
 import static net.novaware.nes.core.file.NesMeta.System.EXTENDED;
 import static net.novaware.nes.core.file.NesMeta.System.NES;
 import static net.novaware.nes.core.file.NesMeta.System.PLAY_CHOICE_10;
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 
 public class NesHeaderWriter extends NesHeaderHandler {
 
+    /**
+     * @param version of the resulting header
+     * @param header existing buffer with correct size that will be used
+     *               to write. Will be cleaned up before writing.
+     * @param includeInfo should info be included at the end.
+     *                    This is non-standard and may not fit in the
+     *                    remaining space (will be clipped)
+     */
     public record Params(
             NesFileVersion version,
+            UByteBuffer header,
             boolean includeInfo // TODO: think about bitfield or enum instead
     ) {
-
+        public Params(NesFileVersion version, boolean includeInfo) {
+            this(version, NesHeader.allocate(), includeInfo);
+        }
     }
-    public @NonNull UByteBuffer write(NesMeta meta, Params params) {
-        assertArgument(meta != null, "meta must not be null");
-        assertArgument(params != null, "params must not be null");
-        assertArgument(params.version != null, "version must not be null");
-        assertArgument(params.version != NesFileVersion.UNKNOWN, "version must be specified");
+
+    public record Result(
+            UByteBuffer header,
+            List<Problem> problems
+    ) {
+    }
+
+    public Result write(NesMeta meta, Params params) {
+        assertArguments(meta, params);
+
         if (params.includeInfo()) {
             // NOTE: actually applies only to DiskDude!, other shorter info strings would fit in 0.7 header
             // assertArgument(params.version == NesFileVersion.ARCHAIC, "info can be included only in archaic header"); // TODO: move to version specific method and check length
         }
 
-        UByteBuffer header = NesHeader.allocate();
+        UByteBuffer header = params.header();
+
+        // TODO: zero out the header (may have old data)
 
         List<NesFileVersion> versions = params.version.getHistory();
 
@@ -40,7 +60,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
         int mapper = meta.mapper();
         boolean mapperStored = false;
 
-        if (versions.contains(NesFileVersion.ARCHAIC)) {
+        if (versions.contains(ARCHAIC)) {
             archaicHeader.putMagic()
                     .putProgramData(meta.programData())
                     .putVideoData(meta.videoData().size())
@@ -49,8 +69,8 @@ public class NesHeaderWriter extends NesHeaderHandler {
                     .putProgramMemoryKind(meta.programMemory().kind());
 
 
-            if (archaicHeader.getMapperRange().test(mapper)) {
-                archaicHeader.putMapper(mapper);
+            if (archaicHeader.getMapperRange(ARCHAIC).test(mapper)) {
+                archaicHeader.putMapper(ARCHAIC, mapper);
                 mapperStored = true;
             }
 
@@ -59,11 +79,9 @@ public class NesHeaderWriter extends NesHeaderHandler {
             }
         }
 
-        if (versions.contains(NesFileVersion.ARCHAIC_0_7)) {
-
-            // FIXME: wtf? why modern?
-            if (!mapperStored && modernHeader.getMapperRange().test(mapper)) {
-                modernHeader.putMapper(mapper);
+        if (versions.contains(ARCHAIC_0_7)) {
+            if (!mapperStored && archaicHeader.getMapperRange(ARCHAIC_0_7).test(mapper)) {
+                archaicHeader.putMapper(ARCHAIC_0_7, mapper);
                 mapperStored = true;
             }
 
@@ -107,7 +125,15 @@ public class NesHeaderWriter extends NesHeaderHandler {
 
         header.rewind();
 
-        return header;
+        return new Result(header, List.of());
+    }
+
+    private void assertArguments(NesMeta meta, Params params) {
+        assertArgument(meta != null, "meta must not be null");
+        assertArgument(params != null, "params must not be null");
+        assertArgument(params.version != null, "version must not be null");
+        assertArgument(params.version != NesFileVersion.UNKNOWN, "version must be specified");
+        assertArgument(params.header != null, "header must not be null");
     }
 
 
