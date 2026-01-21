@@ -47,9 +47,8 @@ public class NesHeaderWriter extends NesHeaderHandler {
             // assertArgument(params.version == NesFileVersion.ARCHAIC, "info can be included only in archaic header"); // TODO: move to version specific method and check length
         }
 
-        UByteBuffer header = params.header();
-
-        // TODO: zero out the header (may have old data)
+        UByteBuffer header = params.header()
+                .zeroOut();
 
         List<NesFileVersion> versions = params.version.getHistory();
 

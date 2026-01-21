@@ -1,13 +1,18 @@
 package net.novaware.nes.core.util;
 
+import org.checkerframework.checker.index.qual.LTEqLengthOf;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.UnsignedTypes.UBYTE_0;
 
 public class UByteBuffer {
 
@@ -138,6 +143,47 @@ public class UByteBuffer {
 
     public int capacity() {
         return buffer.capacity();
+    }
+
+    public UByteBuffer clear() {
+        buffer.clear();
+        return this;
+    }
+
+    @SuppressWarnings("signedness")
+    public UByteBuffer zeroOut() {
+        clear();
+
+        // FIXME: will not work for slices and read only buffers
+        if (buffer.hasArray()) {
+            // High-speed zeroing for HeapByteBuffers
+
+            byte[] array = buffer.array();
+            int fromIndex = validateIndex(buffer.arrayOffset(), array);
+            int toIndex = validateIndex(buffer.arrayOffset() + buffer.capacity(), array);
+
+            Arrays.fill(array, fromIndex, toIndex, UBYTE_0);
+        } else {
+            // Fallback for DirectByteBuffers
+            while (buffer.hasRemaining()) {
+                put(UBYTE_0);
+            }
+            clear(); // Reset position again after the fill loop
+        }
+
+        return this;
+    }
+
+
+    private
+    @NonNegative
+    @LTEqLengthOf("#2")
+    int validateIndex(int index, byte[] array) {
+        if (index < 0 || index > array.length) {
+            throw new IndexOutOfBoundsException("Index out of range: " + index + ", allowed [0, " + (array.length - 1) + "]");
+        }
+
+        return index;
     }
 
     @Override
