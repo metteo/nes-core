@@ -2,7 +2,6 @@ package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.index.qual.LTEqLengthOf;
 import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
 
@@ -174,6 +173,16 @@ public class UByteBuffer {
         return this;
     }
 
+    public UByteBuffer fill(@Unsigned byte b) {
+        clear();
+
+        while (buffer.hasRemaining()) {
+            put(b);
+        }
+
+        clear();
+        return this;
+    }
 
     private
     @NonNegative

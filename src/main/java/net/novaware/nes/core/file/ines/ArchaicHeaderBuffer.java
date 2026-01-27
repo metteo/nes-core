@@ -8,12 +8,14 @@ import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntPredicate;
 
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.Chars.isPrintable;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
@@ -270,15 +272,15 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
 
     public String getInfo() {
         @Unsigned byte[] infoBytes = new byte[NesHeader.SIZE - 7];
+        Arrays.fill(infoBytes, 0, infoBytes.length, (byte)' ');
 
-        // NOTE: may arrive at some random printable character, doesn't mean it's an info text
-        for(int i = 0; i < infoBytes.length; i++) {
+        for(int i = infoBytes.length - 1; i >= 0; i--) {
             final int b = header.getAsInt(i + 7);
 
-            if (32 <= b && b < 127) {
+            if (isPrintable(b)) {
                 infoBytes[i] = ubyte(b);
             } else {
-                infoBytes[i] = ' '; // any nonprintable char into space
+                break; // read back until something strange
             }
         }
 

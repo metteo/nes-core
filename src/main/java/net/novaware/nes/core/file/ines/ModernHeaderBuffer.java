@@ -6,15 +6,11 @@ import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.util.function.IntPredicate;
-
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.DENDY;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_DUAL;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_DUAL;
-import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMapperLo;
-import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.putMapperLo;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;

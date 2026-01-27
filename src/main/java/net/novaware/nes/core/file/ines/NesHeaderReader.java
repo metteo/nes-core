@@ -73,7 +73,7 @@ public class NesHeaderReader extends NesHeaderHandler {
             programMemoryKind = archaicHeader.getProgramMemoryKind();
 
             // TODO: read info?
-            if (params.version == ARCHAIC) {
+            if (params.version != FUTURE) { // NES 2.0 uses whole header
                 info = archaicHeader.getInfo();
             }
         }

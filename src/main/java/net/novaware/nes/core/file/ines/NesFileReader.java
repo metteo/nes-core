@@ -7,6 +7,7 @@ import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.file.ReaderMode;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
+import static net.novaware.nes.core.file.Problem.Severity.MAJOR;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 
 // TODO: support Archaic iNES and NES 2.0 modes
@@ -33,11 +35,12 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
  */
 public class NesFileReader extends NesFileHandler {
 
-    public record Result(NesFile nesFile, List<Problem> problems) {
+    public record Result(@Nullable NesFile nesFile, List<Problem> problems) {
     }
 
     // TODO: add method for parsing header and returning just meta
 
+    // TODO: allow specifying the version (user override)
     public Result read(URI origin, ReaderMode mode) throws NesFileReadingException { // TODO: test
         assertArgument(origin != null, "origin must be provided");
         assertArgument(origin.getScheme().equals("file"), "origin must be a file URI");
@@ -65,6 +68,8 @@ public class NesFileReader extends NesFileHandler {
         assertArgument(inputStream != null, "inputStream must be provided");
         assertArgument(mode != null, "mode must be provided");
 
+        var allProblems = new ArrayList<Problem>();
+
         var inputBuffer = readInputStream(origin, inputStream);
 
         final var headerSize = NesHeader.SIZE;
@@ -73,6 +78,10 @@ public class NesFileReader extends NesFileHandler {
         var headerScanner = new NesHeaderScanner();
         var headerScanResult = headerScanner.scan(headerBuffer);
 
+        if (headerScanResult.version() == NesFileVersion.FUTURE) {
+            return new Result(null, List.of(new Problem(MAJOR, "NES 2.0 is not yet supported")));
+        }
+
         // TODO: report if not GAME_NES
 
         var headerReader = new NesHeaderReader();
@@ -80,27 +89,30 @@ public class NesFileReader extends NesFileHandler {
         var headerResult = headerReader.read(headerBuffer, headerReaderParams);
         var meta = headerResult.meta();
 
+        allProblems.addAll(headerScanResult.problems());
+        allProblems.addAll(headerResult.problems());
+
         // FIXME: check if there is enough data before slicing. there are truncated roms out there.
 
         var trainerSize = meta.trainer().toBytes();
-        var trainerData = trainerSize > 0
-                ? inputBuffer.slice(headerSize, trainerSize)
-                : ByteBuffer.allocate(0);
-
         var programDataSize = meta.programData().toBytes();
         var videoDataSize = meta.videoData().size().toBytes();
-
-        var programData = inputBuffer.slice(headerSize + trainerSize, programDataSize);
-        var videoData = videoDataSize > 0
-                ? inputBuffer.slice(headerSize + trainerSize + programDataSize, videoDataSize)
-                : ByteBuffer.allocate(0);
 
         int expectedDataAmount = headerSize + trainerSize + programDataSize + videoDataSize;
         int inputBufferSize = inputBuffer.capacity();
 
         if (inputBufferSize < expectedDataAmount) {
-            throw new IllegalArgumentException("File is truncated. Expected " + expectedDataAmount + " bytes but got " + inputBufferSize);
+            allProblems.add(new Problem(MAJOR, "File is truncated. Expected " + expectedDataAmount + " bytes but got " + inputBufferSize));
+            return new Result(null, allProblems);
         }
+
+        var trainerData = trainerSize > 0
+                ? inputBuffer.slice(headerSize, trainerSize)
+                : ByteBuffer.allocate(0);
+        var programData = inputBuffer.slice(headerSize + trainerSize, programDataSize);
+        var videoData = videoDataSize > 0
+                ? inputBuffer.slice(headerSize + trainerSize + programDataSize, videoDataSize)
+                : ByteBuffer.allocate(0);
 
         int remainingDataSize = inputBufferSize - expectedDataAmount;
         var remainingData = inputBuffer.slice(expectedDataAmount, remainingDataSize);
@@ -115,10 +127,6 @@ public class NesFileReader extends NesFileHandler {
         );
 
         var metaWithMaybeTitle = new NesFooterReader().read(remainingData, meta); // TODO: or default to file name without extension toTitle(URI)
-
-        var allProblems = new ArrayList<Problem>();
-        allProblems.addAll(headerScanResult.problems());
-        allProblems.addAll(headerResult.problems());
 
         NesFile nesFile = new NesFile(origin, metaWithMaybeTitle, data, NesHash.empty());
         return new Result(nesFile, allProblems);

@@ -10,6 +10,9 @@ import static net.novaware.nes.core.file.ReaderMode.STRICT
 
 class NesFileReaderSpec extends Specification {
 
+    // TODO: test for files much bigger than the spec (huge footer)
+    // TODO: test for files smaller than the spec (invalid meta or truncated)
+
     def "should persist origin of the file" () {
         given:
         def expectedOrigin = URI.create("file:///home/user/file.nes") // TODO: may not work on win

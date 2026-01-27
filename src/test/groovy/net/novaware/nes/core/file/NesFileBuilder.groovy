@@ -9,6 +9,12 @@ class NesFileBuilder implements TestDataBuilder<NesFile> {
     private NesMetaBuilder meta = NesMetaBuilder.marioBros()
     private NesDataBuilder data = NesDataBuilder.marioBros()
 
+    static NesFileBuilder empty() {
+        return new NesFileBuilder()
+                .origin(UriBuilder.marioBros())
+                .data(NesDataBuilder.emptyData())
+    }
+
     // TODO: separate clean archaic marioBros from dirty one (with info and title)
     static NesFileBuilder marioBros() {
         return new NesFileBuilder()
