@@ -44,6 +44,17 @@ public record NesData(
         return hasData(footer);
     }
 
+    public int size() {
+        int header = header().capacity();
+        int trainer = trainer().capacity();
+        int program = program().capacity();
+        int video = video().capacity();
+        int misc = misc().capacity();
+        int footer = footer().capacity();
+
+        return header + trainer + program + video + misc + footer;
+    }
+
     public static Builder builder() {
         return new AutoBuilder_NesData_Builder();
     }

@@ -91,6 +91,10 @@ public record NesFile (
 
         // TODO: validate different section against each other, or not?
     }
+
+    public boolean hasData() {
+        return data != null;
+    }
 }
 
 

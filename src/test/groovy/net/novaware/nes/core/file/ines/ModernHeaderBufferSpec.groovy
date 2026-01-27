@@ -39,26 +39,11 @@ class ModernHeaderBufferSpec extends Specification {
         def byte10 = 0
         byte10 |= uint(BYTE_10_RESERVED_BITS)
         byte10 |= uint(BUS_CONFLICTS_BIT)
-        byte10 |= uint(PROGRAM_MEMORY_PRESENT_BIT)
-        byte10 |= uint(VIDEO_STANDARD_2_BITS)
+        byte10 |= uint(PROGRAM_MEMORY_ABSENT_BIT)
+        byte10 |= uint(VIDEO_STANDARD_EXT_BITS)
 
         expect:
         byte10 == 0xFF
-    }
-
-    def "should put and then get mapper with hi bits" () {
-        given:
-        def header = headerBuffer()
-
-        when:
-        header.putMapper(mapper)
-        def actualMapper = header.getMapper()
-
-        then:
-        actualMapper == mapper
-
-        where:
-        mapper << [0, 1, 2, 15, 16, 129, 255]
     }
 
     def "should put and then get system type" () {
@@ -112,14 +97,18 @@ class ModernHeaderBufferSpec extends Specification {
         def header = headerBuffer()
 
         when:
-        header.putVideoStandard(videoStandard)
+        header.putVideoStandard(input)
         def actual = header.getVideoStandard()
 
         then:
-        actual == videoStandard
+        actual == expected
 
         where:
-        videoStandard << [NTSC, PAL] // TODO: what about dual, dendy, etc
+        input     | expected // downgrade dual to single (there is no space)
+        NTSC      | NTSC
+        NTSC_DUAL | NTSC
+        PAL       | PAL
+        PAL_DUAL  | PAL
     }
 
     def "should get byte9 reserved bits" () {
@@ -157,19 +146,19 @@ class ModernHeaderBufferSpec extends Specification {
         busConflicts << [true, false]
     }
 
-    def "should put and then get program memory present bit" () {
+    def "should put and then get program memory absent bit" () {
         given:
         def header = headerBuffer()
 
         when:
-        header.putProgramMemoryPresent(present)
-        def actual = header.getProgramMemoryPresent()
+        header.putProgramMemoryAbsent(absent)
+        def actual = header.isProgramMemoryAbsent()
 
         then:
-        actual == present
+        actual == absent
 
         where:
-        present << [true, false]
+        absent << [true, false]
     }
 
     def "should put and then get unofficial video standard extended in byte10" () {
@@ -184,7 +173,7 @@ class ModernHeaderBufferSpec extends Specification {
         actual == videoStandardExt
 
         where:
-        videoStandardExt << [NTSC, NTSC_HYBRID, PAL, PAL_HYBRID] // TODO: what about dendy, etc
+        videoStandardExt << [NTSC, NTSC_DUAL, PAL, PAL_DUAL]
     }
 
     def "should get byte10 reserved bits" () {

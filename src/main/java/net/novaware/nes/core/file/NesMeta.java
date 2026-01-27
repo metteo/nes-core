@@ -185,10 +185,10 @@ public record NesMeta(
     }
 
     public enum Kind {
-        NONE,
-        VOLATILE, // no battery
-        PERSISTENT, // battery
-        UNKNOWN
+        NONE,       // no work ram, open bus
+        VOLATILE,   // no battery, work ram
+        PERSISTENT, // battery, save ram
+        UNKNOWN     // memory absence bit not set
     }
 
     /**
@@ -237,14 +237,21 @@ public record NesMeta(
         }
     }
 
+    /**
+     * {@link VideoStandard#NTSC}  Ratio: 3.0 | Hz: 60 <br>
+     * {@link VideoStandard#PAL}   Ratio: 3.2 | Hz: 50 <br>
+     * {@link VideoStandard#DENDY} Ratio: 3.0 | Hz: 50
+     */
     public enum VideoStandard {
-        NTSC,
-        NTSC_HYBRID,
-        PAL,
-        PAL_HYBRID,
-        DENDY,
-        OTHER,
-        UNKNOWN
+                     //      iNES        | NES 2.0
+                     // byte 9 | byte 10 | byte 12
+        NTSC,        // 0b0    | 0b00    | 0b00
+        NTSC_DUAL,   // 0b0    | 0b01    | 0b10
+        PAL,         // 0b1    | 0b10    | 0b01
+        PAL_DUAL,    // 0b1    | 0b11    | -
+        DENDY,       // -      | -       | 0b11
+
+        UNKNOWN      // Archaic iNES / iNES 0.7
     }
 
     public record ProgramMemory(Kind kind, Quantity size) {

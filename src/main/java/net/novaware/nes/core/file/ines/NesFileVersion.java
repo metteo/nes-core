@@ -9,18 +9,18 @@ import java.util.List;
 import static java.util.Collections.reverse;
 
 public enum NesFileVersion implements Comparable<NesFileVersion> {
+//              displayName,     textual,  num,  off., major, year, parent
+    UNKNOWN    ("Unknown",       "?.?.?",   -1, false, false,   -1, null       ),
 
-    UNKNOWN    ("Unknown",       "?.?.?",   -1, false,   -1, null       ),
+    ARCHAIC    ("Archaic iNES",  "0.6.8",   68,  true,  true, 1996, null       ),
+    ARCHAIC_0_7("iNES 0.7",      "0.7.4",   74,  true, false, 1997, ARCHAIC    ), // MapperHi
 
-    ARCHAIC    ("Archaic iNES",  "0.6.8",   68,  true, 1996, null       ),
-    ARCHAIC_0_7("iNES 0.7",      "0.7.4",   74,  true, 1997, ARCHAIC    ), // MapperHi
+    MODERN     ("The iNES",      "1.7.5", 1075,  true,  true, 1998, ARCHAIC_0_7), // VS.System
+    MODERN_1_3 ("iNES 1.3",      "1.7.6", 1076, false, false, 2000, MODERN     ), // PlayChoice-10 bit, Version (future)
+    MODERN_1_5 ("iNES 1.5",      "1.9.1", 1091,  true, false, 2003, MODERN_1_3 ), // PRG RAM size, TV System
+    MODERN_1_7 ("iNES 1.7",     "1.10.4", 1104, false, false, 2005, MODERN_1_5 ), // PRG RAM presence, TV System (multi), Bus Conflicts
 
-    MODERN     ("The iNES",      "1.7.5", 1075,  true, 1998, ARCHAIC_0_7), // VS.System
-    MODERN_1_3 ("iNES 1.3",      "1.7.6", 1076, false, 2000, MODERN     ), // PlayChoice-10 bit, Version (future)
-    MODERN_1_5 ("iNES 1.5",      "1.9.1", 1091,  true, 2003, MODERN_1_3 ), // PRG RAM size, TV System
-    MODERN_1_7 ("iNES 1.7",     "1.10.4", 1104, false, 2005, MODERN_1_5 ), // PRG RAM presence, TV System (multi), Bus Conflicts
-
-    FUTURE     ("NES 2.0",      "2.15.6", 2156,  true, 2006, MODERN     ); // Bytes 7-15 revisited
+    FUTURE     ("NES 2.0",      "2.15.6", 2156,  true,  true, 2006, MODERN     ); // Bytes 7-15 revisited
 
     /**
      * Name used in nesdev.org wiki. Variants beyond iNES are
@@ -53,6 +53,8 @@ public enum NesFileVersion implements Comparable<NesFileVersion> {
      */
     private final boolean official;
 
+    private final boolean major;
+
     /**
      * Estimated year of release (@Gemieni, I'm looking at you :))
      */
@@ -82,6 +84,7 @@ public enum NesFileVersion implements Comparable<NesFileVersion> {
             String textual,
             int numeric,
             boolean official,
+            boolean major,
             int releaseYear,
             @Nullable NesFileVersion parent
     ) {
@@ -89,6 +92,7 @@ public enum NesFileVersion implements Comparable<NesFileVersion> {
         this.textual = textual;
         this.numeric = numeric;
         this.official = official;
+        this.major = major;
         this.releaseYear = releaseYear;
         this.parent = parent;
     }
@@ -97,6 +101,7 @@ public enum NesFileVersion implements Comparable<NesFileVersion> {
     public String textual() { return textual; }
     public int numeric() { return numeric; }
     public boolean isOfficial() { return official; }
+    public boolean isMajor() { return major; }
     public int releaseYear() { return releaseYear; }
     public @Nullable NesFileVersion parent() { return parent; }
 

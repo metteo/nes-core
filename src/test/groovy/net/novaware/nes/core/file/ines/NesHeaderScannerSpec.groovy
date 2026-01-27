@@ -77,9 +77,9 @@ class NesHeaderScannerSpec extends Specification {
                 .putProgramData(marioBros.programData())
                 .putVideoData(marioBros.videoData().size())
                 .putTrainer(marioBros.trainer())
-                .putMapper(marioBros.mapper())
-                .putMemoryKind(marioBros.programMemory().kind())
-                .putMemoryLayout(marioBros.videoData().layout())
+                .putMapper(ARCHAIC_0_7, marioBros.mapper())
+                .putProgramMemoryKind(marioBros.programMemory().kind())
+                .putVideoMemoryLayout(marioBros.videoData().layout())
         // bytes 7-15 are 0s
 
         header

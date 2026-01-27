@@ -5,10 +5,13 @@ import net.novaware.nes.core.file.NesFileFaker
 import net.novaware.nes.core.file.NesMeta
 import spock.lang.Specification
 
-import static net.novaware.nes.core.file.ines.NesFileReader.Mode.LENIENT
-import static net.novaware.nes.core.file.ines.NesFileReader.Mode.STRICT
+import static net.novaware.nes.core.file.ReaderMode.LENIENT
+import static net.novaware.nes.core.file.ReaderMode.STRICT
 
 class NesFileReaderSpec extends Specification {
+
+    // TODO: test for files much bigger than the spec (huge footer)
+    // TODO: test for files smaller than the spec (invalid meta or truncated)
 
     def "should persist origin of the file" () {
         given:

@@ -1,5 +1,7 @@
 package net.novaware.nes.core.cpu.instruction;
 
+import org.jspecify.annotations.Nullable;
+
 public class InstructionRegistry {
 
     // Static lookup map for fast retrieval by opcode (essential for performance)
@@ -11,9 +13,7 @@ public class InstructionRegistry {
         }
     }
 
-    // TODO: Optional is not very memory friendly in hot code?
-    //@Nullable TODO: include jspecify
-    public static Instruction fromOpcode(byte opcode) {
+    public static @Nullable Instruction fromOpcode(byte opcode) {
         return OPCODE_MAP[opcode & 0xFF];
     }
 }

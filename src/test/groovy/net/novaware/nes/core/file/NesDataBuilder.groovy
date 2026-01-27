@@ -9,6 +9,7 @@ import java.nio.ByteBuffer
 
 import static java.nio.ByteBuffer.allocate
 import static java.nio.ByteOrder.LITTLE_ENDIAN
+import static net.novaware.nes.core.util.UnsignedTypes.ubyte
 
 class NesDataBuilder implements TestDataBuilder<NesData> {
 
@@ -30,6 +31,10 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
         byte[] buffer = new byte[size];
         random.nextBytes(buffer); // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
         return ByteBuffer.wrap(buffer).order(LITTLE_ENDIAN)
+    }
+
+    static NesDataBuilder nesData() {
+        return new NesDataBuilder()
     }
 
     static NesDataBuilder emptyData() {
@@ -59,6 +64,16 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
                 .video(randomBuffer(meta.videoData().size().toBytes()))
                 .misc(playChoice10 ? randomBuffer(8 * 1024 + 2 * 16) : emptyBuffer())
                 .footer(randomBuffer(meta.footer().toBytes())) // TODO: use meta.title to fill?
+    }
+
+    static NesDataBuilder watermarkedData() {
+        return nesData()
+                .header(NesHeader.allocate().fill(ubyte(0xAA)))
+                .trainer(UByteBuffer.allocate(512).fill(ubyte(0x88)).unwrap())
+                .program(UByteBuffer.allocate(16 * 1024).fill(ubyte(0x55)).unwrap())
+                .video(UByteBuffer.allocate(8 * 1024).fill(ubyte(0x88)).unwrap())
+                .misc(UByteBuffer.allocate(8 * 1024 + 2 * 16).fill(ubyte(0xCC)).unwrap())
+                .footer(UByteBuffer.allocate(127).fill(ubyte(0xF0)).unwrap())
     }
 
     NesDataBuilder header(UByteBuffer header) {

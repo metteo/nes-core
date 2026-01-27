@@ -1,14 +1,21 @@
 package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.MagicNumber;
-import net.novaware.nes.core.file.NesMeta;
+import net.novaware.nes.core.file.NesMeta.Kind;
+import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.IntPredicate;
 
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.Chars.isPrintable;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
@@ -21,7 +28,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
  * <a href="https://www.nesdev.org/wiki/INES">iNES on nesdev.org</a><br>
  * <a href="https://fms.komkon.org/EMUL8/NES.html#LABM">.NES File Format on fms.komkon.org</a>
  */
-public class ArchaicHeaderBuffer {
+public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
 
     // region Bytes 0-3
 
@@ -47,14 +54,16 @@ public class ArchaicHeaderBuffer {
     public static final @Unsigned byte BATTERY_BIT    = ubyte(0b0000_0010);
 
     // endregion
+    // region Byte 7 (iNES 0.7)
 
-    private final UByteBuffer header;
+    public static final int  BYTE_7 = 7;
+    public static final @Unsigned byte MAPPER_HI_BITS       = ubyte(0b1111_0000);
+    public static final @Unsigned byte BYTE_7_RESERVED_BITS = ubyte(0b0000_1111);
+
+    // endregion
 
     public ArchaicHeaderBuffer(UByteBuffer header) {
-        assertArgument(header != null, "header cannot be null");
-        assertArgument(header.capacity() == NesHeader.SIZE, "header must be " + NesHeader.SIZE + " bytes");
-
-        this.header = header;
+        super(header);
     }
 
     public ArchaicHeaderBuffer putMagic() {
@@ -103,40 +112,109 @@ public class ArchaicHeaderBuffer {
         return new Quantity(byte5, BANK_8KB);
     }
 
-    public ArchaicHeaderBuffer putMapper(int mapper) {
-        assertArgument(mapper >= 0 && mapper <= 15, "Archaic mapper must be 0-15");
+    public IntPredicate getMapperRange(NesFileVersion version) {
+        assertArchaicVersion(version);
 
+        return switch(version) {
+            case ARCHAIC -> mapper -> 0 <= mapper && mapper <= 0xF;
+            case ARCHAIC_0_7 -> mapper -> 0 <= mapper && mapper <= 0xFF;
+            default -> throw archaicAssertionError();
+        };
+    }
+
+    /* package */ static UByteBuffer putMapperLo(UByteBuffer header, int mapper) {
         int byte6 = header.getAsInt(BYTE_6);
+
         int cleared = byte6 & ~uint(MAPPER_LO_BITS);
         int shifted = (mapper << 4) & uint(MAPPER_LO_BITS);
 
-        header.putAsByte(BYTE_6, cleared | shifted);
+        return header.putAsByte(BYTE_6, cleared | shifted);
+    }
+
+    /* package */ static UByteBuffer putMapperHi(UByteBuffer header, int mapper) {
+        assertArgument((mapper & ~uint(MAPPER_HI_BITS)) == 0,
+                "mapper hi bits must be in their target position");
+
+        int byte7 = header.getAsInt(BYTE_7);
+        int cleared = byte7 & ~uint(MAPPER_HI_BITS);
+        int bits = mapper & uint(MAPPER_HI_BITS);
+
+        return header.putAsByte(BYTE_7, cleared | bits);
+    }
+
+    public ArchaicHeaderBuffer putMapper(NesFileVersion version, int mapper) {
+        assertArchaicVersion(version);
+
+        switch(version) {
+            case ARCHAIC:
+                assertArgument(getMapperRange(version).test(mapper), "Archaic mapper must be 0-15");
+                putMapperLo(header, mapper);
+                break;
+            case ARCHAIC_0_7:
+                assertArgument(getMapperRange(version).test(mapper), "iNES 0.7 mapper must be 0-255");
+
+                putMapperLo(header, mapper & 0x0F);
+                putMapperHi(header, mapper & 0xF0);
+                break;
+
+            default: throw archaicAssertionError();
+        }
 
         return this;
     }
 
-    public int getMapper() {
+    /* package */ static int getMapperLo(UByteBuffer header) {
         int byte6 = header.getAsInt(BYTE_6);
 
         return (byte6 & uint(MAPPER_LO_BITS)) >> 4;
     }
 
-    public ArchaicHeaderBuffer putMemoryLayout(NesMeta.Layout layout) {
+    /* package */ static int getMapperHi(UByteBuffer header) {
+        int byte7 = header.getAsInt(BYTE_7);
+
+        return (byte7 & uint(MAPPER_HI_BITS));
+    }
+
+    public int getMapper(NesFileVersion version) {
+        assertArchaicVersion(version);
+
+        return switch(version) {
+            case ARCHAIC -> getMapperLo(header);
+            case ARCHAIC_0_7 -> getMapperHi(header) | getMapperLo(header);
+            default -> throw archaicAssertionError();
+        };
+    }
+
+    private AssertionError archaicAssertionError() throws AssertionError {
+        return new AssertionError("unreachable, check method version assertion");
+    }
+
+    private void assertArchaicVersion(NesFileVersion version) {
+        assertArgument(List.of(ARCHAIC, ARCHAIC_0_7).contains(version), "version must be one of archaic ones");
+    }
+
+    public int getByte7Reserved() { // TODO: report if not 0
+        int byte7 = header.getAsInt(BYTE_7);
+
+        return (byte7 & uint(BYTE_7_RESERVED_BITS));
+    }
+
+    public ArchaicHeaderBuffer putVideoMemoryLayout(Layout layout) {
         int byte6 = header.getAsInt(BYTE_6);
         int cleared = byte6 & ~uint(LAYOUT_BITS);
-        int bits = layout.bits();
+        int layoutBits = layout.bits();
 
-        header.putAsByte(BYTE_6, cleared | bits);
+        header.putAsByte(BYTE_6, cleared | layoutBits);
 
         return this;
     }
 
-    public NesMeta.Layout getMemoryLayout() {
+    public Layout getVideoMemoryLayout() {
         int byte6 = header.getAsInt(BYTE_6);
 
         int layoutBits = (byte6 & uint(LAYOUT_BITS));
 
-        return NesMeta.Layout.fromBits(layoutBits);
+        return Layout.fromBits(layoutBits);
     }
 
     public ArchaicHeaderBuffer putTrainer(Quantity trainer) {
@@ -145,9 +223,9 @@ public class ArchaicHeaderBuffer {
 
         int byte6 = header.getAsInt(BYTE_6);
         int cleared = byte6 & ~uint(TRAINER_BIT);
-        int bit = trainer.amount() == 1 ? uint(TRAINER_BIT) : 0;
+        int trainerBit = trainer.amount() == 1 ? uint(TRAINER_BIT) : 0;
 
-        header.putAsByte(BYTE_6, cleared | bit);
+        header.putAsByte(BYTE_6, cleared | trainerBit);
 
         return this;
     }
@@ -160,25 +238,25 @@ public class ArchaicHeaderBuffer {
         return new Quantity(trainerBit, BANK_512B);
     }
 
-    public ArchaicHeaderBuffer putMemoryKind(NesMeta.Kind kind) {
+    public ArchaicHeaderBuffer putProgramMemoryKind(Kind kind) {
         int byte6 = header.getAsInt(BYTE_6);
         int cleared = byte6 & ~uint(BATTERY_BIT);
-        int bit = kind == NesMeta.Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
+        int batteryBit = kind == Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
 
-        header.putAsByte(BYTE_6, cleared | bit);
+        header.putAsByte(BYTE_6, cleared | batteryBit);
 
         return this;
     }
 
-    public NesMeta.Kind getMemoryKind() {
+    public Kind getProgramMemoryKind() {
         int byte6 = header.getAsInt(BYTE_6);
 
         int batteryBit = (byte6 & uint(BATTERY_BIT)) >> 1;
 
-        return batteryBit == 0 ? NesMeta.Kind.VOLATILE : NesMeta.Kind.PERSISTENT;
+        return batteryBit == 0 ? Kind.VOLATILE : Kind.PERSISTENT;
     }
 
-    // region Byte 7-15 only archaic TODO: improve the info methods and test better
+    // region Byte 7-15 for archaic, 8-15 for 0.7 TODO: improve the info methods and test better
 
     public ArchaicHeaderBuffer putInfo(String info) {
         assertArgument(info.length() < 10, "info too long to fit in the header");
@@ -194,15 +272,15 @@ public class ArchaicHeaderBuffer {
 
     public String getInfo() {
         @Unsigned byte[] infoBytes = new byte[NesHeader.SIZE - 7];
+        Arrays.fill(infoBytes, 0, infoBytes.length, (byte)' ');
 
-        // NOTE: may arrive at some random printable character, doesn't mean it's an info text
-        for(int i = 0; i < infoBytes.length; i++) {
+        for(int i = infoBytes.length - 1; i >= 0; i--) {
             final int b = header.getAsInt(i + 7);
 
-            if (32 <= b && b < 127) {
+            if (isPrintable(b)) {
                 infoBytes[i] = ubyte(b);
             } else {
-                infoBytes[i] = ' '; // any nonprintable char into space
+                break; // read back until something strange
             }
         }
 

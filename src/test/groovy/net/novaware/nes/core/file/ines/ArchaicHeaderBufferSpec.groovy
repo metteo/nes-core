@@ -8,13 +8,22 @@ import static net.novaware.nes.core.file.NesMeta.Kind.PERSISTENT
 import static net.novaware.nes.core.file.NesMeta.Kind.VOLATILE
 import static net.novaware.nes.core.file.NesMeta.Layout.*
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.*
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
+import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7
 import static net.novaware.nes.core.util.Quantity.Unit.*
 import static net.novaware.nes.core.util.UnsignedTypes.uint
 
 class ArchaicHeaderBufferSpec extends Specification {
 
+    UByteBuffer buffer
+    ArchaicHeaderBuffer header
 
-    def "should pass byte cross checks for Archaic_iNES" () {
+    def setup() {
+        buffer = NesHeader.allocate()
+        header = new ArchaicHeaderBuffer(buffer)
+    }
+
+    def "should pass byte cross checks for Archaic iNES" () {
         given:
         def byte6 = 0
         byte6 |= uint(MAPPER_LO_BITS)
@@ -26,27 +35,48 @@ class ArchaicHeaderBufferSpec extends Specification {
         byte6 == 0xFF
     }
 
-    def "should put and then get program data size" () {
+    def "should pass byte cross checks for iNES 0.7" () {
         given:
-        def header = headerBuffer()
+        def byte7 = 0
+        byte7 |= uint(MAPPER_HI_BITS)
+        byte7 |= uint(BYTE_7_RESERVED_BITS)
 
+        expect:
+        byte7 == 0xFF
+    }
+
+    def "should put and then get magic" () {
+        when:
+        header.putMagic()
+        def magic = header.getMagic()
+
+        then:
+        magic == MAGIC_NUMBER.numbers()
+
+        byte[] bytes = new byte[4];
+        buffer.get(BYTE_0, bytes);
+
+        bytes == MAGIC_NUMBER.numbers()
+
+        verifyEach(getRemainingData(BYTE_5).toList()) {it == 0 }
+    }
+
+    def "should put and then get program data size" () {
         when:
         header.putProgramData(new Quantity(amount, BANK_16KB))
-        // TODO: maybe get binary data and validate?
         Quantity programData = header.getProgramData()
 
         then:
         programData.amount() == amount
         programData.unit() == BANK_16KB
+        // TODO: validate buffer byte/bit
+        // TODO: validate other bytes are 0s
 
         where:
         amount << [0, 1, 2, 128, 255]
     }
 
     def "should put and then get video data size" () {
-        given:
-        def header = headerBuffer()
-
         when:
         header.putVideoData(new Quantity(amount, BANK_8KB))
         Quantity videoData = header.getVideoData()
@@ -61,20 +91,19 @@ class ArchaicHeaderBufferSpec extends Specification {
 
     def "should put and then get byte 6"() {
         given:
-        def header = headerBuffer()
-
         Quantity trainerSize = new Quantity(trainer, BANK_512B)
+        def version = ARCHAIC
 
         when:
-        header.putMapper(mapper)
-                .putMemoryLayout(layout)
+        header.putMapper(version, mapper)
+                .putVideoMemoryLayout(layout)
                 .putTrainer(trainerSize)
-                .putMemoryKind(kind)
+                .putProgramMemoryKind(kind)
 
-        def actualMapper = header.getMapper()
-        def actualLayout = header.getMemoryLayout()
+        def actualMapper = header.getMapper(version)
+        def actualLayout = header.getVideoMemoryLayout()
         def actualTrainer = header.getTrainer()
-        def actualKind = header.getMemoryKind()
+        def actualKind = header.getProgramMemoryKind()
 
         then:
         actualMapper == mapper
@@ -90,10 +119,43 @@ class ArchaicHeaderBufferSpec extends Specification {
         15     | STANDARD_VERTICAL      | 0       | PERSISTENT
     }
 
+    def "should put and then get mapper with hi bits (iNES 0.7)" () {
+        given:
+        def version = ARCHAIC_0_7
+
+        when:
+        header.putMapper(version, mapper)
+        def actualMapper = header.getMapper(version)
+
+        then:
+        actualMapper == mapper
+
+        where:
+        mapper << [0, 1, 2, 15, 16, 129, 255]
+    }
+
+    def "should get byte7 reserved bits" () {
+        when:
+        header.unwrap().put(BYTE_7, input as byte)
+        def byte7 = header.getByte7Reserved()
+
+        then:
+        expected == byte7
+
+        where:
+        _ | input       | expected
+        _ | 0x00        | 0x00
+        //| 0brrrr_rrr_ | 0b0rrr_rrrr
+        _ | 0b1111_1111 | 0b0000_1111
+        _ | 0b1010_1010 | 0b0000_1010
+        _ | 0b0101_0101 | 0b0000_0101
+    }
+
     // TODO: test put/get info
 
-    static def headerBuffer() {
-        def buffer = UByteBuffer.allocate(NesHeader.SIZE)
-        new ArchaicHeaderBuffer(buffer)
+    byte[] getRemainingData(int startByte) {
+        def maybeZeroes = new byte[NesHeader.SIZE - startByte]
+        buffer.get(startByte, maybeZeroes)
+        maybeZeroes
     }
 }
