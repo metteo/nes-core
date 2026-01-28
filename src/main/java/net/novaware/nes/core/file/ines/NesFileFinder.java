@@ -94,6 +94,8 @@ public class NesFileFinder {
         buffer.append(meta.videoData().size().toBytes()).append(" B").append("\t");
         buffer.append(meta.videoData().layout()).append("\t");
         buffer.append(meta.videoStandard()).append("\t");
+        // TODO: misc rom size
+        // TODO: footer size
         buffer.append(meta.info()).append(System.lineSeparator());
 
         return buffer;
