@@ -33,7 +33,9 @@ public enum AddressingMode {
     // endregion
     // region Control Flow
 
-    RELATIVE                // Used only by Branch* (e.g., BEQ Label)
+    RELATIVE,               // Used only by Branch* (e.g., BEQ Label)
 
     // endregion
+
+    UNKNOWN                 // NULL Object
 }

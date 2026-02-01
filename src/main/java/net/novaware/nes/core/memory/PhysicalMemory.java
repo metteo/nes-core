@@ -8,14 +8,20 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
 public class PhysicalMemory implements Addressable {
 
     private final UByteBuffer buffer;
+    private final int offset;
+
+    public PhysicalMemory(int size, int offset) {
+        buffer = UByteBuffer.allocate(size);
+        this.offset = offset;
+    }
 
     public PhysicalMemory(int size) {
-        buffer = UByteBuffer.allocate(size);
+        this(size, 0);
     }
 
     @Override
     public @Unsigned byte read(@Unsigned short address) {
-        final int position = uint(address);
+        final int position = uint(address) - offset;
 
         return buffer.position(position)
                 .get();
@@ -23,7 +29,7 @@ public class PhysicalMemory implements Addressable {
 
     @Override
     public void write(@Unsigned short address, @Unsigned byte data) {
-        final int position = uint(address);
+        final int position = uint(address) - offset;
 
         buffer.position(position)
                 .put(data);

@@ -2,12 +2,15 @@ package net.novaware.nes.core.apu;
 
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.register.CycleCounter;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
  * @see <a href="https://www.nesdev.org/wiki/2A03">2A03 on nesdev.org</a>
  */
 public class ApuRegisterFile {
+
+    public CycleCounter cycleCounter = new CycleCounter("APUCC");
 
     // FIXME: there registers are asymetrical, writes are accepted, reads cause open bus (mostly)
 

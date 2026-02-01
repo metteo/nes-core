@@ -24,5 +24,7 @@ public enum InstructionCategory {
 
     SHIFTS_ROTATES,
 
-    STACK_OPS
+    STACK_OPS,
+
+    UNKNOWN
 }

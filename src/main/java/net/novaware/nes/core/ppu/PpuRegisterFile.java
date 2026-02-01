@@ -2,6 +2,7 @@ package net.novaware.nes.core.ppu;
 
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.ShortRegister;
 import org.jspecify.annotations.Nullable;
 
@@ -9,6 +10,8 @@ import org.jspecify.annotations.Nullable;
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
  */
 public class PpuRegisterFile {
+
+    public CycleCounter cycleCounter = new CycleCounter("PPUCC");
 
     // TODO: enforce R / W / RW / Wx2 specifics
     private ByteRegister ppuCtrl = new ByteRegister("PPUCTRL"); // 0x2000

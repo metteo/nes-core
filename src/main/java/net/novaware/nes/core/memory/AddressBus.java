@@ -2,6 +2,10 @@ package net.novaware.nes.core.memory;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+/**
+ * Both ABL and ABH (Address Bus Low & High)
+ * @param <T>
+ */
 public interface AddressBus<T extends AddressBus<T>> {
 
     /**

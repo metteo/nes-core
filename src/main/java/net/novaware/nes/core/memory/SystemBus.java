@@ -1,5 +1,7 @@
 package net.novaware.nes.core.memory;
 
+import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.apu.ApuRegisterFile;
 import net.novaware.nes.core.ppu.PpuRegisterFile;
 import net.novaware.nes.core.register.ByteRegister;
@@ -24,6 +26,7 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
+@BoardScope
 // TODO: move to cpu part since ppu has it's own bus
 public class SystemBus implements AddressBus<SystemBus>, DataBus {
 
@@ -37,13 +40,18 @@ public class SystemBus implements AddressBus<SystemBus>, DataBus {
     private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
     private ByteRegisterMemory ppuRegs = new PpuRegisterFile().asByteRegisterMemory();
     private ByteRegisterMemory apuIoRegs = new ApuRegisterFile().asByteRegisterMemory();
-    private PhysicalMemory cartridge = new PhysicalMemory(CARTRIDGE_SIZE); // TODO: temporary
+    private PhysicalMemory cartridge = new PhysicalMemory(CARTRIDGE_SIZE, uint(CARTRIDGE_START)); // TODO: temporary
 
     private @Unsigned short address;
 
     private Addressable currentSegment = ram;
     private IntPredicate currentRange = RAM_RANGE;
     private @Unsigned short currentAddress;
+
+    @Inject
+    public SystemBus() {
+
+    }
 
     @Override
     public void specify(@Unsigned short address) {
