@@ -1,74 +1,60 @@
 package net.novaware.nes.core.cpu
 
-import net.novaware.nes.core.cpu.register.CpuRegisterFile
-import net.novaware.nes.core.cpu.unit.ArithmeticLogic
-import net.novaware.nes.core.memory.SystemBus
+import net.novaware.nes.core.cpu.unit.*
 import spock.lang.Specification
-
-import static net.novaware.nes.core.util.Bin.s
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
 
 class CpuSpec extends Specification {
 
-    CpuRegisterFile registers = new CpuRegisterFile();
-    SystemBus systemBus = new SystemBus();
+    CpuRegisters registers = new CpuRegisters()
 
-    def "should construct an instance" () {
+    ControlUnit controlUnit = Mock()
+    AddressGen addressGen = Mock()
+    ArithmeticLogic alu = Mock()
+    InstructionDecoder decoder = Mock()
+    InterruptLogic interrupts = Mock()
+    LoadStore loadStore = Mock()
+    PowerMgmt powerMgmt = Mock()
+    StackEngine stackEngine = Mock()
+
+    Cpu instance = new Cpu(
+            registers,
+            controlUnit,
+            addressGen,
+            alu,
+            decoder,
+            interrupts,
+            loadStore,
+            powerMgmt,
+            stackEngine
+    )
+
+    def "should properly initialize units" () {
         when:
-        newCpu()
+        instance.initialize()
 
         then:
-        Cpu.RESET_VECTOR == ushort(0xFFFC)
+        1 * controlUnit.initialize()
+        1 * addressGen.initialize()
+        1 * alu.initialize()
+        1 * decoder.initialize()
+        1 * interrupts.initialize()
+        1 * loadStore.initialize()
+        1 * powerMgmt.initialize()
+        1 * stackEngine.initialize()
     }
 
-    Cpu newCpu() {
-        def cpu = new Cpu(registers, systemBus, new ArithmeticLogic(registers))
-        cpu.initialize()
-        cpu.powerOn()
-        cpu.reset()
-        cpu
-    }
-
-    def "should jump to start of rom" () {
-        given:
-        systemBus.specifyAnd(Cpu.RESET_VECTOR).writeByte(ubyte(0x00))
-        systemBus.specifyAnd(ushort(0xFFFD)).writeByte(ubyte(0x80))
-
-        systemBus.specifyAnd(ushort(0x0345)).writeByte(ubyte(0xEA))
-
+    def "should properly reset units" () {
         when:
-        def cpu = newCpu()
+        instance.reset()
 
         then:
-        registers.programCounter.get() == ushort(0x8000)
-    }
-
-    def "should calculate bitwise or"() {
-        given:
-        systemBus.specifyAnd(ushort(0x0000)).writeByte(ubyte(0x0D))
-        systemBus.specifyAnd(ushort(0x0001)).writeByte(ubyte(0x54))
-        systemBus.specifyAnd(ushort(0x0002)).writeByte(ubyte(0x06))
-        systemBus.specifyAnd(ushort(0x0654)).writeByte(ubyte(0b1010_0110))
-
-        when:
-        def cpu = newCpu()
-        def startCycle = registers.cycleCounter.getValue();
-
-        registers.accumulator.set(ubyte(0b0101_1001))
-
-        cpu.fetch()
-        // TODO: check what was fetched
-        cpu.decode()
-        // TODO: check what was decoded
-        cpu.execute()
-
-        then:
-
-        //TODO: registers.cycleCounter.getValue() == startCycle + 4
-
-        registers.accumulator.get() == ubyte(0b1111_1111)
-        //                            0bNV1B_DIZC
-        s(registers.status.get()) == "0b1010_0100"
+        1 * controlUnit.reset()
+        1 * addressGen.reset()
+        1 * alu.reset()
+        1 * decoder.reset()
+        1 * interrupts.reset()
+        1 * loadStore.reset()
+        1 * powerMgmt.reset()
+        1 * stackEngine.reset()
     }
 }

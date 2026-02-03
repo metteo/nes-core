@@ -3,13 +3,14 @@ package net.novaware.nes.core.ppu;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.RegisterFile;
 import net.novaware.nes.core.register.ShortRegister;
 import org.jspecify.annotations.Nullable;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
  */
-public class PpuRegisterFile {
+public class PpuRegisters extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("PPUCC");
 

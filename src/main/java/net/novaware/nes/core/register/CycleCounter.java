@@ -3,6 +3,7 @@ package net.novaware.nes.core.register;
 public class CycleCounter extends Register {
 
     private long value;
+    private long mark;
 
     public CycleCounter(String name) {
         super(name);
@@ -18,5 +19,13 @@ public class CycleCounter extends Register {
 
     public void increment() {
         value++;
+    }
+
+    public void mark() {
+        mark = value;
+    }
+
+    public long diff() {
+        return value - mark;
     }
 }

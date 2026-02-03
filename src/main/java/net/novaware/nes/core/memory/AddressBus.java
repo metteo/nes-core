@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
  * Both ABL and ABH (Address Bus Low & High)
  * @param <T>
  */
-public interface AddressBus<T extends AddressBus<T>> {
+public interface AddressBus<T> {
 
     /**
      * Specify memory location for read or write.

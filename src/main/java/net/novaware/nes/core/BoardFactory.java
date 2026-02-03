@@ -1,9 +1,10 @@
 package net.novaware.nes.core;
 
 import dagger.Component;
+import net.novaware.nes.core.cpu.CpuModule;
 
 @BoardScope
-@Component
+@Component(modules = { CpuModule.class })
 public abstract class BoardFactory {
 
     public static BoardFactory newBoardFactory() {

@@ -1,14 +1,17 @@
 package net.novaware.nes.core.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.apu.ApuRegisterFile;
-import net.novaware.nes.core.ppu.PpuRegisterFile;
+import jakarta.inject.Named;
+import net.novaware.nes.core.apu.ApuRegisters;
+import net.novaware.nes.core.ppu.PpuRegisters;
 import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.ShortRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.function.IntPredicate;
 
+import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_TEST_REGISTERS_END;
@@ -26,9 +29,8 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
-@BoardScope
 // TODO: move to cpu part since ppu has it's own bus
-public class SystemBus implements AddressBus<SystemBus>, DataBus {
+public class SystemBus implements MemoryBus {
 
     public static final IntPredicate RAM_RANGE      = a -> uint(RAM_START) <= a                && a <= uint(RAM_MIRROR_3_END);
     public static final IntPredicate PPU_REGS_RANGE = a -> uint(PPU_REGISTERS_START) <= a      && a <= uint(PPU_REGISTERS_MIRROR_END);
@@ -36,26 +38,32 @@ public class SystemBus implements AddressBus<SystemBus>, DataBus {
     public static final IntPredicate APU_TEST_RANGE = a -> uint(APU_TEST_REGISTERS_START) <= a && a <= uint(APU_TEST_REGISTERS_END);
     public static final IntPredicate CARTRIDGE_RANGE = a -> uint(CARTRIDGE_START) <= a         && a <= uint(CARTRIDGE_END);
 
+    private final CycleCounter cycleCounter;
 
     private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
-    private ByteRegisterMemory ppuRegs = new PpuRegisterFile().asByteRegisterMemory();
-    private ByteRegisterMemory apuIoRegs = new ApuRegisterFile().asByteRegisterMemory();
+    private ByteRegisterMemory ppuRegs = new PpuRegisters().asByteRegisterMemory();
+    private ByteRegisterMemory apuIoRegs = new ApuRegisters().asByteRegisterMemory();
     private PhysicalMemory cartridge = new PhysicalMemory(CARTRIDGE_SIZE, uint(CARTRIDGE_START)); // TODO: temporary
 
-    private @Unsigned short address;
+    // TODO: this belongs to memory controller / memory bus as currentAddress variable / currentData variable for open bus
+    public ShortRegister memoryAddress = new ShortRegister("MAR");
+    public ByteRegister  memoryData = new ByteRegister("MDR");
 
     private Addressable currentSegment = ram;
     private IntPredicate currentRange = RAM_RANGE;
-    private @Unsigned short currentAddress;
+    private @Unsigned short currentAddress; // translated into specific segment range
 
     @Inject
-    public SystemBus() {
-
+    public SystemBus(
+        @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter
+    ) {
+        this.cycleCounter = cycleCounter;
     }
 
     @Override
     public void specify(@Unsigned short address) {
-        this.address = address;
+        memoryAddress.set(address);
+        cycleCounter.increment();
 
         int addressInt = uint(address);
 
@@ -97,11 +105,15 @@ public class SystemBus implements AddressBus<SystemBus>, DataBus {
 
     @Override
     public @Unsigned byte readByte() {
-        return currentSegment.read(currentAddress);
+        @Unsigned byte data = currentSegment.read(currentAddress);
+
+        memoryData.set(data);
+        return data;
     }
 
     @Override
     public void writeByte(@Unsigned byte data) {
+        memoryData.set(data);
         currentSegment.write(currentAddress, data);
     }
 

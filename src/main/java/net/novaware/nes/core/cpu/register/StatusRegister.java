@@ -5,19 +5,19 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 
-public class ProcessorRegister extends Register {
+public class StatusRegister extends Register {
 
     private boolean negative;   // 7
     private boolean overflow;   // 6
                                 // 5 - always one
-    private boolean b;          // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php
+    private boolean b;          // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php TODO: transient!
 
     private boolean decimal;    // 3
-    private boolean interrupt;  // 2 - 0 if irq enabled, 1 if irq disabled, TODO: transient!
+    private boolean irq_off;  // 2 - 0 if irq enabled, 1 if irq disabled
     private boolean zero;       // 1
     private boolean carry;      // 0
 
-    public ProcessorRegister(String name) {
+    public StatusRegister(String name) {
         super(name);
     }
 
@@ -27,20 +27,20 @@ public class ProcessorRegister extends Register {
         b = false;
 
         decimal = false;
-        interrupt = true;
+        irq_off = true;
         zero = false;
         carry = false;
     }
 
     public void reset() {
-        interrupt = true;
+        irq_off = true;
     }
 
     public boolean isNegative() {
         return negative;
     }
 
-    public ProcessorRegister setNegative(boolean negative) {
+    public StatusRegister setNegative(boolean negative) {
         this.negative = negative;
 
         return this;
@@ -50,17 +50,17 @@ public class ProcessorRegister extends Register {
         return overflow;
     }
 
-    public ProcessorRegister setOverflow(boolean overflow) {
+    public StatusRegister setOverflow(boolean overflow) {
         this.overflow = overflow;
 
         return this;
     }
 
-    public boolean getB() { // TODO: come up with a name
+    public boolean getB() { // TODO: come up with a name, gemini suggests "Break"
         return b;
     }
 
-    public ProcessorRegister setB(boolean b) {
+    public StatusRegister setB(boolean b) {
         this.b = b;
 
         return this;
@@ -70,18 +70,18 @@ public class ProcessorRegister extends Register {
         return decimal;
     }
 
-    public ProcessorRegister setDecimal(boolean decimal) {
+    public StatusRegister setDecimal(boolean decimal) {
         this.decimal = decimal;
 
         return this;
     }
 
     public boolean isIrqDisabled() {
-        return interrupt;
+        return irq_off;
     }
 
-    public ProcessorRegister setIrqDisabled(boolean interrupt) {
-        this.interrupt = interrupt;
+    public StatusRegister setIrqDisabled(boolean irqDisabled) {
+        this.irq_off = irqDisabled;
 
         return this;
     }
@@ -90,7 +90,7 @@ public class ProcessorRegister extends Register {
         return zero;
     }
 
-    public ProcessorRegister setZero(boolean zero) {
+    public StatusRegister setZero(boolean zero) {
         this.zero = zero;
 
         return this;
@@ -100,7 +100,7 @@ public class ProcessorRegister extends Register {
         return carry;
     }
 
-    public ProcessorRegister setCarry(boolean carry) {
+    public StatusRegister setCarry(boolean carry) {
         this.carry = carry;
 
         return this;
@@ -117,7 +117,7 @@ public class ProcessorRegister extends Register {
         int b = this.b ? 0x10 : 0;
 
         int dec = decimal ? 0x8 : 0;
-        int irqd = interrupt ? 0x4 : 0;
+        int irqd = irq_off ? 0x4 : 0;
         int zero = this.zero ? 0x2 : 0;
         int carry = this.carry ? 0x1 : 0;
 
