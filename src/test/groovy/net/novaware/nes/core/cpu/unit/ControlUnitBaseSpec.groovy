@@ -1,0 +1,99 @@
+package net.novaware.nes.core.cpu.unit
+
+import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.cpu.instruction.Instruction
+import net.novaware.nes.core.memory.RecordingBus
+import spock.lang.Specification
+
+import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static net.novaware.nes.core.util.UnsignedTypes.ushort
+
+class ControlUnitBaseSpec extends Specification {
+
+    CpuRegisters registers = new CpuRegisters()
+    RecordingBus bus = new RecordingBus()
+    AddressGen agu = new AddressGen(bus)
+    ArithmeticLogic alu = new ArithmeticLogic(registers)
+
+
+    ControlUnit newControlUnit() {
+        def cu = new ControlUnit(
+                registers,
+                bus.cycleCounter(),
+                bus,
+                agu,
+                alu
+        )
+
+        cu.initialize()
+        cu.powerOn()
+        cu.reset()
+        cu
+    }
+
+    def regs(Map args) {
+        // 16-bit registers
+        if (args.pc != null) registers.programCounter.set(ushort(args.pc as int))
+
+        // 8-bit general purpose
+        if (args.a != null)  registers.accumulator.set(ubyte(args.a as int))
+        if (args.x != null)  registers.indexX.set(ubyte(args.x as int))
+        if (args.y != null)  registers.indexY.set(ubyte(args.y as int))
+        if (args.s != null)  registers.stackPointer.set(ubyte(args.s as int))
+
+        // Status Flags (P register)
+        // We can handle individual flags for better test readability
+        if (args.c != null) registers.status.setCarry(args.c as boolean)
+        if (args.z != null) registers.status.setZero(args.z as boolean)
+        if (args.i != null) registers.status.setIrqDisabled(args.i as boolean)
+        if (args.d != null) registers.status.setDecimal(args.d as boolean)
+        if (args.b != null) registers.status.setB(args.b as boolean)
+        if (args.v != null) registers.status.setOverflow(args.v as boolean)
+        if (args.n != null) registers.status.setNegative(args.n as boolean)
+
+        // Support setting the whole status byte at once if needed
+        // if (args.p != null) registers.status.set(ubyte(args.p as int))
+    }
+
+    def ram(Object... addr_data) {
+        assert addr_data.size() % 2 == 0 : "ram must be in pairs [address, value]. current size: ${addr_data.size()}"
+
+        addr_data.collate(2).each { pair ->
+            def (addr, data) = pair
+
+            int address = switch(addr) {
+                case Number -> addr.intValue()
+                default     -> throw new IllegalArgumentException("Unknown addr type: ${addr.class}")
+            }
+
+            int value = switch (data) {
+                case Instruction -> data.opcode() // Your enum method
+                case Number      -> data.intValue()
+                default          -> throw new IllegalArgumentException("Unknown data type: ${data.class}")
+            }
+
+            bus.specifyAnd(ushort(address)).writeByte(ubyte(value))
+        }
+    }
+
+    def expectRegs(Map args) {
+        if (args.pc != null) assert registers.programCounter.get() == ushort(args.pc as int)
+        if (args.a != null)  assert registers.accumulator.get() == ubyte(args.a as int)
+
+        // Status flags as booleans
+        if (args.z != null) assert registers.status.isZero() == args.z
+        if (args.n != null) assert registers.status.isNegative() == args.n
+        if (args.c != null) assert registers.status.getCarry() == args.c
+        // FIXME: ... repeat for v, i, d
+        return true
+    }
+
+    def expectRam(Object... addrData) { // TODO: improve, maybe do a string based assertion?
+        addrData.collate(2).each { pair ->
+            def (addr, expected) = pair
+
+            assert bus.specifyAnd(ushort(addr as int)).readByte() == ubyte(expected as int)
+        }
+        return true
+    }
+}

@@ -21,7 +21,13 @@ public class Hex {
         return hexFormat.formatHex(input);
     }
 
-    public static String s(byte input) {
+    @SuppressWarnings("signedness")
+    public static String s(@Unsigned byte input) {
+        return hexFormat.toHexDigits(input);
+    }
+
+    @SuppressWarnings("signedness")
+    public static String s(@Unsigned short input) {
         return hexFormat.toHexDigits(input);
     }
 }
