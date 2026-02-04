@@ -2,6 +2,10 @@ package net.novaware.nes.core.cpu.instruction
 
 import spock.lang.Specification
 
+import java.util.stream.Stream
+
+import static net.novaware.nes.core.util.UnsignedTypes.uint
+
 class InstructionSpec extends Specification {
 
     def "should construct correctly with getters"() {
@@ -17,6 +21,12 @@ class InstructionSpec extends Specification {
 
     def "should contain correct amount of opcodes"() {
         expect:
-        Instruction.values().length == 151
+        Instruction.values().length == 152
+
+        and: "only OxUK should use 0xFF pseudo opcode"
+        Stream.of(Instruction.values())
+                .map(Instruction::opcode)
+                .filter(o -> uint(o) == 0xFF)
+                .count() == 1
     }
 }

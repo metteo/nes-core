@@ -29,6 +29,7 @@
         <auto-value.version>1.11.0</auto-value.version>
         <checker.version>3.53.0</checker.version>
         <maven-compiler.version>3.13.0</maven-compiler.version>
+        <dagger.version>2.59</dagger.version>
 
         <jpms.name>net.novaware.nes.core</jpms.name>
         <jpms.opens>--add-opens ${jpms.name}/${jpms.name}</jpms.opens>
@@ -55,7 +56,6 @@
             <version>${jspecify.version}</version>
         </dependency>
 
-
         <dependency> <!-- Annotations from the Checker Framework: nullness, signedness, ... -->
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
@@ -67,6 +67,12 @@
             <artifactId>auto-value-annotations</artifactId>
             <version>${auto-value.version}</version>
        <!-- <scope>provided</scope> - TODO:  figure out how to run from IJ with it -->
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.dagger</groupId>
+            <artifactId>dagger</artifactId>
+            <version>${dagger.version}</version>
         </dependency>
 
         <dependency>
@@ -148,6 +154,11 @@
                             <artifactId>auto-value</artifactId>
                             <version>${auto-value.version}</version>
                         </path>
+                        <path>
+                            <groupId>com.google.dagger</groupId>
+                            <artifactId>dagger-compiler</artifactId>
+                            <version>${dagger.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
@@ -189,15 +200,24 @@
                     <argLine>
                         @{argLine}
                         ${jpms.opens}=ALL-UNNAMED
+                        ${jpms.opens}.apu=ALL-UNNAMED
                         ${jpms.opens}.cpu=ALL-UNNAMED
                         ${jpms.opens}.cpu.instruction=ALL-UNNAMED
+                        ${jpms.opens}.cpu.memory=ALL-UNNAMED
+                        ${jpms.opens}.cpu.register=ALL-UNNAMED
+                        ${jpms.opens}.cpu.unit=ALL-UNNAMED
                         ${jpms.opens}.file=ALL-UNNAMED
                         ${jpms.opens}.file.ines=ALL-UNNAMED
                         ${jpms.opens}.file.nesy=ALL-UNNAMED
                         ${jpms.opens}.file.pasofami=ALL-UNNAMED
                         ${jpms.opens}.file.unif=ALL-UNNAMED
+                        ${jpms.opens}.memory=ALL-UNNAMED
                         ${jpms.opens}.net=ALL-UNNAMED
+                        ${jpms.opens}.ppu=ALL-UNNAMED
+                        ${jpms.opens}.ppu.memory=ALL-UNNAMED
+                        ${jpms.opens}.register=ALL-UNNAMED
                         ${jpms.opens}.util=ALL-UNNAMED
+                        ${jpms.opens}.util.uml=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
@@ -243,6 +263,11 @@
                                     <version>${auto-value.version}</version>
                                 </path>
                                 <path>
+                                    <groupId>com.google.dagger</groupId>
+                                    <artifactId>dagger-compiler</artifactId>
+                                    <version>${dagger.version}</version>
+                                </path>
+                                <path>
                                     <groupId>org.checkerframework</groupId>
                                     <artifactId>checker</artifactId>
                                     <version>${checker.version}</version>
@@ -250,6 +275,7 @@
                             </annotationProcessorPaths>
                             <annotationProcessors>
                                 <annotationProcessor>com.google.auto.value.processor.AutoBuilderProcessor</annotationProcessor>
+                                <annotationProcessor>dagger.internal.codegen.ComponentProcessor</annotationProcessor>
 
                                 <!-- Add all the checkers you want to enable here -->
                                 <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
@@ -261,14 +287,14 @@
                                 <annotationProcessor>org.checkerframework.checker.formatter.FormatterChecker</annotationProcessor>
                                 <annotationProcessor>org.checkerframework.checker.units.UnitsChecker</annotationProcessor>
                                 <annotationProcessor>org.checkerframework.checker.signedness.SignednessChecker</annotationProcessor>
-                                <annotationProcessor>org.checkerframework.checker.index.IndexChecker</annotationProcessor>
+<!--                            <annotationProcessor>org.checkerframework.checker.index.IndexChecker</annotationProcessor> -->
                             </annotationProcessors>
                             <compilerArgs>
                                 <arg>-Xmaxerrs</arg><arg>10000</arg>
                                 <arg>-Xmaxwarns</arg><arg>10000</arg>
                                 <!-- <arg>-Awarns</arg> --> <!-- -Awarns turns type-checking errors into warnings. -->
 
-                                <arg>-AskipDefs=\.AutoBuilder*</arg> <!-- generated by auto value -->
+                                <arg>-AskipDefs=\.DaggerBoardFactory$|\.AutoBuilder*</arg> <!-- generated by dagger / auto-value -->
 
                                 <arg>-Xpkginfo:always</arg><!-- prevents recompile -->
                                 <arg>-g:lines,vars,source</arg>

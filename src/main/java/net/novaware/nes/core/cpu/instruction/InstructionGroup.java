@@ -124,11 +124,22 @@ public enum InstructionGroup {
     PULL_PROC_STATUS_FROM_SP("PLP", STACK_OPS),
 
     TRANSFER_SP_TO_X        ("TSX", STACK_OPS),
-    TRANSFER_X_TO_SP        ("TXS", STACK_OPS);
+    TRANSFER_X_TO_SP        ("TXS", STACK_OPS),
 
     // endregion
 
+    UNKNOWN                 ("???", InstructionCategory.UNKNOWN);
+
     private static final List<InstructionGroup> instances = List.of(values());
+    private static final InstructionGroup[] ordinalIndex;
+
+    static {
+        ordinalIndex = new InstructionGroup[instances().size()];
+
+        for (InstructionGroup ig : instances()) {
+            ordinalIndex[ig.ordinal()] = ig;
+        }
+    }
 
     private final String mnemonic;
     private final InstructionCategory category;
@@ -148,6 +159,10 @@ public enum InstructionGroup {
 
     public static List<InstructionGroup> instances() {
         return instances;
+    }
+
+    public static InstructionGroup valueOf(int ordinal) {
+        return ordinalIndex[ordinal];
     }
 
     /**

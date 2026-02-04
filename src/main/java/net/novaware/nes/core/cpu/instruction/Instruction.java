@@ -1,7 +1,10 @@
 package net.novaware.nes.core.cpu.instruction;
 
+import org.checkerframework.checker.signedness.qual.Unsigned;
+
 import static net.novaware.nes.core.cpu.instruction.AddressingMode.*;
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.*;
+import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 
 public enum Instruction {
 
@@ -266,18 +269,23 @@ public enum Instruction {
     OxF9(SUBTRACT_WITH_CARRY,   INDEXED_ABSOLUTE_Y,     0xF9, 3),
 
     OxFD(SUBTRACT_WITH_CARRY,   INDEXED_ABSOLUTE_X,     0xFD, 3),
-    OxFE(INCREMENT_MEMORY,      INDEXED_ABSOLUTE_X,     0xFE, 3);
+    OxFE(INCREMENT_MEMORY,      INDEXED_ABSOLUTE_X,     0xFE, 3),
 
     // endregion
+
+    /**
+     * OxUnKnown - null object to fill the array
+     */
+    OxUK(InstructionGroup.UNKNOWN, AddressingMode.UNKNOWN, 0xFF, -1);
 
     /**
      * Simplifies enum creation without casting to byte
      */
     Instruction(InstructionGroup group, AddressingMode addressingMode, int opcode, int size) {
-        this(group, addressingMode, (byte) opcode, size);
+        this(group, addressingMode, ubyte(opcode), size);
     }
 
-    Instruction(InstructionGroup group, AddressingMode addressingMode, byte opcode, int size) {
+    Instruction(InstructionGroup group, AddressingMode addressingMode, @Unsigned byte opcode, int size) {
         this.group = group;
         this.addressingMode = addressingMode;
         this.opcode = opcode;
@@ -286,7 +294,7 @@ public enum Instruction {
 
     private final InstructionGroup group;
     private final AddressingMode addressingMode;
-    private final byte opcode;
+    private final @Unsigned byte opcode;
     private final int size;
 
     public InstructionGroup group() {
@@ -297,7 +305,7 @@ public enum Instruction {
         return addressingMode;
     }
 
-    public byte opcode() {
+    public @Unsigned byte opcode() {
         return opcode;
     }
 
