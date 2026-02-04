@@ -15,6 +15,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <itJavaDirectory>${project.basedir}/src/it/java</itJavaDirectory>
+        <itGroovyDirectory>${project.basedir}/src/it/groovy</itGroovyDirectory>
+        <itResourceDirectory>${project.basedir}/src/it/resources</itResourceDirectory>
+        <itOutputDirectory>${project.build.directory}/it-classes</itOutputDirectory>
+
         <gmaven-plus.version>4.2.1</gmaven-plus.version>
         <groovy.version>4.0.29</groovy.version>
         <spock.version>2.4-groovy-4.0</spock.version>
@@ -28,12 +33,19 @@
         <jspecify.version>1.0.0</jspecify.version>
         <auto-value.version>1.11.0</auto-value.version>
         <checker.version>3.53.0</checker.version>
-        <maven-compiler.version>3.13.0</maven-compiler.version>
+        <compiler.version>3.13.0</compiler.version>
+        <resources.version>3.3.1</resources.version>
+        <failsafe.version>3.5.4</failsafe.version>
+        <jar.version>3.4.1</jar.version>
+        <modernizer.version>3.2.0</modernizer.version>
         <dagger.version>2.59</dagger.version>
 
         <jpms.name>net.novaware.nes.core</jpms.name>
         <jpms.opens>--add-opens ${jpms.name}/${jpms.name}</jpms.opens>
         <argLine/>
+
+        <!-- TODO: consider adding skipUTs, skipITs: https://stackoverflow.com/questions/6612344/prevent-unit-tests-but-allow-integration-tests-in-maven -->
+        <!-- TODO: consider separate profile for all IT executions -->
     </properties>
 
 
@@ -137,7 +149,30 @@
             </plugin>
 
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${resources.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-itResources</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${itOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${itResourceDirectory}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId> <!-- see also checker profile -->
+                <version>${compiler.version}</version>
                 <configuration>
                     <fork>true</fork>
                     <compilerArgs>
@@ -161,6 +196,22 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default-itCompile</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <compileSourceRoots>
+                                <root>${itJavaDirectory}</root>
+                            </compileSourceRoots>
+                            <generatedTestSourcesDirectory>${project.build.directory}/generated-it-sources/it-annotations</generatedTestSourcesDirectory>
+                            <outputDirectory>${itOutputDirectory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin> <!-- compilation of tests in groovy -->
@@ -172,6 +223,24 @@
                         <goals>
                             <goal>compileTests</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>default-itGCompile</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>compileTests</goal>
+                        </goals>
+                        <configuration>
+                            <testSources>
+                                <testSource>
+                                    <directory>${itGroovyDirectory}</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </testSource>
+                            </testSources>
+                            <testOutputDirectory>${itOutputDirectory}</testOutputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
@@ -224,7 +293,7 @@
             <plugin>
                 <groupId>org.gaul</groupId>
                 <artifactId>modernizer-maven-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>${modernizer.version}</version>
                 <configuration>
                     <javaVersion>25</javaVersion>
                 </configuration>
@@ -235,6 +304,44 @@
                         <goals>
                             <goal>modernizer</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${failsafe.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    <testClassesDirectory>${itOutputDirectory}</testClassesDirectory>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${jar.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-itJar</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                        <configuration>
+                            <testClassesDirectory>${itOutputDirectory}</testClassesDirectory>
+                            <classifier>its</classifier>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -253,7 +360,7 @@
                 <plugins>
                     <plugin>
                         <artifactId>maven-compiler-plugin</artifactId>
-                        <version>${maven-compiler.version}</version>
+                        <version>${compiler.version}</version>
                         <configuration>
                             <fork>true</fork> <!-- Must fork or else JVM arguments are ignored. -->
                             <annotationProcessorPaths>
