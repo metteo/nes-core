@@ -11,6 +11,7 @@ class MemoryMapSpec extends Specification {
         expect:
         MEMORY_SIZE == 0x10000
         RAM_SIZE == 0x800
+        STACK_SEGMENT_SIZE == 0x100
         RAM_MIRROR_1_SIZE == 0x800
         RAM_MIRROR_2_SIZE == 0x800
         RAM_MIRROR_3_SIZE == 0x800

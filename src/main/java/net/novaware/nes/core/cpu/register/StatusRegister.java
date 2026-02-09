@@ -5,15 +5,16 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 
+// TODO: consider setters that accept an int value to prevent branching?
 public class StatusRegister extends Register {
 
     private boolean negative;   // 7
     private boolean overflow;   // 6
                                 // 5 - always one
-    private boolean b;          // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php TODO: transient!
+    private boolean brk;        // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php TODO: transient!
 
     private boolean decimal;    // 3
-    private boolean irq_off;  // 2 - 0 if irq enabled, 1 if irq disabled
+    private boolean irq_off;    // 2 - 0 if irq enabled, 1 if irq disabled
     private boolean zero;       // 1
     private boolean carry;      // 0
 
@@ -21,10 +22,10 @@ public class StatusRegister extends Register {
         super(name);
     }
 
-    public void powerOn() {
+    public void initialize() {
         negative = false;
         overflow = false;
-        b = false;
+        brk = false;
 
         decimal = false;
         irq_off = true;
@@ -56,12 +57,12 @@ public class StatusRegister extends Register {
         return this;
     }
 
-    public boolean getB() { // TODO: come up with a name, gemini suggests "Break"
-        return b;
+    public boolean getBreak() {
+        return brk;
     }
 
-    public StatusRegister setB(boolean b) {
-        this.b = b;
+    public StatusRegister setBreak(boolean brk) {
+        this.brk = brk;
 
         return this;
     }
@@ -114,7 +115,7 @@ public class StatusRegister extends Register {
         int neg = negative ? 0x80 : 0;
         int ov = overflow ? 0x40 : 0;
         int one = 0x20;
-        int b = this.b ? 0x10 : 0;
+        int b = this.brk ? 0x10 : 0;
 
         int dec = decimal ? 0x8 : 0;
         int irqd = irq_off ? 0x4 : 0;

@@ -12,14 +12,35 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
     // TODO: have separate tests for fetching, decoding and execution
     // to prevent permutations of instr group * addressing mode
 
-
-    def "should construct an instance" () {
+    def "should construct an initialized instance" () {
         when:
         newControlUnit()
 
         then:
         ControlUnit.RESET_VECTOR == ushort(0xFFFC)
         bus.cycles() == 6
+        expectRegs(
+            sp: 0x01FD
+        )
+    }
+
+    def "should reset properly"() {
+        given:
+        ram(
+            0xFFFC, 0x00,
+            0xFFFD, 0x80
+        )
+        def cu = newControlUnit()
+        
+        when:
+        cu.reset()
+
+        then:
+        bus.cycles() == 6
+        expectRegs(
+            pc: 0x8001,
+            sp: 0x01FA
+        )
     }
 
     def "should jump to start of rom" () {
@@ -33,7 +54,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         newControlUnit()
 
         then:
-        expectRegs pc: 0x8000
+        expectRegs pc: 0x8001 // pc+1 because of priming fetchOpcode
     }
 
     def "should bitwise or absolute"() {
@@ -48,12 +69,13 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             0x0654, 0b1010_0110
         )
 
-        regs a: 0b0101_1001
+        regs pc: 0x0000, a: 0b0101_1001
 
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 
@@ -89,7 +111,8 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 
@@ -118,7 +141,8 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 
@@ -149,7 +173,8 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 
@@ -177,7 +202,8 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 
@@ -209,7 +235,8 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         bus.record()
 
         when:
-        cu.fetch()
+        cu.fetchOpcode()
+        cu.fetchOperand()
         cu.decode()
         cu.execute()
 

@@ -14,6 +14,7 @@ class CpuSpec extends Specification {
     InterruptLogic interrupts = Mock()
     LoadStore loadStore = Mock()
     PowerMgmt powerMgmt = Mock()
+    MemoryMgmt mmu = Mock()
     StackEngine stackEngine = Mock()
 
     Cpu instance = new Cpu(
@@ -25,6 +26,7 @@ class CpuSpec extends Specification {
             interrupts,
             loadStore,
             powerMgmt,
+            mmu,
             stackEngine
     )
 
@@ -40,6 +42,7 @@ class CpuSpec extends Specification {
         1 * interrupts.initialize()
         1 * loadStore.initialize()
         1 * powerMgmt.initialize()
+        1 * mmu.initialize()
         1 * stackEngine.initialize()
     }
 
@@ -55,6 +58,7 @@ class CpuSpec extends Specification {
         1 * interrupts.reset()
         1 * loadStore.reset()
         1 * powerMgmt.reset()
+        1 * mmu.reset()
         1 * stackEngine.reset()
     }
 }

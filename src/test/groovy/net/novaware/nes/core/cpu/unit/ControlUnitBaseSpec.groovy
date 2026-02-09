@@ -12,22 +12,22 @@ class ControlUnitBaseSpec extends Specification {
 
     CpuRegisters registers = new CpuRegisters()
     RecordingBus bus = new RecordingBus()
-    AddressGen agu = new AddressGen(bus)
+    AddressGen agu = new AddressGen(registers, bus)
     ArithmeticLogic alu = new ArithmeticLogic(registers)
+    MemoryMgmt mmu = new MemoryMgmt(registers, bus)
 
 
     ControlUnit newControlUnit() {
         def cu = new ControlUnit(
-                registers,
-                bus.cycleCounter(),
-                bus,
-                agu,
-                alu
+            registers,
+            bus.cycleCounter(),
+            bus,
+            agu,
+            alu,
+            mmu
         )
 
         cu.initialize()
-        cu.powerOn()
-        cu.reset()
         cu
     }
 
@@ -47,7 +47,7 @@ class ControlUnitBaseSpec extends Specification {
         if (args.z != null) registers.status.setZero(args.z as boolean)
         if (args.i != null) registers.status.setIrqDisabled(args.i as boolean)
         if (args.d != null) registers.status.setDecimal(args.d as boolean)
-        if (args.b != null) registers.status.setB(args.b as boolean)
+        if (args.b != null) registers.status.setBreak(args.b as boolean)
         if (args.v != null) registers.status.setOverflow(args.v as boolean)
         if (args.n != null) registers.status.setNegative(args.n as boolean)
 
@@ -79,6 +79,7 @@ class ControlUnitBaseSpec extends Specification {
     def expectRegs(Map args) {
         if (args.pc != null) assert registers.programCounter.get() == ushort(args.pc as int)
         if (args.a != null)  assert registers.accumulator.get() == ubyte(args.a as int)
+        if (args.sp != null)  assert registers.stackPointer.get() == ushort(args.sp as int)
 
         // Status flags as booleans
         if (args.z != null) assert registers.status.isZero() == args.z

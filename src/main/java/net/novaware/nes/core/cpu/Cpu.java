@@ -2,15 +2,19 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
 import net.novaware.nes.core.cpu.unit.InstructionDecoder;
 import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
+import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.PowerMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
+import net.novaware.nes.core.util.Initializable;
+import net.novaware.nes.core.util.Resettable;
 import net.novaware.nes.core.util.uml.Owned;
 
 import java.util.List;
@@ -21,7 +25,7 @@ import java.util.List;
  * TODO: https://github.com/christopherpow/nes-test-roms
  */
 @BoardScope
-public class Cpu {
+public class Cpu implements Initializable, Resettable {
 
     @Owned private final CpuRegisters registers;
 
@@ -32,6 +36,7 @@ public class Cpu {
     @Owned private final InterruptLogic interrupts;
     @Owned private final LoadStore loadStore;
     @Owned private final PowerMgmt powerMgmt;
+    @Owned private final MemoryMgmt mmu;
     @Owned private final StackEngine stackEngine;
 
     private List<Unit> units;
@@ -47,6 +52,7 @@ public class Cpu {
         InterruptLogic interrupts,
         LoadStore loadStore,
         PowerMgmt powerMgmt,
+        MemoryMgmt mmu,
         StackEngine stackEngine
     ) {
         this.registers = registers;
@@ -59,16 +65,15 @@ public class Cpu {
             this.interrupts = interrupts,
             this.loadStore = loadStore,
             this.powerMgmt = powerMgmt,
+            this.mmu = mmu,
             this.stackEngine = stackEngine
         );
     }
 
     public void initialize() {
-        units.forEach(Unit::initialize);
-    }
+        registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
 
-    public void powerOn() {
-        controlUnit.powerOn();
+        units.forEach(Unit::initialize);
     }
 
     public void reset() {
@@ -82,7 +87,20 @@ public class Cpu {
     public void cycle() {
         controlUnit.execute();
 
-        controlUnit.fetch();
+        controlUnit.fetchOperand();
         controlUnit.decode();
+
+        // fetchOperand();
+        //   fetchLo();
+        //   fetchHi();
+        // decode();
+        //   fetchLo();
+        //   fetchHi();
+        // execute();
+        //   read(); //and maybe write original back
+        //   modify();
+        //   write();
+        // sampleInterrupts();
+        // fetchOpcode();
     }
 }
