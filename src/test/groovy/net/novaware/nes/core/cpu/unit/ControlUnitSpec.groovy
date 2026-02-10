@@ -249,4 +249,91 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             c: true
         )
     }
+
+    def "should branch if plus"() {
+        given:
+        def cu = newControlUnit()
+
+        ram(
+            sourcePc  , Ox10,  // BPL
+            sourcePc+1, offset // relative +/-
+        )
+
+        regs(
+            pc: sourcePc,
+            n: negative
+        )
+
+        bus.record()
+
+        when:
+        cu.fetchOpcode()
+        cu.fetchOperand()
+        cu.decode()
+        cu.execute()
+
+        then:
+        bus.cycles() == cycles
+        expectRegs(
+            pc: targetPc
+        )
+
+        where:
+        //                           | b + t + p = base cycles + taken + page crossing
+        sourcePc | negative | offset | cycles    | targetPc
+        0x0000   | false    | 5      | 2 + 1 + 0 | 0x0007
+        0x0000   | true     | 5      | 2 + 0 + 0 | 0x0002
+
+        0x00FC   | false    | 3      | 2 + 1 + 1 | 0x0101
+        0x00FC   | true     | 3      | 2 + 0 + 0 | 0x00FE
+
+        0x00FE   | false    | -3     | 2 + 1 + 1 | 0x00FD
+        0x00FE   | true     | -3     | 2 + 0 + 0 | 0x0100
+    }
+
+    def "should branch if any without cycle checks"() {
+        given:
+        def cu = newControlUnit()
+
+        ram(
+            0x0000, opcode,
+            0x0001, 0x05
+        )
+
+        regs(
+            pc: 0x0000,
+            n:  neg,
+            z:  zero,
+            c:  carry,
+            v:  ovf
+        )
+
+        when:
+        cu.fetchOpcode()
+        cu.fetchOperand()
+        cu.decode()
+        cu.execute()
+
+        then:
+        expectRegs pc: expectedPc
+
+        where:
+        opcode | neg   | zero  | carry | ovf   | expectedPc
+        Ox10   | false | false | false | false | 0x0007 // BPL taken
+        Ox10   | true  | false | false | false | 0x0002 // BPL not taken
+        Ox30   | true  | false | false | false | 0x0007 // BMI taken
+        Ox30   | false | false | false | false | 0x0002 // BMI not taken
+        OxF0   | false | true  | false | false | 0x0007 // BEQ taken
+        OxF0   | false | false | false | false | 0x0002 // BEQ not taken
+        OxD0   | false | false | false | false | 0x0007 // BNE taken
+        OxD0   | false | true  | false | false | 0x0002 // BNE not taken
+        OxB0   | false | false | true  | false | 0x0007 // BCS taken
+        OxB0   | false | false | false | false | 0x0002 // BCS not taken
+        Ox90   | false | false | false | false | 0x0007 // BCC taken
+        Ox90   | false | false | true  | false | 0x0002 // BCC not taken
+        Ox70   | false | false | false | true  | 0x0007 // BVS taken
+        Ox70   | false | false | false | false | 0x0002 // BVS not taken
+        Ox50   | false | false | false | false | 0x0007 // BVC taken
+        Ox50   | false | false | false | true  | 0x0002 // BVC not taken
+    }
 }

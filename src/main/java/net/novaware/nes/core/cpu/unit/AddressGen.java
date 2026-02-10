@@ -54,6 +54,7 @@ public class AddressGen implements Unit {
 
         @Unsigned byte addrLo = memoryBus.specifyAnd(address).readByte();
         @Unsigned byte addrHi = memoryBus.specifyAnd(ushort(sourcePlusOne)).readByte();
+
         return ushort(uint(addrHi) << 8 | uint(addrLo));
     }
 }

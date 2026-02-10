@@ -35,14 +35,19 @@ class DelegatingRegisterSpec extends Specification {
     def "should work with byte data"() {
         given:
         def register = new DelegatingRegister("DOP")
-        register.configureByte()
+
 
         when:
+        register.configureData(ubyte(0x11))
+
+        then:
+        register.getData() == ubyte(0x11)
+
+        and:
         register.setData(ubyte(0x12))
 
         then:
         register.getData() == ubyte(0x12)
-
     }
 
     def "should work with ByteRegister"() {
@@ -51,7 +56,7 @@ class DelegatingRegisterSpec extends Specification {
         accumulator.setAsByte(0x34)
 
         def register = new DelegatingRegister("DOP")
-        register.configureByteRegister(accumulator)
+        register.configureDataRegister(accumulator)
 
         when:
         def prevValue = register.getData()

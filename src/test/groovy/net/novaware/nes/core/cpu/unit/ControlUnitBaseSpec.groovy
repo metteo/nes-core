@@ -15,6 +15,7 @@ class ControlUnitBaseSpec extends Specification {
     AddressGen agu = new AddressGen(registers, bus)
     ArithmeticLogic alu = new ArithmeticLogic(registers)
     MemoryMgmt mmu = new MemoryMgmt(registers, bus)
+    InstructionDecoder decoder = new InstructionDecoder(registers, bus.cycleCounter(), bus, agu)
 
 
     ControlUnit newControlUnit() {
@@ -24,7 +25,8 @@ class ControlUnitBaseSpec extends Specification {
             bus,
             agu,
             alu,
-            mmu
+            mmu,
+            decoder
         )
 
         cu.initialize()

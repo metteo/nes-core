@@ -81,9 +81,9 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         where:
         instr | x    | y    | cycles
-        Ox1E  | 0x67 | 0    | 1 // oops
+        Ox1E  | 0xBC | 0    | 1 // oops
         Ox1E  | 0x01 | 0    | 0
-        Ox19  | 0    | 0x89 | 1 // oops
+        Ox19  | 0    | 0xCD | 1 // oops
         Ox19  | 0    | 0x02 | 0
     }
 
@@ -190,13 +190,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
 
         registers.currentInstruction.set(Instruction.Ox11.opcode())
-        registers.currentOperand.setAsShort(0x20)
+        registers.currentOperand.setAsShort(address)
 
-        regs y: y
+        regs y: 0x02
         ram(
-            0x0020, 0x80,
-            0x0021, 0x40,
-            (0x4080 + y), 0x77
+            address        , 0x80,
+            address+1      , 0x40,
+            (0x4080 + 0x02), 0x77
         )
 
         bus.record()
@@ -210,9 +210,9 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         registers.decodedOperand.getData() == ubyte(0x77)
 
         where:
-        y    | cycles
-        0x01 | 2
-        0xFF | 3
+        address | cycles
+        0x00FE  | 2
+        0x00FF  | 3
     }
 
     def "should decode zero page mode"() {
@@ -279,7 +279,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         then:
         bus.cycles() == 0
         registers.decodedInstruction.getAsInt() == BRANCH_IF_NOT_EQUAL.ordinal()
-        registers.decodedOperand.getAddress() == ushort(0x0025 - OxD0.size() + operand)
+        registers.decodedOperand.getAddress() == ushort(0x0025 + operand)
 
         where:
         operand << [-2, 2]
