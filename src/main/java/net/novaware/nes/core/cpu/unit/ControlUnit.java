@@ -6,6 +6,7 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
+import net.novaware.nes.core.cpu.unit.ArithmeticLogic.ByteUnaryOperator;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.util.uml.Used;
@@ -118,38 +119,107 @@ public class ControlUnit implements Unit {
     }
 
     public void execute() {
-
-        // TODO: need a flag or null register value when pipeline is empty
-
         int instrGroup = registers.dir().getAsInt();
 
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
         switch (instruction) {
-            case JUMP_TO -> registers.pc().set(registers.dor().getAddress());
-            case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
-            case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
-            case ROTATE_LEFT -> {
-                @Unsigned byte data = registers.dor().getData(); // read
-                registers.dor().setData(data); // write unmodified
-                @Unsigned byte newData = alu.rotateLeft(data); // modify
-                registers.dor().setData(newData); // write
-            }
-            case BRANCH_IF_PLUS ->         branchIf(!registers.status().isNegative());
-            case BRANCH_IF_MINUS ->        branchIf(registers.status().isNegative());
-            case BRANCH_IF_EQUAL ->        branchIf(registers.status().isZero());
-            case BRANCH_IF_NOT_EQUAL ->    branchIf(!registers.status().isZero());
-            case BRANCH_IF_CARRY_SET ->    branchIf(registers.status().getCarry());
-            case BRANCH_IF_CARRY_CLR ->    branchIf(!registers.status().getCarry());
+            case ADD_WITH_CARRY      -> alu.addWithCarry(registers.dor().getData());
+            case SUBTRACT_WITH_CARRY -> alu.subtractWithBorrow(registers.dor().getData());
+
+            case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
+            case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
+
+            case INCREMENT_X -> alu.incrementX();
+            case DECREMENT_X -> alu.decrementX();
+
+            case INCREMENT_Y -> alu.incrementY();
+            case DECREMENT_Y -> alu.decrementY();
+
+            case BRANCH_IF_PLUS         -> branchIf(!registers.status().isNegative());
+            case BRANCH_IF_MINUS        -> branchIf(registers.status().isNegative());
+
+            case BRANCH_IF_EQUAL        -> branchIf(registers.status().isZero());
+            case BRANCH_IF_NOT_EQUAL    -> branchIf(!registers.status().isZero());
+
+            case BRANCH_IF_CARRY_SET    -> branchIf(registers.status().getCarry());
+            case BRANCH_IF_CARRY_CLR    -> branchIf(!registers.status().getCarry());
+
             case BRANCH_IF_OVERFLOW_SET -> branchIf(registers.status().isOverflow());
             case BRANCH_IF_OVERFLOW_CLR -> branchIf(!registers.status().isOverflow());
 
+            case COMPARE_A -> alu.compareA();
+            case COMPARE_X -> alu.compareX();
+            case COMPARE_Y -> alu.compareY();
+
+            case JUMP_TO -> registers.pc().set(registers.dor().getAddress());
+
+            case JUMP_TO_SUBROUTINE -> {}
+            case RETURN_FROM_SUBROUTINE -> {}
+
+            case SET_CARRY -> registers.status().setCarry(true);
+            case CLR_CARRY -> registers.status().setCarry(false);
+
+            case SET_DECIMAL -> registers.status().setDecimal(true);
+            case CLR_DECIMAL -> registers.status().setDecimal(false);
+
+            case SET_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(true);
+            case CLR_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(false);
+
+            case CLR_OVERFLOW -> registers.status().setOverflow(false);
+
+            case BREAK -> {}
+            case RETURN_FROM_INTERRUPT -> {}
+
+            case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
+            case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
+            case BITWISE_XOR -> {}
+            case BIT_TEST -> {}
+
+            case LOAD_A_WITH_MEMORY -> {}
+            case STORE_A_IN_MEMORY -> {}
+
+            case LOAD_X_WITH_MEMORY -> {}
+            case STORE_X_IN_MEMORY -> {}
+
+            case LOAD_Y_WITH_MEMORY -> {}
+            case STORE_Y_IN_MEMORY -> {}
+
             case NO_OPERATION -> {}
+
+            case TRANSFER_A_TO_X -> {}
+            case TRANSFER_X_TO_A -> {}
+
+            case TRANSFER_A_TO_Y -> {}
+            case TRANSFER_Y_TO_A -> {}
+
+            case ARITHMETIC_SHIFT_LEFT -> readModifyWrite(alu::arithmeticShiftLeft);
+            case LOGICAL_SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
+
+            case ROTATE_LEFT  -> readModifyWrite(alu::rotateLeft);
+            case ROTATE_RIGHT -> readModifyWrite(alu::rotateRight);
+
+            case PUSH_A -> {}
+            case PULL_A -> {}
+
+            case PUSH_PROC_STATUS_TO_SP -> {}
+            case PULL_PROC_STATUS_FROM_SP -> {}
+
+            case TRANSFER_SP_TO_X -> {}
+            case TRANSFER_X_TO_SP -> {}
+
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
         // execute the handler
         // write back to mem / reg
         // fetch the next instruction
+    }
+
+    private void readModifyWrite(ByteUnaryOperator operator) {
+        @Unsigned byte data = registers.dor().getData(); // read
+        registers.dor().setData(data); // write unmodified
+        @Unsigned byte newData = operator.apply(data); // modify
+        registers.dor().setData(newData); // write
     }
 
     private void branchIf(boolean condition) {

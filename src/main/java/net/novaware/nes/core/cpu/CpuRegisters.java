@@ -27,7 +27,7 @@ public class CpuRegisters extends RegisterFile {
     private final ShortRegister currentOperand;
 
     /** @see InstructionGroup#ordinal() TODO: use aaa000cc bits */
-    private final DataRegister  decodedInstruction;
+    private final DataRegister  decodedInstruction; // TODO: consider holding enum value to improve perf
     private final DelegatingRegister decodedOperand;
 
     private final DataRegister accumulator;

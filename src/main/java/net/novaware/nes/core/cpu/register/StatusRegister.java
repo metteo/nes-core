@@ -5,7 +5,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 
-// TODO: consider setters that accept an int value to prevent branching?
+// TODO: consider setters / getters that use an int value to prevent branching?
 public class StatusRegister extends Register {
 
     private boolean negative;   // 7
@@ -107,7 +107,17 @@ public class StatusRegister extends Register {
         return this;
     }
 
-    public @Unsigned byte get() {
+    public boolean getBorrow() {
+        return !carry;
+    }
+
+    public StatusRegister setBorrow(boolean borrow) {
+        this.carry = !borrow;
+
+        return this;
+    }
+
+    public @Unsigned byte get() { // TODO: allow setting break flag for stack operations
         return ubyte(getAsInt());
     }
 

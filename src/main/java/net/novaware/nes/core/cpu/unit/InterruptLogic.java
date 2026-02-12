@@ -16,6 +16,8 @@ public class InterruptLogic implements Unit {
 
     }
 
+    // BRK, NMI, IRQ
+
     public void reset() {
 
     }

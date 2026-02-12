@@ -8,4 +8,6 @@ public class LoadStore implements Unit {
     public LoadStore () {
 
     }
+
+    // LDA, LDX, LDY, STA, STX, STY
 }
