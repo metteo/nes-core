@@ -6,9 +6,9 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
-import net.novaware.nes.core.cpu.unit.ArithmeticLogic.ByteUnaryOperator;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.util.UByteUnaryOperator;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -148,9 +148,9 @@ public class ControlUnit implements Unit {
             case BRANCH_IF_OVERFLOW_SET -> branchIf(registers.status().isOverflow());
             case BRANCH_IF_OVERFLOW_CLR -> branchIf(!registers.status().isOverflow());
 
-            case COMPARE_A -> alu.compareA();
-            case COMPARE_X -> alu.compareX();
-            case COMPARE_Y -> alu.compareY();
+            case COMPARE_A -> alu.compareA(registers.dor().getData());
+            case COMPARE_X -> alu.compareX(registers.dor().getData());
+            case COMPARE_Y -> alu.compareY(registers.dor().getData());
 
             case JUMP_TO -> registers.pc().set(registers.dor().getAddress());
 
@@ -173,8 +173,8 @@ public class ControlUnit implements Unit {
 
             case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
             case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
-            case BITWISE_XOR -> {}
-            case BIT_TEST -> {}
+            case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
+            case BIT_TEST -> alu.bitTest(registers.dor().getData());
 
             case LOAD_A_WITH_MEMORY -> {}
             case STORE_A_IN_MEMORY -> {}
@@ -215,10 +215,10 @@ public class ControlUnit implements Unit {
         // fetch the next instruction
     }
 
-    private void readModifyWrite(ByteUnaryOperator operator) {
+    private void readModifyWrite(UByteUnaryOperator operator) {
         @Unsigned byte data = registers.dor().getData(); // read
         registers.dor().setData(data); // write unmodified
-        @Unsigned byte newData = operator.apply(data); // modify
+        @Unsigned byte newData = operator.applyAsUByte(data); // modify
         registers.dor().setData(newData); // write
     }
 
