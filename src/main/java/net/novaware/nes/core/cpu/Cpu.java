@@ -13,11 +13,10 @@ import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.PowerMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
-import net.novaware.nes.core.util.Initializable;
-import net.novaware.nes.core.util.Resettable;
 import net.novaware.nes.core.util.uml.Owned;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * https://web.archive.org/web/20221112231348if_/http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
@@ -25,7 +24,9 @@ import java.util.List;
  * TODO: https://github.com/christopherpow/nes-test-roms
  */
 @BoardScope
-public class Cpu implements Initializable, Resettable {
+public class Cpu implements Interruptible, Synchronizable, Overflowable {
+
+    private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
     @Owned private final CpuRegisters registers;
 
@@ -70,13 +71,16 @@ public class Cpu implements Initializable, Resettable {
         );
     }
 
-    public void initialize() {
+    /* package */ void initialize() {
         registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
 
         units.forEach(Unit::initialize);
     }
 
-    public void reset() {
+    /**
+     * Perform the reset of the CPU
+     */
+    /* package */ void reset() {
         units.forEach(Unit::reset);
     }
 
@@ -102,5 +106,58 @@ public class Cpu implements Initializable, Resettable {
         //   write();
         // sampleInterrupts();
         // fetchOpcode();
+    }
+
+    /**
+     * Trigger IRQ of CPU on low
+     */
+    @Override
+    public void interruptRequest(boolean high) {
+
+    }
+
+    /**
+     * Trigger NMI of CPU on low edge
+     */
+    @Override
+    public void nonMaskableInterrupt(boolean high) {
+
+    }
+
+    /**
+     * Trigger RST of the CPU on low
+     */
+    @Override
+    public void reset(boolean high) {
+
+    }
+
+    /**
+     * Trigger RDY halt/step the CPU on low edge
+     */
+    @Override
+    public void ready(boolean high) {
+
+    }
+
+    @Override
+    public void addSyncListener(SyncListener listener) {
+        syncListeners.add(listener);
+    }
+
+    @Override
+    public void removeSyncListener(SyncListener listener) {
+        syncListeners.remove(listener);
+    }
+
+    protected void fireSyncChange(boolean high) {
+        for (SyncListener listener : syncListeners) {
+            listener.onSyncChange(high);
+        }
+    }
+
+    @Override
+    public void setOverflow(boolean high) {
+
     }
 }

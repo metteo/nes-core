@@ -11,7 +11,7 @@ import static net.novaware.nes.core.cpu.instruction.Instruction.Ox19
 import static net.novaware.nes.core.cpu.instruction.Instruction.Ox1E
 import static net.novaware.nes.core.cpu.instruction.Instruction.Ox96
 import static net.novaware.nes.core.cpu.instruction.Instruction.OxD0
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.BRANCH_IF_NOT_EQUAL
+import static net.novaware.nes.core.cpu.instruction.InstructionGroup.BRANCH_IF_ZERO_CLR
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
 import static net.novaware.nes.core.util.UnsignedTypes.ushort
 
@@ -33,7 +33,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.ARITHMETIC_SHIFT_LEFT.ordinal()
+        registers.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
         registers.decodedOperand.getData() == ubyte(0x28)
     }
 
@@ -53,7 +53,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.ARITHMETIC_SHIFT_LEFT.ordinal()
+        registers.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
         registers.decodedOperand.getData() == ubyte(0x42)
     }
 
@@ -127,7 +127,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 2
-        registers.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO.ordinal()
+        registers.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO_LOCATION.ordinal()
         registers.decodedOperand.getAddress() == ushort(result)
 
         where:
@@ -278,7 +278,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == BRANCH_IF_NOT_EQUAL.ordinal()
+        registers.decodedInstruction.getAsInt() == BRANCH_IF_ZERO_CLR.ordinal()
         registers.decodedOperand.getAddress() == ushort(0x0025 + operand)
 
         where:

@@ -124,8 +124,8 @@ public class ControlUnit implements Unit {
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
         switch (instruction) {
-            case ADD_WITH_CARRY      -> alu.addWithCarry(registers.dor().getData());
-            case SUBTRACT_WITH_CARRY -> alu.subtractWithBorrow(registers.dor().getData());
+            case ADD_WITH_CARRY       -> alu.addWithCarry(registers.dor().getData());
+            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(registers.dor().getData());
 
             case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
             case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
@@ -136,11 +136,11 @@ public class ControlUnit implements Unit {
             case INCREMENT_Y -> alu.incrementY();
             case DECREMENT_Y -> alu.decrementY();
 
-            case BRANCH_IF_PLUS         -> branchIf(!registers.status().isNegative());
-            case BRANCH_IF_MINUS        -> branchIf(registers.status().isNegative());
+            case BRANCH_IF_NEGATIVE_SET -> branchIf(registers.status().isNegative());
+            case BRANCH_IF_NEGATIVE_CLR -> branchIf(!registers.status().isNegative());
 
-            case BRANCH_IF_EQUAL        -> branchIf(registers.status().isZero());
-            case BRANCH_IF_NOT_EQUAL    -> branchIf(!registers.status().isZero());
+            case BRANCH_IF_ZERO_SET     -> branchIf(registers.status().isZero());
+            case BRANCH_IF_ZERO_CLR     -> branchIf(!registers.status().isZero());
 
             case BRANCH_IF_CARRY_SET    -> branchIf(registers.status().getCarry());
             case BRANCH_IF_CARRY_CLR    -> branchIf(!registers.status().getCarry());
@@ -148,11 +148,11 @@ public class ControlUnit implements Unit {
             case BRANCH_IF_OVERFLOW_SET -> branchIf(registers.status().isOverflow());
             case BRANCH_IF_OVERFLOW_CLR -> branchIf(!registers.status().isOverflow());
 
-            case COMPARE_A -> alu.compareA(registers.dor().getData());
-            case COMPARE_X -> alu.compareX(registers.dor().getData());
-            case COMPARE_Y -> alu.compareY(registers.dor().getData());
+            case COMPARE_A_WITH_MEMORY -> alu.compareA(registers.dor().getData());
+            case COMPARE_X_WITH_MEMORY -> alu.compareX(registers.dor().getData());
+            case COMPARE_Y_WITH_MEMORY -> alu.compareY(registers.dor().getData());
 
-            case JUMP_TO -> registers.pc().set(registers.dor().getAddress());
+            case JUMP_TO_LOCATION -> registers.pc().set(registers.dor().getAddress());
 
             case JUMP_TO_SUBROUTINE -> {}
             case RETURN_FROM_SUBROUTINE -> {}
@@ -160,6 +160,7 @@ public class ControlUnit implements Unit {
             case SET_CARRY -> registers.status().setCarry(true);
             case CLR_CARRY -> registers.status().setCarry(false);
 
+            // TODO: http://www.6502.org/tutorials/decimal_mode.html
             case SET_DECIMAL -> registers.status().setDecimal(true);
             case CLR_DECIMAL -> registers.status().setDecimal(false);
 
@@ -168,7 +169,7 @@ public class ControlUnit implements Unit {
 
             case CLR_OVERFLOW -> registers.status().setOverflow(false);
 
-            case BREAK -> {}
+            case FORCE_BREAK -> {}
             case RETURN_FROM_INTERRUPT -> {}
 
             case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
@@ -176,7 +177,7 @@ public class ControlUnit implements Unit {
             case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
             case BIT_TEST -> alu.bitTest(registers.dor().getData());
 
-            case LOAD_A_WITH_MEMORY -> {}
+            case LOAD_A_WITH_MEMORY -> {} // TODO: Implement LoadStores next
             case STORE_A_IN_MEMORY -> {}
 
             case LOAD_X_WITH_MEMORY -> {}
@@ -193,17 +194,17 @@ public class ControlUnit implements Unit {
             case TRANSFER_A_TO_Y -> {}
             case TRANSFER_Y_TO_A -> {}
 
-            case ARITHMETIC_SHIFT_LEFT -> readModifyWrite(alu::arithmeticShiftLeft);
-            case LOGICAL_SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
+            case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
+            case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
 
             case ROTATE_LEFT  -> readModifyWrite(alu::rotateLeft);
             case ROTATE_RIGHT -> readModifyWrite(alu::rotateRight);
 
-            case PUSH_A -> {}
-            case PULL_A -> {}
+            case PUSH_A_TO_SP   -> {}
+            case PULL_A_FROM_SP -> {}
 
-            case PUSH_PROC_STATUS_TO_SP -> {}
-            case PULL_PROC_STATUS_FROM_SP -> {}
+            case PUSH_STATUS_TO_SP   -> {}
+            case PULL_STATUS_FROM_SP -> {}
 
             case TRANSFER_SP_TO_X -> {}
             case TRANSFER_X_TO_SP -> {}

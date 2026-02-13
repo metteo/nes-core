@@ -29,4 +29,11 @@ class InstructionSpec extends Specification {
                 .filter(o -> uint(o) == 0xFF)
                 .count() == 1
     }
+
+    def "should cross check instruction sizes with addressing mode sizes"() {
+        expect:
+        for (Instruction i : Instruction.values()) {
+            assert i.size() == i.addressingMode().size() + 1
+        }
+    }
 }

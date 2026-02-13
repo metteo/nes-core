@@ -10,7 +10,7 @@ public enum InstructionGroup {
     // region Arithmetic
 
     ADD_WITH_CARRY          ("ADC", ARITHMETIC),
-    SUBTRACT_WITH_CARRY     ("SBC", ARITHMETIC),
+    SUBTRACT_WITH_BORROW    ("SBC", ARITHMETIC),
 
     INCREMENT_MEMORY        ("INC", ARITHMETIC),
     DECREMENT_MEMORY        ("DEC", ARITHMETIC),
@@ -24,14 +24,14 @@ public enum InstructionGroup {
     // endregion
     // region Branching
 
-    BRANCH_IF_EQUAL         ("BEQ", BRANCHING),
-    BRANCH_IF_NOT_EQUAL     ("BNE", BRANCHING),
+    BRANCH_IF_ZERO_SET      ("BEQ", BRANCHING),
+    BRANCH_IF_ZERO_CLR      ("BNE", BRANCHING),
 
     BRANCH_IF_CARRY_SET     ("BCS", BRANCHING),
     BRANCH_IF_CARRY_CLR     ("BCC", BRANCHING),
 
-    BRANCH_IF_PLUS          ("BPL", BRANCHING),
-    BRANCH_IF_MINUS         ("BMI", BRANCHING),
+    BRANCH_IF_NEGATIVE_SET  ("BMI", BRANCHING),
+    BRANCH_IF_NEGATIVE_CLR  ("BPL", BRANCHING),
 
     BRANCH_IF_OVERFLOW_SET  ("BVS", BRANCHING),
     BRANCH_IF_OVERFLOW_CLR  ("BVC", BRANCHING),
@@ -39,14 +39,14 @@ public enum InstructionGroup {
     // endregion
     // region Comparison
 
-    COMPARE_A               ("CMP", COMPARISON),
-    COMPARE_X               ("CPX", COMPARISON),
-    COMPARE_Y               ("CPY", COMPARISON),
+    COMPARE_A_WITH_MEMORY   ("CMP", COMPARISON),
+    COMPARE_X_WITH_MEMORY   ("CPX", COMPARISON),
+    COMPARE_Y_WITH_MEMORY   ("CPY", COMPARISON),
 
     // endregion
     // region Control flow
 
-    JUMP_TO                 ("JMP", CONTROL_FLOW),
+    JUMP_TO_LOCATION        ("JMP", CONTROL_FLOW),
 
     JUMP_TO_SUBROUTINE      ("JSR", CONTROL_FLOW),
     RETURN_FROM_SUBROUTINE  ("RTS", CONTROL_FLOW),
@@ -57,8 +57,8 @@ public enum InstructionGroup {
     SET_CARRY               ("SEC", FLAG_CONTROL),
     CLR_CARRY               ("CLC", FLAG_CONTROL),
 
-    SET_DECIMAL             ("SED", FLAG_CONTROL), // TODO: not available on nes?
-    CLR_DECIMAL             ("CLD", FLAG_CONTROL), // TODO: not available on nes?
+    SET_DECIMAL             ("SED", FLAG_CONTROL),
+    CLR_DECIMAL             ("CLD", FLAG_CONTROL),
 
     SET_INTERRUPT_DISABLE   ("SEI", FLAG_CONTROL),
     CLR_INTERRUPT_DISABLE   ("CLI", FLAG_CONTROL),
@@ -68,7 +68,7 @@ public enum InstructionGroup {
     // endregion
     // region Interrupts
 
-    BREAK                   ("BRK", INTERRUPTS), // software IRQ,
+    FORCE_BREAK             ("BRK", INTERRUPTS), // software IRQ,
     RETURN_FROM_INTERRUPT   ("RTI", INTERRUPTS),
 
     // endregion
@@ -108,8 +108,8 @@ public enum InstructionGroup {
     // endregion
     // region Shifts & Rotates
 
-    ARITHMETIC_SHIFT_LEFT   ("ASL", SHIFTS_ROTATES),
-    LOGICAL_SHIFT_RIGHT     ("LSR", SHIFTS_ROTATES),
+    SHIFT_LEFT              ("ASL", SHIFTS_ROTATES),
+    SHIFT_RIGHT             ("LSR", SHIFTS_ROTATES),
 
     ROTATE_LEFT             ("ROL", SHIFTS_ROTATES),
     ROTATE_RIGHT            ("ROR", SHIFTS_ROTATES),
@@ -117,11 +117,11 @@ public enum InstructionGroup {
     // endregion
     // region Stack Operations
 
-    PUSH_A                  ("PHA", STACK_OPS),
-    PULL_A                  ("PLA", STACK_OPS),
+    PUSH_A_TO_SP            ("PHA", STACK_OPS),
+    PULL_A_FROM_SP          ("PLA", STACK_OPS),
 
-    PUSH_PROC_STATUS_TO_SP  ("PHP", STACK_OPS),
-    PULL_PROC_STATUS_FROM_SP("PLP", STACK_OPS),
+    PUSH_STATUS_TO_SP       ("PHP", STACK_OPS),
+    PULL_STATUS_FROM_SP     ("PLP", STACK_OPS),
 
     TRANSFER_SP_TO_X        ("TSX", STACK_OPS),
     TRANSFER_X_TO_SP        ("TXS", STACK_OPS),
