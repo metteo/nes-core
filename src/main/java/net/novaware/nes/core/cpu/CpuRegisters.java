@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
+import net.novaware.nes.core.cpu.register.StackPointer;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.ByteRegister;
@@ -37,7 +38,7 @@ public class CpuRegisters extends RegisterFile {
 
     private final StatusRegister status;
 
-    private final AddressRegister stackPointer;
+    private final StackPointer stackPointer;
     private final AddressRegister stackSegment;
 
     // TODO: falling edge triggered, not high / low state
@@ -60,14 +61,14 @@ public class CpuRegisters extends RegisterFile {
             decodedInstruction = new ByteRegister("DIR"),
             accumulator = new ByteRegister("A"),
             indexX = new ByteRegister("X"),
-            indexY = new ByteRegister("Y")
+            indexY = new ByteRegister("Y"),
+            stackPointer = new StackPointer("S")
         );
 
         addressRegisters = List.of(
             programCounter = new ShortRegister("PC"),
             memoryAddress = new ShortRegister("MAR"),
             currentOperand = new ShortRegister("COR"),
-            stackPointer = new ShortRegister("S"),
             stackSegment = new ShortRegister("SS")
         );
 
@@ -174,12 +175,12 @@ public class CpuRegisters extends RegisterFile {
         return status;
     }
 
-    public AddressRegister getStackPointer() {
+    public StackPointer getStackPointer() {
         return stackPointer;
     }
 
     /** @see #getStackPointer() */
-    public AddressRegister sp() {
+    public StackPointer sp() {
         return stackPointer;
     }
 

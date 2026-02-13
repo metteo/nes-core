@@ -10,10 +10,11 @@ class CpuRegistersSpec extends Specification {
 
     def "all data registers are initialized and reachable"() {
         expect:
-        registers.dataRegisters.size() == 6
+        registers.dataRegisters.size() == 7
         registers.a().getName() == "A"
         registers.x().getName() == "X"
         registers.y().getName() == "Y"
+        registers.sp().getName() == "S"
         registers.mdr().getName() == "MDR"
         registers.cir().getName() == "CIR"
         registers.dir().getName() == "DIR"
@@ -21,11 +22,10 @@ class CpuRegistersSpec extends Specification {
 
     def "all address registers are initialized and reachable"() {
         expect:
-        registers.addressRegisters.size() == 5
+        registers.addressRegisters.size() == 4
         registers.pc().getName() == "PC"
         registers.mar().getName() == "MAR"
         registers.cor().getName() == "COR"
-        registers.sp().getName() == "S"
         registers.ss().getName() == "SS"
     }
 

@@ -17,7 +17,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         newControlUnit()
 
         then:
-        ControlUnit.RESET_VECTOR == ushort(0xFFFC)
+        InterruptLogic.RES_VECTOR == ushort(0xFFFC)
         bus.cycles() == 6
         expectRegs(
             sp: 0x01FD
@@ -335,5 +335,18 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         Ox70   | false | false | false | false | 0x0002 // BVS not taken
         Ox50   | false | false | false | false | 0x0007 // BVC taken
         Ox50   | false | false | false | true  | 0x0002 // BVC not taken
+    }
+
+    def "should transfer between registers and update flags"() {
+        given:
+        def cu = newControlUnit()
+
+        regs(a: 0x25)
+
+        when:
+        cu.transfer(registers.a(), registers.x()) // TAX
+
+        then:
+        expectRegs(x: 0x25, z: false, n: false)
     }
 }

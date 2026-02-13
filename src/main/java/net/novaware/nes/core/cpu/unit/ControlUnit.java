@@ -8,6 +8,7 @@ import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -15,12 +16,9 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 @BoardScope
 public class ControlUnit implements Unit {
-
-    public static final @Unsigned short RESET_VECTOR = ushort(0xFFFC); // TODO: move to InterruptLogic
 
     @Used private final CpuRegisters registers;
     @Used private final CycleCounter cycleCounter;
@@ -29,16 +27,22 @@ public class ControlUnit implements Unit {
     @Used private final ArithmeticLogic alu;
     @Used private final MemoryMgmt mmu;
     @Used private final InstructionDecoder decoder;
+    @Used private final LoadStore loadStore;
+    @Used private final StackEngine stackEngine;
+    @Used private final InterruptLogic interrupts;
 
     @Inject
     public ControlUnit(
-        CpuRegisters registers,
-        @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
-        @Named(CPU_BUS) MemoryBus memoryBus,
-        AddressGen addressGen,
-        ArithmeticLogic alu,
-        MemoryMgmt mmu,
-        InstructionDecoder decoder
+            CpuRegisters registers,
+            @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
+            @Named(CPU_BUS) MemoryBus memoryBus,
+            AddressGen addressGen,
+            ArithmeticLogic alu,
+            MemoryMgmt mmu,
+            InstructionDecoder decoder,
+            LoadStore loadStore,
+            StackEngine stackEngine,
+            InterruptLogic interrupts
     ) {
         this.registers = registers;
         this.cycleCounter = cycleCounter;
@@ -47,6 +51,9 @@ public class ControlUnit implements Unit {
         this.alu = alu;
         this.mmu = mmu;
         this.decoder = decoder;
+        this.loadStore = loadStore;
+        this.stackEngine = stackEngine;
+        this.interrupts = interrupts;
     }
 
     @Override
@@ -56,10 +63,11 @@ public class ControlUnit implements Unit {
         registers.a().setAsByte(0);
         registers.x().setAsByte(0);
         registers.y().setAsByte(0);
-        registers.sp().highAsByte(0x01).lowAsByte(0xFD);
+        registers.sp().setAsByte(0xFD);
         registers.status().initialize();
 
-        registers.pc().set(addressGen.fetchAddress(RESET_VECTOR));
+        // TODO: move to InterruptLogic unit
+        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
         fetchOpcode();
     }
 
@@ -67,15 +75,15 @@ public class ControlUnit implements Unit {
     public void reset() {
         cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
 
-        registers.pc().set(addressGen.fetchAddress(RESET_VECTOR));
+        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
         fetchOpcode();
 
         registers.status().reset();
 
         // TODO: move to stack engine
-        int sp = registers.sp().lowAsInt();
+        int sp = registers.sp().getAsInt();
         sp -= 3;
-        registers.sp().lowAsByte(sp);
+        registers.sp().setAsByte(sp);
     }
 
     /**
@@ -169,30 +177,30 @@ public class ControlUnit implements Unit {
 
             case CLR_OVERFLOW -> registers.status().setOverflow(false);
 
-            case FORCE_BREAK -> {}
-            case RETURN_FROM_INTERRUPT -> {}
+            case FORCE_BREAK -> interrupts.forceBreak(); // TODO: what about unused operand that is skipped on return?
+            case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
 
             case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
             case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
             case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
             case BIT_TEST -> alu.bitTest(registers.dor().getData());
 
-            case LOAD_A_WITH_MEMORY -> {} // TODO: Implement LoadStores next
-            case STORE_A_IN_MEMORY -> {}
+            case LOAD_A_WITH_MEMORY -> loadStore.load(registers.a());
+            case STORE_A_IN_MEMORY -> loadStore.store(registers.a());
 
-            case LOAD_X_WITH_MEMORY -> {}
-            case STORE_X_IN_MEMORY -> {}
+            case LOAD_X_WITH_MEMORY -> loadStore.load(registers.x());
+            case STORE_X_IN_MEMORY -> loadStore.store(registers.x());
 
-            case LOAD_Y_WITH_MEMORY -> {}
-            case STORE_Y_IN_MEMORY -> {}
+            case LOAD_Y_WITH_MEMORY -> loadStore.load(registers.y());
+            case STORE_Y_IN_MEMORY -> loadStore.store(registers.y());
 
             case NO_OPERATION -> {}
 
-            case TRANSFER_A_TO_X -> {}
-            case TRANSFER_X_TO_A -> {}
+            case TRANSFER_A_TO_X -> this.transfer(registers.a(), registers.x());
+            case TRANSFER_X_TO_A -> this.transfer(registers.x(), registers.a());
 
-            case TRANSFER_A_TO_Y -> {}
-            case TRANSFER_Y_TO_A -> {}
+            case TRANSFER_A_TO_Y -> this.transfer(registers.a(), registers.y());
+            case TRANSFER_Y_TO_A -> this.transfer(registers.y(), registers.a());
 
             case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
             case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
@@ -200,14 +208,14 @@ public class ControlUnit implements Unit {
             case ROTATE_LEFT  -> readModifyWrite(alu::rotateLeft);
             case ROTATE_RIGHT -> readModifyWrite(alu::rotateRight);
 
-            case PUSH_A_TO_SP   -> {}
-            case PULL_A_FROM_SP -> {}
+            case PUSH_A_TO_SP   -> stackEngine.push(registers.a());
+            case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
 
-            case PUSH_STATUS_TO_SP   -> {}
-            case PULL_STATUS_FROM_SP -> {}
+            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus();
+            case PULL_STATUS_FROM_SP -> stackEngine.pullStatus();
 
-            case TRANSFER_SP_TO_X -> {}
-            case TRANSFER_X_TO_SP -> {}
+            case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
+            case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
@@ -216,14 +224,15 @@ public class ControlUnit implements Unit {
         // fetch the next instruction
     }
 
-    private void readModifyWrite(UByteUnaryOperator operator) {
+    /* package */ void readModifyWrite(UByteUnaryOperator operator) {
         @Unsigned byte data = registers.dor().getData(); // read
         registers.dor().setData(data); // write unmodified
+
         @Unsigned byte newData = operator.applyAsUByte(data); // modify
         registers.dor().setData(newData); // write
     }
 
-    private void branchIf(boolean condition) {
+    /* package */ void branchIf(boolean condition) {
         @Unsigned short jumpAddress = registers.dor().getAddress();
         @Unsigned short currentPc = registers.pc().get();
 
@@ -234,5 +243,18 @@ public class ControlUnit implements Unit {
         cycleCounter.maybeIncrement(condition);
         cycleCounter.maybeIncrement(condition && pageChange);
         registers.pc().set(condition ? jumpAddress : currentPc); // hopefully cmov
+    }
+
+
+    /* package */ void transfer(DataRegister src, DataRegister dst) {
+        @Unsigned byte data = src.get();
+
+        dst.set(data);
+
+        int dataVal = uint(data);
+
+        registers.status()
+                .setZero(dataVal == 0)
+                .setNegative((dataVal & 0x80) != 0);
     }
 }

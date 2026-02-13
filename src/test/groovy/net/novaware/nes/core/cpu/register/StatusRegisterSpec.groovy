@@ -21,12 +21,11 @@ class StatusRegisterSpec extends Specification {
         then:
         !reg.isNegative()
         !reg.isOverflow()
-        !reg.getBreak()
         !reg.isDecimal()
         reg.isIrqDisabled()
         !reg.isZero()
         !reg.getCarry()
-        reg.getAsInt() == 0b0010_0100
+        reg.get().getAsInt() == 0b0010_0100
     }
 
     def "should update IRQ flag on reset"() {
@@ -48,7 +47,6 @@ class StatusRegisterSpec extends Specification {
         expect:
         reg.setNegative(true).isNegative()
         reg.setOverflow(true).isOverflow()
-        reg.setBreak(true).getBreak()
         reg.setDecimal(true).isDecimal()
         reg.setIrqDisabled(true).isIrqDisabled()
         reg.setZero(true).isZero()
@@ -62,27 +60,25 @@ class StatusRegisterSpec extends Specification {
         when: "all flags set"
         reg.setNegative(true)
            .setOverflow(true)
-           .setBreak(true)
            .setDecimal(true)
            .setIrqDisabled(true)
            .setZero(true)
            .setCarry(true)
 
         then:
-        reg.getAsInt() == 0xFF
-        reg.get() == ubyte(0xFF)
+        reg.get().getAsInt() == 0xEF // break = 0
+        reg.get().get() == ubyte(0xEF)
 
         when: "all flags cleared (except bit 5)"
         reg.setNegative(false)
            .setOverflow(false)
-           .setBreak(false)
            .setDecimal(false)
            .setIrqDisabled(false)
            .setZero(false)
            .setCarry(false)
 
         then:
-        reg.getAsInt() == 0x20
-        reg.get() == ubyte(0x20)
+        reg.get().getAsInt() == 0x20
+        reg.get().get() == ubyte(0x20)
     }
 }
