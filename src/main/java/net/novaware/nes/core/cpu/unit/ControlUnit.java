@@ -4,193 +4,247 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
-import net.novaware.nes.core.cpu.instruction.AddressingMode;
-import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.util.UByteUnaryOperator;
+import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 @BoardScope
 public class ControlUnit implements Unit {
 
-    public static final @Unsigned short RESET_VECTOR = ushort(0xFFFC);
+    @Used private final CpuRegisters registers;
+    @Used private final CycleCounter cycleCounter;
+    @Used private final AddressGen addressGen;
+    @Used private final ArithmeticLogic alu;
+    @Used private final MemoryMgmt mmu;
+    @Used private final InstructionDecoder decoder;
+    @Used private final LoadStore loadStore;
+    @Used private final StackEngine stackEngine;
+    @Used private final InterruptLogic interrupts;
 
-    @Used
-    private CpuRegisters registers;
-
-    @Used
-    CycleCounter cycleCounter;
-
-    @Used
-    private MemoryBus memoryBus;
-
-    @Used
-    private AddressGen addressGen;
-
-    @Used
-    private ArithmeticLogic alu;
+    @Owned private final ControlFlow flow;
 
     @Inject
     public ControlUnit(
-        CpuRegisters registers,
-        @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
-        @Named(CPU_BUS) MemoryBus memoryBus,
-        AddressGen addressGen,
-        ArithmeticLogic alu
+            CpuRegisters registers,
+            @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
+            AddressGen addressGen,
+            ArithmeticLogic alu,
+            MemoryMgmt mmu,
+            InstructionDecoder decoder,
+            LoadStore loadStore,
+            StackEngine stackEngine,
+            InterruptLogic interrupts,
+            ControlFlow flow
     ) {
         this.registers = registers;
         this.cycleCounter = cycleCounter;
-        this.memoryBus = memoryBus;
         this.addressGen = addressGen;
         this.alu = alu;
+        this.mmu = mmu;
+        this.decoder = decoder;
+        this.loadStore = loadStore;
+        this.stackEngine = stackEngine;
+        this.interrupts = interrupts;
+        this.flow = flow;
     }
 
-    public void powerOn() {
-        registers.accumulator.setAsByte(0);
-        registers.indexX.setAsByte(0);
-        registers.indexY.setAsByte(0);
-        registers.programCounter.set(RESET_VECTOR);
-        registers.stackPointer.setAsByte(0);
-        registers.status.powerOn();
+    @Override
+    public void initialize() {
+        this.flow.initialize();
+
+        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
+
+        registers.a().setAsByte(0);
+        registers.x().setAsByte(0);
+        registers.y().setAsByte(0);
+        registers.sp().setAsByte(0xFD);
+        registers.status().initialize();
+
+        // TODO: move to InterruptLogic unit
+        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
+        fetchOpcode();
     }
 
     @Override
     public void reset() {
-        cycleCounter.setValue(4); // stabilizing after takes about n cycles, 6 cycles according to pdf
+        this.flow.reset();
 
-        registers.programCounter.set(addressGen.fetchAddress(RESET_VECTOR));
+        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
 
-        registers.status.reset();
+        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
+        fetchOpcode();
+
+        registers.status().reset();
 
         // TODO: move to stack engine
-        int sp = registers.stackPointer.getAsInt();
+        int sp = registers.sp().getAsInt();
         sp -= 3;
-        registers.stackPointer.setAsByte(sp);
+        registers.sp().setAsByte(sp);
     }
 
-    public void fetch() {
-        @Unsigned short currentAddress = registers.programCounter.get();
-        int currentAddressInt = uint(currentAddress);
+    /**
+     * Last cycle of the instruction
+     */
+    public void fetchOpcode() {
+        @Unsigned short opcodeAddress = addressGen.getPc();
+        @Unsigned byte opcode = mmu.specifyAnd(opcodeAddress).readByte();
 
-        @Unsigned byte opcode = memoryBus.specifyAnd(currentAddress)
-                .readByte();
+        registers.cir().set(opcode);
+    }
 
-        // TODO: this needs to be the only point of lookup (data fetcher, address decoder, instruction executor)
-        // which is propagated through the pipeline and parts used when needed?
-        Instruction instruction = InstructionRegistry.fromOpcode(opcode);
-        registers.currentInstruction.set(instruction.opcode());
+    public void fetchOperandLo() {
+        @Unsigned short operandLoAddress = addressGen.getPc();
+        @Unsigned byte operandLo = mmu.specifyAnd(operandLoAddress).readByte();
 
-        int size = instruction.size();
+        registers.cor().low(operandLo);
+    }
 
-        int newPc = currentAddressInt + size;
-        registers.programCounter.setAsShort(newPc);
+    public void fetchOperandHi() {
+        int size = InstructionRegistry.fromOpcode(registers.cir().get()).size();
 
-        switch (size) {
-            case 1: // NOTE: covers a dummy read even for single byte instructions
-            case 2:
-                @Unsigned byte operand = memoryBus.specifyAnd(ushort(currentAddressInt + 1)).readByte();
-                registers.currentOperand.set(ushort(operand));
-                break;
-
-            case 3:
-                @Unsigned byte operandLo = memoryBus.specifyAnd(ushort(currentAddressInt + 1)).readByte();
-                @Unsigned byte operandHi = memoryBus.specifyAnd(ushort(currentAddressInt + 2)).readByte();
-                registers.currentOperand.set(ushort((uint(operandHi) << 8) | uint(operandLo)));
-                break;
-
-            default:
-                throw new IllegalStateException("Unexpected instruction size: " + size);
+        if (size < 3) { // TODO: maybe read the size from dedicated array and get rid of the if?
+            registers.cor().highAsByte(0x00);
+            return;
         }
 
+        @Unsigned short operandHiAddress = addressGen.getPc();
+        @Unsigned byte operandHi = mmu.specifyAnd(operandHiAddress).readByte();
+
+        registers.cor().high(operandHi);
     }
 
-    // TODO: move to decoder
+    public void fetchOperand() {
+        fetchOperandLo();
+        fetchOperandHi();
+    }
+
     public void decode() {
-        @Unsigned byte opcode = registers.currentInstruction.get();
-
-
-        Instruction instruction = InstructionRegistry.fromOpcode(opcode);
-
-        // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
-        registers.decodedInstruction.setAsByte(instruction.group().ordinal());
-
-        AddressingMode addressingMode = instruction.addressingMode();
-        @Unsigned short operand = registers.currentOperand.get();
-
-        switch(addressingMode) {
-            case IMPLIED:
-                registers.decodedOperand.configureEmpty();
-                break;
-            case IMMEDIATE:
-                registers.decodedOperand.configureByte();
-                registers.decodedOperand.setData(ubyte(uint(operand) & 0xFF)); // FIXME: ugly
-                break;
-            case ACCUMULATOR:
-                registers.decodedOperand.configureByteRegister(registers.accumulator);
-                break;
-            case ZERO_PAGE: // 0x00NN
-            case ABSOLUTE:  // 0xNNNN
-                registers.decodedOperand.configureMemory(memoryBus, operand);
-                break;
-            case RELATIVE: // only branches
-                break;
-            case ABSOLUTE_INDIRECT: // only jump
-                @Unsigned short address = addressGen.fetchAddress(operand);
-                registers.decodedOperand.configureMemory(memoryBus, address);
-                break;
-            case INDEXED_ZERO_PAGE_X:
-            case INDEXED_ZERO_PAGE_Y:
-            case INDEXED_ABSOLUTE_X:
-            case INDEXED_ABSOLUTE_Y:
-            case PRE_INDEXED_INDIRECT_X:
-            case POST_INDEXED_INDIRECT_Y:
-                break;
-            case UNKNOWN:
-                throw new UnsupportedOperationException("Unsupported addressing mode: " + addressingMode.name());
-        }
+        decoder.decode();
     }
 
     public void execute() {
-
-        // TODO: need a flag or null register value when pipeline is empty
-
-        int instrGroup = registers.decodedInstruction.getAsInt();
+        int instrGroup = registers.dir().getAsInt();
 
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
-        switch(instruction) {
-            case JUMP_TO:
-                @Unsigned short operand = registers.decodedOperand.getAddress();
-                registers.programCounter.set(operand);
-                break;
-            case BITWISE_OR:
-                alu.bitwiseOr(registers.decodedOperand.getData());
-                break;
-            case BITWISE_AND:
-                alu.bitwiseAnd(registers.decodedOperand.getData());
-                break;
-            case ROTATE_LEFT:
-                @Unsigned byte data = registers.decodedOperand.getData(); // read
-                registers.decodedOperand.setData(data); // write unmodified
-                @Unsigned byte newData = alu.rotateLeft(data); // modify
-                registers.decodedOperand.setData(newData); // write
-                break;
-            case NO_OPERATION:
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
+        switch (instruction) {
+            case ADD_WITH_CARRY       -> alu.addWithCarry(registers.dor().getData());
+            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(registers.dor().getData());
+
+            case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
+            case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
+
+            case INCREMENT_X -> alu.incrementX();
+            case DECREMENT_X -> alu.decrementX();
+
+            case INCREMENT_Y -> alu.incrementY();
+            case DECREMENT_Y -> alu.decrementY();
+
+            case BRANCH_IF_NEGATIVE_SET -> flow.branchIf(registers.status().isNegative());
+            case BRANCH_IF_NEGATIVE_CLR -> flow.branchIf(!registers.status().isNegative());
+
+            case BRANCH_IF_ZERO_SET     -> flow.branchIf(registers.status().isZero());
+            case BRANCH_IF_ZERO_CLR     -> flow.branchIf(!registers.status().isZero());
+
+            case BRANCH_IF_CARRY_SET    -> flow.branchIf(registers.status().getCarry());
+            case BRANCH_IF_CARRY_CLR    -> flow.branchIf(!registers.status().getCarry());
+
+            case BRANCH_IF_OVERFLOW_SET -> flow.branchIf(registers.status().isOverflow());
+            case BRANCH_IF_OVERFLOW_CLR -> flow.branchIf(!registers.status().isOverflow());
+
+            case COMPARE_A_WITH_MEMORY -> alu.compareA(registers.dor().getData());
+            case COMPARE_X_WITH_MEMORY -> alu.compareX(registers.dor().getData());
+            case COMPARE_Y_WITH_MEMORY -> alu.compareY(registers.dor().getData());
+
+            case JUMP_TO_LOCATION -> flow.jumpTo();
+
+            case JUMP_TO_SUBROUTINE -> flow.call();
+            case RETURN_FROM_SUBROUTINE -> flow.returnFromCall();
+
+            case SET_CARRY -> registers.status().setCarry(true);
+            case CLR_CARRY -> registers.status().setCarry(false);
+
+            // TODO: http://www.6502.org/tutorials/decimal_mode.html
+            case SET_DECIMAL -> registers.status().setDecimal(true);
+            case CLR_DECIMAL -> registers.status().setDecimal(false);
+
+            case SET_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(true);
+            case CLR_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(false);
+
+            case CLR_OVERFLOW -> registers.status().setOverflow(false);
+
+            case FORCE_BREAK -> interrupts.forceBreak(); // TODO: what about unused operand that is skipped on return?
+            case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
+
+            case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
+            case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
+            case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
+            case BIT_TEST -> alu.bitTest(registers.dor().getData());
+
+            case LOAD_A_WITH_MEMORY -> loadStore.load(registers.a());
+            case STORE_A_IN_MEMORY -> loadStore.store(registers.a());
+
+            case LOAD_X_WITH_MEMORY -> loadStore.load(registers.x());
+            case STORE_X_IN_MEMORY -> loadStore.store(registers.x());
+
+            case LOAD_Y_WITH_MEMORY -> loadStore.load(registers.y());
+            case STORE_Y_IN_MEMORY -> loadStore.store(registers.y());
+
+            case NO_OPERATION -> {}
+
+            case TRANSFER_A_TO_X -> this.transfer(registers.a(), registers.x());
+            case TRANSFER_X_TO_A -> this.transfer(registers.x(), registers.a());
+
+            case TRANSFER_A_TO_Y -> this.transfer(registers.a(), registers.y());
+            case TRANSFER_Y_TO_A -> this.transfer(registers.y(), registers.a());
+
+            case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
+            case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
+
+            case ROTATE_LEFT  -> readModifyWrite(alu::rotateLeft);
+            case ROTATE_RIGHT -> readModifyWrite(alu::rotateRight);
+
+            case PUSH_A_TO_SP   -> stackEngine.push(registers.a());
+            case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
+
+            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus();
+            case PULL_STATUS_FROM_SP -> stackEngine.pullStatus();
+
+            case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
+            case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
+
+            default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
         // execute the handler
         // write back to mem / reg
         // fetch the next instruction
+    }
+
+    /* package */ void readModifyWrite(UByteUnaryOperator operator) {
+        @Unsigned byte data = registers.dor().getData(); // read
+        registers.dor().setData(data); // write unmodified
+
+        @Unsigned byte newData = operator.applyAsUByte(data); // modify
+        registers.dor().setData(newData); // write
+    }
+
+    /* package */ void transfer(DataRegister src, DataRegister dst) {
+        @Unsigned byte data = src.get();
+
+        dst.set(data);
+
+        int dataVal = uint(data);
+
+        registers.status()
+                .setZero(dataVal == 0)
+                .setNegative((dataVal & 0x80) != 0);
     }
 }

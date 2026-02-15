@@ -2,30 +2,84 @@ package net.novaware.nes.core.register;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
-public class ShortRegister extends Register {
+public class ShortRegister extends AddressRegister {
 
-    private @Unsigned short data;
+    /*
+     * Internally we keep 2 bytes because that's how it works in hardware
+     */
+    private @Unsigned byte hi;
+    private @Unsigned byte lo;
 
     public ShortRegister(String name) {
         super(name);
     }
 
     public @Unsigned short get() {
-        return data;
+        return ushort(getAsInt());
+    }
+
+    @Override
+    public @Unsigned byte high() {
+        return hi;
+    }
+
+    @Override
+    public @Unsigned byte low() {
+        return lo;
     }
 
     public int getAsInt() {
-        return uint(data);
+        return uint(hi) << 8 | uint(lo);
     }
 
-    public void set(@Unsigned short data) {
-        this.data = data;
+    @Override
+    public int highAsInt() {
+        return uint(hi);
     }
 
-    public void setAsShort(int data) {
-        set(ushort(data));
+    @Override
+    public int lowAsInt() {
+        return uint(lo);
+    }
+
+    public void set(@Unsigned short address) {
+        setAsShort(uint(address));
+    }
+
+    @Override
+    public AddressRegister high(@Unsigned byte hi) {
+        this.hi = hi;
+
+        return this;
+    }
+
+    @Override
+    public AddressRegister low(@Unsigned byte lo) {
+        this.lo = lo;
+
+        return this;
+    }
+
+    public void setAsShort(int address) {
+        hi = ubyte((address & 0xFF00) >> 8);
+        lo = ubyte(address & 0x00FF);
+    }
+
+    @Override
+    public AddressRegister highAsByte(int hi) {
+        this.hi = ubyte(hi);
+
+        return this;
+    }
+
+    @Override
+    public AddressRegister lowAsByte(int lo) {
+        this.lo = ubyte(lo);
+
+        return this;
     }
 }

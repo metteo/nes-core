@@ -8,4 +8,6 @@ public class PowerMgmt implements Unit {
     public PowerMgmt () {
 
     }
+
+    // Cold boot (power on), Warm boot (reset), Sleep states (idle loop, suspend, resume)
 }

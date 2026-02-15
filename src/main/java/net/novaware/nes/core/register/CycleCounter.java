@@ -17,8 +17,19 @@ public class CycleCounter extends Register {
         this.value = value;
     }
 
+    /**
+     * Unconditional increment
+     */
     public void increment() {
         value++;
+    }
+
+    /**
+     * Conditional increment hopefully compiled into CMOV instruction
+     * @param yes / no
+     */
+    public void maybeIncrement(boolean yes) {
+        value += yes ? 1 : 0;
     }
 
     public void mark() {

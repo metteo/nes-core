@@ -18,6 +18,10 @@ public class MemoryMap {
     public static final @Unsigned short RAM_END = ushort(0x07FF);
     public static final int RAM_SIZE = uint(RAM_END) - uint(RAM_START) + 1;
 
+    public static final @Unsigned short STACK_SEGMENT_START = ushort(0x0100);
+    public static final @Unsigned short STACK_SEGMENT_END = ushort(0x01FF);
+    public static final int STACK_SEGMENT_SIZE = uint(STACK_SEGMENT_END) - uint(STACK_SEGMENT_START) + 1;
+
     public static final @Unsigned short RAM_MIRROR_1_START = ushort(0x0800);
     public static final @Unsigned short RAM_MIRROR_1_END = ushort(0x0FFF);
     public static final int RAM_MIRROR_1_SIZE = uint(RAM_MIRROR_1_END) - uint(RAM_MIRROR_1_START) + 1;

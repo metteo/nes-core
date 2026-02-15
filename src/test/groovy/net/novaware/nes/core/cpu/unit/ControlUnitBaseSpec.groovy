@@ -12,24 +12,35 @@ class ControlUnitBaseSpec extends Specification {
 
     CpuRegisters registers = new CpuRegisters()
     RecordingBus bus = new RecordingBus()
-    AddressGen agu = new AddressGen(bus)
+    AddressGen agu = new AddressGen(registers, bus)
     ArithmeticLogic alu = new ArithmeticLogic(registers)
+    MemoryMgmt mmu = new MemoryMgmt(registers, bus)
+    InstructionDecoder decoder = new InstructionDecoder(registers, bus.cycleCounter(), bus, agu)
+    LoadStore loadStore = new LoadStore(registers)
+    StackEngine stackEngine = new StackEngine(registers, mmu)
+    InterruptLogic interrupts = new InterruptLogic(registers, stackEngine)
+    ControlFlow flow = new ControlFlow(registers, bus.cycleCounter(), stackEngine)
 
 
     ControlUnit newControlUnit() {
         def cu = new ControlUnit(
-                registers,
-                bus.cycleCounter(),
-                bus,
-                agu,
-                alu
+            registers,
+            bus.cycleCounter(),
+            agu,
+            alu,
+            mmu,
+            decoder,
+            loadStore,
+            stackEngine,
+            interrupts,
+            flow
         )
 
         cu.initialize()
-        cu.powerOn()
-        cu.reset()
         cu
     }
+
+    // TODO: make these into extension methods? so it's possible to use this in other tests
 
     def regs(Map args) {
         // 16-bit registers
@@ -39,7 +50,7 @@ class ControlUnitBaseSpec extends Specification {
         if (args.a != null)  registers.accumulator.set(ubyte(args.a as int))
         if (args.x != null)  registers.indexX.set(ubyte(args.x as int))
         if (args.y != null)  registers.indexY.set(ubyte(args.y as int))
-        if (args.s != null)  registers.stackPointer.set(ubyte(args.s as int))
+        if (args.sp != null)  registers.stackPointer.set(ubyte(args.sp as int))
 
         // Status Flags (P register)
         // We can handle individual flags for better test readability
@@ -47,7 +58,7 @@ class ControlUnitBaseSpec extends Specification {
         if (args.z != null) registers.status.setZero(args.z as boolean)
         if (args.i != null) registers.status.setIrqDisabled(args.i as boolean)
         if (args.d != null) registers.status.setDecimal(args.d as boolean)
-        if (args.b != null) registers.status.setB(args.b as boolean)
+        if (args.b != null) registers.status.setBreak(args.b as boolean)
         if (args.v != null) registers.status.setOverflow(args.v as boolean)
         if (args.n != null) registers.status.setNegative(args.n as boolean)
 
@@ -79,6 +90,9 @@ class ControlUnitBaseSpec extends Specification {
     def expectRegs(Map args) {
         if (args.pc != null) assert registers.programCounter.get() == ushort(args.pc as int)
         if (args.a != null)  assert registers.accumulator.get() == ubyte(args.a as int)
+        if (args.x != null)  assert registers.indexX.get() == ubyte(args.x as int)
+        if (args.y != null)  assert registers.indexY.get() == ubyte(args.y as int)
+        if (args.sp != null) assert registers.stackPointer.get() == ubyte(args.sp as int)
 
         // Status flags as booleans
         if (args.z != null) assert registers.status.isZero() == args.z

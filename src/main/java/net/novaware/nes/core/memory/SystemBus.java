@@ -4,8 +4,10 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import net.novaware.nes.core.apu.ApuRegisters;
 import net.novaware.nes.core.ppu.PpuRegisters;
+import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.ShortRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -45,9 +47,10 @@ public class SystemBus implements MemoryBus {
     private ByteRegisterMemory apuIoRegs = new ApuRegisters().asByteRegisterMemory();
     private PhysicalMemory cartridge = new PhysicalMemory(CARTRIDGE_SIZE, uint(CARTRIDGE_START)); // TODO: temporary
 
-    // TODO: this belongs to memory controller / memory bus as currentAddress variable / currentData variable for open bus
-    public ShortRegister memoryAddress = new ShortRegister("MAR");
-    public ByteRegister  memoryData = new ByteRegister("MDR");
+    // TODO: this belongs to memory bus as currentAddress variable / currentData variable for open bus
+    // TODO: figure out better register names
+    private AddressRegister memoryAddress = new ShortRegister("MAR?");
+    private DataRegister memoryData = new ByteRegister("MDR?");
 
     private Addressable currentSegment = ram;
     private IntPredicate currentRange = RAM_RANGE;

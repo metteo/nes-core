@@ -2,18 +2,21 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
 import net.novaware.nes.core.cpu.unit.InstructionDecoder;
 import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
+import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.PowerMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
 import net.novaware.nes.core.util.uml.Owned;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * https://web.archive.org/web/20221112231348if_/http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
@@ -21,7 +24,9 @@ import java.util.List;
  * TODO: https://github.com/christopherpow/nes-test-roms
  */
 @BoardScope
-public class Cpu {
+public class Cpu implements Interruptible, Synchronizable, Overflowable {
+
+    private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
     @Owned private final CpuRegisters registers;
 
@@ -32,6 +37,7 @@ public class Cpu {
     @Owned private final InterruptLogic interrupts;
     @Owned private final LoadStore loadStore;
     @Owned private final PowerMgmt powerMgmt;
+    @Owned private final MemoryMgmt mmu;
     @Owned private final StackEngine stackEngine;
 
     private List<Unit> units;
@@ -47,6 +53,7 @@ public class Cpu {
         InterruptLogic interrupts,
         LoadStore loadStore,
         PowerMgmt powerMgmt,
+        MemoryMgmt mmu,
         StackEngine stackEngine
     ) {
         this.registers = registers;
@@ -59,19 +66,21 @@ public class Cpu {
             this.interrupts = interrupts,
             this.loadStore = loadStore,
             this.powerMgmt = powerMgmt,
+            this.mmu = mmu,
             this.stackEngine = stackEngine
         );
     }
 
-    public void initialize() {
+    /* package */ void initialize() {
+        registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
+
         units.forEach(Unit::initialize);
     }
 
-    public void powerOn() {
-        controlUnit.powerOn();
-    }
-
-    public void reset() {
+    /**
+     * Perform the reset of the CPU
+     */
+    /* package */ void reset() {
         units.forEach(Unit::reset);
     }
 
@@ -82,7 +91,73 @@ public class Cpu {
     public void cycle() {
         controlUnit.execute();
 
-        controlUnit.fetch();
+        controlUnit.fetchOperand();
         controlUnit.decode();
+
+        // fetchOperand();
+        //   fetchLo();
+        //   fetchHi();
+        // decode();
+        //   fetchLo();
+        //   fetchHi();
+        // execute();
+        //   read(); //and maybe write original back
+        //   modify();
+        //   write();
+        // sampleInterrupts();
+        // fetchOpcode();
+    }
+
+    /**
+     * Trigger IRQ of CPU on low
+     */
+    @Override
+    public void interruptRequest(boolean high) {
+
+    }
+
+    /**
+     * Trigger NMI of CPU on low edge
+     */
+    @Override
+    public void nonMaskableInterrupt(boolean high) {
+
+    }
+
+    /**
+     * Trigger RST of the CPU on low
+     */
+    @Override
+    public void reset(boolean high) {
+
+    }
+
+    /**
+     * Trigger RDY halt/step the CPU on low edge
+     */
+    @Override
+    public void ready(boolean high) {
+
+    }
+
+    @Override
+    public void addSyncListener(SyncListener listener) {
+        syncListeners.add(listener);
+    }
+
+    @Override
+    public void removeSyncListener(SyncListener listener) {
+        syncListeners.remove(listener);
+    }
+
+    protected void fireSyncChange(boolean high) {
+        for (SyncListener listener : syncListeners) {
+            listener.onSyncChange(high);
+        }
+    }
+
+    @Override
+    public void setOverflow(boolean high) {
+
     }
 }

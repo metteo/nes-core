@@ -7,6 +7,8 @@ import net.novaware.nes.core.register.RegisterFile;
 import net.novaware.nes.core.register.ShortRegister;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
  */
@@ -26,6 +28,7 @@ public class PpuRegisters extends RegisterFile {
     private ByteRegister ppuAddr = new ByteRegister("PPUADDR");
     private ByteRegister ppuData = new ByteRegister("PPUDATA"); // 0x2007
 
+    // TODO: create special register for those that accepts 2 writes
     private ShortRegister ppuScrollFull = new ShortRegister("PPUSCROLL_FULL");
     private ShortRegister ppuAddrFull = new ShortRegister("PPUADDR_FULL");
 
@@ -36,6 +39,19 @@ public class PpuRegisters extends RegisterFile {
     private ByteRegister t = new ByteRegister("T");
     private ByteRegister x = new ByteRegister("X");
     private ByteRegister w = new ByteRegister("W");
+
+    public PpuRegisters() {
+        super("PPU");
+
+        dataRegisters = List.of(
+                ppuCtrl, ppuMask, ppuStatus,
+                oamAddr, oamData,
+                ppuScroll, ppuAddr, ppuData,
+                v, t, x, w
+        );
+
+        addressRegisters = List.of(ppuScrollFull, ppuAddrFull);
+    }
 
     public ByteRegisterMemory asByteRegisterMemory() {
         return new ByteRegisterMemory("PPUREGS", new ByteRegister[] {

@@ -1,7 +1,8 @@
 package net.novaware.nes.core.cpu.unit;
 
-public interface Unit {
+import net.novaware.nes.core.util.Initializable;
+import net.novaware.nes.core.util.Resettable;
 
-    default void initialize() {}
-    default void reset() {}
+public interface Unit extends Initializable, Resettable {
+
 }
