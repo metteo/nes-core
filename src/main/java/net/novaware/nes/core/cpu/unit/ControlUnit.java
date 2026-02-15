@@ -6,14 +6,13 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
+import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
@@ -22,7 +21,6 @@ public class ControlUnit implements Unit {
 
     @Used private final CpuRegisters registers;
     @Used private final CycleCounter cycleCounter;
-    @Used private final MemoryBus memoryBus;
     @Used private final AddressGen addressGen;
     @Used private final ArithmeticLogic alu;
     @Used private final MemoryMgmt mmu;
@@ -31,22 +29,23 @@ public class ControlUnit implements Unit {
     @Used private final StackEngine stackEngine;
     @Used private final InterruptLogic interrupts;
 
+    @Owned private final ControlFlow flow;
+
     @Inject
     public ControlUnit(
             CpuRegisters registers,
             @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
-            @Named(CPU_BUS) MemoryBus memoryBus,
             AddressGen addressGen,
             ArithmeticLogic alu,
             MemoryMgmt mmu,
             InstructionDecoder decoder,
             LoadStore loadStore,
             StackEngine stackEngine,
-            InterruptLogic interrupts
+            InterruptLogic interrupts,
+            ControlFlow flow
     ) {
         this.registers = registers;
         this.cycleCounter = cycleCounter;
-        this.memoryBus = memoryBus;
         this.addressGen = addressGen;
         this.alu = alu;
         this.mmu = mmu;
@@ -54,10 +53,13 @@ public class ControlUnit implements Unit {
         this.loadStore = loadStore;
         this.stackEngine = stackEngine;
         this.interrupts = interrupts;
+        this.flow = flow;
     }
 
     @Override
     public void initialize() {
+        this.flow.initialize();
+
         cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
 
         registers.a().setAsByte(0);
@@ -73,6 +75,8 @@ public class ControlUnit implements Unit {
 
     @Override
     public void reset() {
+        this.flow.reset();
+
         cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
 
         registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
@@ -144,26 +148,26 @@ public class ControlUnit implements Unit {
             case INCREMENT_Y -> alu.incrementY();
             case DECREMENT_Y -> alu.decrementY();
 
-            case BRANCH_IF_NEGATIVE_SET -> branchIf(registers.status().isNegative());
-            case BRANCH_IF_NEGATIVE_CLR -> branchIf(!registers.status().isNegative());
+            case BRANCH_IF_NEGATIVE_SET -> flow.branchIf(registers.status().isNegative());
+            case BRANCH_IF_NEGATIVE_CLR -> flow.branchIf(!registers.status().isNegative());
 
-            case BRANCH_IF_ZERO_SET     -> branchIf(registers.status().isZero());
-            case BRANCH_IF_ZERO_CLR     -> branchIf(!registers.status().isZero());
+            case BRANCH_IF_ZERO_SET     -> flow.branchIf(registers.status().isZero());
+            case BRANCH_IF_ZERO_CLR     -> flow.branchIf(!registers.status().isZero());
 
-            case BRANCH_IF_CARRY_SET    -> branchIf(registers.status().getCarry());
-            case BRANCH_IF_CARRY_CLR    -> branchIf(!registers.status().getCarry());
+            case BRANCH_IF_CARRY_SET    -> flow.branchIf(registers.status().getCarry());
+            case BRANCH_IF_CARRY_CLR    -> flow.branchIf(!registers.status().getCarry());
 
-            case BRANCH_IF_OVERFLOW_SET -> branchIf(registers.status().isOverflow());
-            case BRANCH_IF_OVERFLOW_CLR -> branchIf(!registers.status().isOverflow());
+            case BRANCH_IF_OVERFLOW_SET -> flow.branchIf(registers.status().isOverflow());
+            case BRANCH_IF_OVERFLOW_CLR -> flow.branchIf(!registers.status().isOverflow());
 
             case COMPARE_A_WITH_MEMORY -> alu.compareA(registers.dor().getData());
             case COMPARE_X_WITH_MEMORY -> alu.compareX(registers.dor().getData());
             case COMPARE_Y_WITH_MEMORY -> alu.compareY(registers.dor().getData());
 
-            case JUMP_TO_LOCATION -> registers.pc().set(registers.dor().getAddress());
+            case JUMP_TO_LOCATION -> flow.jumpTo();
 
-            case JUMP_TO_SUBROUTINE -> {}
-            case RETURN_FROM_SUBROUTINE -> {}
+            case JUMP_TO_SUBROUTINE -> flow.call();
+            case RETURN_FROM_SUBROUTINE -> flow.returnFromCall();
 
             case SET_CARRY -> registers.status().setCarry(true);
             case CLR_CARRY -> registers.status().setCarry(false);
@@ -231,20 +235,6 @@ public class ControlUnit implements Unit {
         @Unsigned byte newData = operator.applyAsUByte(data); // modify
         registers.dor().setData(newData); // write
     }
-
-    /* package */ void branchIf(boolean condition) {
-        @Unsigned short jumpAddress = registers.dor().getAddress();
-        @Unsigned short currentPc = registers.pc().get();
-
-        int jumpAddressHi = uint(jumpAddress) >> 8;
-        int pcHi = registers.pc().highAsInt();
-        boolean pageChange = jumpAddressHi != pcHi;
-
-        cycleCounter.maybeIncrement(condition);
-        cycleCounter.maybeIncrement(condition && pageChange);
-        registers.pc().set(condition ? jumpAddress : currentPc); // hopefully cmov
-    }
-
 
     /* package */ void transfer(DataRegister src, DataRegister dst) {
         @Unsigned byte data = src.get();

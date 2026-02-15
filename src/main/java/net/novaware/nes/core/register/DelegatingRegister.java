@@ -91,6 +91,7 @@ public class DelegatingRegister extends Register {
         delegate.setAddress(address);
     }
 
+    // FIXME: virtual calls all over. Consider simplifying during performance optimization
     interface Delegate {
         @Unsigned byte getData();
         void setData(@Unsigned byte data);

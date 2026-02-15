@@ -19,19 +19,21 @@ class ControlUnitBaseSpec extends Specification {
     LoadStore loadStore = new LoadStore(registers)
     StackEngine stackEngine = new StackEngine(registers, mmu)
     InterruptLogic interrupts = new InterruptLogic(registers, stackEngine)
+    ControlFlow flow = new ControlFlow(registers, bus.cycleCounter(), stackEngine)
+
 
     ControlUnit newControlUnit() {
         def cu = new ControlUnit(
             registers,
             bus.cycleCounter(),
-            bus,
             agu,
             alu,
             mmu,
             decoder,
             loadStore,
             stackEngine,
-            interrupts
+            interrupts,
+            flow
         )
 
         cu.initialize()

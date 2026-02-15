@@ -37,8 +37,11 @@ public class StackEngine implements Unit {
     void push(@Unsigned short address) {
         int addrVal = uint(address);
 
-        push(ubyte((addrVal & 0xFF00) >> 8));
-        push(ubyte(addrVal & 0xFF));
+        int addrHi = (addrVal & 0xFF00) >> 8;
+        int addrLo = addrVal & 0xFF;
+
+        push(ubyte(addrHi));
+        push(ubyte(addrLo));
     }
 
     void push(@Unsigned byte data) {
@@ -50,7 +53,7 @@ public class StackEngine implements Unit {
         sp.decrement();
     }
 
-    void pull(DataRegister register) {
+    @Unsigned byte pull() {
         final StackPointer sp = registers.sp();
 
         sp.increment();
@@ -58,7 +61,17 @@ public class StackEngine implements Unit {
         @Unsigned byte data = mmu.specifyAnd(sp.address())
                 .readByte();
 
-        register.set(data);
+        return data;
+    }
+
+    void pull(DataRegister register) {
+        register.set(pull());
+    }
+
+    void pull(AddressRegister register) {
+        // order matters, low first
+        register.low(pull());
+        register.high(pull());
     }
 
     void pushStatus() {

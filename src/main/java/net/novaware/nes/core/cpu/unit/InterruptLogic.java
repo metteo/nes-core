@@ -28,13 +28,14 @@ public class InterruptLogic implements Unit {
         this.stackEngine = stackEngine;
     }
 
-    public void forceBreak() {
+    public void forceBreak() { // TODO: test how NMI can override the BRK
         int pcVal = registers.pc().getAsInt();
         int retVal = pcVal + 2;
 
         stackEngine.push(ushort(retVal));
         stackEngine.pushStatus(); // brk flag = 1
 
+        registers.status().setIrqDisabled(true);
         registers.pc().set(IRQ_VECTOR);
     }
 
@@ -52,5 +53,8 @@ public class InterruptLogic implements Unit {
     }
 
     public void returnFromInterrupt() {
+        stackEngine.pullStatus();
+
+        stackEngine.pull(registers.pc());
     }
 }
