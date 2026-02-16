@@ -1,6 +1,7 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.uml.Used;
@@ -8,6 +9,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
+@BoardScope
 public class LoadStore implements Unit {
 
     @Used private final CpuRegisters registers;

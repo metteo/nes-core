@@ -21,6 +21,4 @@ public interface DataBus {
      * Write byte into memory under address specified using {@link AddressBus#specify(short)}
      */
     void writeByte(final @Unsigned byte data);
-
-    //TODO: maybe add methods for byte[]
 }

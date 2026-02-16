@@ -1,12 +1,14 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
+@BoardScope
 public class InterruptLogic implements Unit {
 
     public static final @Unsigned short NMI_VECTOR = ushort(0xFFFA);

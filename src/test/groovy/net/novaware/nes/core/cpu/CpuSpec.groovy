@@ -13,21 +13,23 @@ class CpuSpec extends Specification {
     InstructionDecoder decoder = Mock()
     InterruptLogic interrupts = Mock()
     LoadStore loadStore = Mock()
-    PowerMgmt powerMgmt = Mock()
     MemoryMgmt mmu = Mock()
+    PowerMgmt powerMgmt = Mock()
+    PrefetchUnit prefetch = Mock()
     StackEngine stackEngine = Mock()
 
     Cpu instance = new Cpu(
-            registers,
-            controlUnit,
-            addressGen,
-            alu,
-            decoder,
-            interrupts,
-            loadStore,
-            powerMgmt,
-            mmu,
-            stackEngine
+        registers,
+        controlUnit,
+        addressGen,
+        alu,
+        decoder,
+        interrupts,
+        loadStore,
+        mmu,
+        powerMgmt,
+        prefetch,
+        stackEngine
     )
 
     def "should properly initialize units" () {
@@ -41,8 +43,9 @@ class CpuSpec extends Specification {
         1 * decoder.initialize()
         1 * interrupts.initialize()
         1 * loadStore.initialize()
-        1 * powerMgmt.initialize()
         1 * mmu.initialize()
+        1 * powerMgmt.initialize()
+        1 * prefetch.initialize()
         1 * stackEngine.initialize()
     }
 
@@ -57,8 +60,9 @@ class CpuSpec extends Specification {
         1 * decoder.reset()
         1 * interrupts.reset()
         1 * loadStore.reset()
-        1 * powerMgmt.reset()
         1 * mmu.reset()
+        1 * powerMgmt.reset()
+        1 * prefetch.reset()
         1 * stackEngine.reset()
     }
 }

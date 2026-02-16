@@ -2,6 +2,7 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -15,6 +16,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
  * Subunit of Control Unit responsible for handling control flow instructions
  * jumps, calls, returns, branches
  */
+@BoardScope
 public class ControlFlow implements Unit {
 
     @Used private final CpuRegisters registers;

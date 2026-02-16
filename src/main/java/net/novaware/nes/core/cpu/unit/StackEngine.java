@@ -1,6 +1,7 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.cpu.register.StackPointer;
 import net.novaware.nes.core.cpu.register.Status;
@@ -11,6 +12,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 
+@BoardScope
 public class StackEngine implements Unit {
 
     private final CpuRegisters registers;
@@ -101,6 +103,4 @@ public class StackEngine implements Unit {
 
         registers.status().set(status);
     }
-
-    // JSR, RTS
 }

@@ -2,6 +2,7 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
@@ -19,6 +20,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
 import static net.novaware.nes.core.util.UnsignedTypes.uint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
+@BoardScope
 public class InstructionDecoder implements Unit {
 
     @Used private final CpuRegisters registers;

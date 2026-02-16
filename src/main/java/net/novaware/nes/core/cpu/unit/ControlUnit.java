@@ -19,48 +19,60 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
 @BoardScope
 public class ControlUnit implements Unit {
 
-    @Used private final CpuRegisters registers;
-    @Used private final CycleCounter cycleCounter;
-    @Used private final AddressGen addressGen;
-    @Used private final ArithmeticLogic alu;
-    @Used private final MemoryMgmt mmu;
-    @Used private final InstructionDecoder decoder;
-    @Used private final LoadStore loadStore;
-    @Used private final StackEngine stackEngine;
-    @Used private final InterruptLogic interrupts;
+    // stabilizing after takes about n cycles, 6 cycles according to PDF
+    private static final int INITIAL_CPU_CYCLE = 3;
 
     @Owned private final ControlFlow flow;
 
+    @Used private final CpuRegisters registers;
+    @Used private final CycleCounter cycleCounter;
+
+    @Used private final AddressGen addressGen;
+    @Used private final ArithmeticLogic alu;
+    @Used private final InstructionDecoder decoder;
+    @Used private final InterruptLogic interrupts;
+    @Used private final LoadStore loadStore;
+    @Used private final MemoryMgmt mmu;
+    @Used private final PrefetchUnit prefetch;
+    @Used private final StackEngine stackEngine;
+
     @Inject
     public ControlUnit(
+            ControlFlow flow,
+
             CpuRegisters registers,
             @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
+
             AddressGen addressGen,
             ArithmeticLogic alu,
-            MemoryMgmt mmu,
             InstructionDecoder decoder,
-            LoadStore loadStore,
-            StackEngine stackEngine,
             InterruptLogic interrupts,
-            ControlFlow flow
+            LoadStore loadStore,
+            MemoryMgmt mmu,
+            PrefetchUnit prefetch,
+            StackEngine stackEngine
+
     ) {
+        this.flow = flow;
+
         this.registers = registers;
         this.cycleCounter = cycleCounter;
+
         this.addressGen = addressGen;
         this.alu = alu;
-        this.mmu = mmu;
         this.decoder = decoder;
-        this.loadStore = loadStore;
-        this.stackEngine = stackEngine;
         this.interrupts = interrupts;
-        this.flow = flow;
+        this.loadStore = loadStore;
+        this.mmu = mmu;
+        this.prefetch = prefetch;
+        this.stackEngine = stackEngine;
     }
 
     @Override
     public void initialize() {
-        this.flow.initialize();
+        flow.initialize();
 
-        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
+        cycleCounter.setValue(INITIAL_CPU_CYCLE);
 
         registers.a().setAsByte(0);
         registers.x().setAsByte(0);
@@ -70,17 +82,17 @@ public class ControlUnit implements Unit {
 
         // TODO: move to InterruptLogic unit
         registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        fetchOpcode();
+        prefetch.run();
     }
 
     @Override
     public void reset() {
-        this.flow.reset();
+        flow.reset();
 
-        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
+        cycleCounter.setValue(INITIAL_CPU_CYCLE);
 
         registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        fetchOpcode();
+        prefetch.run();
 
         registers.status().reset();
 
@@ -94,10 +106,7 @@ public class ControlUnit implements Unit {
      * Last cycle of the instruction
      */
     public void fetchOpcode() {
-        @Unsigned short opcodeAddress = addressGen.getPc();
-        @Unsigned byte opcode = mmu.specifyAnd(opcodeAddress).readByte();
-
-        registers.cir().set(opcode);
+        prefetch.run();
     }
 
     public void fetchOperandLo() {

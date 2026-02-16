@@ -11,6 +11,7 @@ import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
 import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.PowerMgmt;
+import net.novaware.nes.core.cpu.unit.PrefetchUnit;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
 import net.novaware.nes.core.util.uml.Owned;
@@ -24,23 +25,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * TODO: https://github.com/christopherpow/nes-test-roms
  */
 @BoardScope
+@SuppressWarnings("unused") // @Owned unit fields are annotated only
 public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
     private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
     @Owned private final CpuRegisters registers;
-
     @Owned private final ControlUnit controlUnit;
+
     @Owned private final AddressGen addressGen;
     @Owned private final ArithmeticLogic alu;
     @Owned private final InstructionDecoder decoder;
     @Owned private final InterruptLogic interrupts;
     @Owned private final LoadStore loadStore;
-    @Owned private final PowerMgmt powerMgmt;
     @Owned private final MemoryMgmt mmu;
+    @Owned private final PowerMgmt powerMgmt;
+    @Owned private final PrefetchUnit prefetch;
     @Owned private final StackEngine stackEngine;
 
-    private List<Unit> units;
+    private final List<Unit> units;
 
     @Inject
     public Cpu(
@@ -52,21 +55,25 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         InstructionDecoder decoder,
         InterruptLogic interrupts,
         LoadStore loadStore,
-        PowerMgmt powerMgmt,
         MemoryMgmt mmu,
+        PowerMgmt powerMgmt,
+        PrefetchUnit prefetch,
         StackEngine stackEngine
     ) {
         this.registers = registers;
 
+
         this.units = List.of(
             this.controlUnit = controlUnit,
+
             this.addressGen = addressGen,
             this.alu = alu,
             this.decoder = decoder,
             this.interrupts = interrupts,
             this.loadStore = loadStore,
-            this.powerMgmt = powerMgmt,
             this.mmu = mmu,
+            this.powerMgmt = powerMgmt,
+            this.prefetch = prefetch,
             this.stackEngine = stackEngine
         );
     }
@@ -88,24 +95,27 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         // NOTE: input signal that allows to halt or single cycle the processor
     }
 
-    public void cycle() {
-        controlUnit.execute();
-
+    /**
+     * Advance single instruction
+     */
+    // TODO: use one lone coder test assembly to verify ticks
+    public void advance() {
         controlUnit.fetchOperand();
-        controlUnit.decode();
+        // low byte
+        // high byte*
 
-        // fetchOperand();
-        //   fetchLo();
-        //   fetchHi();
-        // decode();
-        //   fetchLo();
-        //   fetchHi();
-        // execute();
-        //   read(); //and maybe write original back
-        //   modify();
-        //   write();
-        // sampleInterrupts();
-        // fetchOpcode();
+        controlUnit.decode();
+        // low byte*
+        // high byte*
+
+        controlUnit.execute();
+        // read* (and optionally write original back)
+        // modify
+        // write
+
+        // controlUnit.sampleInterrupts();
+
+        controlUnit.fetchOpcode();
     }
 
     /**

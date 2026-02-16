@@ -16,7 +16,7 @@ import static net.novaware.nes.core.util.UnsignedTypes.uint;
 public class ArithmeticLogic implements Unit {
 
     @Used
-    private CpuRegisters registers;
+    private final CpuRegisters registers;
 
     @Inject
     public ArithmeticLogic(CpuRegisters registers) {

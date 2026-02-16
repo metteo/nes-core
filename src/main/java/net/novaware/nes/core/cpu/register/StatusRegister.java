@@ -9,6 +9,8 @@ public class StatusRegister extends Register {
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
+    //              unused        // 5 - always one
+    //              break         // 4 - transient
 
     private boolean decimal;      // 3 - ADC and SBC in decimal mode
     private boolean irq_off;      // 2 - 0 if irq enabled, 1 if irq disabled

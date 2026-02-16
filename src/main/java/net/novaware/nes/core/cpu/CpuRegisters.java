@@ -15,6 +15,7 @@ import net.novaware.nes.core.register.ShortRegister;
 
 import java.util.List;
 
+// TODO: each CPU unit should depend on specific registers instead of all of these
 @BoardScope
 public class CpuRegisters extends RegisterFile {
 
@@ -28,7 +29,7 @@ public class CpuRegisters extends RegisterFile {
     private final ShortRegister currentOperand;
 
     /** @see InstructionGroup#ordinal() TODO: use aaa000cc bits */
-    private final DataRegister  decodedInstruction; // TODO: consider holding enum value to improve perf
+    private final DataRegister  decodedInstruction; // TODO: consider holding enum value or handler to improve perf
     private final DelegatingRegister decodedOperand;
 
     private final DataRegister accumulator;
@@ -49,7 +50,8 @@ public class CpuRegisters extends RegisterFile {
 
     // TODO: add separate irq/nmi latch registers?
 
-    // TODO: segment registers: Code Segment, Video Segment, Extra Segments configured by mappers
+    // TODO: segment registers: Code Segment, Video Segment, Extra Segments configured by mappers for debug view
+    //       e.g. where is nametable, where is pallete etc.
 
     @Inject
     public CpuRegisters() {

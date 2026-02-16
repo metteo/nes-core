@@ -11,7 +11,11 @@ public class Board {
 
     @Owned
     private final Cpu cpu;
-
+    /*
+    @Owned
+    @Named(CPU_RAM)
+    private final PhysicalMemory cpuMemory;
+    */
     @Inject
     /* package */ Board(
         final Cpu cpu
