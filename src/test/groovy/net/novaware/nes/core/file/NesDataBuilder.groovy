@@ -9,7 +9,7 @@ import java.nio.ByteBuffer
 
 import static java.nio.ByteBuffer.allocate
 import static java.nio.ByteOrder.LITTLE_ENDIAN
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ubyte
 
 class NesDataBuilder implements TestDataBuilder<NesData> {
 

@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
-import static net.novaware.nes.core.util.UnsignedTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 
 public class UByteBuffer {
 

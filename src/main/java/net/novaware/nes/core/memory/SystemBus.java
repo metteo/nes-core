@@ -28,8 +28,8 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_MIRROR_3_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_SIZE;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 // TODO: move to cpu part since ppu has it's own bus
 public class SystemBus implements MemoryBus {

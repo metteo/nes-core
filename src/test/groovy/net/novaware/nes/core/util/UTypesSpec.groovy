@@ -2,11 +2,11 @@ package net.novaware.nes.core.util;
 
 import spock.lang.Specification
 
-import static UnsignedTypes.ubyte
-import static UnsignedTypes.sint
-import static UnsignedTypes.ushort
+import static UTypes.ubyte
+import static UTypes.sint
+import static UTypes.ushort
 
-class UnsignedTypesSpec extends Specification {
+class UTypesSpec extends Specification {
 
     def "should convert short to sint (signed int)" () {
         expect:

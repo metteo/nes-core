@@ -3,9 +3,9 @@ package net.novaware.nes.core.memory
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.sint
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.sint
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class SystemBusSpec extends Specification {
 

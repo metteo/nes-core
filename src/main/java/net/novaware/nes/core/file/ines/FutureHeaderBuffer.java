@@ -3,7 +3,7 @@ package net.novaware.nes.core.file.ines;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 /**
  * NES 2.0 compatible header buffer

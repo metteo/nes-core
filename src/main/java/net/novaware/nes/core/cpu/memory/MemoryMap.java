@@ -2,8 +2,8 @@ package net.novaware.nes.core.cpu.memory;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/CPU_memory_map">CPU Memory Map on nesdev.org</a>

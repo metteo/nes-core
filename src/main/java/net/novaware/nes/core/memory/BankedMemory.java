@@ -3,14 +3,14 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
 import net.novaware.nes.core.util.UByteBuffer;
-import net.novaware.nes.core.util.UnsignedTypes;
+import net.novaware.nes.core.util.UTypes;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 public class BankedMemory implements MemoryDevice {
 
@@ -97,8 +97,8 @@ public class BankedMemory implements MemoryDevice {
 
     @Override
     public void specify(@Unsigned short address) {
-        int addrVal = UnsignedTypes.sint(address);
-        int visibleAddress = addrVal - UnsignedTypes.sint(startAddress);
+        int addrVal = sint(address);
+        int visibleAddress = addrVal - sint(startAddress);
 
         // TODO: slow in hot code, change to shifting / masking
         bankIndex = visibleAddress / bankSize.toBytes();

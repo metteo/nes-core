@@ -13,8 +13,8 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_DUAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * The iNES 1.0 compatible header buffer

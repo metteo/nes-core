@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.register
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ubyte
 
 class StatusRegisterSpec extends Specification {
 

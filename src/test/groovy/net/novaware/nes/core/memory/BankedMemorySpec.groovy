@@ -4,8 +4,8 @@ import net.novaware.nes.core.util.Quantity
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Quantity.Unit.*
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 // TODO: make it more clever, eg fill whole hidden space with unique values and then assert edges and random mids
 class BankedMemorySpec extends Specification {

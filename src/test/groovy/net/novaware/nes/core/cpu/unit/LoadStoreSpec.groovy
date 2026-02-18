@@ -5,8 +5,8 @@ import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class LoadStoreSpec extends Specification {
 

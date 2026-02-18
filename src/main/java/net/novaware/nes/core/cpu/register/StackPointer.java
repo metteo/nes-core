@@ -4,8 +4,8 @@ import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.register.ByteRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class StackPointer extends ByteRegister {
 

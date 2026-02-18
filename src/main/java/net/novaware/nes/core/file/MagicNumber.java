@@ -3,7 +3,7 @@ package net.novaware.nes.core.file;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 public enum MagicNumber {
 

@@ -2,7 +2,7 @@ package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * Converts numbers into string representation of binary literal with '_'

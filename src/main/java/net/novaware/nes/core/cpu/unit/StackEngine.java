@@ -9,8 +9,8 @@ import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.DataRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 @BoardScope
 public class StackEngine implements Unit {

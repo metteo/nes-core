@@ -3,7 +3,7 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 public class PhysicalMemory implements MemoryDevice {
 

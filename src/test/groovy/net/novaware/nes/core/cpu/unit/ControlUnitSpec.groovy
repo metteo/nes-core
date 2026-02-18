@@ -4,7 +4,7 @@ import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.memory.RecordingBus.Op
 import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ushort
 
 // useful: bus.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {

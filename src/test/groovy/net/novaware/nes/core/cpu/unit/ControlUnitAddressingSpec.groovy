@@ -2,18 +2,10 @@ package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.cpu.instruction.Instruction
 import net.novaware.nes.core.cpu.instruction.InstructionGroup
-import net.novaware.nes.core.util.UnsignedTypes
 
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox09
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox0A
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox16
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox19
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox1E
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox96
-import static net.novaware.nes.core.cpu.instruction.Instruction.OxD0
+import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.BRANCH_IF_ZERO_CLR
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.*
 
 class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
@@ -22,7 +14,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
 
         registers.currentInstruction.set(Ox0A.opcode())
-        registers.currentOperand.set(UnsignedTypes.USHORT_0)
+        registers.currentOperand.set(USHORT_0)
 
         regs a: 0x28
 

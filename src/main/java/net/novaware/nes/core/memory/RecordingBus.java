@@ -12,9 +12,9 @@ import java.util.List;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.*;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.WRITE;
-import static net.novaware.nes.core.util.UnsignedTypes.UBYTE_0;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class RecordingBus implements MemoryBus {
 

@@ -2,7 +2,7 @@ package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-public class UnsignedTypes {
+public class UTypes {
 
     public static final @Unsigned short USHORT_0 = ushort(0x0000);
     public static final @Unsigned byte UBYTE_0 = ubyte(0x00);

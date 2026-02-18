@@ -7,7 +7,7 @@ import static net.novaware.nes.core.memory.RecordingBus.*
 import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
 import static net.novaware.nes.core.memory.RecordingBus.OpType.WRITE
-import static net.novaware.nes.core.util.UnsignedTypes.*
+import static net.novaware.nes.core.util.UTypes.*
 
 class RecordingBusSpec extends Specification {
 

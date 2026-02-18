@@ -22,8 +22,8 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_DUAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class CartridgeImpl implements Cartridge {
 

@@ -11,7 +11,7 @@ import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.*
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7
 import static net.novaware.nes.core.util.Quantity.Unit.*
-import static net.novaware.nes.core.util.UnsignedTypes.sint
+import static net.novaware.nes.core.util.UTypes.sint
 
 class ArchaicHeaderBufferSpec extends Specification {
 

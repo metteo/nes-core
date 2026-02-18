@@ -4,7 +4,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.instruction.AddressingMode.*;
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.*;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public enum Instruction {
 

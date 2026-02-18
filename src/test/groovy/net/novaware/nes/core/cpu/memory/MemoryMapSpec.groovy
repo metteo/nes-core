@@ -3,7 +3,7 @@ package net.novaware.nes.core.cpu.memory
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.MemoryMap.*
-import static net.novaware.nes.core.util.UnsignedTypes.sint
+import static net.novaware.nes.core.util.UTypes.sint
 
 class MemoryMapSpec extends Specification {
 

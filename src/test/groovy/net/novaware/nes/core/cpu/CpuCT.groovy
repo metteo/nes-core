@@ -4,8 +4,8 @@ import net.novaware.nes.core.BoardFactory
 import net.novaware.nes.core.clock.LoopedClockGenerator
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class CpuCT extends Specification {
 

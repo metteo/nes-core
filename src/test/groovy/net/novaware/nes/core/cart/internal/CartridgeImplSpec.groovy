@@ -3,8 +3,8 @@ package net.novaware.nes.core.cart.internal
 import net.novaware.nes.core.file.NesFileBuilder
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class CartridgeImplSpec extends Specification {
 

@@ -1,10 +1,11 @@
 package net.novaware.nes.core.register;
 
-import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
-import net.novaware.nes.core.util.UnsignedTypes;
 import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 public class DelegatingRegister extends Register {
 
@@ -32,8 +33,8 @@ public class DelegatingRegister extends Register {
      * Removes old data before configuring for new data.
      */
     private void reset() {
-        data = UnsignedTypes.UBYTE_0;
-        address = UnsignedTypes.USHORT_0;
+        data = UBYTE_0;
+        address = USHORT_0;
 
         dataRegister = nullByteRegister;
         memoryBus = nullMemoryBus;

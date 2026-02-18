@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 import java.util.stream.Stream
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint
+import static net.novaware.nes.core.util.UTypes.sint
 
 class InstructionSpec extends Specification {
 

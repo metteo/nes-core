@@ -8,7 +8,7 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.*
 import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.*
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB
 import static net.novaware.nes.core.util.QuantityBuilder.banks8kb
-import static net.novaware.nes.core.util.UnsignedTypes.sint
+import static net.novaware.nes.core.util.UTypes.sint
 
 class ModernHeaderBufferSpec extends Specification {
 

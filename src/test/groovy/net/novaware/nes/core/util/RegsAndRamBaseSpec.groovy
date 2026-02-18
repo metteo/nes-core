@@ -5,8 +5,8 @@ import net.novaware.nes.core.cpu.instruction.Instruction
 import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static UTypes.ubyte
+import static UTypes.ushort
 
 class RegsAndRamBaseSpec extends Specification {
 

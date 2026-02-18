@@ -7,7 +7,7 @@ import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 @BoardScope
 public class LoadStore implements Unit {

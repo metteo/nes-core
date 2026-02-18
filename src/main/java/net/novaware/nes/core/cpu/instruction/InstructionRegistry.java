@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.instruction;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 public class InstructionRegistry {
 

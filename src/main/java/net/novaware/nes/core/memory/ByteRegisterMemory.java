@@ -4,7 +4,7 @@ import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.sint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
