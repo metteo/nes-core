@@ -10,7 +10,7 @@ import net.novaware.nes.core.register.DataRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 @BoardScope
 public class StackEngine implements Unit {
@@ -37,7 +37,7 @@ public class StackEngine implements Unit {
     }
 
     void push(@Unsigned short address) {
-        int addrVal = uint(address);
+        int addrVal = sint(address);
 
         int addrHi = (addrVal & 0xFF00) >> 8;
         int addrLo = addrVal & 0xFF;

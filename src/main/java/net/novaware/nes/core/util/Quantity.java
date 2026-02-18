@@ -14,6 +14,9 @@ public record Quantity(int amount, Unit unit) {
         return switch (unit()) {
             case BYTES -> amount;
             case BANK_512B -> amount * 512;
+            case BANK_1KB -> amount * 1 * 1024;
+            case BANK_2KB -> amount * 2 * 1024;
+            case BANK_4KB -> amount * 4 * 1024;
             case BANK_8KB -> amount * 8 * 1024;
             case BANK_16KB -> amount * 16 * 1024;
             case BANK_32KB -> amount * 32 * 1024;
@@ -23,6 +26,9 @@ public record Quantity(int amount, Unit unit) {
     public enum Unit {
         BYTES,
         BANK_512B,
+        BANK_1KB,
+        BANK_2KB,
+        BANK_4KB,
         BANK_8KB,
         BANK_16KB,
         BANK_32KB

@@ -4,5 +4,6 @@ open module net.novaware.nes.core.it {
     requires org.apache.groovy;
     requires org.spockframework.core;
     requires org.junit.jupiter.api;
+    requires org.junit.jupiter.engine;
     requires org.hamcrest;
 }

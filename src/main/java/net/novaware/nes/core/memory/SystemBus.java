@@ -28,31 +28,31 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_MIRROR_3_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_SIZE;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 // TODO: move to cpu part since ppu has it's own bus
 public class SystemBus implements MemoryBus {
 
-    public static final IntPredicate RAM_RANGE      = a -> uint(RAM_START) <= a                && a <= uint(RAM_MIRROR_3_END);
-    public static final IntPredicate PPU_REGS_RANGE = a -> uint(PPU_REGISTERS_START) <= a      && a <= uint(PPU_REGISTERS_MIRROR_END);
-    public static final IntPredicate APU_IO_RANGE   = a -> uint(APU_IO_REGISTERS_START) <= a   && a <= uint(APU_IO_REGISTERS_END);
-    public static final IntPredicate APU_TEST_RANGE = a -> uint(APU_TEST_REGISTERS_START) <= a && a <= uint(APU_TEST_REGISTERS_END);
-    public static final IntPredicate CARTRIDGE_RANGE = a -> uint(CARTRIDGE_START) <= a         && a <= uint(CARTRIDGE_END);
+    public static final IntPredicate RAM_RANGE      = a -> sint(RAM_START) <= a                && a <= sint(RAM_MIRROR_3_END);
+    public static final IntPredicate PPU_REGS_RANGE = a -> sint(PPU_REGISTERS_START) <= a      && a <= sint(PPU_REGISTERS_MIRROR_END);
+    public static final IntPredicate APU_IO_RANGE   = a -> sint(APU_IO_REGISTERS_START) <= a   && a <= sint(APU_IO_REGISTERS_END);
+    public static final IntPredicate APU_TEST_RANGE = a -> sint(APU_TEST_REGISTERS_START) <= a && a <= sint(APU_TEST_REGISTERS_END);
+    public static final IntPredicate CARTRIDGE_RANGE = a -> sint(CARTRIDGE_START) <= a         && a <= sint(CARTRIDGE_END);
 
     private final CycleCounter cycleCounter;
 
     private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
     private ByteRegisterMemory ppuRegs = new PpuRegisters().asByteRegisterMemory();
     private ByteRegisterMemory apuIoRegs = new ApuRegisters().asByteRegisterMemory();
-    private PhysicalMemory cartridge = new PhysicalMemory(CARTRIDGE_SIZE, uint(CARTRIDGE_START)); // TODO: temporary
+    private MemoryDevice cartridge = new PhysicalMemory(CARTRIDGE_SIZE, sint(CARTRIDGE_START)); // TODO: temporary
 
     // TODO: this belongs to memory bus as currentAddress variable / currentData variable for open bus
     // TODO: figure out better register names
     private AddressRegister memoryAddress = new ShortRegister("MAR?");
     private DataRegister memoryData = new ByteRegister("MDR?");
 
-    private Addressable currentSegment = ram;
+    private MemoryDevice currentSegment = ram;
     private IntPredicate currentRange = RAM_RANGE;
     private @Unsigned short currentAddress; // translated into specific segment range
 
@@ -68,20 +68,20 @@ public class SystemBus implements MemoryBus {
         memoryAddress.set(address);
         cycleCounter.increment();
 
-        int addressInt = uint(address);
+        int addressInt = sint(address);
 
 //        if (currentRange.test(addressInt)) {
 //            return; // fast track
 //        }
 
-        if (RAM_RANGE.test(addressInt)) {
+        if (RAM_RANGE.test(addressInt)) { // TODO: maybe switch to BankedMemory
             currentRange = RAM_RANGE;
-            currentAddress = ushort(addressInt & uint(RAM_END));
+            currentAddress = ushort(addressInt & sint(RAM_END));
             currentSegment = ram;
 
         } else if (PPU_REGS_RANGE.test(addressInt)) {
             currentRange = PPU_REGS_RANGE;
-            currentAddress = ushort(addressInt & uint(PPU_REGISTERS_END));
+            currentAddress = ushort(addressInt & sint(PPU_REGISTERS_END));
             currentSegment = ppuRegs;
 
         } else if (APU_IO_RANGE.test(addressInt)) {
@@ -101,14 +101,8 @@ public class SystemBus implements MemoryBus {
     }
 
     @Override
-    public SystemBus specifyAnd(@Unsigned short address) {
-        specify(address);
-        return this;
-    }
-
-    @Override
     public @Unsigned byte readByte() {
-        @Unsigned byte data = currentSegment.read(currentAddress);
+        @Unsigned byte data = currentSegment.specifyThen(currentAddress).readByte();
 
         memoryData.set(data);
         return data;
@@ -117,11 +111,16 @@ public class SystemBus implements MemoryBus {
     @Override
     public void writeByte(@Unsigned byte data) {
         memoryData.set(data);
-        currentSegment.write(currentAddress, data);
+        currentSegment.specifyThen(currentAddress).writeByte(data);
     }
 
     // FIXME: temp for design / testing ideas
     /* package */ ByteRegister getPpuRegs(int idx) {
         return ppuRegs.registers[idx];
+    }
+
+    @Override
+    public void attach(MemoryDevice memoryDevice) { // FIXME: what about the address range?
+        cartridge = memoryDevice;
     }
 }

@@ -3,14 +3,14 @@ package net.novaware.nes.core.util;
 import spock.lang.Specification
 
 import static UnsignedTypes.ubyte
-import static UnsignedTypes.uint
+import static UnsignedTypes.sint
 import static UnsignedTypes.ushort
 
 class UnsignedTypesSpec extends Specification {
 
-    def "should convert short to uint" () {
+    def "should convert short to sint (signed int)" () {
         expect:
-        output == uint(input)
+        output == sint(input)
 
         where:
         input           || output
@@ -19,9 +19,9 @@ class UnsignedTypesSpec extends Specification {
         0xFFFF as short || 0xFFFF
     }
 
-    def "should convert byte to uint" () {
+    def "should convert byte to sint (signed int)" () {
         expect:
-        output == uint(input)
+        output == sint(input)
 
         where:
         input        || output

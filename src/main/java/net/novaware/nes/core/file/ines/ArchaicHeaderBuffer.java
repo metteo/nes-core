@@ -20,7 +20,7 @@ import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * Archaic iNES compatible header buffer
@@ -84,7 +84,7 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
 
     public ArchaicHeaderBuffer putProgramData(Quantity programData) {
         assertArgument(programData.unit() == BANK_16KB, "program data size not in 16KB units");
-        assertArgument(programData.amount() <= uint(PROGRAM_DATA_SIZE), "program data size exceeded");
+        assertArgument(programData.amount() <= sint(PROGRAM_DATA_SIZE), "program data size exceeded");
 
         header.putAsByte(BYTE_4, programData.amount());
 
@@ -99,7 +99,7 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
 
     public ArchaicHeaderBuffer putVideoData(Quantity videoData) {
         assertArgument(videoData.unit() == BANK_8KB, "video data size not in 8KB units");
-        assertArgument(videoData.amount() <= uint(VIDEO_DATA_SIZE), "video data size exceeded");
+        assertArgument(videoData.amount() <= sint(VIDEO_DATA_SIZE), "video data size exceeded");
 
         header.putAsByte(BYTE_5, videoData.amount());
 
@@ -125,19 +125,19 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     /* package */ static UByteBuffer putMapperLo(UByteBuffer header, int mapper) {
         int byte6 = header.getAsInt(BYTE_6);
 
-        int cleared = byte6 & ~uint(MAPPER_LO_BITS);
-        int shifted = (mapper << 4) & uint(MAPPER_LO_BITS);
+        int cleared = byte6 & ~sint(MAPPER_LO_BITS);
+        int shifted = (mapper << 4) & sint(MAPPER_LO_BITS);
 
         return header.putAsByte(BYTE_6, cleared | shifted);
     }
 
     /* package */ static UByteBuffer putMapperHi(UByteBuffer header, int mapper) {
-        assertArgument((mapper & ~uint(MAPPER_HI_BITS)) == 0,
+        assertArgument((mapper & ~sint(MAPPER_HI_BITS)) == 0,
                 "mapper hi bits must be in their target position");
 
         int byte7 = header.getAsInt(BYTE_7);
-        int cleared = byte7 & ~uint(MAPPER_HI_BITS);
-        int bits = mapper & uint(MAPPER_HI_BITS);
+        int cleared = byte7 & ~sint(MAPPER_HI_BITS);
+        int bits = mapper & sint(MAPPER_HI_BITS);
 
         return header.putAsByte(BYTE_7, cleared | bits);
     }
@@ -166,13 +166,13 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     /* package */ static int getMapperLo(UByteBuffer header) {
         int byte6 = header.getAsInt(BYTE_6);
 
-        return (byte6 & uint(MAPPER_LO_BITS)) >> 4;
+        return (byte6 & sint(MAPPER_LO_BITS)) >> 4;
     }
 
     /* package */ static int getMapperHi(UByteBuffer header) {
         int byte7 = header.getAsInt(BYTE_7);
 
-        return (byte7 & uint(MAPPER_HI_BITS));
+        return (byte7 & sint(MAPPER_HI_BITS));
     }
 
     public int getMapper(NesFileVersion version) {
@@ -196,12 +196,12 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     public int getByte7Reserved() { // TODO: report if not 0
         int byte7 = header.getAsInt(BYTE_7);
 
-        return (byte7 & uint(BYTE_7_RESERVED_BITS));
+        return (byte7 & sint(BYTE_7_RESERVED_BITS));
     }
 
     public ArchaicHeaderBuffer putVideoMemoryLayout(Layout layout) {
         int byte6 = header.getAsInt(BYTE_6);
-        int cleared = byte6 & ~uint(LAYOUT_BITS);
+        int cleared = byte6 & ~sint(LAYOUT_BITS);
         int layoutBits = layout.bits();
 
         header.putAsByte(BYTE_6, cleared | layoutBits);
@@ -212,7 +212,7 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     public Layout getVideoMemoryLayout() {
         int byte6 = header.getAsInt(BYTE_6);
 
-        int layoutBits = (byte6 & uint(LAYOUT_BITS));
+        int layoutBits = (byte6 & sint(LAYOUT_BITS));
 
         return Layout.fromBits(layoutBits);
     }
@@ -222,8 +222,8 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
         assertArgument(trainer.amount() <= 1, "trainer size exceeded");
 
         int byte6 = header.getAsInt(BYTE_6);
-        int cleared = byte6 & ~uint(TRAINER_BIT);
-        int trainerBit = trainer.amount() == 1 ? uint(TRAINER_BIT) : 0;
+        int cleared = byte6 & ~sint(TRAINER_BIT);
+        int trainerBit = trainer.amount() == 1 ? sint(TRAINER_BIT) : 0;
 
         header.putAsByte(BYTE_6, cleared | trainerBit);
 
@@ -233,15 +233,15 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     public Quantity getTrainer() {
         int byte6 = header.getAsInt(BYTE_6);
 
-        int trainerBit = (byte6 & uint(TRAINER_BIT)) >> 2;
+        int trainerBit = (byte6 & sint(TRAINER_BIT)) >> 2;
 
         return new Quantity(trainerBit, BANK_512B);
     }
 
     public ArchaicHeaderBuffer putProgramMemoryKind(Kind kind) {
         int byte6 = header.getAsInt(BYTE_6);
-        int cleared = byte6 & ~uint(BATTERY_BIT);
-        int batteryBit = kind == Kind.PERSISTENT ? uint(BATTERY_BIT) : 0;
+        int cleared = byte6 & ~sint(BATTERY_BIT);
+        int batteryBit = kind == Kind.PERSISTENT ? sint(BATTERY_BIT) : 0;
 
         header.putAsByte(BYTE_6, cleared | batteryBit);
 
@@ -251,7 +251,7 @@ public class ArchaicHeaderBuffer extends BaseHeaderBuffer {
     public Kind getProgramMemoryKind() {
         int byte6 = header.getAsInt(BYTE_6);
 
-        int batteryBit = (byte6 & uint(BATTERY_BIT)) >> 1;
+        int batteryBit = (byte6 & sint(BATTERY_BIT)) >> 1;
 
         return batteryBit == 0 ? Kind.VOLATILE : Kind.PERSISTENT;
     }

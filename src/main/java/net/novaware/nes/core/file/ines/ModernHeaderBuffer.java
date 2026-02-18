@@ -14,7 +14,7 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.PAL_DUAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * The iNES 1.0 compatible header buffer
@@ -67,7 +67,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         assertArgument(system != null, "system cannot be null");
 
         int byte7 = header.getAsInt(BYTE_7);
-        int cleared = byte7 & ~uint(SYSTEM_TYPE_BITS);
+        int cleared = byte7 & ~sint(SYSTEM_TYPE_BITS);
         int bits = system.bits();
 
         header.putAsByte(BYTE_7, cleared | bits);
@@ -78,7 +78,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public NesMeta.System getSystem() {
         int byte7 = header.getAsInt(BYTE_7);
 
-        int systemBits = (byte7 & uint(SYSTEM_TYPE_BITS));
+        int systemBits = (byte7 & sint(SYSTEM_TYPE_BITS));
 
         return NesMeta.System.fromBits(systemBits);
     }
@@ -87,8 +87,8 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         assertArgument(0b00 <= version && version <= 0b11, "version must be 0b00-0b11");
 
         int byte7 = header.getAsInt(BYTE_7);
-        int cleared = byte7 & ~uint(VERSION_BITS);
-        int shifted = (version << 2) & uint(VERSION_BITS);
+        int cleared = byte7 & ~sint(VERSION_BITS);
+        int shifted = (version << 2) & sint(VERSION_BITS);
 
         header.putAsByte(BYTE_7, cleared | shifted);
 
@@ -98,7 +98,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public static int getVersion(UByteBuffer header) {
         int byte7 = header.getAsInt(BYTE_7);
 
-        return (byte7 & uint(VERSION_BITS)) >> 2;
+        return (byte7 & sint(VERSION_BITS)) >> 2;
     }
 
     public int getVersion() {
@@ -107,7 +107,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public ModernHeaderBuffer putProgramMemory(Quantity programMemory) {
         assertArgument(programMemory.unit() == BANK_8KB, "program memory size not in 8KB units");
-        assertArgument(programMemory.amount() <= uint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
+        assertArgument(programMemory.amount() <= sint(PROGRAM_MEMORY_SIZE), "program memory size exceeded");
 
         header.putAsByte(BYTE_8, programMemory.amount());
 
@@ -127,7 +127,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         //  to encode like getMapperRange predicate
 
         int byte9 = header.getAsInt(BYTE_9);
-        int cleared = byte9 & ~uint(VIDEO_STANDARD_BITS);
+        int cleared = byte9 & ~sint(VIDEO_STANDARD_BITS);
 
         int bit = switch(videoStandard) {
             default              -> 0b0;
@@ -142,7 +142,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public VideoStandard getVideoStandard() {
         int byte9 = header.getAsInt(BYTE_9);
-        int bit = (byte9 & uint(VIDEO_STANDARD_BITS));
+        int bit = (byte9 & sint(VIDEO_STANDARD_BITS));
 
         return bit == 1 ? PAL : NTSC;
     }
@@ -150,7 +150,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public int getByte9Reserved() { // TODO: report if not 0
         int byte9 = header.getAsInt(BYTE_9);
 
-        return (byte9 & uint(BYTE_9_RESERVED_BITS)) >> 1;
+        return (byte9 & sint(BYTE_9_RESERVED_BITS)) >> 1;
     }
 
     // region Byte 10 Methods (unofficial)
@@ -158,8 +158,8 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public ModernHeaderBuffer putBusConflicts(boolean busConflicts) {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int cleared = byte10 & ~uint(BUS_CONFLICTS_BIT);
-        int busConflictsBit = busConflicts ? uint(BUS_CONFLICTS_BIT) : 0;
+        int cleared = byte10 & ~sint(BUS_CONFLICTS_BIT);
+        int busConflictsBit = busConflicts ? sint(BUS_CONFLICTS_BIT) : 0;
 
         header.putAsByte(BYTE_10, cleared | busConflictsBit);
 
@@ -169,7 +169,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public boolean getBusConflicts() {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int busConflictsBit = byte10 & uint(BUS_CONFLICTS_BIT);
+        int busConflictsBit = byte10 & sint(BUS_CONFLICTS_BIT);
 
         return busConflictsBit != 0;
     }
@@ -177,8 +177,8 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public ModernHeaderBuffer putProgramMemoryAbsent(boolean absent) {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int cleared = byte10 & ~uint(PROGRAM_MEMORY_ABSENT_BIT);
-        int absenceBit = absent ? uint(PROGRAM_MEMORY_ABSENT_BIT) : 0;
+        int cleared = byte10 & ~sint(PROGRAM_MEMORY_ABSENT_BIT);
+        int absenceBit = absent ? sint(PROGRAM_MEMORY_ABSENT_BIT) : 0;
 
         header.putAsByte(BYTE_10, cleared | absenceBit);
 
@@ -188,7 +188,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public boolean isProgramMemoryAbsent() {
         int byte10 = header.getAsInt(BYTE_10);
 
-        int bit = byte10 & uint(PROGRAM_MEMORY_ABSENT_BIT);
+        int bit = byte10 & sint(PROGRAM_MEMORY_ABSENT_BIT);
 
         return bit != 0;
     }
@@ -198,7 +198,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
         assertArgument(videoStandard != DENDY, "video standard cannot be Dendy");
 
         int byte10 = header.getAsInt(BYTE_10);
-        int cleared = byte10 & ~uint(VIDEO_STANDARD_EXT_BITS);
+        int cleared = byte10 & ~sint(VIDEO_STANDARD_EXT_BITS);
 
         int bit = switch(videoStandard) { // TODO: consider moving to the enum
             default        -> 0b00;
@@ -215,7 +215,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
 
     public VideoStandard getVideoStandardExt() {
         int byte10 = header.getAsInt(BYTE_10);
-        int bits = (byte10 & uint(VIDEO_STANDARD_EXT_BITS));
+        int bits = (byte10 & sint(VIDEO_STANDARD_EXT_BITS));
 
         return switch (bits) {
             default   -> NTSC;
@@ -229,7 +229,7 @@ public class ModernHeaderBuffer extends BaseHeaderBuffer {
     public int getByte10Reserved() { // TODO: report if not 0
         int byte10 = header.getAsInt(BYTE_10);
 
-        return byte10 & uint(BYTE_10_RESERVED_BITS);
+        return byte10 & sint(BYTE_10_RESERVED_BITS);
     }
 
     // endregion

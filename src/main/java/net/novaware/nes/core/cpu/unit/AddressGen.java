@@ -6,7 +6,7 @@ import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 @BoardScope
@@ -39,12 +39,12 @@ public class AddressGen implements Unit {
 
     public @Unsigned short fetchAddress(@Unsigned short address) {
         @Unsigned byte addrLo = mmu.specifyAnd(address).readByte();
-        @Unsigned byte addrHi = mmu.specifyAnd(ushort(uint(address) + 1)).readByte();
-        return ushort(uint(addrHi) << 8 | uint(addrLo));
+        @Unsigned byte addrHi = mmu.specifyAnd(ushort(sint(address) + 1)).readByte();
+        return ushort(sint(addrHi) << 8 | sint(addrLo));
     }
 
     public @Unsigned short buggyFetchAddress(@Unsigned short address) {
-        int source = uint(address);
+        int source = sint(address);
 
         int sourceLo = 0x00FF & source;
         int sourceHi = 0xFF00 & source;
@@ -54,6 +54,6 @@ public class AddressGen implements Unit {
         @Unsigned byte addrLo = mmu.specifyAnd(address).readByte();
         @Unsigned byte addrHi = mmu.specifyAnd(ushort(sourcePlusOne)).readByte();
 
-        return ushort(uint(addrHi) << 8 | uint(addrLo));
+        return ushort(sint(addrHi) << 8 | sint(addrLo));
     }
 }

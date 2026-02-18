@@ -78,7 +78,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         );
     }
 
-    /* package */ void initialize() {
+    public void initialize() {
         registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
 
         units.forEach(Unit::initialize);

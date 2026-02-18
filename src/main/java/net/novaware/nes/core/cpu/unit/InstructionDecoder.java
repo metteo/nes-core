@@ -17,7 +17,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 @BoardScope
@@ -70,7 +70,7 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodePostIndexedIndirectY(@Unsigned short operand) {
-        int address = uint(addressGen.fetchAddress(operand));
+        int address = sint(addressGen.fetchAddress(operand));
         int yVal = registers.y().getAsInt();
 
         int result = address + yVal;
@@ -82,7 +82,7 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodePreIndexedIndirectX(@Unsigned short operand) {
-        int address = uint(operand);
+        int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
         int indirectAddress = address + xVal;
@@ -95,9 +95,9 @@ public class InstructionDecoder implements Unit {
     private void decodeIndexedAbsolute(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        int result = indexVal + uint(operand);
+        int result = indexVal + sint(operand);
 
-        boolean pageChange = (uint(operand) & 0xFF00) != (result & 0xFF00);
+        boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
         cycleCounter.maybeIncrement(pageChange);
 
         this.registers.dor().configureMemory(memoryBus, ushort(result));
@@ -106,7 +106,7 @@ public class InstructionDecoder implements Unit {
     private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        int result = (indexVal + uint(operand)) & 0xFF;
+        int result = (indexVal + sint(operand)) & 0xFF;
 
         this.registers.dor().configureMemory(memoryBus, ushort(result));
     }
@@ -133,7 +133,7 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeImmediate(@Unsigned short operand) {
-        int data = uint(operand);
+        int data = sint(operand);
         registers.dor().configureData(ubyte(data));
     }
 

@@ -11,7 +11,7 @@ import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.*
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7
 import static net.novaware.nes.core.util.Quantity.Unit.*
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 
 class ArchaicHeaderBufferSpec extends Specification {
 
@@ -26,10 +26,10 @@ class ArchaicHeaderBufferSpec extends Specification {
     def "should pass byte cross checks for Archaic iNES" () {
         given:
         def byte6 = 0
-        byte6 |= uint(MAPPER_LO_BITS)
-        byte6 |= uint(LAYOUT_BITS)
-        byte6 |= uint(TRAINER_BIT)
-        byte6 |= uint(BATTERY_BIT)
+        byte6 |= sint(MAPPER_LO_BITS)
+        byte6 |= sint(LAYOUT_BITS)
+        byte6 |= sint(TRAINER_BIT)
+        byte6 |= sint(BATTERY_BIT)
 
         expect:
         byte6 == 0xFF
@@ -38,8 +38,8 @@ class ArchaicHeaderBufferSpec extends Specification {
     def "should pass byte cross checks for iNES 0.7" () {
         given:
         def byte7 = 0
-        byte7 |= uint(MAPPER_HI_BITS)
-        byte7 |= uint(BYTE_7_RESERVED_BITS)
+        byte7 |= sint(MAPPER_HI_BITS)
+        byte7 |= sint(BYTE_7_RESERVED_BITS)
 
         expect:
         byte7 == 0xFF

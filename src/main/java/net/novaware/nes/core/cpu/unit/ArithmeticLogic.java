@@ -10,7 +10,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import java.util.function.IntBinaryOperator;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 @BoardScope
 public class ArithmeticLogic implements Unit {
@@ -29,7 +29,7 @@ public class ArithmeticLogic implements Unit {
         int a = registers.a().getAsInt();
         int aSign = a >> 7;
 
-        int dataVal = uint(data);
+        int dataVal = sint(data);
         int dataSign = dataVal >> 7;
 
         int result = a + dataVal + prevCarry;
@@ -51,7 +51,7 @@ public class ArithmeticLogic implements Unit {
         int a = registers.a().getAsInt();
         int aSign = a >> 7;
 
-        int dataVal = uint(data);
+        int dataVal = sint(data);
         int dataSign = dataVal >> 7;
 
         int result = a - dataVal - prevBorrow;
@@ -75,7 +75,7 @@ public class ArithmeticLogic implements Unit {
     }
 
     private @Unsigned byte incrementMemory(@Unsigned byte data, int by) {
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         int result = dataVal + by;
         int resultByte = result & 0xFF;
@@ -120,7 +120,7 @@ public class ArithmeticLogic implements Unit {
     public void bitwiseOp(@Unsigned byte operand, IntBinaryOperator operator) {
         @Unsigned byte a = registers.a().get();
 
-        int result = operator.applyAsInt(uint(a), uint(operand));
+        int result = operator.applyAsInt(sint(a), sint(operand));
 
         registers.a().setAsByte(result);
         registers.status()
@@ -143,8 +143,8 @@ public class ArithmeticLogic implements Unit {
     public void bitTest(@Unsigned byte data) {
         @Unsigned byte a = registers.a().get();
 
-        int aVal = uint(a);
-        int dataVal = uint(data);
+        int aVal = sint(a);
+        int dataVal = sint(data);
 
         int result = aVal & dataVal;
         int resultByte = result & 0xFF;
@@ -170,8 +170,8 @@ public class ArithmeticLogic implements Unit {
     private void compareRegister(DataRegister register, @Unsigned byte data) {
         @Unsigned byte reg = register.get();
 
-        int regVal = uint(reg);
-        int dataVal = uint(data);
+        int regVal = sint(reg);
+        int dataVal = sint(data);
 
         int result = regVal - dataVal;
         int resultByte = result & 0xFF;
@@ -186,7 +186,7 @@ public class ArithmeticLogic implements Unit {
     public @Unsigned byte rotateLeft(@Unsigned byte data) {
         int oldCarry = registers.status().getCarry() ? 1 : 0;
 
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         int result = (dataVal << 1) | oldCarry; // modify
         boolean newCarry = (result & (1 << 8)) > 0;
@@ -203,7 +203,7 @@ public class ArithmeticLogic implements Unit {
     public @Unsigned byte rotateRight(@Unsigned byte data) {
         int oldCarry = registers.status().getCarry() ? (1 << 7) : 0;
         boolean newCarry = (data & 0b1) > 0;
-        int newData = (uint(data) >> 1) | oldCarry; // modify // FIXME: consider >> vs >>>
+        int newData = (sint(data) >> 1) | oldCarry; // modify // FIXME: consider >> vs >>>
 
         registers.status()
                 .setCarry(newCarry)
@@ -214,7 +214,7 @@ public class ArithmeticLogic implements Unit {
     }
 
     public @Unsigned byte arithmeticShiftLeft(@Unsigned byte data) {
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         int result = dataVal << 1;
         int resultByte = result & 0xFF;
@@ -228,7 +228,7 @@ public class ArithmeticLogic implements Unit {
     }
 
     public @Unsigned byte logicalShiftRight(@Unsigned byte data) {
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         int result = dataVal >> 1;
         int resultByte = result & 0xFF;

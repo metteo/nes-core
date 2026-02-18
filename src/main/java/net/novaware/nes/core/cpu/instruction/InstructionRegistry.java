@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.instruction;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 public class InstructionRegistry {
 
@@ -11,7 +11,7 @@ public class InstructionRegistry {
 
     static {
         for (Instruction instruction : Instruction.values()) {
-            OPCODE_MAP[uint(instruction.opcode())] = instruction;
+            OPCODE_MAP[sint(instruction.opcode())] = instruction;
         }
 
         for(int i = 0; i < OPCODE_MAP.length; i++) {
@@ -22,6 +22,6 @@ public class InstructionRegistry {
     }
 
     public static Instruction fromOpcode(@Unsigned byte opcode) {
-        return OPCODE_MAP[uint(opcode)];
+        return OPCODE_MAP[sint(opcode)];
     }
 }

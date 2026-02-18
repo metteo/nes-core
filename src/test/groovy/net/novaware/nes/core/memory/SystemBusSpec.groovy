@@ -4,7 +4,7 @@ import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 import static net.novaware.nes.core.util.UnsignedTypes.ushort
 
 class SystemBusSpec extends Specification {
@@ -18,18 +18,18 @@ class SystemBusSpec extends Specification {
         def data = ubyte(0x3)
 
         when:
-        bus.specifyAnd(address).writeByte(data)
+        bus.specifyThen(address).writeByte(data)
         def read = bus.readByte()
 
         then:
-        uint(read) == uint(data)
+        sint(read) == sint(data)
 
         and:
-        bus.specifyAnd(ushort(0x4)).writeByte(ubyte(0x5))
+        bus.specifyThen(ushort(0x4)).writeByte(ubyte(0x5))
 
         then:
         bus.specify(address)
-        uint(bus.readByte()) == uint(data)
+        sint(bus.readByte()) == sint(data)
 
         // TODO: verify mirroring works
     }
@@ -41,19 +41,19 @@ class SystemBusSpec extends Specification {
         def data = ubyte(0xAA)
 
         when:
-        bus.specifyAnd(address).writeByte(data)
+        bus.specifyThen(address).writeByte(data)
         def read = bus.readByte()
 
         then:
-        uint(read) == uint(data)
-        bus.getPpuRegs(4).getAsInt() == uint(data)
+        sint(read) == sint(data)
+        bus.getPpuRegs(4).getAsInt() == sint(data)
 
         and:
         bus.specify(ushort(0x2004 + 0x8))
         def read2 = bus.readByte()
 
         then:
-        uint(read2) == uint(data)
+        sint(read2) == sint(data)
     }
 
     // TODO: write tests for apu and cartridge

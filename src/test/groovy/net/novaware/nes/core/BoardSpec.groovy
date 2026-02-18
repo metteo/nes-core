@@ -1,12 +1,15 @@
-package net.novaware.nes.core;
+package net.novaware.nes.core
 
-import spock.lang.Specification;
+import net.novaware.nes.core.clock.LoopedClockGenerator
+import net.novaware.nes.core.cpu.unit.ClockGenerator
+import spock.lang.Specification
 
 class BoardSpec extends Specification {
 
     def "should instantiate"() {
         given:
-        BoardFactory factory = BoardFactory.newBoardFactory();
+        ClockGenerator clock = new LoopedClockGenerator()
+        BoardFactory factory = BoardFactory.newBoardFactory(clock);
 
         when:
         def board = factory.newBoard();

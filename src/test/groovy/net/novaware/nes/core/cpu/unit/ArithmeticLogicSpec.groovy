@@ -7,7 +7,7 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Hex.s
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 
 class ArithmeticLogicSpec extends Specification {
 
@@ -163,7 +163,7 @@ class ArithmeticLogicSpec extends Specification {
         byte result = alu.incrementMemory(ubyte(data))
 
         then:
-        uint(result) == expected
+        sint(result) == expected
         regs.status().zero == zero
         regs.status().negative == neg
 
@@ -179,7 +179,7 @@ class ArithmeticLogicSpec extends Specification {
         byte result = alu.decrementMemory(ubyte(data))
 
         then:
-        uint(result) == expected
+        sint(result) == expected
         regs.status().zero == zero
         regs.status().negative == neg
 
@@ -312,7 +312,7 @@ class ArithmeticLogicSpec extends Specification {
         def result = alu.arithmeticShiftLeft(ubyte(data))
 
         then:
-        uint(result) == expected
+        sint(result) == expected
         regs.status().carry == carry as boolean
         regs.status().zero == zero
         regs.status().negative == neg
@@ -329,7 +329,7 @@ class ArithmeticLogicSpec extends Specification {
         def result = alu.logicalShiftRight(ubyte(data))
 
         then:
-        uint(result) == expected
+        sint(result) == expected
         regs.status().carry == carry as boolean
         regs.status().zero == zero
         !regs.status().negative

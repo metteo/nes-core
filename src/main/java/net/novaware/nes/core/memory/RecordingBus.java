@@ -102,12 +102,6 @@ public class RecordingBus implements MemoryBus {
     }
 
     @Override
-    public DataBus specifyAnd(@Unsigned short address) {
-        specify(address);
-        return this;
-    }
-
-    @Override
     public @Unsigned byte readByte() {
         @Unsigned byte b = memory[memoryAddress.getAsInt()];
         memoryData.set(b);
@@ -121,5 +115,10 @@ public class RecordingBus implements MemoryBus {
         memoryData.set(data);
         memory[memoryAddress.getAsInt()] = data;
         activity.add(new Op(WRITE, memoryAddress.get(), data));
+    }
+
+    @Override
+    public void attach(MemoryDevice memoryDevice) {
+        throw new UnsupportedOperationException("not implemented!");
     }
 }

@@ -7,7 +7,7 @@ import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 @BoardScope
 public class LoadStore implements Unit {
@@ -24,7 +24,7 @@ public class LoadStore implements Unit {
 
         register.set(data);
 
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         registers.status()
                 .setZero(dataVal == 0)

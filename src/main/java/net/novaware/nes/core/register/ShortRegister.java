@@ -3,7 +3,7 @@ package net.novaware.nes.core.register;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 public class ShortRegister extends AddressRegister {
@@ -33,21 +33,21 @@ public class ShortRegister extends AddressRegister {
     }
 
     public int getAsInt() {
-        return uint(hi) << 8 | uint(lo);
+        return sint(hi) << 8 | sint(lo);
     }
 
     @Override
     public int highAsInt() {
-        return uint(hi);
+        return sint(hi);
     }
 
     @Override
     public int lowAsInt() {
-        return uint(lo);
+        return sint(lo);
     }
 
     public void set(@Unsigned short address) {
-        setAsShort(uint(address));
+        setAsShort(sint(address));
     }
 
     @Override

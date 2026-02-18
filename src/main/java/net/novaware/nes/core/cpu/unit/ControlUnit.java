@@ -14,7 +14,7 @@ import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 @BoardScope
 public class ControlUnit implements Unit {
@@ -139,6 +139,7 @@ public class ControlUnit implements Unit {
         decoder.decode();
     }
 
+    // TODO: test that correct units are called
     public void execute() {
         int instrGroup = registers.dir().getAsInt();
 
@@ -250,7 +251,7 @@ public class ControlUnit implements Unit {
 
         dst.set(data);
 
-        int dataVal = uint(data);
+        int dataVal = sint(data);
 
         registers.status()
                 .setZero(dataVal == 0)

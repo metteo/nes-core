@@ -3,7 +3,7 @@ package net.novaware.nes.core.file;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 public enum MagicNumber {
 
@@ -39,7 +39,7 @@ public enum MagicNumber {
         @Unsigned byte[] magicBytes = numbers();
         int matches = 0;
         for (int i = 0; i < Math.min(bytes.length, magicBytes.length); i++) {
-            if (uint(bytes[i]) == uint(magicBytes[i])) {
+            if (sint(bytes[i]) == sint(magicBytes[i])) {
                 matches++;
             }
         }

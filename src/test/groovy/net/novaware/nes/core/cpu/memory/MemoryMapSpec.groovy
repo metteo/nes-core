@@ -3,7 +3,7 @@ package net.novaware.nes.core.cpu.memory
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.MemoryMap.*
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 
 class MemoryMapSpec extends Specification {
 
@@ -34,15 +34,15 @@ class MemoryMapSpec extends Specification {
 
     def "should cross check continuity" () {
         expect:
-        uint(MEMORY_START)                 == uint(RAM_START)
-        uint(RAM_END) + 1                  == uint(RAM_MIRROR_1_START)
-        uint(RAM_MIRROR_1_END) + 1         == uint(RAM_MIRROR_2_START)
-        uint(RAM_MIRROR_2_END) + 1         == uint(RAM_MIRROR_3_START)
-        uint(RAM_MIRROR_3_END) + 1         == uint(PPU_REGISTERS_START)
-        uint(PPU_REGISTERS_END) + 1        == uint(PPU_REGISTERS_MIRROR_START)
-        uint(PPU_REGISTERS_MIRROR_END) + 1 == uint(APU_IO_REGISTERS_START)
-        uint(APU_IO_REGISTERS_END) + 1     == uint(APU_TEST_REGISTERS_START)
-        uint(APU_TEST_REGISTERS_END) + 1   == uint(CARTRIDGE_START)
-        uint(CARTRIDGE_END)                == uint(MEMORY_END)
+        sint(MEMORY_START)                 == sint(RAM_START)
+        sint(RAM_END) + 1                  == sint(RAM_MIRROR_1_START)
+        sint(RAM_MIRROR_1_END) + 1         == sint(RAM_MIRROR_2_START)
+        sint(RAM_MIRROR_2_END) + 1         == sint(RAM_MIRROR_3_START)
+        sint(RAM_MIRROR_3_END) + 1         == sint(PPU_REGISTERS_START)
+        sint(PPU_REGISTERS_END) + 1        == sint(PPU_REGISTERS_MIRROR_START)
+        sint(PPU_REGISTERS_MIRROR_END) + 1 == sint(APU_IO_REGISTERS_START)
+        sint(APU_IO_REGISTERS_END) + 1     == sint(APU_TEST_REGISTERS_START)
+        sint(APU_TEST_REGISTERS_END) + 1   == sint(CARTRIDGE_START)
+        sint(CARTRIDGE_END)                == sint(MEMORY_END)
     }
 }

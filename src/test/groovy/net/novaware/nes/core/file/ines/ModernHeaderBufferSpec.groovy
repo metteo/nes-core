@@ -8,16 +8,16 @@ import static net.novaware.nes.core.file.NesMeta.VideoStandard.*
 import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.*
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB
 import static net.novaware.nes.core.util.QuantityBuilder.banks8kb
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 
 class ModernHeaderBufferSpec extends Specification {
 
     def "should pass byte cross checks for byte7" () {
         given:
         def byte7 = 0
-        byte7 |= uint(MAPPER_HI_BITS)
-        byte7 |= uint(VERSION_BITS)
-        byte7 |= uint(SYSTEM_TYPE_BITS)
+        byte7 |= sint(MAPPER_HI_BITS)
+        byte7 |= sint(VERSION_BITS)
+        byte7 |= sint(SYSTEM_TYPE_BITS)
 
         expect:
         byte7 == 0xFF
@@ -26,8 +26,8 @@ class ModernHeaderBufferSpec extends Specification {
     def "should pass byte cross checks for byte9" () {
         given:
         def byte9 = 0
-        byte9 |= uint(BYTE_9_RESERVED_BITS)
-        byte9 |= uint(VIDEO_STANDARD_BITS)
+        byte9 |= sint(BYTE_9_RESERVED_BITS)
+        byte9 |= sint(VIDEO_STANDARD_BITS)
 
         expect:
         byte9 == 0xFF
@@ -37,10 +37,10 @@ class ModernHeaderBufferSpec extends Specification {
         given:
 
         def byte10 = 0
-        byte10 |= uint(BYTE_10_RESERVED_BITS)
-        byte10 |= uint(BUS_CONFLICTS_BIT)
-        byte10 |= uint(PROGRAM_MEMORY_ABSENT_BIT)
-        byte10 |= uint(VIDEO_STANDARD_EXT_BITS)
+        byte10 |= sint(BYTE_10_RESERVED_BITS)
+        byte10 |= sint(BUS_CONFLICTS_BIT)
+        byte10 |= sint(PROGRAM_MEMORY_ABSENT_BIT)
+        byte10 |= sint(VIDEO_STANDARD_EXT_BITS)
 
         expect:
         byte10 == 0xFF

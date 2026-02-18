@@ -3,7 +3,7 @@ package net.novaware.nes.core.ppu.memory
 import spock.lang.Specification
 
 import static net.novaware.nes.core.ppu.memory.MemoryMap.*
-import static net.novaware.nes.core.util.UnsignedTypes.uint
+import static net.novaware.nes.core.util.UnsignedTypes.sint
 
 class MemoryMapSpec extends Specification {
 
@@ -27,12 +27,12 @@ class MemoryMapSpec extends Specification {
 
     def "should cross check continuity" () {
         expect:
-        uint(MEMORY_START)            == uint(PATTERN_TABLE_1_START)
-        uint(PATTERN_TABLE_1_END) + 1 == uint(PATTERN_TABLE_2_START)
-        uint(PATTERN_TABLE_2_END) + 1 == uint(VRAM_START)
-        uint(VRAM_END) + 1            == uint(UNUSED_START)
-        uint(UNUSED_END) + 1          == uint(PALETTE_RAM_START)
-        uint(PALETTE_RAM_END) + 1     == uint(PALETTE_RAM_MIRROR_START)
-        uint(PALETTE_RAM_MIRROR_END)  == uint(MEMORY_END)
+        sint(MEMORY_START)            == sint(PATTERN_TABLE_1_START)
+        sint(PATTERN_TABLE_1_END) + 1 == sint(PATTERN_TABLE_2_START)
+        sint(PATTERN_TABLE_2_END) + 1 == sint(VRAM_START)
+        sint(VRAM_END) + 1            == sint(UNUSED_START)
+        sint(UNUSED_END) + 1          == sint(PALETTE_RAM_START)
+        sint(PALETTE_RAM_END) + 1     == sint(PALETTE_RAM_MIRROR_START)
+        sint(PALETTE_RAM_MIRROR_END)  == sint(MEMORY_END)
     }
 }

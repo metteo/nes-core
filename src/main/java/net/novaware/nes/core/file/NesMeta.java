@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * Metadata section usually read from NES ROM file or from ROM Meta DB.
@@ -160,7 +160,7 @@ public record NesMeta(
 
         public static Layout fromBits(int bits) {
             for (Layout layout : values()) {
-                if (uint(layout.bits) == (bits & BITS_MASK)) {
+                if (sint(layout.bits) == (bits & BITS_MASK)) {
                     return layout;
                 }
             }
@@ -173,7 +173,7 @@ public record NesMeta(
         }
 
         public int bits() {
-            return uint(bits) & BITS_MASK;
+            return sint(bits) & BITS_MASK;
         }
     }
 
@@ -223,12 +223,12 @@ public record NesMeta(
         }
 
         public int bits() {
-            return uint(bits) & BITS_MASK;
+            return sint(bits) & BITS_MASK;
         }
 
         public static System fromBits(int bits) { // NOTE: modern nes only, 2.0 will need extension
             for (System system : values()) {
-                if (uint(system.bits) == (bits & BITS_MASK)) {
+                if (sint(system.bits) == (bits & BITS_MASK)) {
                     return system;
                 }
             }

@@ -10,7 +10,7 @@ import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * Subunit of Control Unit responsible for handling control flow instructions
@@ -38,7 +38,7 @@ public class ControlFlow implements Unit {
         @Unsigned short jumpAddress = registers.dor().getAddress();
         @Unsigned short currentPc = registers.pc().get();
 
-        int jumpAddressHi = uint(jumpAddress) >> 8;
+        int jumpAddressHi = sint(jumpAddress) >> 8;
         int pcHi = registers.pc().highAsInt();
         boolean pageChange = jumpAddressHi != pcHi;
 

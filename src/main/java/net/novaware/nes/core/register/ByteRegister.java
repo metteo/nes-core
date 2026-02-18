@@ -3,7 +3,7 @@ package net.novaware.nes.core.register;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 public class ByteRegister extends DataRegister {
 
@@ -22,7 +22,7 @@ public class ByteRegister extends DataRegister {
     }
 
     public int getAsInt() {
-        return uint(data);
+        return sint(data);
     }
 
     public void setAsByte(int data) {

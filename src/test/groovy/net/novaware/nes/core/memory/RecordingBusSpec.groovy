@@ -24,12 +24,12 @@ class RecordingBusSpec extends Specification {
         bus.cycles() == 1
     }
 
-    def "should increase cycle counter when calling specifyAnd"() {
+    def 'should increase cycle counter when calling specifyThen'() {
         given:
         bus.record()
 
         when:
-        bus.specifyAnd(ushort(0x0000))
+        bus.specifyThen(ushort(0x0000))
 
         then:
         bus.cycles() == 1
@@ -66,8 +66,8 @@ class RecordingBusSpec extends Specification {
         def c = ubyte(0xDD)
 
         when:
-        bus.specifyAnd(ushort(0xBBBB)).writeByte(b)
-        bus.specifyAnd(ushort(0xCCCC)).writeByte(c)
+        bus.specifyThen(ushort(0xBBBB)).writeByte(b)
+        bus.specifyThen(ushort(0xCCCC)).writeByte(c)
 
         then:
         bus.readByte() == c
@@ -87,7 +87,7 @@ class RecordingBusSpec extends Specification {
         bus.specify(ushort(0x3333))
         bus.writeByte(ubyte(0x44))
         bus.specify(ushort(0x5555))
-        bus.specifyAnd(ushort(0x3333)).readByte()
+        bus.specifyThen(ushort(0x3333)).readByte()
 
         then:
         bus.cycles() == 5

@@ -10,13 +10,17 @@ public class UnsignedTypes {
     public static final @Unsigned short USHORT_MAX_VALUE = ushort(0xFFFF);
     public static final @Unsigned byte UBYTE_MAX_VALUE = ubyte(0xFF);
 
-    // TODO: rename to sint
-    public static int uint(@Unsigned short s) {
+    /**
+     * Convert unsigned short to signed int (regular int)
+     */
+    public static int sint(@Unsigned short s) {
         return s & 0xFFFF;
     }
 
-    // TODO: rename to sint
-    public static int uint(@Unsigned byte b) {
+    /**
+     * Convert unsigned byte to signed int (regular int)
+     */
+    public static int sint(@Unsigned byte b) {
         return b & 0xFF;
     }
 

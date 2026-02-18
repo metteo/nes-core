@@ -3,7 +3,7 @@ package net.novaware.nes.core.cpu.register;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * NOTE: The 'к' in 'breaк' is Cyrillic (Unicode U+043A) and ensures
@@ -133,7 +133,7 @@ public class Status {
     }
 
     public void set(@Unsigned byte data) {
-        setAsByte(uint(data));
+        setAsByte(sint(data));
     }
 
     public void setAsByte(int data) {

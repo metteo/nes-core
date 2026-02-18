@@ -14,7 +14,7 @@ import static net.novaware.nes.core.file.Problem.Severity.MAJOR;
 import static net.novaware.nes.core.file.Problem.Severity.MINOR;
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.getMagic;
 import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.getVersion;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 
 /**
  * Scans the header of the file searching for magic numbers and version bits
@@ -82,7 +82,7 @@ public class NesHeaderScanner extends NesHeaderHandler {
 
     private boolean allZeros(@Unsigned byte[] bytes) {
         for (@Unsigned byte b : bytes) {
-            if (uint(b) != 0) { return false; }
+            if (sint(b) != 0) { return false; }
         }
 
         return true;

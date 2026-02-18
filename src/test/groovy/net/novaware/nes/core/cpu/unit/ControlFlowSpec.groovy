@@ -30,8 +30,8 @@ class ControlFlowSpec extends Specification {
         then:
         regs.pc().getAsInt() == 0x1278
 
-        bus.specifyAnd(ushort(0x01FC)).readByte() == ubyte(0x34) // ^
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0x12) // |
+        bus.specifyThen(ushort(0x01FC)).readByte() == ubyte(0x34) // ^
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12) // |
 
         and: "return"
         flow.returnFromCall()

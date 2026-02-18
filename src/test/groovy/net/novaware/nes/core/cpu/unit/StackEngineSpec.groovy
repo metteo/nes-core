@@ -25,14 +25,14 @@ class StackEngineSpec extends Specification {
         engine.push(regs.a())
 
         then:
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0x12)
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12)
         regs.sp().getAsInt() == 0xFC
     }
 
     def "should pull accumulator from the stack"() {
         given:
         regs.sp().setAsByte(0xFC)
-        bus.specifyAnd(ushort(0x01FD)).writeByte(ubyte(0x34))
+        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(0x34))
 
         when:
         engine.pull(regs.a())
@@ -51,7 +51,7 @@ class StackEngineSpec extends Specification {
         engine.pushStatus()
 
         then:
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)
         regs.sp().getAsInt() == 0xFC
     }
 
@@ -66,7 +66,7 @@ class StackEngineSpec extends Specification {
             .setOverflow(true)
             .setNegative(true)
 
-        bus.specifyAnd(ushort(0x01FD)).writeByte(ubyte(0b0011_0100))
+        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(0b0011_0100))
 
         Status s = regs.status().get() // we hold the reference to check break flag from the stack
 

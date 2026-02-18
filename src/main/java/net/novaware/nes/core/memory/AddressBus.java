@@ -14,7 +14,9 @@ public interface AddressBus<T> {
      *
      * @see <a href="https://en.wikipedia.org/wiki/Bus_(computing)#Address_bus">Address Bus</a>
      */
-    void specify(final @Unsigned short address);
+    void specify(final @Unsigned short address); // TODO: specify calls should propagate to every device on the bus?
+    // Only the interested devices on the way will configure path for incoming (or not) read or write
+    // Open bus behavior is usually hi byte of the address
 
-    T specifyAnd(@Unsigned short address);
+    T specifyThen(@Unsigned short address);
 }

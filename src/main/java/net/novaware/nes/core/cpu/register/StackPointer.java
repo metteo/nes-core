@@ -4,7 +4,7 @@ import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.register.ByteRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UnsignedTypes.sint;
 import static net.novaware.nes.core.util.UnsignedTypes.ushort;
 
 public class StackPointer extends ByteRegister {
@@ -20,7 +20,7 @@ public class StackPointer extends ByteRegister {
     }
 
     public int addressAsInt() {
-        return uint(page) | getAsInt();
+        return sint(page) | getAsInt();
     }
 
     public void decrement() {
