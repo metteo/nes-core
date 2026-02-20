@@ -3,19 +3,23 @@ package net.novaware.nes.core.cpu.unit;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
-import net.novaware.nes.core.cpu.register.StackPointer;
 import net.novaware.nes.core.cpu.register.Status;
+import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.DataRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 @BoardScope
 public class StackEngine implements Unit {
 
-    private final CpuRegisters registers;
+    private final AddressRegister stackSegment;
+    private final DataRegister stackPointer;
+    private final StatusRegister status;
+
     private final MemoryMgmt mmu;
 
     @Inject
@@ -23,8 +27,29 @@ public class StackEngine implements Unit {
         CpuRegisters registers,
         MemoryMgmt mmu
     ) {
-        this.registers = registers;
+        this.stackSegment = registers.getStackSegment();
+        this.stackPointer = registers.getStackPointer();
+        this.status = registers.getStatus();
+
         this.mmu = mmu;
+    }
+
+    private void increment() {
+        int sp = stackPointer.getAsInt();
+        stackPointer.setAsByte(sp + 1);
+    }
+
+    private void decrement() {
+        int sp = stackPointer.getAsInt();
+        stackPointer.setAsByte(sp - 1);
+    }
+
+    private @Unsigned short address() {
+        return ushort(addressInt());
+    }
+
+    private int addressInt() {
+        return stackSegment.getAsInt() + stackPointer.getAsInt();
     }
 
     void push(DataRegister register) {
@@ -47,20 +72,16 @@ public class StackEngine implements Unit {
     }
 
     void push(@Unsigned byte data) {
-        final StackPointer sp = registers.sp();
-
-        mmu.specifyAnd(sp.address())
+        mmu.specifyAnd(address())
                 .writeByte(data);
 
-        sp.decrement();
+        decrement();
     }
 
     @Unsigned byte pull() {
-        final StackPointer sp = registers.sp();
+        increment();
 
-        sp.increment();
-
-        @Unsigned byte data = mmu.specifyAnd(sp.address())
+        @Unsigned byte data = mmu.specifyAnd(address())
                 .readByte();
 
         return data;
@@ -77,30 +98,25 @@ public class StackEngine implements Unit {
     }
 
     void pushStatus() {
-        final StackPointer sp = registers.sp();
+        Status s = status.get().setBreak(true);
 
-        Status status = registers.status().get()
-                .setBreak(true);
+        @Unsigned byte data = s.get();
 
-        @Unsigned byte data = status.get();
-
-        mmu.specifyAnd(sp.address())
+        mmu.specifyAnd(address())
                 .writeByte(data);
 
-        sp.decrement();
+        decrement();
     }
 
     void pullStatus() {
-        final StackPointer sp = registers.sp();
+        increment();
 
-        sp.increment();
-
-        @Unsigned byte data = mmu.specifyAnd(sp.address())
+        @Unsigned byte data = mmu.specifyAnd(address())
                 .readByte();
 
-        Status status = registers.status().get();
-        status.set(data);
+        Status s = status.get();
+        s.set(data);
 
-        registers.status().set(status);
+        status.set(s);
     }
 }

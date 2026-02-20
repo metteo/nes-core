@@ -7,7 +7,7 @@ import net.novaware.nes.core.cpu.CpuRegisters;
 import net.novaware.nes.core.memory.MemoryBus;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
+import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
 
 @BoardScope
 public class MemoryMgmt implements Unit {

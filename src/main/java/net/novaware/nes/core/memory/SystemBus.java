@@ -21,7 +21,6 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_TEST_REGISTERS_STAR
 import static net.novaware.nes.core.cpu.memory.MemoryMap.CARTRIDGE_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.CARTRIDGE_SIZE;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.CARTRIDGE_START;
-import static net.novaware.nes.core.cpu.memory.MemoryMap.PPU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.PPU_REGISTERS_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_END;
@@ -66,6 +65,7 @@ public class SystemBus implements MemoryBus {
     @Override
     public void specify(@Unsigned short address) {
         memoryAddress.set(address);
+        currentAddress = address;
         cycleCounter.increment();
 
         int addressInt = sint(address);
@@ -81,12 +81,10 @@ public class SystemBus implements MemoryBus {
 
         } else if (PPU_REGS_RANGE.test(addressInt)) {
             currentRange = PPU_REGS_RANGE;
-            currentAddress = ushort(addressInt & sint(PPU_REGISTERS_END));
             currentSegment = ppuRegs;
 
         } else if (APU_IO_RANGE.test(addressInt)) {
             currentRange = APU_IO_RANGE;
-            currentAddress = address;
             currentSegment = apuIoRegs;
 
         } else if (APU_TEST_RANGE.test(addressInt)) {
@@ -95,7 +93,6 @@ public class SystemBus implements MemoryBus {
 
         } else if (CARTRIDGE_RANGE.test(addressInt)) {
             currentRange = CARTRIDGE_RANGE;
-            currentAddress = address;
             currentSegment = cartridge;
         }
     }

@@ -3,7 +3,6 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
 import net.novaware.nes.core.util.UByteBuffer;
-import net.novaware.nes.core.util.UTypes;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
@@ -120,11 +119,11 @@ public class BankedMemory implements MemoryDevice {
 
     @Override
     public @Unsigned byte readByte() {
-        return visibleBanks[bankIndex].get();
+        return visibleBanks[bankIndex].get(bankAddress);
     }
 
     @Override
     public void writeByte(@Unsigned byte data) {
-        visibleBanks[bankIndex].put(data);
+        visibleBanks[bankIndex].put(bankAddress, data);
     }
 }

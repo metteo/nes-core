@@ -7,6 +7,7 @@ module net.novaware.nes.core {
 
     requires org.jspecify;
     requires org.checkerframework.checker.qual;
+    requires java.desktop; // TODO: temporary for testing easy6502, move to tests later
 
     exports net.novaware.nes.core;
     exports net.novaware.nes.core.port;
@@ -17,4 +18,5 @@ module net.novaware.nes.core {
     exports net.novaware.nes.core.clock;
     exports net.novaware.nes.core.cpu.unit;
     exports net.novaware.nes.core.port.internal;
+    exports net.novaware.nes.core.easy;
 }

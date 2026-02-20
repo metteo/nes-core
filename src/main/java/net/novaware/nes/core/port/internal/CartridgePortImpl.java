@@ -7,7 +7,7 @@ import net.novaware.nes.core.port.CartridgePort;
 import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
-import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
+import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
 
 public class CartridgePortImpl implements CartridgePort {
 

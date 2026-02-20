@@ -5,12 +5,14 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class PhysicalMemory implements MemoryDevice {
+public class PhysicalMemory implements MemoryDevice { // TODO: Add nameable
 
     private final UByteBuffer buffer;
     private final int offset;
 
-    public PhysicalMemory(int size, int offset) {
+    private int position;
+
+    public PhysicalMemory(int size, int offset) { // TODO: move offset as first param (or second after name)
         buffer = UByteBuffer.allocate(size);
         this.offset = offset;
     }
@@ -31,18 +33,18 @@ public class PhysicalMemory implements MemoryDevice {
 
     @Override
     public void specify(@Unsigned short address) {
-        final int position = sint(address) - offset;
+        position = sint(address) - offset;
 
         buffer.position(position);
     }
 
     @Override
     public @Unsigned byte readByte() {
-        return buffer.get();
+        return buffer.get(position); // get() advances position, we want to keep it
     }
 
     @Override
     public void writeByte(@Unsigned byte data) {
-        buffer.put(data);
+        buffer.put(position, data);
     }
 }

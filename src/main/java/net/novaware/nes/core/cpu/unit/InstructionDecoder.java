@@ -14,8 +14,8 @@ import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_BUS;
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
+import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;

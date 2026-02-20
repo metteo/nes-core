@@ -1,6 +1,7 @@
 package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.cpu.memory.MemoryMap
 import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.RecordingBus
@@ -15,6 +16,10 @@ class StackEngineSpec extends Specification {
     MemoryBus bus = new RecordingBus()
     MemoryMgmt mmu = new MemoryMgmt(regs, bus)
     StackEngine engine = new StackEngine(regs, mmu)
+
+    def setup() {
+        regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
+    }
 
     def "should push accumulator on the stack"() {
         given:

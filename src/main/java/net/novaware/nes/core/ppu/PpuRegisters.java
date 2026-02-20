@@ -1,5 +1,6 @@
 package net.novaware.nes.core.ppu;
 
+import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -8,6 +9,8 @@ import net.novaware.nes.core.register.ShortRegister;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
@@ -53,9 +56,13 @@ public class PpuRegisters extends RegisterFile {
         addressRegisters = List.of(ppuScrollFull, ppuAddrFull);
     }
 
-    public ByteRegisterMemory asByteRegisterMemory() {
-        return new ByteRegisterMemory("PPUREGS", new ByteRegister[] {
-                ppuCtrl, ppuMask, ppuStatus, oamAddr, oamData, ppuScroll, ppuAddr, ppuData
+    public ByteRegisterMemory asByteRegisterMemory() { // TODO: move the creation to cpu memory module?
+        return new ByteRegisterMemory("PPUREGS",
+                sint(MemoryMap.PPU_REGISTERS_START), // FIXME: this is cpu map specific offset
+                new ByteRegister[] {
+                ppuCtrl, ppuMask, ppuStatus,
+                oamAddr, oamData,
+                ppuScroll, ppuAddr, ppuData
         });
     }
 

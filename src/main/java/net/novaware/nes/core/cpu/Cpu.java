@@ -2,7 +2,6 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
@@ -79,8 +78,6 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
     }
 
     public void initialize() {
-        registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
-
         units.forEach(Unit::initialize);
     }
 

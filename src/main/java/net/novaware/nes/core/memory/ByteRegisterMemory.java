@@ -10,20 +10,24 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
     private final String name;
 
-    final ByteRegister[] registers; // TODO: make private
-    private int index;
+    private final int offset;
+    /* package */ final ByteRegister[] registers; // TODO: make private
     private final int size;
 
-    public ByteRegisterMemory(String name, ByteRegister[] registers) {
+    private int index;
+
+    public ByteRegisterMemory(String name, int offset, ByteRegister[] registers) {
         this.name = name;
+        this.offset = offset;
+
         this.registers = registers;
         this.size = registers.length;
     }
 
     @Override
     public void specify(@Unsigned short address) {
-        int addressInt = sint(address);
-        index = addressInt % size;
+        int addressInt = sint(address) - offset;
+        index = addressInt % size; // TODO: remainder is slow, see BankedMemory
     }
 
     @Override

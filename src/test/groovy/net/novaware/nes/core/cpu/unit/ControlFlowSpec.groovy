@@ -1,6 +1,7 @@
 package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.cpu.memory.MemoryMap
 import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
@@ -16,6 +17,7 @@ class ControlFlowSpec extends Specification {
     ControlFlow flow = new ControlFlow(regs, bus.cycleCounter(), stackEngine)
 
     def "setup"() {
+        regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
         regs.sp().setAsByte(0xFD)
     }
 
@@ -38,6 +40,6 @@ class ControlFlowSpec extends Specification {
 
         then:
         regs.pc().getAsInt() == 0x1234 + 1
-        regs.sp().addressAsInt() == 0x01FD
+        stackEngine.address() == ushort(0x01FD)
     }
 }

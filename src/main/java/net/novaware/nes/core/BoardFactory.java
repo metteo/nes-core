@@ -3,10 +3,11 @@ package net.novaware.nes.core;
 import dagger.BindsInstance;
 import dagger.Component;
 import net.novaware.nes.core.cpu.CpuModule;
+import net.novaware.nes.core.cpu.memory.MemoryModule;
 import net.novaware.nes.core.cpu.unit.ClockGenerator;
 
 @BoardScope
-@Component(modules = { CpuModule.class })
+@Component(modules = { CpuModule.class, MemoryModule.class })
 public abstract class BoardFactory {
 
     public static BoardFactory newBoardFactory(ClockGenerator clock) {
@@ -16,6 +17,8 @@ public abstract class BoardFactory {
     }
 
     public abstract Board newBoard();
+
+    // TODO: consider adding a newCartridge method here. But then rename BoardFactory into sth else like NesCore
 
     @Component.Builder
     public static abstract class Builder {

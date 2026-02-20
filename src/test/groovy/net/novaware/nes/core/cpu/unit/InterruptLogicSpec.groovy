@@ -1,6 +1,7 @@
 package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.cpu.memory.MemoryMap
 import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.RecordingBus
@@ -17,6 +18,10 @@ class InterruptLogicSpec extends Specification {
     MemoryMgmt mmu = new MemoryMgmt(regs, bus)
     StackEngine stackEngine = new StackEngine(regs, mmu)
     InterruptLogic interrupts = new InterruptLogic(regs, stackEngine)
+
+    def setup() {
+        regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
+    }
 
     def "should force break (eg software irq)"() {
         given:

@@ -1,11 +1,14 @@
 package net.novaware.nes.core.apu;
 
+import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
 
 import java.util.List;
+
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
@@ -68,8 +71,10 @@ public class ApuRegisters extends RegisterFile {
         addressRegisters = List.of();
     }
 
-    public ByteRegisterMemory asByteRegisterMemory() {
-        return new ByteRegisterMemory("APUREGS", new ByteRegister[]{
+    public ByteRegisterMemory asByteRegisterMemory() { // TODO: move the creation to cpu memory module?
+        return new ByteRegisterMemory("APUREGS",
+                sint(MemoryMap.APU_IO_REGISTERS_START), // FIXME: this is cpu map specific offset
+                new ByteRegister[]{
                 sq1Vol, sq1Sweep, sq1Lo, sq1Hi,
                 sq2Vol, sq2Sweep, sq2Lo, sq2Hi,
                 triLinear, triUnused, triLo, triHi,
