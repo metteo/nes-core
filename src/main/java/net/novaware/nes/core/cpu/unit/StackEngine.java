@@ -1,16 +1,19 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.memory.MemoryModule;
 import net.novaware.nes.core.cpu.register.Status;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.DataRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 @BoardScope
@@ -24,14 +27,19 @@ public class StackEngine implements Unit {
 
     @Inject
     public StackEngine (
+        @Named(MemoryModule.STACK_SEGMENT) AddressRegister stackSegment,
         CpuRegisters registers,
         MemoryMgmt mmu
     ) {
-        this.stackSegment = registers.getStackSegment();
+        this.stackSegment = stackSegment; // important, injection initializes value
         this.stackPointer = registers.getStackPointer();
         this.status = registers.getStatus();
 
         this.mmu = mmu;
+    }
+
+    public void initialize() {
+        assertState(stackSegment.getAsInt() != 0, "Stack Segment points to Zero Page");
     }
 
     private void increment() {
@@ -88,7 +96,13 @@ public class StackEngine implements Unit {
     }
 
     void pull(DataRegister register) {
-        register.set(pull());
+        @Unsigned byte data = pull();
+        int dataVal = sint(data);
+
+        register.set(data);
+
+        status.setZero(dataVal == 0)
+                .setNegative((dataVal & (1 << 7)) > 0);
     }
 
     void pull(AddressRegister register) {

@@ -104,6 +104,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         controlUnit.decode();
         // low byte*
         // high byte*
+        // indirect fetch* // TODO: maybe it should be part of execute?
 
         controlUnit.execute();
         // read* (and optionally write original back)
@@ -113,6 +114,8 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         // controlUnit.sampleInterrupts();
 
         controlUnit.fetchOpcode();
+
+        // TODO: allow running for given cycle budget, efficiently stop before (or just after depending on strictness)
     }
 
     /**

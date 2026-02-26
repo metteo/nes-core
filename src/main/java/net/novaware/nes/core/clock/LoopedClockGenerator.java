@@ -1,7 +1,5 @@
 package net.novaware.nes.core.clock;
 
-import net.novaware.nes.core.cpu.unit.ClockGenerator;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;

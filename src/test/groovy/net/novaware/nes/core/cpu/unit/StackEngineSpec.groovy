@@ -15,7 +15,7 @@ class StackEngineSpec extends Specification {
     CpuRegisters regs = new CpuRegisters()
     MemoryBus bus = new RecordingBus()
     MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine engine = new StackEngine(regs, mmu)
+    StackEngine engine = new StackEngine(regs.stackSegment, regs, mmu)
 
     def setup() {
         regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
@@ -37,14 +37,23 @@ class StackEngineSpec extends Specification {
     def "should pull accumulator from the stack"() {
         given:
         regs.sp().setAsByte(0xFC)
-        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(0x34))
+        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(value))
 
         when:
         engine.pull(regs.a())
 
         then:
-        regs.a().get() == ubyte(0x34)
+        regs.a().get() == ubyte(value)
         regs.sp().getAsInt() == 0xFD
+
+        regs.status().isZero() == zero
+        regs.status().isNegative() == neg
+
+        where:
+        value || zero  | neg
+        0x34  || false | false
+        0x00  || true  | false
+        0x80  || false | true
     }
 
     def "should push processor status on the stack"() {

@@ -205,4 +205,6 @@ public class DelegatingRegister extends Register {
             return address;
         }
     }
+
+    // TODO: implement toString delegating to delegate. Do not trigger memory reads because it will affect cycles
 }

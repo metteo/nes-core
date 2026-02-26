@@ -10,14 +10,15 @@ import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
-import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 @BoardScope
@@ -46,6 +47,17 @@ public class InstructionDecoder implements Unit {
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
 
+        // TODO: Hide log generation behind a flag. sout is sloooow
+        System.out.println(" " + instruction.group().mnemonic() + "                            "
+                + " A:" + Hex.s(registers.a().get()).toUpperCase()
+                + " X:" + Hex.s(registers.x().get()).toUpperCase()
+                + " Y:" + Hex.s(registers.y().get()).toUpperCase()
+                + " P:" + Hex.s(registers.status().get().get()).toUpperCase()
+                + " SP:" + Hex.s(registers.sp().get()).toUpperCase()
+//                + " PPU:       "
+//                + " CYC:" + cycleCounter.getValue()
+        );
+
         // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
         registers.dir().setAsByte(instruction.group().ordinal());
 
@@ -65,7 +77,7 @@ public class InstructionDecoder implements Unit {
             case INDEXED_ABSOLUTE_Y -> decodeIndexedAbsolute(registers.y(), operand);
             case PRE_INDEXED_INDIRECT_X -> decodePreIndexedIndirectX(operand);
             case POST_INDEXED_INDIRECT_Y -> decodePostIndexedIndirectY(operand);
-            case UNKNOWN -> throw new UnsupportedOperationException("Unsupported addressing mode: " + addressingMode.name());
+            case UNKNOWN -> throw new UnsupportedOperationException("Unsupported opcode: " + Hex.s(opcode));
         }
     }
 

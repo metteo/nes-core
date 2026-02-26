@@ -117,13 +117,13 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
+        expectRegs pc: 0x0001 // nop is single byte instruction
         bus.cycles() == 2
         bus.activity() == [
             new Op(ACCESS, 0x0000, 0x00), // opcode
             new Op(READ,   0x0000, 0xEA),
 
-            new Op(ACCESS, 0x0001, 0x00), // required 2nd read
-            new Op(READ,   0x0001, 0x00),
+            new Op(ACCESS, 0x0001, 0x00), // required 2nd access, but no read
         ]
     }
 

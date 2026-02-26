@@ -2,7 +2,8 @@ package net.novaware.nes.core.util
 
 import net.novaware.nes.core.cpu.CpuRegisters
 import net.novaware.nes.core.cpu.instruction.Instruction
-import net.novaware.nes.core.memory.RecordingBus
+import net.novaware.nes.core.memory.MemoryBus
+
 import spock.lang.Specification
 
 import static UTypes.ubyte
@@ -10,8 +11,8 @@ import static UTypes.ushort
 
 class RegsAndRamBaseSpec extends Specification {
 
-    CpuRegisters registers = new CpuRegisters()
-    RecordingBus bus = new RecordingBus()
+    CpuRegisters registers
+    MemoryBus bus
 
     def regs(Map args) {
         // 16-bit registers

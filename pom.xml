@@ -251,6 +251,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <includes>
                         <include>**/*Test</include>
                         <include>**/*Spec</include>
@@ -272,7 +273,9 @@
                         ${jpms.opens}=ALL-UNNAMED
                         ${jpms.opens}.apu=ALL-UNNAMED
                         ${jpms.opens}.cart=ALL-UNNAMED
+                        ${jpms.opens}.cart.internal=ALL-UNNAMED
                         ${jpms.opens}.clock=ALL-UNNAMED
+                        ${jpms.opens}.config=ALL-UNNAMED
                         ${jpms.opens}.cpu=ALL-UNNAMED
                         ${jpms.opens}.cpu.instruction=ALL-UNNAMED
                         ${jpms.opens}.cpu.memory=ALL-UNNAMED
@@ -284,9 +287,11 @@
                         ${jpms.opens}.file.nesy=ALL-UNNAMED
                         ${jpms.opens}.file.pasofami=ALL-UNNAMED
                         ${jpms.opens}.file.unif=ALL-UNNAMED
+                        ${jpms.opens}.mapper=ALL-UNNAMED
                         ${jpms.opens}.memory=ALL-UNNAMED
                         ${jpms.opens}.net=ALL-UNNAMED
                         ${jpms.opens}.port=ALL-UNNAMED
+                        ${jpms.opens}.port.internal=ALL-UNNAMED
                         ${jpms.opens}.ppu=ALL-UNNAMED
                         ${jpms.opens}.ppu.memory=ALL-UNNAMED
                         ${jpms.opens}.register=ALL-UNNAMED
@@ -325,6 +330,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     <classesDirectory>${project.build.outputDirectory}</classesDirectory>
                     <testClassesDirectory>${itOutputDirectory}</testClassesDirectory>
                 </configuration>

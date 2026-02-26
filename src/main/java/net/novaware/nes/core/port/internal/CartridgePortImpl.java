@@ -1,6 +1,8 @@
 package net.novaware.nes.core.port.internal;
 
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
@@ -9,6 +11,7 @@ import org.jspecify.annotations.Nullable;
 import static java.util.Objects.requireNonNull;
 import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
 
+@BoardScope
 public class CartridgePortImpl implements CartridgePort {
 
     private MemoryBus cpuBus;
@@ -16,6 +19,7 @@ public class CartridgePortImpl implements CartridgePort {
 
     private @Nullable Cartridge cartridge;
 
+    @Inject
     public CartridgePortImpl(
             @Named(CPU_BUS) MemoryBus cpuBus
     ) {
@@ -32,11 +36,14 @@ public class CartridgePortImpl implements CartridgePort {
     public void connect(Cartridge cartridge) {
         this.cartridge = requireNonNull(cartridge, "cartridge cannot be null");
 
-        Cartridge.Config config = this.cartridge.getConfig();
+        Cartridge.Config config = cartridge.getConfig();
 
         // TODO: check if cartridge config compatible with the board config
 
-        //cpuBus.attach(this.cartridge.getProgram());
-        //TODO: ppuBus.attach(this.cartridge.getVideo());
+
+        cpuBus.attach(cartridge.getProgram());
+        //TODO: ppuBus.attach(cartridge.getVideo());
     }
+
+
 }

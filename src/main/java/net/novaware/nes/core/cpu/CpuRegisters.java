@@ -49,9 +49,6 @@ public class CpuRegisters extends RegisterFile {
 
     // TODO: add separate irq/nmi latch registers?
 
-    // TODO: segment registers: Code Segment, Video Segment, Extra Segments configured by mappers for debug view
-    //       e.g. where is nametable, where is pallete etc.
-
     @Inject
     public CpuRegisters() {
         super("CPU");

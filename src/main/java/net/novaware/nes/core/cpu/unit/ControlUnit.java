@@ -8,6 +8,7 @@ import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.UByteUnaryOperator;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
@@ -114,25 +115,42 @@ public class ControlUnit implements Unit {
         @Unsigned byte operandLo = mmu.specifyAnd(operandLoAddress).readByte();
 
         registers.cor().low(operandLo);
+
+        System.out.print(Hex.s(operandLo).toUpperCase() + " ");
     }
 
     public void fetchOperandHi() {
-        int size = InstructionRegistry.fromOpcode(registers.cir().get()).size();
-
-        if (size < 3) { // TODO: maybe read the size from dedicated array and get rid of the if?
-            registers.cor().highAsByte(0x00);
-            return;
-        }
-
         @Unsigned short operandHiAddress = addressGen.getPc();
         @Unsigned byte operandHi = mmu.specifyAnd(operandHiAddress).readByte();
 
         registers.cor().high(operandHi);
+
+        System.out.print(Hex.s(operandHi).toUpperCase() + " ");
     }
 
     public void fetchOperand() {
-        fetchOperandLo();
-        fetchOperandHi();
+        int size = InstructionRegistry.fromOpcode(registers.cir().get()).size();
+
+        switch (size) {
+            case 1 -> {
+                mmu.specifyAnd(registers.pc().get()); // no pc increment, data ignored
+                registers.cor().lowAsByte(0x00);
+                registers.cor().highAsByte(0x00);
+
+                System.out.print("  " + " " + "  " + " ");
+            }
+            case 2 -> {
+                fetchOperandLo();
+                registers.cor().highAsByte(0x00);
+
+                System.out.print("  " + " ");
+            }
+            case 3 -> {
+                fetchOperandLo();
+                fetchOperandHi();
+            }
+            default -> throw new IllegalArgumentException("Unsupported instruction size:" + size);
+        }
     }
 
     public void decode() {
@@ -230,6 +248,8 @@ public class ControlUnit implements Unit {
 
             case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
+
+            case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(registers.dor().getData()); } // FIXME: test illegal
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }

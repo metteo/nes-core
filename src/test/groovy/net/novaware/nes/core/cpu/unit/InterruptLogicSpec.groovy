@@ -16,7 +16,7 @@ class InterruptLogicSpec extends Specification {
     CpuRegisters regs = new CpuRegisters()
     MemoryBus bus = new RecordingBus()
     MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine stackEngine = new StackEngine(regs, mmu)
+    StackEngine stackEngine = new StackEngine(regs.stackSegment, regs, mmu)
     InterruptLogic interrupts = new InterruptLogic(regs, stackEngine)
 
     def setup() {

@@ -21,7 +21,7 @@ class InstructionSpec extends Specification {
 
     def "should contain correct amount of opcodes"() {
         expect:
-        Instruction.values().length == 152
+        Instruction.values().length == 153
 
         and: "only OxUK should use 0xFF pseudo opcode"
         Stream.of(Instruction.values())

@@ -1,5 +1,6 @@
 package net.novaware.nes.core.register;
 
+import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -81,5 +82,10 @@ public class ShortRegister extends AddressRegister {
         this.lo = ubyte(lo);
 
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ": 0x" + Hex.s(get());
     }
 }

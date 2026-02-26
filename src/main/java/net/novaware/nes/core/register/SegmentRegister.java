@@ -2,7 +2,7 @@ package net.novaware.nes.core.register;
 
 public class SegmentRegister extends Register {
 
-    // TODO: implement segment register with starting address and size
+    // TODO: implement segment register with base address and limit
 
     // also cover mirrorring case?
 

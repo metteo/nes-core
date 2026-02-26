@@ -1,10 +1,13 @@
 package net.novaware.nes.core;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.clock.ClockGenerator;
+import net.novaware.nes.core.clock.ClockGenerator.Handle;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
-import net.novaware.nes.core.cpu.unit.ClockGenerator;
-import net.novaware.nes.core.cpu.unit.ClockGenerator.Handle;
 import net.novaware.nes.core.port.CartridgePort;
+import net.novaware.nes.core.port.DebugPort;
+import net.novaware.nes.core.port.internal.DebugPortImpl;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 
@@ -18,6 +21,12 @@ public class Board {
 
     @Owned
     private final Cpu cpu;
+
+    @Owned
+    private final CartridgePort cartridgePort;
+
+    @Owned
+    private final DebugPortImpl debugPort;
 
     @Used
     private final ClockGenerator clock;
@@ -33,9 +42,13 @@ public class Board {
     @Inject
     /* package */ Board(
         final Cpu cpu,
+        final CartridgePort cartridgePort,
+        final DebugPortImpl debugPort,
         final ClockGenerator clock
     ) {
         this.cpu = cpu;
+        this.cartridgePort = cartridgePort;
+        this.debugPort = debugPort;
         this.clock = clock;
     }
 
@@ -45,9 +58,19 @@ public class Board {
     }
 
     private void start() {
-        Handle cpuHandle = clock.schedule(cpu::advance, 5);
+        Handle cpuHandle = clock.schedule(() -> {
+            try {
+                cpu.advance();
+            } catch (Exception e) {
+                debugPort.onException(e);
+            }
+        }, (int) VideoStandard.NTSC.getCpuFrequency()); // Hz
 
         clockHandles.add(cpuHandle);
+    }
+
+    public void powerOff() {
+        stop();
     }
 
     private void stop() {
@@ -60,6 +83,10 @@ public class Board {
     }
 
     public CartridgePort getCartridgePort() {
-        throw new UnsupportedOperationException("not implemented!");
+        return cartridgePort;
+    }
+
+    public DebugPort getDebugPort() {
+        return debugPort;
     }
 }

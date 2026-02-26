@@ -135,4 +135,18 @@ public class StatusRegister extends Register {
         zero = status.isZero();
         carry = status.getCarry();
     }
+
+    @Override
+    public String toString() {
+        return getName() + ": " +
+                (negative ? "N" : "_") + // 7
+                (overflow ? "V" : "_") + // 6
+                            "1" +        // 5 unused
+                            "_" +        // 4 break
+
+                (decimal  ? "D" : "_") + // 3
+                (irq_off  ? "I" : "_") + // 2
+                (zero     ? "Z" : "_") + // 1
+                (carry    ? "C" : "_");  // 0
+    }
 }

@@ -16,6 +16,7 @@ import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 public interface MemoryModule {
 
     String CPU_BUS = "cpuBus";
+    String STACK_SEGMENT = "stackSegment";
 
     @Provides
     @BoardScope
@@ -26,8 +27,8 @@ public interface MemoryModule {
 
     @Provides
     @BoardScope
-    @Named("stackSegment")
-    static AddressRegister provideStackSegment(CpuRegisters registers) { // FIXME: if there is no injection point it may not be called :(
+    @Named(STACK_SEGMENT)
+    static AddressRegister provideStackSegment(CpuRegisters registers) {
         AddressRegister stackSegment = registers.getStackSegment();
         stackSegment.set(MemoryMap.STACK_SEGMENT_START);
         return stackSegment;

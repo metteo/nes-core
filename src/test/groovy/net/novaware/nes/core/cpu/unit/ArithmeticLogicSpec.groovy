@@ -305,6 +305,7 @@ class ArithmeticLogicSpec extends Specification {
         0b0100_0000 | 0b0100_0000 || false | false  | true
         0b1000_0000 | 0b1000_0000 || false | true   | false
         0b1100_0000 | 0b1100_0000 || false | true   | true
+        0b0000_0000 | 0b1100_0000 || true  | true   | true
     }
 
     def "should shift left (arithmetic)"() {

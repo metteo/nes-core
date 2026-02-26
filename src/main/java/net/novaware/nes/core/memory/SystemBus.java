@@ -91,7 +91,7 @@ public class SystemBus implements MemoryBus {
             // TODO: open bus
             throw new RuntimeException("TODO: open bus");
 
-        } else if (CARTRIDGE_RANGE.test(addressInt)) {
+        } else if (CARTRIDGE_RANGE.test(addressInt)) { // TODO: cartridge can listen to full address range
             currentRange = CARTRIDGE_RANGE;
             currentSegment = cartridge;
         }

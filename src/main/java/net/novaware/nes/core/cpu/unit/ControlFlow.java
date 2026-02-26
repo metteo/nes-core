@@ -64,6 +64,6 @@ public class ControlFlow implements Unit {
         AddressRegister pc = registers.pc();
         stackEngine.pull(pc);
 
-        pc.setAsShort(pc.getAsInt() + 1);
+        pc.setAsShort(pc.getAsInt());
     }
 }

@@ -3,6 +3,7 @@ package net.novaware.nes.core.cpu.unit;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -30,6 +31,8 @@ public class PrefetchUnit implements Unit, Runnable {
     public void run() {
         @Unsigned short opcodeAddress = agu.getPc();
         @Unsigned byte opcode = mmu.specifyAnd(opcodeAddress).readByte();
+
+        System.out.print(Hex.s(opcodeAddress).toUpperCase() + "  " + Hex.s(opcode).toUpperCase() + " ");
 
         registers.cir().set(opcode);
     }

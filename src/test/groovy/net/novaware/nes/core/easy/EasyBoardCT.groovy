@@ -17,7 +17,7 @@ class EasyBoardCT extends Specification {
         board.preload(data)
         board.powerOn()
 
-        Thread.sleep(5000) // TODO: await would be better
+        Thread.sleep(500) // TODO: await would be better
         board.powerOff()
 
         then:

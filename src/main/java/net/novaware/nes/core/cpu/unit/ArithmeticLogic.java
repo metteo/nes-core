@@ -146,13 +146,12 @@ public class ArithmeticLogic implements Unit {
         int aVal = sint(a);
         int dataVal = sint(data);
 
-        int result = aVal & dataVal;
-        int resultByte = result & 0xFF;
+        int result = aVal & dataVal & 0xFF;
 
         registers.status()
                 .setZero(result == 0)
-                .setOverflow((resultByte & (1 << 6)) >> 6 == 1)
-                .setNegative((resultByte & (1 << 7)) >> 7 == 1);
+                .setOverflow((dataVal & (1 << 6)) != 0)
+                .setNegative((dataVal & (1 << 7)) != 0);
     }
 
     public void compareA(@Unsigned byte data) {

@@ -147,4 +147,17 @@ public class Status {
         zero = (data & 0x2) != 0;
         carry = (data & 0x1) != 0;
     }
+
+    @Override
+    public String toString() {
+        return "P: " +
+                (negative ? "N" : "_") +
+                (overflow ? "V" : "_") +
+                "1" + // unused
+                (breaк    ? "B" : "_") +
+                (decimal  ? "D" : "_") +
+                (irq_off  ? "I" : "_") +
+                (zero     ? "Z" : "_") +
+                (carry    ? "C" : "_");
+    }
 }

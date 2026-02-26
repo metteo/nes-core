@@ -1,6 +1,6 @@
-package net.novaware.nes.core.cpu.unit;
+package net.novaware.nes.core.clock;
 
-public interface ClockGenerator extends Unit {
+public interface ClockGenerator {
 
     void shutdown();
 

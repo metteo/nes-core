@@ -2,17 +2,24 @@ package net.novaware.nes.core;
 
 import dagger.BindsInstance;
 import dagger.Component;
+import net.novaware.nes.core.port.internal.PortModule;
+import net.novaware.nes.core.clock.ClockMode;
+import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.cpu.CpuModule;
 import net.novaware.nes.core.cpu.memory.MemoryModule;
-import net.novaware.nes.core.cpu.unit.ClockGenerator;
 
 @BoardScope
-@Component(modules = { CpuModule.class, MemoryModule.class })
+@Component(modules = {
+    CpuModule.class,
+    MemoryModule.class,
+    ClockModule.class,
+    PortModule.class
+})
 public abstract class BoardFactory {
 
-    public static BoardFactory newBoardFactory(ClockGenerator clock) {
+    public static BoardFactory newBoardFactory(ClockMode clockMode) {
         return DaggerBoardFactory.builder()
-                .clock(clock) // TODO: only clock config should come from the outside, not the whole thing
+                .clockMode(clockMode) // TODO: only clock config should come from the outside, not the whole thing
                 .build();
     }
 
@@ -24,7 +31,7 @@ public abstract class BoardFactory {
     public static abstract class Builder {
 
         @BindsInstance
-        public abstract Builder clock(ClockGenerator clock);
+        public abstract Builder clockMode(ClockMode clockMode);
 
         public abstract BoardFactory build();
     }

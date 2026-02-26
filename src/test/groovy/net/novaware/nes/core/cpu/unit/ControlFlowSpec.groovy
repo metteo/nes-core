@@ -13,7 +13,7 @@ class ControlFlowSpec extends Specification {
     CpuRegisters regs = new CpuRegisters()
     RecordingBus bus = new RecordingBus()
     MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine stackEngine = new StackEngine(regs, mmu)
+    StackEngine stackEngine = new StackEngine(regs.stackSegment, regs, mmu)
     ControlFlow flow = new ControlFlow(regs, bus.cycleCounter(), stackEngine)
 
     def "setup"() {
@@ -39,7 +39,7 @@ class ControlFlowSpec extends Specification {
         flow.returnFromCall()
 
         then:
-        regs.pc().getAsInt() == 0x1234 + 1
+        regs.pc().getAsInt() == 0x1234
         stackEngine.address() == ushort(0x01FD)
     }
 }

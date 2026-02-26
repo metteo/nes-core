@@ -1,7 +1,7 @@
 package net.novaware.nes.core.cpu
 
 import net.novaware.nes.core.BoardFactory
-import net.novaware.nes.core.clock.LoopedClockGenerator
+import net.novaware.nes.core.clock.ClockMode
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -11,7 +11,7 @@ class CpuCT extends Specification {
 
     def "should execute simple adding loop"() {
         given:
-        def board = BoardFactory.newBoardFactory(new LoopedClockGenerator()).newBoard()
+        def board = BoardFactory.newBoardFactory(ClockMode.LOOP).newBoard()
 
         def cpu = board.cpu
         def bus = cpu.mmu.memoryBus

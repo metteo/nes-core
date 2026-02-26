@@ -235,6 +235,8 @@ public enum Instruction {
     OxD8(CLR_DECIMAL,            IMPLIED,                0xD8, 1),
     OxD9(COMPARE_A_WITH_MEMORY,  INDEXED_ABSOLUTE_Y,     0xD9, 3),
 
+    OxDB(DEC_MEM_CMP_A,          INDEXED_ABSOLUTE_Y,     0xDB, 3), // FIXME: illegal
+
     OxDD(COMPARE_A_WITH_MEMORY,  INDEXED_ABSOLUTE_X,     0xDD, 3),
     OxDE(DECREMENT_MEMORY,       INDEXED_ABSOLUTE_X,     0xDE, 3),
 

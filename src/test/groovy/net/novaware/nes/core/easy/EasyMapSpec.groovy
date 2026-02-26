@@ -1,4 +1,4 @@
-package net.novaware.nes.core.cpu.memory
+package net.novaware.nes.core.easy
 
 import spock.lang.Specification
 
