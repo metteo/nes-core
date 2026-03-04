@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -16,10 +16,10 @@ import static net.novaware.nes.core.util.UTypes.sint;
 public class ArithmeticLogic implements Unit {
 
     @Used
-    private final CpuRegisters registers;
+    private final CpuRegFile registers;
 
     @Inject
-    public ArithmeticLogic(CpuRegisters registers) {
+    public ArithmeticLogic(CpuRegFile registers) {
         this.registers = registers;
     }
 

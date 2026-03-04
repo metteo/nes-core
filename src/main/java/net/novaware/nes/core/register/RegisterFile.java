@@ -12,6 +12,8 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
 
     protected List<AddressRegister> addressRegisters = List.of();
     protected List<DataRegister> dataRegisters = List.of();
+    // TODO: add segment registers
+    // TODO: add other registers (status, EFlags etc)
 
     protected RegisterFile(String name) {
         this.name = name;
@@ -28,4 +30,5 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
     public List<DataRegister> getDataRegisters() {
         return dataRegisters;
     }
+
 }

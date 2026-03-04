@@ -1,54 +1,43 @@
 package net.novaware.nes.core.cpu
 
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import spock.lang.Specification
 import spock.lang.Subject
 
-class CpuRegistersSpec extends Specification {
+import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
+
+class CpuRegFileSpec extends Specification {
 
     @Subject
-    CpuRegisters registers = new CpuRegisters()
+    CpuRegFile registers = newTestBoardFactory().newCpuRegisters()
 
     def "all data registers are initialized and reachable"() {
         expect:
-        registers.dataRegisters.size() == 7
+        registers.dataRegisters.size() == 4
         registers.a().getName() == "A"
         registers.x().getName() == "X"
         registers.y().getName() == "Y"
         registers.sp().getName() == "S"
-        registers.mdr().getName() == "MDR"
-        registers.cir().getName() == "CIR"
-        registers.dir().getName() == "DIR"
     }
 
     def "all address registers are initialized and reachable"() {
         expect:
-        registers.addressRegisters.size() == 4
+        registers.addressRegisters.size() == 1
         registers.pc().getName() == "PC"
-        registers.mar().getName() == "MAR"
-        registers.cor().getName() == "COR"
-        registers.ss().getName() == "SS"
     }
 
     def "shorthand methods return the same instance as full getters"() {
         expect:
         registers.pc() == registers.getProgramCounter()
-        registers.mar() == registers.getMemoryAddress()
-        registers.mdr() == registers.getMemoryData()
-        registers.cir() == registers.getCurrentInstruction()
-        registers.cor() == registers.getCurrentOperand()
-        registers.dir() == registers.getDecodedInstruction()
-        registers.dor() == registers.getDecodedOperand()
         registers.a() == registers.getAccumulator()
         registers.x() == registers.getIndexX()
         registers.y() == registers.getIndexY()
         registers.sp() == registers.getStackPointer()
-        registers.ss() == registers.getStackSegment()
         registers.status() == registers.getStatus()
     }
 
     def "special registers are initialized correctly"() {
         expect:
-        registers.dor().getName() == "DOR"
         registers.status().getName() == "P"
     }
 }

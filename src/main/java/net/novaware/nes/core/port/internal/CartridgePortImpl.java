@@ -1,15 +1,15 @@
 package net.novaware.nes.core.port.internal;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
 import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
-import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 
 @BoardScope
 public class CartridgePortImpl implements CartridgePort {
@@ -21,7 +21,7 @@ public class CartridgePortImpl implements CartridgePort {
 
     @Inject
     public CartridgePortImpl(
-            @Named(CPU_BUS) MemoryBus cpuBus
+        @CpuVar(BUS) MemoryBus cpuBus
     ) {
         this.cpuBus = cpuBus;
     }

@@ -2,6 +2,8 @@ package net.novaware.nes.core.cpu
 
 import net.novaware.nes.core.BoardFactory
 import net.novaware.nes.core.clock.ClockMode
+import net.novaware.nes.core.config.ImmutableCoreConfig
+import net.novaware.nes.core.memory.MemoryBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -11,7 +13,12 @@ class CpuCT extends Specification {
 
     def "should execute simple adding loop"() {
         given:
-        def board = BoardFactory.newBoardFactory(ClockMode.LOOP).newBoard()
+        BoardFactory factory = BoardFactory.newBoardFactory(ImmutableCoreConfig.builder()
+                .setCpuBusType(MemoryBus.Type.STANDARD)
+                .build(),
+                ClockMode.LOOP
+        )
+        def board = factory.newBoard()
 
         def cpu = board.cpu
         def bus = cpu.mmu.memoryBus

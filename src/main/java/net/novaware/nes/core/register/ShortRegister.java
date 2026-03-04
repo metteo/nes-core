@@ -7,7 +7,7 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-public class ShortRegister extends AddressRegister {
+public final class ShortRegister extends AddressRegister {
 
     /*
      * Internally we keep 2 bytes because that's how it works in hardware

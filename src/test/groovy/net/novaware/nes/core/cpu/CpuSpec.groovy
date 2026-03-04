@@ -1,11 +1,12 @@
 package net.novaware.nes.core.cpu
 
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.unit.*
 import spock.lang.Specification
 
 class CpuSpec extends Specification {
 
-    CpuRegisters registers = new CpuRegisters()
+    CpuRegFile registers = null
 
     ControlUnit controlUnit = Mock()
     AddressGen addressGen = Mock()

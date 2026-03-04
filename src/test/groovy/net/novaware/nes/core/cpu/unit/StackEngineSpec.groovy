@@ -1,25 +1,21 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
-import net.novaware.nes.core.cpu.memory.MemoryMap
+
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
-import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
+import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
 class StackEngineSpec extends Specification {
 
-    CpuRegisters regs = new CpuRegisters()
-    MemoryBus bus = new RecordingBus()
-    MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine engine = new StackEngine(regs.stackSegment, regs, mmu)
-
-    def setup() {
-        regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
-    }
+    def factory = newTestBoardFactory()
+    CpuRegFile regs = factory.newCpuRegisters()
+    MemoryBus bus = factory.newCpuBus()
+    StackEngine engine = factory.newStackEngine()
 
     def "should push accumulator on the stack"() {
         given:

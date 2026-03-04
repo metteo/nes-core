@@ -8,7 +8,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/CPU_memory_map">CPU Memory Map on nesdev.org</a>
  */
-public class MemoryMap {
+public class MemoryMap { // TODO: adjust the name?
 
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0xFFFF);
@@ -53,8 +53,4 @@ public class MemoryMap {
     public static final @Unsigned short CARTRIDGE_START = ushort(0x4020);
     public static final @Unsigned short CARTRIDGE_END = ushort(0xFFFF);
     public static final int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
-
-    // TODO: add subsections like ram, cartridge etc.
-
-
 }

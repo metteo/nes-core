@@ -1,9 +1,13 @@
-package net.novaware.nes.core.memory;
+package net.novaware.nes.core.cpu.memory;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import net.novaware.nes.core.apu.ApuRegisters;
-import net.novaware.nes.core.ppu.PpuRegisters;
+import net.novaware.nes.core.apu.register.ApuRegisters;
+import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.memory.ByteRegisterMemory;
+import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.memory.PhysicalMemory;
+import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -13,7 +17,6 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.function.IntPredicate;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_TEST_REGISTERS_END;
@@ -27,11 +30,12 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_MIRROR_3_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_SIZE;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 // TODO: move to cpu part since ppu has it's own bus
-public class SystemBus implements MemoryBus {
+public class CpuBus implements MemoryBus {
 
     public static final IntPredicate RAM_RANGE      = a -> sint(RAM_START) <= a                && a <= sint(RAM_MIRROR_3_END);
     public static final IntPredicate PPU_REGS_RANGE = a -> sint(PPU_REGISTERS_START) <= a      && a <= sint(PPU_REGISTERS_MIRROR_END);
@@ -41,8 +45,9 @@ public class SystemBus implements MemoryBus {
 
     private final CycleCounter cycleCounter;
 
+    // TODO: MemoryBus only directs calls to respective MemoryDevices, it doesn't own them / create them
     private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
-    private ByteRegisterMemory ppuRegs = new PpuRegisters().asByteRegisterMemory();
+    private ByteRegisterMemory ppuRegs = new PpuRegFile().asByteRegisterMemory();
     private ByteRegisterMemory apuIoRegs = new ApuRegisters().asByteRegisterMemory();
     private MemoryDevice cartridge = new PhysicalMemory(CARTRIDGE_SIZE, sint(CARTRIDGE_START)); // TODO: temporary
 
@@ -56,8 +61,8 @@ public class SystemBus implements MemoryBus {
     private @Unsigned short currentAddress; // translated into specific segment range
 
     @Inject
-    public SystemBus(
-        @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter
+    public CpuBus(
+            @CpuVar(CC) CycleCounter cycleCounter
     ) {
         this.cycleCounter = cycleCounter;
     }
@@ -116,6 +121,8 @@ public class SystemBus implements MemoryBus {
         return ppuRegs.registers[idx];
     }
 
+    // TODO: use attach to the bus for all memory devices, not only cartridge
+    // TODO: try to implement page based indexing instead of if/else
     @Override
     public void attach(MemoryDevice memoryDevice) { // FIXME: what about the address range?
         cartridge = memoryDevice;

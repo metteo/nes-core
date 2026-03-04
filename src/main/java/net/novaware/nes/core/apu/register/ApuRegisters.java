@@ -1,4 +1,4 @@
-package net.novaware.nes.core.apu;
+package net.novaware.nes.core.apu.register;
 
 import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.memory.ByteRegisterMemory;

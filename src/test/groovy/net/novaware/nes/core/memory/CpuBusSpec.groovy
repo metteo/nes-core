@@ -1,5 +1,7 @@
 package net.novaware.nes.core.memory
 
+
+import net.novaware.nes.core.cpu.memory.CpuBus
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
@@ -7,13 +9,13 @@ import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ushort
 
-class SystemBusSpec extends Specification {
+class CpuBusSpec extends Specification {
 
     def cycleCounter = new CycleCounter("CPUCC")
 
     def "should read and write to ram"() {
         given:
-        SystemBus bus = new SystemBus(cycleCounter)
+        CpuBus bus = new CpuBus(cycleCounter)
         def address = ushort(0x0002)
         def data = ubyte(0x3)
 
@@ -36,7 +38,7 @@ class SystemBusSpec extends Specification {
 
     def "should read and write to ppu register"() {
         given:
-        SystemBus bus = new SystemBus(cycleCounter)
+        CpuBus bus = new CpuBus(cycleCounter)
         def address = ushort(0x2004)
         def data = ubyte(0xAA)
 

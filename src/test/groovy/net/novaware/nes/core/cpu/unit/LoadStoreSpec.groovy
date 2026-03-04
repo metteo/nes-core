@@ -1,8 +1,9 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.TestBoardFactory
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.memory.MemoryBus
-import net.novaware.nes.core.memory.RecordingBus
+import net.novaware.nes.core.register.DelegatingRegister
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -10,14 +11,16 @@ import static net.novaware.nes.core.util.UTypes.ushort
 
 class LoadStoreSpec extends Specification {
 
-    CpuRegisters regs = new CpuRegisters()
-    MemoryBus bus = new RecordingBus()
-    LoadStore loadStore = new LoadStore(regs)
+    def factory = TestBoardFactory.newTestBoardFactory()
+    CpuRegFile regs = factory.newCpuRegisters()
+    MemoryBus bus = factory.newCpuBus()
+    LoadStore loadStore = factory.newLoadStore()
+    DelegatingRegister decodedOperand = factory.newDecodedOperand()
 
     def "should load register with memory"() {
         given:
-        regs.dor().configureMemory(bus, ushort(0x1234))
-        regs.dor().setData(ubyte(data))
+        decodedOperand.configureMemory(bus, ushort(0x1234))
+        decodedOperand.setData(ubyte(data))
 
         when:
         loadStore.load(regs.a())
@@ -37,7 +40,7 @@ class LoadStoreSpec extends Specification {
     def "should store register in memory"() {
         given:
         regs.a().set(ubyte(0x56))
-        regs.dor().configureMemory(bus, ushort(0x1234))
+        decodedOperand.configureMemory(bus, ushort(0x1234))
 
         when:
         loadStore.store(regs.a())

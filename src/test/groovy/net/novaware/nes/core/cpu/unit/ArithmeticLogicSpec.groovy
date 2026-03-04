@@ -1,19 +1,23 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.register.DataRegister
 import net.novaware.nes.core.util.Hex
-import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Hex.s
-import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.sint
+import static net.novaware.nes.core.util.UTypes.ubyte
 
-class ArithmeticLogicSpec extends Specification {
+class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
-    CpuRegisters regs = new CpuRegisters()
+    CpuRegFile regs
 
-    ArithmeticLogic alu = new ArithmeticLogic(regs)
+    ArithmeticLogic alu
+
+    def setup() {
+        regs = registers
+        alu = factory.newArithmeticLogic()
+    }
 
     def "should bitwise or"() {
         given:

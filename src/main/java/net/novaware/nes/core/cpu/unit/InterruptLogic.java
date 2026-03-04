@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -16,14 +16,14 @@ public class InterruptLogic implements Unit {
     public static final @Unsigned short IRQ_VECTOR = ushort(0xFFFE);
 
     @Used
-    private final CpuRegisters registers;
+    private final CpuRegFile registers;
 
     @Used
     private final StackEngine stackEngine;
 
     @Inject
     public InterruptLogic(
-        CpuRegisters registers,
+        CpuRegFile registers,
         StackEngine stackEngine
     ) {
         this.registers = registers;

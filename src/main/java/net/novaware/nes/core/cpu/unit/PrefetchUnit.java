@@ -2,10 +2,12 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
-import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 
 /**
  * Pre-fetches instruction opcode
@@ -13,17 +15,18 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 @BoardScope
 public class PrefetchUnit implements Unit, Runnable {
 
-    @Used private final CpuRegisters registers;
+    @Used private final ByteRegister currentInstruction;
+
     @Used private final AddressGen agu;
     @Used private final MemoryMgmt mmu;
 
     @Inject
     public PrefetchUnit(
-        CpuRegisters registers,
+        @CpuVar(CI) ByteRegister currentInstruction,
         AddressGen agu,
         MemoryMgmt mmu
     ) {
-        this.registers = registers;
+        this.currentInstruction = currentInstruction;
         this.agu = agu;
         this.mmu = mmu;
     }
@@ -32,8 +35,8 @@ public class PrefetchUnit implements Unit, Runnable {
         @Unsigned short opcodeAddress = agu.getPc();
         @Unsigned byte opcode = mmu.specifyAnd(opcodeAddress).readByte();
 
-        System.out.print(Hex.s(opcodeAddress).toUpperCase() + "  " + Hex.s(opcode).toUpperCase() + " ");
+        //System.out.print(Hex.s(opcodeAddress).toUpperCase() + "  " + Hex.s(opcode).toUpperCase() + " ");
 
-        registers.cir().set(opcode);
+        currentInstruction.set(opcode);
     }
 }

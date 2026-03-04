@@ -1,8 +1,8 @@
 package net.novaware.nes.core.easy;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.cpu.Cpu;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.memory.MemoryBus;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -13,7 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -29,7 +29,7 @@ public class EasyBoard {
     @Inject
     /* package */ EasyBoard(
         final Cpu cpu,
-        final @Named(CPU_BUS) MemoryBus bus
+        final @CpuVar(BUS) MemoryBus bus
     ) {
         this.cpu = cpu;
         this.bus = bus;

@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class ByteRegister extends DataRegister {
+public final class ByteRegister extends DataRegister {
 
     private @Unsigned byte data;
 

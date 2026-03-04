@@ -2,7 +2,7 @@ package net.novaware.nes.core.port.internal;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.port.DebugPort;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
@@ -10,13 +10,13 @@ import org.jspecify.annotations.Nullable;
 @BoardScope
 public class DebugPortImpl implements DebugPort {
 
-    private final CpuRegisters registers;
+    private final CpuRegFile registers;
 
     private @Nullable Receiver receiver;
 
     @Inject
     public DebugPortImpl(
-        CpuRegisters registers
+        CpuRegFile registers
     ) {
         this.registers = registers;
     }

@@ -1,22 +1,29 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.cpu.memory.MemoryModule.CPU_BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -24,45 +31,64 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 @BoardScope
 public class InstructionDecoder implements Unit {
 
-    @Used private final CpuRegisters registers;
+    @Used private final CpuRegFile registers;
+
+    @Used private final ByteRegister currentInstruction;
+    @Used private final ShortRegister currentOperand;
+    @Used private final ByteRegister decodedInstruction;
+    @Used private final DelegatingRegister decodedOperand;
+
     @Used private final CycleCounter cycleCounter;
     @Used private final MemoryBus memoryBus;
     @Used private final AddressGen addressGen;
 
     @Inject
     public InstructionDecoder(
-            CpuRegisters registers,
-            @Named(CPU_CYCLE_COUNTER)CycleCounter cycleCounter,
-            @Named(CPU_BUS) MemoryBus memoryBus,
-            AddressGen addressGen
+        CpuRegFile registers,
+
+        @CpuVar(CI) ByteRegister currentInstruction,
+        @CpuVar(CO) ShortRegister currentOperand,
+
+        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DO) DelegatingRegister decodedOperand,
+
+        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(BUS) MemoryBus memoryBus,
+        AddressGen addressGen
     ) {
         this.registers = registers;
+
+        this.currentInstruction = currentInstruction;
+        this.currentOperand = currentOperand;
+        this.decodedInstruction = decodedInstruction;
+        this.decodedOperand = decodedOperand;
+
         this.cycleCounter = cycleCounter;
         this.memoryBus = memoryBus;
         this.addressGen = addressGen;
     }
 
     public void decode() {
-        @Unsigned byte opcode = registers.cir().get();
+        @Unsigned byte opcode = currentInstruction.get();
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
 
         // TODO: Hide log generation behind a flag. sout is sloooow
-        System.out.println(" " + instruction.group().mnemonic() + "                            "
-                + " A:" + Hex.s(registers.a().get()).toUpperCase()
-                + " X:" + Hex.s(registers.x().get()).toUpperCase()
-                + " Y:" + Hex.s(registers.y().get()).toUpperCase()
-                + " P:" + Hex.s(registers.status().get().get()).toUpperCase()
-                + " SP:" + Hex.s(registers.sp().get()).toUpperCase()
+//        System.out.println(" " + instruction.group().mnemonic() + "                            "
+//                + " A:" + Hex.s(registers.a().get()).toUpperCase()
+//                + " X:" + Hex.s(registers.x().get()).toUpperCase()
+//                + " Y:" + Hex.s(registers.y().get()).toUpperCase()
+//                + " P:" + Hex.s(registers.status().get().get()).toUpperCase()
+//                + " SP:" + Hex.s(registers.sp().get()).toUpperCase()
 //                + " PPU:       "
 //                + " CYC:" + cycleCounter.getValue()
-        );
+//        );
 
         // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
-        registers.dir().setAsByte(instruction.group().ordinal());
+        decodedInstruction.setAsByte(instruction.group().ordinal());
 
         AddressingMode addressingMode = instruction.addressingMode();
-        @Unsigned short operand = registers.cor().get();
+        @Unsigned short operand = currentOperand.get();
 
         switch (addressingMode) {
             case IMPLIED -> decodeImplied();
@@ -90,7 +116,7 @@ public class InstructionDecoder implements Unit {
         boolean pageChange = (operand & 0xFF) == 0xFF;
         cycleCounter.maybeIncrement(pageChange);
 
-        registers.dor().configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
     private void decodePreIndexedIndirectX(@Unsigned short operand) {
@@ -101,7 +127,7 @@ public class InstructionDecoder implements Unit {
 
         // FIXME: it is supposed to be without carry for this and fetchAddress?
         @Unsigned short result = addressGen.fetchAddress(ushort(indirectAddress & 0xFF));
-        registers.dor().configureMemory(memoryBus, result);
+        decodedOperand.configureMemory(memoryBus, result);
     }
 
     private void decodeIndexedAbsolute(DataRegister indexRegister, @Unsigned short operand) {
@@ -112,7 +138,7 @@ public class InstructionDecoder implements Unit {
         boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
         cycleCounter.maybeIncrement(pageChange);
 
-        this.registers.dor().configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
     private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {
@@ -120,7 +146,7 @@ public class InstructionDecoder implements Unit {
 
         int result = (indexVal + sint(operand)) & 0xFF;
 
-        this.registers.dor().configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
     private void decodeRelative(@Unsigned short operand) {
@@ -128,28 +154,28 @@ public class InstructionDecoder implements Unit {
         @Signed int signedOperand = (byte) operand;
         int pc = registers.pc().getAsInt();
 
-        registers.dor().configureAddress(ushort(pc + signedOperand));
+        decodedOperand.configureAddress(ushort(pc + signedOperand));
     }
 
     private void decodeAbsoluteIndirect(@Unsigned short operand) {
         @Unsigned short address = addressGen.buggyFetchAddress(operand);
-        registers.dor().configureMemory(memoryBus, address);
+        decodedOperand.configureMemory(memoryBus, address);
     }
 
     private void decodeAbsolute(@Unsigned short operand) {
-        registers.dor().configureMemory(memoryBus, operand);
+        decodedOperand.configureMemory(memoryBus, operand);
     }
 
     private void decodeAccumulator() {
-        registers.dor().configureDataRegister(registers.a());
+        decodedOperand.configureDataRegister(registers.a());
     }
 
     private void decodeImmediate(@Unsigned short operand) {
         int data = sint(operand);
-        registers.dor().configureData(ubyte(data));
+        decodedOperand.configureData(ubyte(data));
     }
 
     private void decodeImplied() {
-        registers.dor().configureEmpty();
+        decodedOperand.configureEmpty();
     }
 }

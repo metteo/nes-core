@@ -1,4 +1,4 @@
-package net.novaware.nes.core.ppu;
+package net.novaware.nes.core.ppu.register;
 
 import net.novaware.nes.core.cpu.memory.MemoryMap;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
@@ -15,7 +15,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
  */
-public class PpuRegisters extends RegisterFile {
+public class PpuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("PPUCC");
 
@@ -43,7 +43,7 @@ public class PpuRegisters extends RegisterFile {
     private ByteRegister x = new ByteRegister("X");
     private ByteRegister w = new ByteRegister("W");
 
-    public PpuRegisters() {
+    public PpuRegFile() {
         super("PPU");
 
         dataRegisters = List.of(

@@ -1,8 +1,13 @@
 package net.novaware.nes.core.register;
 
-public class SegmentRegister extends Register {
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
-    // TODO: implement segment register with base address and limit
+import static net.novaware.nes.core.util.UTypes.sint;
+
+public final class SegmentRegister extends Register {
+
+    private @Unsigned short start;
+    private @Unsigned short limit;
 
     // also cover mirrorring case?
 
@@ -10,5 +15,21 @@ public class SegmentRegister extends Register {
 
     public SegmentRegister(String name) {
         super(name);
+    }
+
+    public void setStart(@Unsigned short start) {
+        this.start = start;
+    }
+
+    public @Unsigned short getStart() {
+        return start;
+    }
+
+    public int getStartAsInt() {
+        return sint(start);
+    }
+
+    public void setLimit(@Unsigned short limit) {
+        this.limit = limit;
     }
 }

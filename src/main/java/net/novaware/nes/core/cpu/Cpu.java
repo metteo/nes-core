@@ -2,6 +2,7 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
@@ -29,7 +30,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
     private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
-    @Owned private final CpuRegisters registers;
+    @Owned private final CpuRegFile registers;
     @Owned private final ControlUnit controlUnit;
 
     @Owned private final AddressGen addressGen;
@@ -46,7 +47,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
     @Inject
     public Cpu(
-        CpuRegisters registers,
+        CpuRegFile registers,
 
         ControlUnit controlUnit,
         AddressGen addressGen,

@@ -51,18 +51,12 @@ public class RecordingBus implements MemoryBus {
     private ShortRegister memoryAddress;
     private ByteRegister memoryData;
 
-    public RecordingBus(
-            CycleCounter cycleCounter,
-            ShortRegister memoryAddress,
-            ByteRegister memoryData
-    ) {
-        this.cycleCounter = cycleCounter;
-        this.memoryAddress = memoryAddress;
-        this.memoryData = memoryData;
+    public RecordingBus() {
+        this(new CycleCounter("CPUCC"));
     }
 
-    public RecordingBus() {
-        this.cycleCounter = new CycleCounter("CPUCC");
+    public RecordingBus(CycleCounter cycleCounter) {
+        this.cycleCounter = cycleCounter;
         this.memoryAddress = new ShortRegister("MAR");
         this.memoryData = new ByteRegister("MDR");
     }

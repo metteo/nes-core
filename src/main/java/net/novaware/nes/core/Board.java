@@ -5,6 +5,7 @@ import net.novaware.nes.core.clock.ClockGenerator;
 import net.novaware.nes.core.clock.ClockGenerator.Handle;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
+import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
@@ -16,6 +17,11 @@ import java.util.List;
 
 @BoardScope
 public class Board {
+
+    public interface Config {
+        MemoryBus.Type getCpuBusType();
+    }
+
     // TODO: setup register files for cpu, ppu, apu and any other
     // TODO: any container of data should be wrapped in an object and injectable (e.g. into a debug interface)
 
@@ -33,6 +39,8 @@ public class Board {
 
     @Owned
     private final List<Handle> clockHandles = new ArrayList<>();
+
+    // TODO: include here RAM,
 
     /*
     @Owned

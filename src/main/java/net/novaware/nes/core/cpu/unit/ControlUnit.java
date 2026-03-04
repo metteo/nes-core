@@ -1,20 +1,26 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DataRegister;
-import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 @BoardScope
@@ -25,7 +31,13 @@ public class ControlUnit implements Unit {
 
     @Owned private final ControlFlow flow;
 
-    @Used private final CpuRegisters registers;
+    @Used private final CpuRegFile registers;
+
+    @Used private final ByteRegister currentInstruction;
+    @Used private final ShortRegister currentOperand;
+    @Used private final ByteRegister decodedInstruction;
+    @Used private final DelegatingRegister decodedOperand;
+
     @Used private final CycleCounter cycleCounter;
 
     @Used private final AddressGen addressGen;
@@ -39,24 +51,34 @@ public class ControlUnit implements Unit {
 
     @Inject
     public ControlUnit(
-            ControlFlow flow,
+        ControlFlow flow,
 
-            CpuRegisters registers,
-            @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
+        CpuRegFile registers,
+        @CpuVar(CI) ByteRegister currentInstruction,
+        @CpuVar(CO) ShortRegister currentOperand,
 
-            AddressGen addressGen,
-            ArithmeticLogic alu,
-            InstructionDecoder decoder,
-            InterruptLogic interrupts,
-            LoadStore loadStore,
-            MemoryMgmt mmu,
-            PrefetchUnit prefetch,
-            StackEngine stackEngine
+        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DO) DelegatingRegister decodedOperand,
 
+        @CpuVar(CC) CycleCounter cycleCounter,
+
+        AddressGen addressGen,
+        ArithmeticLogic alu,
+        InstructionDecoder decoder,
+        InterruptLogic interrupts,
+        LoadStore loadStore,
+        MemoryMgmt mmu,
+        PrefetchUnit prefetch,
+        StackEngine stackEngine
     ) {
         this.flow = flow;
 
         this.registers = registers;
+        this.currentInstruction = currentInstruction;
+        this.currentOperand = currentOperand;
+        this.decodedInstruction = decodedInstruction;
+        this.decodedOperand = decodedOperand;
+
         this.cycleCounter = cycleCounter;
 
         this.addressGen = addressGen;
@@ -114,36 +136,36 @@ public class ControlUnit implements Unit {
         @Unsigned short operandLoAddress = addressGen.getPc();
         @Unsigned byte operandLo = mmu.specifyAnd(operandLoAddress).readByte();
 
-        registers.cor().low(operandLo);
+        currentOperand.low(operandLo);
 
-        System.out.print(Hex.s(operandLo).toUpperCase() + " ");
+        //System.out.print(Hex.s(operandLo).toUpperCase() + " ");
     }
 
     public void fetchOperandHi() {
         @Unsigned short operandHiAddress = addressGen.getPc();
         @Unsigned byte operandHi = mmu.specifyAnd(operandHiAddress).readByte();
 
-        registers.cor().high(operandHi);
+        currentOperand.high(operandHi);
 
-        System.out.print(Hex.s(operandHi).toUpperCase() + " ");
+        //System.out.print(Hex.s(operandHi).toUpperCase() + " ");
     }
 
     public void fetchOperand() {
-        int size = InstructionRegistry.fromOpcode(registers.cir().get()).size();
+        int size = InstructionRegistry.fromOpcode(currentInstruction.get()).size();
 
         switch (size) {
             case 1 -> {
                 mmu.specifyAnd(registers.pc().get()); // no pc increment, data ignored
-                registers.cor().lowAsByte(0x00);
-                registers.cor().highAsByte(0x00);
+                currentOperand.lowAsByte(0x00);
+                currentOperand.highAsByte(0x00);
 
-                System.out.print("  " + " " + "  " + " ");
+                //System.out.print("  " + " " + "  " + " ");
             }
             case 2 -> {
                 fetchOperandLo();
-                registers.cor().highAsByte(0x00);
+                currentOperand.highAsByte(0x00);
 
-                System.out.print("  " + " ");
+                //System.out.print("  " + " ");
             }
             case 3 -> {
                 fetchOperandLo();
@@ -159,13 +181,13 @@ public class ControlUnit implements Unit {
 
     // TODO: test that correct units are called
     public void execute() {
-        int instrGroup = registers.dir().getAsInt();
+        int instrGroup = decodedInstruction.getAsInt();
 
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
         switch (instruction) {
-            case ADD_WITH_CARRY       -> alu.addWithCarry(registers.dor().getData());
-            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(registers.dor().getData());
+            case ADD_WITH_CARRY       -> alu.addWithCarry(decodedOperand.getData());
+            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(decodedOperand.getData());
 
             case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
             case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
@@ -188,9 +210,9 @@ public class ControlUnit implements Unit {
             case BRANCH_IF_OVERFLOW_SET -> flow.branchIf(registers.status().isOverflow());
             case BRANCH_IF_OVERFLOW_CLR -> flow.branchIf(!registers.status().isOverflow());
 
-            case COMPARE_A_WITH_MEMORY -> alu.compareA(registers.dor().getData());
-            case COMPARE_X_WITH_MEMORY -> alu.compareX(registers.dor().getData());
-            case COMPARE_Y_WITH_MEMORY -> alu.compareY(registers.dor().getData());
+            case COMPARE_A_WITH_MEMORY -> alu.compareA(decodedOperand.getData());
+            case COMPARE_X_WITH_MEMORY -> alu.compareX(decodedOperand.getData());
+            case COMPARE_Y_WITH_MEMORY -> alu.compareY(decodedOperand.getData());
 
             case JUMP_TO_LOCATION -> flow.jumpTo();
 
@@ -212,10 +234,10 @@ public class ControlUnit implements Unit {
             case FORCE_BREAK -> interrupts.forceBreak(); // TODO: what about unused operand that is skipped on return?
             case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
 
-            case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
-            case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
-            case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
-            case BIT_TEST -> alu.bitTest(registers.dor().getData());
+            case BITWISE_AND -> alu.bitwiseAnd(decodedOperand.getData());
+            case BITWISE_OR -> alu.bitwiseOr(decodedOperand.getData());
+            case BITWISE_XOR -> alu.bitwiseXor(decodedOperand.getData());
+            case BIT_TEST -> alu.bitTest(decodedOperand.getData());
 
             case LOAD_A_WITH_MEMORY -> loadStore.load(registers.a());
             case STORE_A_IN_MEMORY -> loadStore.store(registers.a());
@@ -249,7 +271,7 @@ public class ControlUnit implements Unit {
             case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
 
-            case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(registers.dor().getData()); } // FIXME: test illegal
+            case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(decodedOperand.getData()); } // FIXME: test illegal
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
@@ -259,11 +281,11 @@ public class ControlUnit implements Unit {
     }
 
     /* package */ void readModifyWrite(UByteUnaryOperator operator) {
-        @Unsigned byte data = registers.dor().getData(); // read
-        registers.dor().setData(data); // write unmodified
+        @Unsigned byte data = decodedOperand.getData(); // read
+        decodedOperand.setData(data); // write unmodified
 
         @Unsigned byte newData = operator.applyAsUByte(data); // modify
-        registers.dor().setData(newData); // write
+        decodedOperand.setData(newData); // write
     }
 
     /* package */ void transfer(DataRegister src, DataRegister dst) {
@@ -273,7 +295,7 @@ public class ControlUnit implements Unit {
 
         int dataVal = sint(data);
 
-        registers.status()
+        registers.status() // TODO: create a utility
                 .setZero(dataVal == 0)
                 .setNegative((dataVal & 0x80) != 0);
     }

@@ -1,16 +1,17 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
-import net.novaware.nes.core.cpu.memory.MemoryModule;
+import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.Status;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -19,7 +20,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 @BoardScope
 public class StackEngine implements Unit {
 
-    private final AddressRegister stackSegment;
+    private final SegmentRegister stackSegment;
     private final DataRegister stackPointer;
     private final StatusRegister status;
 
@@ -27,8 +28,8 @@ public class StackEngine implements Unit {
 
     @Inject
     public StackEngine (
-        @Named(MemoryModule.STACK_SEGMENT) AddressRegister stackSegment,
-        CpuRegisters registers,
+        @CpuVar(SS) SegmentRegister stackSegment,
+        CpuRegFile registers,
         MemoryMgmt mmu
     ) {
         this.stackSegment = stackSegment; // important, injection initializes value
@@ -39,7 +40,7 @@ public class StackEngine implements Unit {
     }
 
     public void initialize() {
-        assertState(stackSegment.getAsInt() != 0, "Stack Segment points to Zero Page");
+        assertState(stackSegment.getStartAsInt() != 0, "Stack Segment points to Zero Page");
     }
 
     private void increment() {
@@ -57,7 +58,7 @@ public class StackEngine implements Unit {
     }
 
     private int addressInt() {
-        return stackSegment.getAsInt() + stackPointer.getAsInt();
+        return stackSegment.getStartAsInt() + stackPointer.getAsInt();
     }
 
     void push(DataRegister register) {

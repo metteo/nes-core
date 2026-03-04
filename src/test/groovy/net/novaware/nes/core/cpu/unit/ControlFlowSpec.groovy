@@ -1,30 +1,31 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
-import net.novaware.nes.core.cpu.memory.MemoryMap
-import net.novaware.nes.core.memory.RecordingBus
-import spock.lang.Specification
+import net.novaware.nes.core.cpu.register.CpuRegFile
+import net.novaware.nes.core.cpu.register.CpuInsFile
 
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
-class ControlFlowSpec extends Specification {
+class ControlFlowSpec extends ControlUnitBaseSpec {
 
-    CpuRegisters regs = new CpuRegisters()
-    RecordingBus bus = new RecordingBus()
-    MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine stackEngine = new StackEngine(regs.stackSegment, regs, mmu)
-    ControlFlow flow = new ControlFlow(regs, bus.cycleCounter(), stackEngine)
+    CpuRegFile regs
+    CpuInsFile extRegs
+    StackEngine stackEngine
+    ControlFlow flow
 
-    def "setup"() {
-        regs.getStackSegment().set(MemoryMap.STACK_SEGMENT_START)
+    def setup() {
+        regs = registers
+        extRegs = factory.newExtRegisters()
+        stackEngine = factory.newStackEngine()
+        flow = factory.newControlFlow()
+
         regs.sp().setAsByte(0xFD)
     }
 
     def "should call a subroutine and return from it"() {
         given:
         regs.pc().setAsShort(0x1234)
-        regs.dor().configureMemory(bus, ushort(0x1278))
+        extRegs.dor().configureMemory(bus, ushort(0x1278))
 
         when:
         flow.call()

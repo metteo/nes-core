@@ -10,6 +10,9 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  */
 public class MemoryMap {
 
+    // TODO: segment registers: Video Segment, configured by mappers for debug view
+    //       e.g. where is nametable, where is pallete etc.
+
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0x3FFF);
     public static final int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
