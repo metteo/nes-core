@@ -2,15 +2,19 @@ package net.novaware.nes.core;
 
 import dagger.BindsInstance;
 import dagger.Component;
+import net.novaware.nes.core.apu.inject.ApuModule;
 import net.novaware.nes.core.clock.ClockMode;
 import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.inject.CpuModule;
 import net.novaware.nes.core.port.internal.PortModule;
+import net.novaware.nes.core.ppu.inject.PpuModule;
 
 @BoardScope
 @Component(modules = {
     CpuModule.class,
+    PpuModule.class,
+    ApuModule.class,
     ClockModule.class,
     PortModule.class
 })

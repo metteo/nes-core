@@ -1,6 +1,6 @@
-package net.novaware.nes.core.memory
+package net.novaware.nes.core.easy
 
-import net.novaware.nes.core.easy.EasyBus
+
 import spock.lang.Specification
 
 import static net.novaware.nes.core.easy.EasyMap.*

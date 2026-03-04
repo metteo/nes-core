@@ -1,6 +1,6 @@
-package net.novaware.nes.core.cpu
+package net.novaware.nes.core.cpu.register
 
-import net.novaware.nes.core.cpu.register.CpuRegFile
+
 import spock.lang.Specification
 import spock.lang.Subject
 

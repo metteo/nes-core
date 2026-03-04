@@ -280,7 +280,7 @@ public class ControlUnit implements Unit {
         // fetch the next instruction
     }
 
-    /* package */ void readModifyWrite(UByteUnaryOperator operator) {
+    /* package */ void readModifyWrite(UByteUnaryOperator operator) { // TODO: move to alu
         @Unsigned byte data = decodedOperand.getData(); // read
         decodedOperand.setData(data); // write unmodified
 
@@ -288,7 +288,7 @@ public class ControlUnit implements Unit {
         decodedOperand.setData(newData); // write
     }
 
-    /* package */ void transfer(DataRegister src, DataRegister dst) {
+    /* package */ void transfer(DataRegister src, DataRegister dst) { // TODO: move to alu
         @Unsigned byte data = src.get();
 
         dst.set(data);

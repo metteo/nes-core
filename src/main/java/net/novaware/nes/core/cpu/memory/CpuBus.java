@@ -1,7 +1,7 @@
 package net.novaware.nes.core.cpu.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.apu.register.ApuRegisters;
+import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -48,7 +48,7 @@ public class CpuBus implements MemoryBus {
     // TODO: MemoryBus only directs calls to respective MemoryDevices, it doesn't own them / create them
     private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
     private ByteRegisterMemory ppuRegs = new PpuRegFile().asByteRegisterMemory();
-    private ByteRegisterMemory apuIoRegs = new ApuRegisters().asByteRegisterMemory();
+    private ByteRegisterMemory apuIoRegs = new ApuRegFile().asByteRegisterMemory();
     private MemoryDevice cartridge = new PhysicalMemory(CARTRIDGE_SIZE, sint(CARTRIDGE_START)); // TODO: temporary
 
     // TODO: this belongs to memory bus as currentAddress variable / currentData variable for open bus

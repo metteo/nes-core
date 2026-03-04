@@ -14,7 +14,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
  * @see <a href="https://www.nesdev.org/wiki/2A03">2A03 on nesdev.org</a>
  */
-public class ApuRegisters extends RegisterFile {
+public class ApuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("APUCC");
 
@@ -55,8 +55,8 @@ public class ApuRegisters extends RegisterFile {
     private ByteRegister joy1 = new ByteRegister("JOY1");
     private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017
 
-    public ApuRegisters() {
-        super("APU");
+    public ApuRegFile() {
+        super("APU_REG");
 
         // TODO: initialize fields inside the list to make sure all items are there
         dataRegisters = List.of(

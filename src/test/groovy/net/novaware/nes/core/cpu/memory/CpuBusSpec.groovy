@@ -1,7 +1,6 @@
-package net.novaware.nes.core.memory
+package net.novaware.nes.core.cpu.memory
 
 
-import net.novaware.nes.core.cpu.memory.CpuBus
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
