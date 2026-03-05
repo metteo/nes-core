@@ -1,14 +1,12 @@
 package net.novaware.nes.core.apu.register;
 
-import net.novaware.nes.core.cpu.memory.MemoryMap;
-import net.novaware.nes.core.memory.ByteRegisterMemory;
+import jakarta.inject.Inject;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
-
-import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
@@ -55,8 +53,11 @@ public class ApuRegFile extends RegisterFile {
     private ByteRegister joy1 = new ByteRegister("JOY1");
     private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017
 
+    @Inject
     public ApuRegFile() {
         super("APU_REG");
+
+        // TODO: inject with all the registers from module instead of creating them here
 
         // TODO: initialize fields inside the list to make sure all items are there
         dataRegisters = List.of(
@@ -71,17 +72,15 @@ public class ApuRegFile extends RegisterFile {
         addressRegisters = List.of();
     }
 
-    public ByteRegisterMemory asByteRegisterMemory() { // TODO: move the creation to cpu memory module?
-        return new ByteRegisterMemory("APUREGS",
-                sint(MemoryMap.APU_IO_REGISTERS_START), // FIXME: this is cpu map specific offset
-                new ByteRegister[]{
+    public ByteRegister @NonNull [] getCpuRegisters() {
+        return new ByteRegister[]{
                 sq1Vol, sq1Sweep, sq1Lo, sq1Hi,
                 sq2Vol, sq2Sweep, sq2Lo, sq2Hi,
                 triLinear, triUnused, triLo, triHi,
                 noiseVol, noiseUnused, noiseLo, noiseHi,
                 dmcFreq, dmcRaw, dmcStart, dmcLength,
                 oamDma, sndChn, joy1, joy2
-        });
+        };
     }
 
 }

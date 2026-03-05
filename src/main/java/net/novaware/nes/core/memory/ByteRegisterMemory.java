@@ -11,7 +11,7 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
     private final String name;
 
     private final int offset;
-    public final ByteRegister[] registers; // TODO: make private
+    private final ByteRegister[] registers;
     private final int size;
 
     private int index;

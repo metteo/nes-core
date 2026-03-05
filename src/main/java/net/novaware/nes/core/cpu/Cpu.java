@@ -112,7 +112,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         // modify
         // write
 
-        // controlUnit.sampleInterrupts();
+        //controlUnit.sampleInterrupts(); // TODO: implement next
 
         controlUnit.fetchOpcode();
 

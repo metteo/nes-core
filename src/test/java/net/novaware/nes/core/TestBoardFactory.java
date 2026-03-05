@@ -32,9 +32,8 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
     MemoryModule.class,
     ClockModule.class,
     PortModule.class
-    // TODO: allow changing between RecordingBus and SystemBus
 })
-public abstract class TestBoardFactory {
+public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory name
 
     public static TestBoardFactory newTestBoardFactory() {
         return newTestBoardFactory(ImmutableCoreConfig.builder()

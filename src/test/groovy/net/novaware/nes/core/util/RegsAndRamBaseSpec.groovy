@@ -1,10 +1,10 @@
 package net.novaware.nes.core.util
 
-
-import net.novaware.nes.core.cpu.register.CpuRegFile
+import net.novaware.nes.core.TestBoardFactory
 import net.novaware.nes.core.cpu.instruction.Instruction
+import net.novaware.nes.core.cpu.register.CpuInsFile
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.memory.MemoryBus
-
 import spock.lang.Specification
 
 import static UTypes.ubyte
@@ -12,8 +12,12 @@ import static UTypes.ushort
 
 class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
 
-    CpuRegFile registers
-    T bus
+    def factory = TestBoardFactory.newTestBoardFactory()
+
+    CpuRegFile registers = factory.newCpuRegisters()
+    CpuInsFile insRegs = factory.newExtRegisters()
+
+    T bus = factory.newCpuBus() as T
 
     def regs(Map args) {
         // 16-bit registers
@@ -28,11 +32,29 @@ class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
         // Status Flags (P register)
         // We can handle individual flags for better test readability
         if (args.c != null) registers.status.setCarry(args.c as boolean)
+        if (args.b != null) registers.status.setBorrow(args.b as boolean) // NOTE: NOT break
         if (args.z != null) registers.status.setZero(args.z as boolean)
         if (args.i != null) registers.status.setIrqDisabled(args.i as boolean)
         if (args.d != null) registers.status.setDecimal(args.d as boolean)
         if (args.v != null) registers.status.setOverflow(args.v as boolean)
         if (args.n != null) registers.status.setNegative(args.n as boolean)
+
+        // Instruction registers
+        if (args.do != null) insRegs.dor().configureData(ubyte(args.do as int))
+
+        checkKeys(args.keySet())
+
+        return true
+    }
+
+    static def checkKeys(Set keys) {
+        def uncheckedKeys = new HashSet(keys)
+        uncheckedKeys
+                .removeAll(["pc", "a", "x", "y", "sp", "c", "b", "z", "i", "d", "v", "n", "do"])
+
+        if (!uncheckedKeys.isEmpty()) {
+            throw new AssertionError("There are unchecked keys: ${uncheckedKeys.join(", ")}")
+        }
     }
 
     def ram(Object... addr_data) {
@@ -65,11 +87,16 @@ class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
 
         // Status flags as booleans
         if (args.c != null) assert registers.status.getCarry() == args.c
+        if (args.b != null) assert registers.status.getBorrow() == args.b
         if (args.z != null) assert registers.status.isZero() == args.z
         if (args.i != null) assert registers.status.isIrqDisabled() == args.i
         if (args.d != null) assert registers.status.isDecimal() == args.d
         if (args.v != null) assert registers.status.isOverflow() == args.v
         if (args.n != null) assert registers.status.isNegative() == args.n
+
+        if (args.do != null) assert insRegs.dor().getData() == ubyte(args.do as int) // TODO: what about address?
+
+        checkKeys(args.keySet())
 
         return true
     }

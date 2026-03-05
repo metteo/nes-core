@@ -18,7 +18,7 @@ public class StatusRegister extends Register {
     private boolean carry;        // 0 - carry or !borrow flag
 
     /**
-     * Copy of status register that can be manipulated during stack operations
+     * Working copy of status register that can be manipulated during stack operations
      */
     private transient Status copy;
 
@@ -91,6 +91,16 @@ public class StatusRegister extends Register {
 
     public StatusRegister setZero(boolean zero) {
         this.zero = zero;
+
+        return this;
+    }
+
+    /**
+     * Special shorthand for setting ZN flags
+     */
+    public StatusRegister maybeZeroOrNegative(int value) {
+        this.zero = (value & 0xFF) == 0;
+        this.negative = (value & 0x80) != 0;
 
         return this;
     }

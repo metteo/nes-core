@@ -1,22 +1,20 @@
 package net.novaware.nes.core.cpu.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.cpu.inject.CpuVar;
-import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.ppu.register.PpuRegFile;
-import net.novaware.nes.core.register.AddressRegister;
-import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
-import net.novaware.nes.core.register.DataRegister;
-import net.novaware.nes.core.register.ShortRegister;
+import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.function.IntPredicate;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.APU_TEST_REGISTERS_END;
@@ -28,13 +26,10 @@ import static net.novaware.nes.core.cpu.memory.MemoryMap.PPU_REGISTERS_MIRROR_EN
 import static net.novaware.nes.core.cpu.memory.MemoryMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_END;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_MIRROR_3_END;
-import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_SIZE;
 import static net.novaware.nes.core.cpu.memory.MemoryMap.RAM_START;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-// TODO: move to cpu part since ppu has it's own bus
 public class CpuBus implements MemoryBus {
 
     public static final IntPredicate RAM_RANGE      = a -> sint(RAM_START) <= a                && a <= sint(RAM_MIRROR_3_END);
@@ -43,34 +38,47 @@ public class CpuBus implements MemoryBus {
     public static final IntPredicate APU_TEST_RANGE = a -> sint(APU_TEST_REGISTERS_START) <= a && a <= sint(APU_TEST_REGISTERS_END);
     public static final IntPredicate CARTRIDGE_RANGE = a -> sint(CARTRIDGE_START) <= a         && a <= sint(CARTRIDGE_END);
 
+    @Used
     private final CycleCounter cycleCounter;
 
-    // TODO: MemoryBus only directs calls to respective MemoryDevices, it doesn't own them / create them
-    private PhysicalMemory ram = new PhysicalMemory(RAM_SIZE);
-    private ByteRegisterMemory ppuRegs = new PpuRegFile().asByteRegisterMemory();
-    private ByteRegisterMemory apuIoRegs = new ApuRegFile().asByteRegisterMemory();
+    @Used
+    private MemoryDevice ram;
+
+    @Used
+    private MemoryDevice ppuRegs;
+
+    @Used
+    private MemoryDevice apuIoRegs;
+
+    // @Owned
+    // private MemoryDevice page40; // TODO: part apu, part io, part cartridge
+
+    @Used
     private MemoryDevice cartridge = new PhysicalMemory(CARTRIDGE_SIZE, sint(CARTRIDGE_START)); // TODO: temporary
 
-    // TODO: this belongs to memory bus as currentAddress variable / currentData variable for open bus
-    // TODO: figure out better register names
-    private AddressRegister memoryAddress = new ShortRegister("MAR?");
-    private DataRegister memoryData = new ByteRegister("MDR?");
-
-    private MemoryDevice currentSegment = ram;
-    private IntPredicate currentRange = RAM_RANGE;
-    private @Unsigned short currentAddress; // translated into specific segment range
+    private MemoryDevice currentSegment;
+    private IntPredicate currentRange;
+    private @Unsigned short addressLatch; // translated into specific segment range
 
     @Inject
     public CpuBus(
-            @CpuVar(CC) CycleCounter cycleCounter
+        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(RAM) MemoryDevice ram,
+        @CpuVar(PPU) MemoryDevice ppuRegs,
+        @CpuVar(APU) MemoryDevice apuIoRegs
     ) {
         this.cycleCounter = cycleCounter;
+        this.ram = ram;
+        this.ppuRegs = ppuRegs;
+        this.apuIoRegs = apuIoRegs;
+
+        currentSegment = ram;
+        currentRange = RAM_RANGE;
     }
 
     @Override
     public void specify(@Unsigned short address) {
-        memoryAddress.set(address);
-        currentAddress = address;
+        addressLatch = address;
         cycleCounter.increment();
 
         int addressInt = sint(address);
@@ -79,9 +87,11 @@ public class CpuBus implements MemoryBus {
 //            return; // fast track
 //        }
 
+        // TODO: try to implement page based indexing instead of if/else
+
         if (RAM_RANGE.test(addressInt)) { // TODO: maybe switch to BankedMemory
             currentRange = RAM_RANGE;
-            currentAddress = ushort(addressInt & sint(RAM_END));
+            addressLatch = ushort(addressInt & sint(RAM_END));
             currentSegment = ram;
 
         } else if (PPU_REGS_RANGE.test(addressInt)) {
@@ -104,25 +114,18 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public @Unsigned byte readByte() {
-        @Unsigned byte data = currentSegment.specifyThen(currentAddress).readByte();
+        @Unsigned byte data = currentSegment.specifyThen(addressLatch).readByte();
 
-        memoryData.set(data);
         return data;
     }
 
     @Override
     public void writeByte(@Unsigned byte data) {
-        memoryData.set(data);
-        currentSegment.specifyThen(currentAddress).writeByte(data);
+        currentSegment.specifyThen(addressLatch).writeByte(data);
     }
 
-    // FIXME: temp for design / testing ideas
-    /* package */ ByteRegister getPpuRegs(int idx) {
-        return ppuRegs.registers[idx];
-    }
+    // TODO: use attach to the bus for all memory devices, not only cartridge? but after switching to mem page index
 
-    // TODO: use attach to the bus for all memory devices, not only cartridge
-    // TODO: try to implement page based indexing instead of if/else
     @Override
     public void attach(MemoryDevice memoryDevice) { // FIXME: what about the address range?
         cartridge = memoryDevice;

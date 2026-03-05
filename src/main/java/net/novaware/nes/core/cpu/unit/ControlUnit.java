@@ -185,7 +185,7 @@ public class ControlUnit implements Unit {
 
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
-        switch (instruction) {
+        switch (instruction) { // TODO: make these 0 argument methods
             case ADD_WITH_CARRY       -> alu.addWithCarry(decodedOperand.getData());
             case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(decodedOperand.getData());
 
@@ -235,7 +235,7 @@ public class ControlUnit implements Unit {
             case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
 
             case BITWISE_AND -> alu.bitwiseAnd(decodedOperand.getData());
-            case BITWISE_OR -> alu.bitwiseOr(decodedOperand.getData());
+            case BITWISE_OR -> alu.bitwiseOr();
             case BITWISE_XOR -> alu.bitwiseXor(decodedOperand.getData());
             case BIT_TEST -> alu.bitTest(decodedOperand.getData());
 

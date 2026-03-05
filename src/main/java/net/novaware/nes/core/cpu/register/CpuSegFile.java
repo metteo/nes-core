@@ -7,7 +7,7 @@ import net.novaware.nes.core.register.SegmentRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
 
@@ -22,26 +22,26 @@ public class CpuSegFile extends RegisterFile {
 
     private final SegmentRegister stackSegment;
 
+    private final SegmentRegister oamSegment;
+
     private final SegmentRegister codeSegment;
 
     private final SegmentRegister dataSegment;
-
-    private final SegmentRegister extraSegment;
 
     @Inject
     public CpuSegFile(
         @CpuVar(ZP) SegmentRegister zeroPage,
         @CpuVar(SS) SegmentRegister stackSegment,
+        @CpuVar(OS) SegmentRegister oamSegment,
         @CpuVar(CS) SegmentRegister codeSegment,
-        @CpuVar(DS) SegmentRegister dataSegment,
-        @CpuVar(ES) SegmentRegister extraSegment
+        @CpuVar(DS) SegmentRegister dataSegment
     ) {
         super("CPU_SEG");
 
         this.zeroPage = zeroPage;
         this.stackSegment = stackSegment;
+        this.oamSegment = oamSegment;
         this.codeSegment = codeSegment;
         this.dataSegment = dataSegment;
-        this.extraSegment = extraSegment;
     }
 }

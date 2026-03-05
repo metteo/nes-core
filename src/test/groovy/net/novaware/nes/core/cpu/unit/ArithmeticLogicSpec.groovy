@@ -1,54 +1,49 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.register.CpuRegFile
+import net.novaware.nes.core.memory.RecordingBus
 import net.novaware.nes.core.register.DataRegister
-import net.novaware.nes.core.util.Hex
+import net.novaware.nes.core.util.RegsAndRamBaseSpec
+import spock.lang.Subject
 
-import static net.novaware.nes.core.util.Hex.s
 import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 
-class ArithmeticLogicSpec extends ControlUnitBaseSpec {
+class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
 
-    CpuRegFile regs
-
-    ArithmeticLogic alu
-
-    def setup() {
-        regs = registers
-        alu = factory.newArithmeticLogic()
-    }
+    @Subject
+    ArithmeticLogic alu = factory.newArithmeticLogic()
 
     def "should bitwise or"() {
         given:
-        regs.a().setAsByte(ubyte(a))
+        regs a: aIn, do: operand
 
         when:
-        alu.bitwiseOr(ubyte(operand))
+        alu.bitwiseOr()
 
         then:
-        regs.a().get() == ubyte(expected)
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs a: aOut, z: zero, n: neg as boolean
 
         where:
-        a           | operand     || expected    | zero  | neg
-        0b0000_1111 | 0b1111_0000 || 0b1111_1111 | false | true
-        0b0000_0000 | 0b0000_0000 || 0b0000_0000 | true  | false
-        0b0101_0101 | 0b1010_1010 || 0b1111_1111 | false | true
+        aIn         | operand     || neg | aOut        | zero
+        0b0000_1111 | 0b1111_0000 ||   1 | 0b1111_1111 | false
+        0b0000_0000 | 0b0000_0000 ||   0 | 0b0000_0000 | true
+        0b0101_0101 | 0b1010_1010 ||   1 | 0b1111_1111 | false
+        0b0000_0001 | 0b0000_0010 ||   0 | 0b0000_0011 | false
     }
 
     def "should bitwise and"() {
         given:
-        regs.a().setAsByte(ubyte(a))
+        regs a: a
 
         when:
         alu.bitwiseAnd(ubyte(operand))
 
         then:
-        regs.a().get() == ubyte(expected)
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            a: expected,
+            z: zero,
+            n: neg
+        )
 
         where:
         a           | operand     || expected    | zero  | neg
@@ -59,15 +54,17 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should bitwise xor"() {
         given:
-        regs.a().setAsByte(ubyte(a))
+        regs a: a
 
         when:
         alu.bitwiseXor(ubyte(operand))
 
         then:
-        regs.a().get() == ubyte(expected)
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            a: expected,
+            z: zero,
+            n: neg
+        )
 
         where:
         a           | operand     || expected    | zero  | neg
@@ -78,13 +75,15 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should rotate left"() {
         given:
-        regs.status().carry = inCarry
+        regs c: inCarry
 
         expect:
         alu.rotateLeft(ubyte(inData)) == ubyte(expected)
-        regs.status().carry == carry
-        regs.status().negative == neg
-        regs.status().zero == zero
+        expectRegs(
+            c: carry,
+            z: zero,
+            n: neg
+        )
 
         where:
         inCarry | inData      || expected    | carry | neg   | zero
@@ -96,13 +95,16 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should rotate right"() {
         given:
-        regs.status().carry = inCarry
+        regs c: inCarry
 
         expect:
         alu.rotateRight(ubyte(inData)) == ubyte(expected)
-        regs.status().carry == carry as boolean
-        regs.status().negative == neg as boolean
-        regs.status().zero == zero
+
+        expectRegs(
+            c: carry as boolean,
+            z: zero,
+            n: neg as boolean
+        )
 
         where:
         inCarry | inData      || neg | expected    | carry | zero
@@ -114,18 +116,22 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
     
     def "should add with carry"() {
         given:
-        regs.a().setAsByte(ubyte(a))
-        regs.status().carry = inCarry
+        regs(
+            a: a,
+            c: inCarry
+        )
 
         when:
         alu.addWithCarry(ubyte(data))
 
         then:
-        s(regs.a().get()) == Hex.s(ubyte(expected))
-        regs.status().carry == carry as boolean
-        regs.status().overflow == ov as boolean
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            a: expected,
+            c: carry as boolean,
+            v: ov as boolean,
+            z: zero,
+            n: neg
+        )
 
         where: // TODO: change other data tests to include a comment column instead of code comment
         a    | inCarry | data || expected | neg   | zero  | carry | ov | comment
@@ -138,18 +144,22 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should subtract with borrow"() {
         given:
-        regs.a().setAsByte(ubyte(a))
-        regs.status().setBorrow(inBorrow as boolean)
+        regs(
+            a: a,
+            b: inBorrow
+        )
 
         when:
         alu.subtractWithBorrow(ubyte(data))
 
         then:
-        s(regs.a().get()) == s(ubyte(expected))
-        regs.status().getBorrow() == borrow as boolean
-        regs.status().isOverflow() == overflow as boolean
-        regs.status().isZero() == zero
-        regs.status().isNegative() == neg
+        expectRegs(
+            a: expected,
+            b: borrow as boolean,
+            v: overflow as boolean,
+            z: zero,
+            n: neg
+        )
 
         where:
         a    | inBorrow | data || expected | neg   | zero  | borrow | overflow
@@ -168,8 +178,11 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
         then:
         sint(result) == expected
-        regs.status().zero == zero
-        regs.status().negative == neg
+
+        expectRegs(
+            z: zero,
+            n: neg
+        )
 
         where:
         data || expected | neg   | zero
@@ -184,8 +197,11 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
         then:
         sint(result) == expected
-        regs.status().zero == zero
-        regs.status().negative == neg
+
+        expectRegs(
+            z: zero,
+            n: neg
+        )
 
         where:
         data || expected | neg   | zero
@@ -197,8 +213,8 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
     def "should increment index register"() {
         given:
         DataRegister register = switch(reg) {
-            case "x" -> regs.indexX
-            case "y" -> regs.indexY
+            case "x" -> registers.indexX
+            case "y" -> registers.indexY
         }
         Runnable aluMethod = switch(method) {
             case "incrementX" -> alu::incrementX
@@ -214,8 +230,10 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
         then:
         result == expected
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            z: zero,
+            n: neg
+        )
 
         where:
         reg | data | method       || expected | neg   | zero
@@ -238,40 +256,46 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should compare register with memory"() {
         when: "accumulator"
-        regs.status().initialize()
+        registers.status().initialize() // TODO: maybe should be part of factory
 
-        regs.a().setAsByte(reg)
+        registers.a().setAsByte(reg)
         alu.compareA(ubyte(data))
 
         then:
-        regs.a().getAsInt() == reg // no change
-        regs.status().borrow == borrow
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            a: reg, // no change
+            b: borrow,
+            z: zero,
+            n: neg
+        )
 
         and: "index x"
-        regs.status().initialize()
+        registers.status().initialize()
 
-        regs.x().setAsByte(reg)
+        regs x: reg
         alu.compareX(ubyte(data))
 
         then:
-        regs.x().getAsInt() == reg // no change
-        regs.status().borrow == borrow
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            x: reg, // no change
+            b: borrow,
+            z: zero,
+            n: neg
+        )
 
         and: "index y"
-        regs.status().initialize()
+        registers.status().initialize()
 
-        regs.y().setAsByte(reg)
+        regs y: reg
         alu.compareY(ubyte(data))
 
         then:
-        regs.y().getAsInt() == reg // no change
-        regs.status().borrow == borrow
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            y: reg, // no change
+            b: borrow,
+            z: zero,
+            n: neg
+        )
 
         where:
         reg  | data || borrow | zero  | neg
@@ -289,16 +313,18 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
     def "should bit test"() {
         given:
-        regs.a().setAsByte(a)
+        regs a: a
 
         when:
         alu.bitTest(ubyte(data))
 
         then:
-        regs.a().getAsInt() == a // no change
-        regs.status().zero == zero
-        regs.status().overflow == overflow
-        regs.status().negative == neg
+        expectRegs(
+            a: a, // no change
+            z: zero,
+            v: overflow,
+            n: neg
+        )
 
         where:
         a           | data        || zero  | neg    | overflow
@@ -318,9 +344,11 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
         then:
         sint(result) == expected
-        regs.status().carry == carry as boolean
-        regs.status().zero == zero
-        regs.status().negative == neg
+        expectRegs(
+            c: carry as boolean,
+            z: zero,
+            n: neg
+        )
 
         where:
         data        || carry | expected    | zero  | neg
@@ -335,9 +363,12 @@ class ArithmeticLogicSpec extends ControlUnitBaseSpec {
 
         then:
         sint(result) == expected
-        regs.status().carry == carry as boolean
-        regs.status().zero == zero
-        !regs.status().negative
+
+        expectRegs(
+            c: carry as boolean,
+            z: zero,
+            n: false
+        )
 
         where:
         data        || expected    | carry | zero

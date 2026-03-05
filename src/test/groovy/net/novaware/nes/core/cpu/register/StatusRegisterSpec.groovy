@@ -81,4 +81,26 @@ class StatusRegisterSpec extends Specification {
         reg.get().getAsInt() == 0x20
         reg.get().get() == ubyte(0x20)
     }
+
+    def "updateZN sets flags correctly for 8-bit boundaries"() {
+        given:
+        def reg = new StatusRegister("P")
+
+        when:
+        reg.maybeZeroOrNegative(input)
+
+        then:
+        reg.isZero() == zero
+        reg.isNegative() == neg
+
+        where:
+        input || zero  | neg   | description
+        0x00  || true  | false | "Zero result"
+        0x01  || false | false | "Small positive"
+        0x7F  || false | false | "Max positive"
+        0x80  || false | true  | "Smallest negative"
+        0xFF  || false | true  | "Max negative (-1)"
+        0x100 || true  | false | "Overflow to 0 (Carry set)"
+        0x180 || false | true  | "Overflow to 0x80 (Carry set)"
+    }
 }

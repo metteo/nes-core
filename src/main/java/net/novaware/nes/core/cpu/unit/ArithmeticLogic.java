@@ -2,28 +2,52 @@ package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.register.StatusRegister;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.function.IntBinaryOperator;
 
-import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 @BoardScope
 public class ArithmeticLogic implements Unit {
 
     @Used
-    private final CpuRegFile registers;
+    private final CpuRegFile registers; // TODO: replace with direct register access
+
+    @Used
+    private final ByteRegister accumulator;
+
+    @Used
+    private final DelegatingRegister operand2; // TODO: rename to operand when 0 args methods done
+
+    @Used
+    private final StatusRegister status;
 
     @Inject
-    public ArithmeticLogic(CpuRegFile registers) {
+    public ArithmeticLogic(
+        CpuRegFile registers,
+        @CpuVar(A) ByteRegister accumulator,
+        @CpuVar(DO) DelegatingRegister operand,
+        @CpuVar(PS) StatusRegister status
+    ) {
         this.registers = registers;
+        this.accumulator = accumulator;
+        this.operand2 = operand;
+        this.status = status;
     }
 
-    public void addWithCarry(@Unsigned byte data) {
+    public void addWithCarry(@Unsigned byte data) { // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
         int prevCarry = registers.status().getCarry() ? 1 : 0;
 
         int a = registers.a().getAsInt();
@@ -78,14 +102,11 @@ public class ArithmeticLogic implements Unit {
         int dataVal = sint(data);
 
         int result = dataVal + by;
-        int resultByte = result & 0xFF;
 
         // TODO: status register gets updated here but memory outside (in readModifyWrite)
-        registers.status()
-                .setZero(resultByte == 0)
-                .setNegative((resultByte & (1 << 7)) > 0);
+        status.maybeZeroOrNegative(result);
 
-        return ubyte(resultByte);
+        return ubyte(result);
     }
 
     public void incrementX() {
@@ -108,32 +129,26 @@ public class ArithmeticLogic implements Unit {
         int val = register.getAsInt();
 
         int result = val + by;
-        int resultByte = result & 0xFF;
 
-        register.setAsByte(resultByte);
-
-        registers.status()
-                .setZero(resultByte == 0)
-                .setNegative((resultByte & (1 << 7)) > 0); // TODO: extract, repeats a lot
+        register.setAsByte(result);
+        status.maybeZeroOrNegative(result);
     }
 
     public void bitwiseOp(@Unsigned byte operand, IntBinaryOperator operator) {
-        @Unsigned byte a = registers.a().get();
+        int result = operator.applyAsInt(accumulator.getAsInt(), sint(operand));
 
-        int result = operator.applyAsInt(sint(a), sint(operand));
-
-        registers.a().setAsByte(result);
-        registers.status()
-                .setZero(result == 0)
-                .setNegative((result & (1 << 7)) > 0);
+        accumulator.setAsByte(result);
+        status.maybeZeroOrNegative(result);
     }
 
     public void bitwiseAnd(@Unsigned byte operand) {
         bitwiseOp(operand, (a, b) -> a & b);
     }
 
-    public void bitwiseOr(@Unsigned byte operand) { // TODO: make package, when CU is here
-        bitwiseOp(operand, (a, b) -> a | b);
+    // TODO: make methods package-private, when CU is here, no 0 arg methods
+
+    void bitwiseOr() {
+        bitwiseOp(operand2.getData(), (a, b) -> a | b);
     }
 
     public void bitwiseXor(@Unsigned byte operand) {

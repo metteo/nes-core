@@ -1,5 +1,7 @@
 package net.novaware.nes.core.memory;
 
+import jakarta.inject.Inject;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.ShortRegister;
@@ -9,6 +11,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.*;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.WRITE;
@@ -51,12 +54,13 @@ public class RecordingBus implements MemoryBus {
     private ShortRegister memoryAddress;
     private ByteRegister memoryData;
 
-    public RecordingBus() {
-        this(new CycleCounter("CPUCC"));
-    }
-
-    public RecordingBus(CycleCounter cycleCounter) {
+    @Inject
+    public RecordingBus(
+        @CpuVar(CC) CycleCounter cycleCounter
+    ) {
         this.cycleCounter = cycleCounter;
+
+        // TODO: change these into latches?
         this.memoryAddress = new ShortRegister("MAR");
         this.memoryData = new ByteRegister("MDR");
     }

@@ -12,9 +12,9 @@ import net.novaware.nes.core.ppu.inject.PpuModule;
 
 @BoardScope
 @Component(modules = {
-    CpuModule.class,
     PpuModule.class,
     ApuModule.class,
+    CpuModule.class,
     ClockModule.class,
     PortModule.class
 })

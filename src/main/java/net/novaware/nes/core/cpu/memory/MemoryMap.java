@@ -22,6 +22,10 @@ public class MemoryMap { // TODO: adjust the name?
     public static final @Unsigned short STACK_SEGMENT_END = ushort(0x01FF);
     public static final int STACK_SEGMENT_SIZE = sint(STACK_SEGMENT_END) - sint(STACK_SEGMENT_START) + 1;
 
+    public static final @Unsigned short OAM_SEGMENT_START = ushort(0x0200);
+    public static final @Unsigned short OAM_SEGMENT_END = ushort(0x02FF);
+    public static final int OAM_SEGMENT_SIZE = sint(OAM_SEGMENT_END) - sint(OAM_SEGMENT_START) + 1;
+
     public static final @Unsigned short RAM_MIRROR_1_START = ushort(0x0800);
     public static final @Unsigned short RAM_MIRROR_1_END = ushort(0x0FFF);
     public static final int RAM_MIRROR_1_SIZE = sint(RAM_MIRROR_1_END) - sint(RAM_MIRROR_1_START) + 1;

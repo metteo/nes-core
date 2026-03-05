@@ -1,17 +1,15 @@
 package net.novaware.nes.core.memory
 
-
+import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
-import static net.novaware.nes.core.memory.RecordingBus.*
-import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
-import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
-import static net.novaware.nes.core.memory.RecordingBus.OpType.WRITE
+import static net.novaware.nes.core.memory.RecordingBus.Op
+import static net.novaware.nes.core.memory.RecordingBus.OpType.*
 import static net.novaware.nes.core.util.UTypes.*
 
 class RecordingBusSpec extends Specification {
 
-    RecordingBus bus = new RecordingBus()
+    RecordingBus bus = new RecordingBus(new CycleCounter("CPUCC"))
 
     def "should increase cycle counter when calling specify"() {
         given:
