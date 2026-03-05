@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class ApuRegFile extends RegisterFile {
     private ByteRegister dmcLength = new ByteRegister("DMC_LEN");
 
     private ByteRegister oamDma = new ByteRegister("OAMDMA"); // 0x4014 // FIXME: same instance as in PPU ? / !
-    private ByteRegister sndChn = new ByteRegister("SNDCHN");
+    private ByteRegister sndChn = new ByteRegister("SNDCHN"); // TODO: use dedicate status / control register
     private ByteRegister joy1 = new ByteRegister("JOY1");
     private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017
 
@@ -72,7 +71,7 @@ public class ApuRegFile extends RegisterFile {
         addressRegisters = List.of();
     }
 
-    public ByteRegister @NonNull [] getCpuRegisters() {
+    public ByteRegister[] getCpuRegisters() {
         return new ByteRegister[]{
                 sq1Vol, sq1Sweep, sq1Lo, sq1Hi,
                 sq2Vol, sq2Sweep, sq2Lo, sq2Hi,

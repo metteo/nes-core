@@ -7,8 +7,8 @@ import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
 import net.novaware.nes.core.cpu.inject.CpuModule;
 import net.novaware.nes.core.cpu.inject.CpuVar;
-import net.novaware.nes.core.cpu.inject.MemoryModule;
-import net.novaware.nes.core.cpu.inject.RegisterModule;
+import net.novaware.nes.core.cpu.inject.CpuMemModule;
+import net.novaware.nes.core.cpu.inject.CpuRegModule;
 import net.novaware.nes.core.cpu.register.CpuInsFile;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
@@ -28,8 +28,8 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 @BoardScope
 @Component(modules = {
     CpuModule.class,
-    RegisterModule.class,
-    MemoryModule.class,
+    CpuRegModule.class,
+    CpuMemModule.class,
     ClockModule.class,
     PortModule.class
 })

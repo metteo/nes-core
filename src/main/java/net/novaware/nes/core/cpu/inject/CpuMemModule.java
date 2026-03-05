@@ -7,7 +7,7 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.memory.CpuBus;
-import net.novaware.nes.core.cpu.memory.MemoryMap;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
@@ -30,13 +30,13 @@ import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 @Module
-public interface MemoryModule { // TODO: prefix class name with cpu?
+public interface CpuMemModule {
 
     @Provides
     @BoardScope
     @CpuVar(RAM)
     static MemoryDevice provideMemory() {
-        return new PhysicalMemory(MemoryMap.RAM_SIZE, sint(MemoryMap.RAM_START));
+        return new PhysicalMemory(CpuMemMap.RAM_SIZE, sint(CpuMemMap.RAM_START));
     }
 
     @Provides
@@ -44,7 +44,7 @@ public interface MemoryModule { // TODO: prefix class name with cpu?
     @CpuVar(PPU)
     static MemoryDevice providePpuRegs(PpuRegFile ppuRegFile) {
         return new ByteRegisterMemory("PPU_REGS",
-                sint(MemoryMap.PPU_REGISTERS_START),
+                sint(CpuMemMap.PPU_REGISTERS_START),
                 ppuRegFile.getCpuRegisters());
     }
 
@@ -53,7 +53,7 @@ public interface MemoryModule { // TODO: prefix class name with cpu?
     @CpuVar(APU)
     static MemoryDevice provideApuRegs(ApuRegFile apuRegFile) {
         return new ByteRegisterMemory("APU_REGS",
-                sint(MemoryMap.APU_IO_REGISTERS_START),
+                sint(CpuMemMap.APU_IO_REGISTERS_START),
                 apuRegFile.getCpuRegisters());
     }
 
@@ -76,7 +76,7 @@ public interface MemoryModule { // TODO: prefix class name with cpu?
     @CpuVar(ZP)
     static SegmentRegister provideZeroPage() {
         SegmentRegister zeroPage = new SegmentRegister(ZP.name());
-        zeroPage.setStart(MemoryMap.RAM_START);
+        zeroPage.setStart(CpuMemMap.RAM_START);
         zeroPage.setLimit(ushort(0x00FF)); // TODO: move to memory map?
 
         return zeroPage;
@@ -87,8 +87,8 @@ public interface MemoryModule { // TODO: prefix class name with cpu?
     @CpuVar(SS)
     static SegmentRegister provideStackSegment() {
         SegmentRegister stackSegment = new SegmentRegister(SS.name());
-        stackSegment.setStart(MemoryMap.STACK_SEGMENT_START);
-        stackSegment.setLimit(MemoryMap.STACK_SEGMENT_END);
+        stackSegment.setStart(CpuMemMap.STACK_SEGMENT_START);
+        stackSegment.setLimit(CpuMemMap.STACK_SEGMENT_END);
 
         return stackSegment;
     }
@@ -98,8 +98,8 @@ public interface MemoryModule { // TODO: prefix class name with cpu?
     @CpuVar(OS)
     static SegmentRegister provideOamSegment() {
         SegmentRegister oamSegment = new SegmentRegister(OS.name());
-        oamSegment.setStart(MemoryMap.OAM_SEGMENT_START);
-        oamSegment.setLimit(MemoryMap.OAM_SEGMENT_END);
+        oamSegment.setStart(CpuMemMap.OAM_SEGMENT_START);
+        oamSegment.setLimit(CpuMemMap.OAM_SEGMENT_END);
 
         return oamSegment;
     }

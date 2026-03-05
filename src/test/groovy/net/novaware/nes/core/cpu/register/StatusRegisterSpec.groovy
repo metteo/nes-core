@@ -6,15 +6,14 @@ import static net.novaware.nes.core.util.UTypes.ubyte
 
 class StatusRegisterSpec extends Specification {
 
+    def reg = new StatusRegister()
+
     def "should hold and return name"() {
         expect:
-        new StatusRegister("P").getName() == "P"
+        reg.getName() == "P"
     }
 
     def "should have correct power on state"() {
-        given:
-        def reg = new StatusRegister("P")
-
         when:
         reg.initialize()
 
@@ -30,7 +29,6 @@ class StatusRegisterSpec extends Specification {
 
     def "should update IRQ flag on reset"() {
         given:
-        def reg = new StatusRegister("P")
         reg.setIrqDisabled(false)
 
         when:
@@ -41,9 +39,6 @@ class StatusRegisterSpec extends Specification {
     }
 
     def "should set and get individual flags"() {
-        given:
-        def reg = new StatusRegister("P")
-
         expect:
         reg.setNegative(true).isNegative()
         reg.setOverflow(true).isOverflow()
@@ -54,9 +49,6 @@ class StatusRegisterSpec extends Specification {
     }
 
     def "should calculate aggregate status byte correctly"() {
-        given:
-        def reg = new StatusRegister("P")
-
         when: "all flags set"
         reg.setNegative(true)
            .setOverflow(true)
@@ -83,9 +75,6 @@ class StatusRegisterSpec extends Specification {
     }
 
     def "updateZN sets flags correctly for 8-bit boundaries"() {
-        given:
-        def reg = new StatusRegister("P")
-
         when:
         reg.maybeZeroOrNegative(input)
 

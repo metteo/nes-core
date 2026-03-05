@@ -27,7 +27,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.X;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.Y;
 
 @Module
-public interface RegisterModule { // TODO: prefix class name with cpu?
+public interface CpuRegModule {
 
     // FIXME: use custom qualifier annotation for cpu, ppu, apu with enum value instead of string
 
@@ -122,7 +122,7 @@ public interface RegisterModule { // TODO: prefix class name with cpu?
     @BoardScope
     @CpuVar(PS)
     static StatusRegister provideStatus() {
-        return new StatusRegister("P");
+        return new StatusRegister();
     }
 
     @Provides

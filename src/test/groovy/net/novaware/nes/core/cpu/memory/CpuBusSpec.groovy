@@ -13,9 +13,9 @@ class CpuBusSpec extends Specification {
     def newCpuBus() {
         new CpuBus(
             cycleCounter,
-            new PhysicalMemory(MemoryMap.RAM_SIZE, sint(MemoryMap.RAM_START)),
-            new PhysicalMemory(MemoryMap.PPU_REGISTERS_SIZE + MemoryMap.PPU_REGISTERS_MIRROR_SIZE, sint(MemoryMap.PPU_REGISTERS_START)),
-            new PhysicalMemory(MemoryMap.APU_IO_REGISTERS_SIZE, sint(MemoryMap.APU_TEST_REGISTERS_START)),
+            new PhysicalMemory(CpuMemMap.RAM_SIZE, sint(CpuMemMap.RAM_START)),
+            new PhysicalMemory(CpuMemMap.PPU_REGISTERS_SIZE + CpuMemMap.PPU_REGISTERS_MIRROR_SIZE, sint(CpuMemMap.PPU_REGISTERS_START)),
+            new PhysicalMemory(CpuMemMap.APU_IO_REGISTERS_SIZE, sint(CpuMemMap.APU_TEST_REGISTERS_START)),
         )
     }
 

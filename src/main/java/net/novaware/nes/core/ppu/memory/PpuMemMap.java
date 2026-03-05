@@ -1,5 +1,6 @@
 package net.novaware.nes.core.ppu.memory;
 
+import net.novaware.nes.core.memory.MemoryMap;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -8,7 +9,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_memory_map">PPU Memory Map on nesdev.org</a>
  */
-public class MemoryMap {
+public class PpuMemMap implements MemoryMap {
 
     // TODO: segment registers: Video Segment, configured by mappers for debug view
     //       e.g. where is nametable, where is pallete etc.

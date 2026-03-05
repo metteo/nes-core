@@ -2,10 +2,10 @@ package net.novaware.nes.core.cpu.memory
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.cpu.memory.MemoryMap.*
+import static CpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.sint
 
-class MemoryMapSpec extends Specification {
+class CpuMemMapSpec extends Specification {
 
     def "should cross check sizes" () {
         expect:

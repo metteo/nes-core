@@ -5,7 +5,6 @@ import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
 import net.novaware.nes.core.register.ShortRegister;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public class PpuRegFile extends RegisterFile {
     // TODO: enforce R / W / RW / Wx2 specifics
     private ByteRegister ppuCtrl = new ByteRegister("PPUCTRL"); // 0x2000
     private ByteRegister ppuMask = new ByteRegister("PPUMASK"); // ...
-    private ByteRegister ppuStatus = new ByteRegister("PPUSTATUS");
+    private ByteRegister ppuStatus = new ByteRegister("PPUSTATUS"); // TODO: use a dedicated register type
 
     private ByteRegister oamAddr = new ByteRegister("OAMADDR");
     private ByteRegister oamData = new ByteRegister("OAMDATA");
@@ -57,7 +56,7 @@ public class PpuRegFile extends RegisterFile {
         addressRegisters = List.of(ppuScrollFull, ppuAddrFull);
     }
 
-    public ByteRegister @NonNull [] getCpuRegisters() {
+    public ByteRegister[] getCpuRegisters() {
         return new ByteRegister[]{
                 ppuCtrl, ppuMask, ppuStatus,
                 oamAddr, oamData,

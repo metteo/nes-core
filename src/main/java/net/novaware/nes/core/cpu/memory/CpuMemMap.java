@@ -1,5 +1,6 @@
 package net.novaware.nes.core.cpu.memory;
 
+import net.novaware.nes.core.memory.MemoryMap;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -8,7 +9,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/CPU_memory_map">CPU Memory Map on nesdev.org</a>
  */
-public class MemoryMap { // TODO: adjust the name?
+public class CpuMemMap implements MemoryMap {
 
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0xFFFF);

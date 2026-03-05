@@ -2,10 +2,10 @@ package net.novaware.nes.core.ppu.memory
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.ppu.memory.MemoryMap.*
+import static PpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.sint
 
-class MemoryMapSpec extends Specification {
+class PpuMemMapSpec extends Specification {
 
     def "should cross check sizes" () {
         expect:

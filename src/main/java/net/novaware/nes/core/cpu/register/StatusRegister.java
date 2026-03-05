@@ -2,10 +2,12 @@ package net.novaware.nes.core.cpu.register;
 
 import net.novaware.nes.core.register.Register;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
+
 /**
  * Processor status register
  */
-public class StatusRegister extends Register {
+public class StatusRegister extends Register { // TODO: consider renaming to CpuStatusRegister
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
@@ -22,8 +24,8 @@ public class StatusRegister extends Register {
      */
     private transient Status copy;
 
-    public StatusRegister(String name) {
-        super(name);
+    public StatusRegister() {
+        super(PS.doc());
 
         copy = new Status();
     }
