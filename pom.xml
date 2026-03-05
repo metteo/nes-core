@@ -282,6 +282,8 @@
                         ${jpms.opens}.cpu.instruction=ALL-UNNAMED
                         ${jpms.opens}.cpu.memory=ALL-UNNAMED
                         ${jpms.opens}.cpu.register=ALL-UNNAMED
+                        ${jpms.opens}.cpu.signal=ALL-UNNAMED
+                        ${jpms.opens}.cpu.signal.internal=ALL-UNNAMED
                         ${jpms.opens}.cpu.unit=ALL-UNNAMED
                         ${jpms.opens}.easy=ALL-UNNAMED
                         ${jpms.opens}.file=ALL-UNNAMED

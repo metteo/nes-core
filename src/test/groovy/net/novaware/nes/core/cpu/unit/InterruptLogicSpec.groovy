@@ -21,6 +21,10 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         regs.pc().setAsShort(0x1234)
         regs.sp().setAsByte(0xFD)
         regs.status().initialize() // I=1
+        ram(
+            0xFFFE, 0xCD,
+            0xFFFF, 0xAB,
+        )
 
         Status status = regs.status().get()
 
@@ -28,12 +32,12 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         interrupts.forceBreak()
 
         then:
-        regs.pc().getAsInt() == 0xFFFE
+        regs.pc().getAsInt() == 0xABCD
         regs.sp().getAsInt() == 0xFD - 3
 
         //                                                      0bNV1B_DIZC
         bus.specifyThen(ushort(0x01FB)).readByte() == ubyte(0b0011_0100) // ^
-        bus.specifyThen(ushort(0x01FC)).readByte() == ubyte(0x36)        // |
+        bus.specifyThen(ushort(0x01FC)).readByte() == ubyte(0x35)        // |
         bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12)        // |
 
         status.isIrqDisabled()
@@ -45,7 +49,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         interrupts.returnFromInterrupt()
 
         then:
-        Hex.s(regs.pc().get()) == "1236"
+        Hex.s(regs.pc().get()) == "1235"
         regs.sp().getAsInt() == 0xFD
         status.isIrqDisabled()
         status.getBreak()

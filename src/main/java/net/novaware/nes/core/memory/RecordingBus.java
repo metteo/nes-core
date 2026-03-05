@@ -2,6 +2,7 @@ package net.novaware.nes.core.memory;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.ShortRegister;
@@ -46,7 +47,7 @@ public class RecordingBus implements MemoryBus {
         ACCESS, READ, WRITE
     }
 
-    private @Unsigned byte[] memory = new byte[0xFFFF];
+    private @Unsigned byte[] memory = new byte[CpuMemMap.MEMORY_SIZE];
 
     private final CycleCounter cycleCounter;
     private List<Op> activity = new ArrayList<>();

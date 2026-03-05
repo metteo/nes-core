@@ -7,7 +7,8 @@ import dagger.Module;
  */
 @Module(includes = {
     CpuRegModule.class,
-    CpuMemModule.class
+    CpuMemModule.class,
+    CpuSignalModule.class
 })
 public interface CpuModule {
     // NOTE: do not add provide methods here.

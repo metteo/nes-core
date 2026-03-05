@@ -1,27 +1,27 @@
-package net.novaware.nes.core.cpu;
+package net.novaware.nes.core.cpu.signal;
 
 public interface Synchronizable {
 
-    void ready(boolean high);
+    void ready(Signal s);
 
     /**
      * ___
      * RDY active-low line
      */
-    default void rdy(boolean high) {
-        ready(high);
+    default void rdy(Signal s) {
+        ready(s);
     }
 
     @FunctionalInterface
     interface SyncListener {
 
-        void onSyncChange(boolean high);
+        void onSyncChange(Signal s);
 
         /**
          * SYNC output line
          */
-        default void sync(boolean high) {
-            onSyncChange(high);
+        default void sync(Signal s) {
+            onSyncChange(s);
         }
     }
 

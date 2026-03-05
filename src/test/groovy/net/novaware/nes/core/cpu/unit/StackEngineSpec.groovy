@@ -58,7 +58,7 @@ class StackEngineSpec extends Specification {
         regs.status().initialize()
 
         when:
-        engine.pushStatus()
+        engine.pushStatus(true)
 
         then:
         bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)

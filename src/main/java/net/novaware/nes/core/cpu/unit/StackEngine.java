@@ -112,8 +112,8 @@ public class StackEngine implements Unit {
         register.high(pull());
     }
 
-    void pushStatus() {
-        Status s = status.get().setBreak(true);
+    void pushStatus(boolean brk) {
+        Status s = status.get().setBreak(brk);
 
         @Unsigned byte data = s.get();
 

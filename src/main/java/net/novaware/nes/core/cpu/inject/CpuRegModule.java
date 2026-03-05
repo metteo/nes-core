@@ -8,7 +8,6 @@ import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
@@ -29,16 +28,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.Y;
 @Module
 public interface CpuRegModule {
 
-    // FIXME: use custom qualifier annotation for cpu, ppu, apu with enum value instead of string
-
-    // TODO: falling edge triggered, not high / low state
-    DataRegister nmi = new ByteRegister("NMI");
-    DataRegister irq = new ByteRegister("IRQ");
-    DataRegister reset = new ByteRegister("RST");
-    // TODO: SOH interrupt for sprite 0 hit wake up call
-
-    // TODO: add separate irq/nmi latch registers?
-
     @Provides
     @BoardScope
     @CpuVar(CC)
@@ -57,7 +46,7 @@ public interface CpuRegModule {
     @BoardScope
     @CpuVar(MA)
     static ShortRegister provideMemoryAddress() {
-        return new ShortRegister("MAR");
+        return new ShortRegister("MAR"); // TODO: use CpuVarName enum.name() instead
     }
 
     @Provides

@@ -40,18 +40,25 @@ public enum CpuVarName {
     // region Memory Areas
 
     RAM ("",  "?", "RAM"),
-    PPU ("", "", ""),
-    APU ("", "", ""),
-    CART ("", "", ""),
+    PPU ("", "", "PPU"),
+    APU ("", "", "APU"),
+    CART ("", "", "Cartridge"),
 
     // endregion
 
     BUS("", "memoryBus", "Memory Bus"),
 
-    // TODO: nmi, irq, rst, s0h
+    // region Signals
 
+    IRQ ("", "interruptRequest", "Interrupt Request"),
+    NMI ("", "nonMaskableInterrupt", "Non-Maskable Interrupt"),
+    S0H ("", "sprite0Hit", "Sprite 0 Hit"),
+    RES ("", "reset", "Reset"),
+    RDY ("", "ready", "Ready"),
+    SOV ("SO", "setOverflow", "Set Overflow"),
+
+    // endregion
     ;
-
     private final String doc;
     private final String var;
     private final String display;

@@ -11,7 +11,7 @@ public class StatusRegister extends Register { // TODO: consider renaming to Cpu
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
-    //              unused        // 5 - always one
+    //              expansion     // 5 - always one
     //              break         // 4 - transient
 
     private boolean decimal;      // 3 - ADC and SBC in decimal mode

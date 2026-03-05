@@ -1,8 +1,13 @@
 package net.novaware.nes.core.cpu
 
 import net.novaware.nes.core.cpu.register.CpuRegFile
+import net.novaware.nes.core.cpu.signal.internal.EdgeDetector
+import net.novaware.nes.core.cpu.signal.internal.LevelDetector
 import net.novaware.nes.core.cpu.unit.*
 import spock.lang.Specification
+
+import static net.novaware.nes.core.cpu.signal.Signal.HIGH
+import static net.novaware.nes.core.cpu.signal.Signal.LOW
 
 class CpuSpec extends Specification {
 
@@ -18,6 +23,12 @@ class CpuSpec extends Specification {
     PowerMgmt powerMgmt = Mock()
     PrefetchUnit prefetch = Mock()
     StackEngine stackEngine = Mock()
+    LevelDetector irq = Mock()
+    EdgeDetector nmi = Mock()
+    LevelDetector res = Mock()
+    LevelDetector s0h = Mock()
+    LevelDetector rdy = Mock()
+    EdgeDetector so = Mock()
 
     Cpu instance = new Cpu(
         registers,
@@ -30,7 +41,8 @@ class CpuSpec extends Specification {
         mmu,
         powerMgmt,
         prefetch,
-        stackEngine
+        stackEngine,
+        irq, nmi, s0h, res, rdy, so
     )
 
     def "should properly initialize units" () {
@@ -65,5 +77,71 @@ class CpuSpec extends Specification {
         1 * powerMgmt.reset()
         1 * prefetch.reset()
         1 * stackEngine.reset()
+    }
+
+    def "should properly react to irq signal"() {
+        when:
+        instance.interruptRequest(signal)
+
+        then:
+        1 * irq.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
+    }
+
+    def "should properly react to nmi signal"() {
+        when:
+        instance.nonMaskableInterrupt(signal)
+
+        then:
+        1 * nmi.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
+    }
+
+    def "should properly react to s0h signal"() {
+        when:
+        instance.s0h(signal)
+
+        then:
+        1 * s0h.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
+    }
+
+    def "should properly react to res signal"() {
+        when:
+        instance.reset(signal)
+
+        then:
+        1 * res.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
+    }
+
+    def "should properly react to rdy signal"() {
+        when:
+        instance.rdy(signal)
+
+        then:
+        1 * rdy.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
+    }
+
+    def "should properly react to so signal"() {
+        when:
+        instance.so(signal)
+
+        then:
+        1 * so.set(signal)
+
+        where:
+        signal << [LOW, HIGH]
     }
 }

@@ -5,6 +5,7 @@ public enum AddressingMode {
     // region Immediate and Single Operand
 
     IMMEDIATE(1),              // #$NN (Value is the operand)
+
     IMPLIED(0),                // No operand (e.g., NOP, TAX)
     ACCUMULATOR(0),            // Operand is the A register (e.g., ASL A)
 
@@ -45,7 +46,7 @@ public enum AddressingMode {
     }
 
     /**
-     * Number of bytes the address takes up
+     * Number of bytes the operand takes up
      */
     private final int size;
 

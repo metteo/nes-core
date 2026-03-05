@@ -8,7 +8,6 @@ import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
@@ -21,13 +20,11 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
-import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.cpu.unit.InterruptLogic.RES_VECTOR;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 @BoardScope
 public class ControlUnit implements Unit {
-
-    // stabilizing after takes about n cycles, 6 cycles according to PDF
-    private static final int INITIAL_CPU_CYCLE = 3;
 
     @Owned private final ControlFlow flow;
 
@@ -95,34 +92,47 @@ public class ControlUnit implements Unit {
     public void initialize() {
         flow.initialize();
 
-        cycleCounter.setValue(INITIAL_CPU_CYCLE);
-
         registers.a().setAsByte(0);
         registers.x().setAsByte(0);
         registers.y().setAsByte(0);
-        registers.sp().setAsByte(0xFD);
+        registers.sp().setAsByte(0x00);
         registers.status().initialize();
-
-        // TODO: move to InterruptLogic unit
-        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        prefetch.run();
     }
 
+    /**
+     * Example 9.1: Illustration of Start Cycle
+     * https://web.archive.org/web/20200129081101/http://users.telenet.be:80/kim1-6502/6502/proman.html#126
+     */
     @Override
     public void reset() {
         flow.reset();
 
-        cycleCounter.setValue(INITIAL_CPU_CYCLE);
+        cycleCounter.setValue(0L);
 
-        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        prefetch.run();
-
-        registers.status().reset();
+        int randomAddress = 0x0000;
+                                                     // Cycle
+        mmu.specifyAnd(ushort(randomAddress));       // 1
+        mmu.specifyAnd(ushort(randomAddress + 1)); // 2
 
         // TODO: move to stack engine
         int sp = registers.sp().getAsInt();
-        sp -= 3;
+
         registers.sp().setAsByte(sp);
+        mmu.specifyAnd(ushort(sp));                  // 3
+
+        sp -= 1;
+        registers.sp().setAsByte(sp);
+        mmu.specifyAnd(ushort(sp));                  // 4
+
+        sp -= 2;
+        registers.sp().setAsByte(sp);
+        mmu.specifyAnd(ushort(sp));                  // 5
+
+        @Unsigned short resVector = addressGen.fetchAddress(RES_VECTOR); // 6, 7
+        registers.pc().set(resVector);
+        prefetch.run();                             // 8
+
+        registers.status().reset();
     }
 
     /**
@@ -250,11 +260,11 @@ public class ControlUnit implements Unit {
 
             case NO_OPERATION -> {}
 
-            case TRANSFER_A_TO_X -> this.transfer(registers.a(), registers.x());
-            case TRANSFER_X_TO_A -> this.transfer(registers.x(), registers.a());
+            case TRANSFER_A_TO_X -> alu.transfer(registers.a(), registers.x());
+            case TRANSFER_X_TO_A -> alu.transfer(registers.x(), registers.a());
 
-            case TRANSFER_A_TO_Y -> this.transfer(registers.a(), registers.y());
-            case TRANSFER_Y_TO_A -> this.transfer(registers.y(), registers.a());
+            case TRANSFER_A_TO_Y -> alu.transfer(registers.a(), registers.y());
+            case TRANSFER_Y_TO_A -> alu.transfer(registers.y(), registers.a());
 
             case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
             case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
@@ -265,19 +275,16 @@ public class ControlUnit implements Unit {
             case PUSH_A_TO_SP   -> stackEngine.push(registers.a());
             case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
 
-            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus();
+            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus(true);
             case PULL_STATUS_FROM_SP -> stackEngine.pullStatus();
 
-            case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
+            case TRANSFER_SP_TO_X -> alu.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
 
             case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(decodedOperand.getData()); } // FIXME: test illegal
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
-        // execute the handler
-        // write back to mem / reg
-        // fetch the next instruction
     }
 
     /* package */ void readModifyWrite(UByteUnaryOperator operator) { // TODO: move to alu
@@ -288,15 +295,7 @@ public class ControlUnit implements Unit {
         decodedOperand.setData(newData); // write
     }
 
-    /* package */ void transfer(DataRegister src, DataRegister dst) { // TODO: move to alu
-        @Unsigned byte data = src.get();
-
-        dst.set(data);
-
-        int dataVal = sint(data);
-
-        registers.status() // TODO: create a utility
-                .setZero(dataVal == 0)
-                .setNegative((dataVal & 0x80) != 0);
+    public void sampleInterrupts() {
+        interrupts.sample();
     }
 }

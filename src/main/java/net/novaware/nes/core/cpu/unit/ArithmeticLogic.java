@@ -254,4 +254,10 @@ public class ArithmeticLogic implements Unit {
 
         return ubyte(resultByte);
     }
+
+    void transfer(DataRegister src, DataRegister dst) {
+        @Unsigned byte data = src.get();
+        dst.set(data);
+        status.maybeZeroOrNegative(sint(data));
+    }
 }

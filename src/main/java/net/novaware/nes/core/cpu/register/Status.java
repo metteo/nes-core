@@ -14,7 +14,7 @@ public class Status {
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
-                                  // 5 - always one
+                                  // 5 - expansion, always one
     private boolean breaк;        // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php
 
     private boolean decimal;      // 3 - ADC and SBC in decimal mode

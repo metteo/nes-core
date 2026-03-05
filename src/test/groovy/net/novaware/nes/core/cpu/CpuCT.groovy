@@ -28,6 +28,7 @@ class CpuCT extends Specification {
 
         when:
         cpu.initialize()
+        cpu.reset()
 
         then:
         cpu.registers.pc().getAsInt() == 0x1234 + 1

@@ -376,4 +376,16 @@ class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
         0b0000_1111 || 0b0000_0111 | 1     | false
         0b0000_0001 || 0b0000_0000 | 1     | true
     }
+
+    def "should transfer between registers and update flags"() {
+        given:
+
+        regs(a: 0x25)
+
+        when:
+        alu.transfer(registers.a(), registers.x()) // TAX
+
+        then:
+        expectRegs(x: 0x25, z: false, n: false)
+    }
 }
