@@ -39,4 +39,9 @@ public class CycleCounter extends Register {
     public long diff() {
         return value - mark;
     }
+
+    @Override
+    public String toString() {
+        return getName() + ": " + value;
+    }
 }

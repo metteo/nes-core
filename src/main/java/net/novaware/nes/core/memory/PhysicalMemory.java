@@ -3,14 +3,16 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
-public class PhysicalMemory implements Addressable {
+public class PhysicalMemory implements MemoryDevice { // TODO: Add nameable
 
     private final UByteBuffer buffer;
     private final int offset;
 
-    public PhysicalMemory(int size, int offset) {
+    private int position;
+
+    public PhysicalMemory(int size, int offset) { // TODO: move offset as first param (or second after name)
         buffer = UByteBuffer.allocate(size);
         this.offset = offset;
     }
@@ -19,19 +21,30 @@ public class PhysicalMemory implements Addressable {
         this(size, 0);
     }
 
-    @Override
-    public @Unsigned byte read(@Unsigned short address) {
-        final int position = uint(address) - offset;
+    public PhysicalMemory(UByteBuffer buffer, int offset) {
+        this.buffer = buffer;
+        this.offset = offset;
+    }
 
-        return buffer.position(position)
-                .get();
+    public PhysicalMemory(UByteBuffer buffer) {
+        this(buffer, 0);
+    }
+
+
+    @Override
+    public void specify(@Unsigned short address) {
+        position = sint(address) - offset;
+
+        buffer.position(position);
     }
 
     @Override
-    public void write(@Unsigned short address, @Unsigned byte data) {
-        final int position = uint(address) - offset;
+    public @Unsigned byte readByte() {
+        return buffer.get(position); // get() advances position, we want to keep it
+    }
 
-        buffer.position(position)
-                .put(data);
+    @Override
+    public void writeByte(@Unsigned byte data) {
+        buffer.put(position, data);
     }
 }

@@ -2,18 +2,10 @@ package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.cpu.instruction.Instruction
 import net.novaware.nes.core.cpu.instruction.InstructionGroup
-import net.novaware.nes.core.util.UnsignedTypes
 
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox09
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox0A
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox16
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox19
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox1E
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox96
-import static net.novaware.nes.core.cpu.instruction.Instruction.OxD0
+import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.BRANCH_IF_ZERO_CLR
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.*
 
 class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
@@ -21,8 +13,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Ox0A.opcode())
-        registers.currentOperand.set(UnsignedTypes.USHORT_0)
+        insRegs.currentInstruction.set(Ox0A.opcode())
+        insRegs.currentOperand.set(USHORT_0)
 
         regs a: 0x28
 
@@ -33,16 +25,16 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x28)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x28)
     }
 
     def "should decode absolute mode" () {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox0E.opcode())
-        registers.currentOperand.setAsShort(0x1234)
+        insRegs.currentInstruction.set(Instruction.Ox0E.opcode())
+        insRegs.currentOperand.setAsShort(0x1234)
 
         ram 0x1234, 0x42
 
@@ -53,16 +45,16 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x42)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
     def "should decode absolute x / y indexed mode"() {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(instr.opcode())
-        registers.currentOperand.setAsShort(0x2345)
+        insRegs.currentInstruction.set(instr.opcode())
+        insRegs.currentOperand.setAsShort(0x2345)
 
         regs x: x, y: y
         ram (
@@ -76,8 +68,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == cycles
-        registers.decodedInstruction.getAsInt() == instr.group().ordinal()
-        registers.decodedOperand.getData() == ubyte(0x13)
+        insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x13)
 
         where:
         instr | x    | y    | cycles
@@ -91,8 +83,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Ox09.opcode())
-        registers.currentOperand.setAsShort(0x78)
+        insRegs.currentInstruction.set(Ox09.opcode())
+        insRegs.currentOperand.setAsShort(0x78)
 
         bus.record()
 
@@ -101,16 +93,16 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x78)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x78)
     }
 
     def "should decode absolute indirect mode"() {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox6C.opcode())
-        registers.currentOperand.setAsShort(operand)
+        insRegs.currentInstruction.set(Instruction.Ox6C.opcode())
+        insRegs.currentOperand.setAsShort(operand)
 
         ram(
             0x0300, 0x34, // bb
@@ -127,8 +119,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 2
-        registers.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO_LOCATION.ordinal()
-        registers.decodedOperand.getAddress() == ushort(result)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO_LOCATION.ordinal()
+        insRegs.decodedOperand.getAddress() == ushort(result)
 
         where:
         operand | result
@@ -140,8 +132,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox01.opcode())
-        registers.currentOperand.setAsShort(0x20)
+        insRegs.currentInstruction.set(Instruction.Ox01.opcode())
+        insRegs.currentOperand.setAsShort(0x20)
 
         regs x: 0x04
         ram(
@@ -157,16 +149,16 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 2
-        registers.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x42)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
     def "should decode pre indexed indirect x mode with zero page wrap"() {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox01.opcode())
-        registers.currentOperand.setAsShort(0xFF)
+        insRegs.currentInstruction.set(Instruction.Ox01.opcode())
+        insRegs.currentOperand.setAsShort(0xFF)
 
         regs x: 0x01
         ram(
@@ -182,15 +174,15 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 2
-        registers.decodedOperand.getData() == ubyte(0x99)
+        insRegs.decodedOperand.getData() == ubyte(0x99)
     }
 
     def "should decode post indexed indirect y mode" () {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox11.opcode())
-        registers.currentOperand.setAsShort(address)
+        insRegs.currentInstruction.set(Instruction.Ox11.opcode())
+        insRegs.currentOperand.setAsShort(address)
 
         regs y: 0x02
         ram(
@@ -206,8 +198,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == cycles
-        registers.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x77)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x77)
 
         where:
         address | cycles
@@ -219,8 +211,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(Instruction.Ox05.opcode())
-        registers.currentOperand.setAsShort(0x42)
+        insRegs.currentInstruction.set(Instruction.Ox05.opcode())
+        insRegs.currentOperand.setAsShort(0x42)
 
         ram 0x0042, 0x13
 
@@ -231,16 +223,16 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
-        registers.decodedOperand.getData() == ubyte(0x13)
+        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x13)
     }
 
     def "should decode indexed zero page x / y mode"() {
         given:
         def cu = newControlUnit()
 
-        registers.currentInstruction.set(instr.opcode())
-        registers.currentOperand.setAsShort(0x80)
+        insRegs.currentInstruction.set(instr.opcode())
+        insRegs.currentOperand.setAsShort(0x80)
 
         regs x: x, y: y
         ram(
@@ -254,8 +246,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == instr.group().ordinal()
-        registers.decodedOperand.getData() == ubyte(0x55)
+        insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
+        insRegs.decodedOperand.getData() == ubyte(0x55)
 
         where:
         instr | x    | y
@@ -268,8 +260,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
 
         regs pc: 0x0025
-        registers.currentInstruction.set(OxD0.opcode())
-        registers.currentOperand.setAsShort(operand)
+        insRegs.currentInstruction.set(OxD0.opcode())
+        insRegs.currentOperand.setAsShort(operand)
 
         bus.record()
 
@@ -278,8 +270,8 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         bus.cycles() == 0
-        registers.decodedInstruction.getAsInt() == BRANCH_IF_ZERO_CLR.ordinal()
-        registers.decodedOperand.getAddress() == ushort(0x0025 + operand)
+        insRegs.decodedInstruction.getAsInt() == BRANCH_IF_ZERO_CLR.ordinal()
+        insRegs.decodedOperand.getAddress() == ushort(0x0025 + operand)
 
         where:
         operand << [-2, 2]

@@ -1,0 +1,33 @@
+package net.novaware.nes.core.cpu.signal.internal;
+
+import net.novaware.nes.core.cpu.signal.Signal;
+
+import static net.novaware.nes.core.cpu.signal.Signal.not;
+
+public class LevelDetector implements Detector {
+
+    private final String name;
+    private final Signal activeState;
+
+    private Signal current;
+
+    public LevelDetector(String name, Signal activeState) {
+        this.name = name;
+        this.activeState = activeState;
+        this.current = not(activeState);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public boolean isActive() {
+        return activeState == current;
+    }
+
+    public void set(Signal state) {
+        this.current = state;
+    }
+}

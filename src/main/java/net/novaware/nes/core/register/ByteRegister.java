@@ -1,11 +1,12 @@
 package net.novaware.nes.core.register;
 
+import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.sint;
 
-public class ByteRegister extends DataRegister {
+public final class ByteRegister extends DataRegister {
 
     private @Unsigned byte data;
 
@@ -22,10 +23,15 @@ public class ByteRegister extends DataRegister {
     }
 
     public int getAsInt() {
-        return uint(data);
+        return sint(data);
     }
 
     public void setAsByte(int data) {
         set(ubyte(data));
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ": 0x" + Hex.s(get());
     }
 }

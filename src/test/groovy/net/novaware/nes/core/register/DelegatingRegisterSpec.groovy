@@ -1,10 +1,11 @@
 package net.novaware.nes.core.register
 
-import net.novaware.nes.core.memory.SystemBus
+
+import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class DelegatingRegisterSpec extends Specification {
 
@@ -74,8 +75,8 @@ class DelegatingRegisterSpec extends Specification {
 
     def "should work with memory address"() {
         given:
-        def systemBus = new SystemBus(new CycleCounter("CPUCC"))
-        systemBus.specifyAnd(ushort(0x0012)).writeByte(ubyte(0x34))
+        def systemBus = new RecordingBus(new CycleCounter("CPUCC"))
+        systemBus.specifyThen(ushort(0x0012)).writeByte(ubyte(0x34))
         def register = new DelegatingRegister("DOP")
         register.configureMemory(systemBus, ushort(0x0012))
 
@@ -89,7 +90,7 @@ class DelegatingRegisterSpec extends Specification {
         register.setData(ubyte(0x56))
 
         then:
-        systemBus.specifyAnd(ushort(0x0012)).readByte() == ubyte(0x56)
+        systemBus.specifyThen(ushort(0x0012)).readByte() == ubyte(0x56)
         register.getData() == ubyte(0x56)
     }
 }

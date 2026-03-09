@@ -1,67 +1,72 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import net.novaware.nes.core.cpu.CpuRegisters;
-import net.novaware.nes.core.register.AddressRegister;
+import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PC;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * Subunit of Control Unit responsible for handling control flow instructions
  * jumps, calls, returns, branches
  */
+@BoardScope
 public class ControlFlow implements Unit {
 
-    @Used private final CpuRegisters registers;
+    @Used private final ShortRegister programCounter;
+    @Used private final DelegatingRegister decodedOperand;
     @Used private final CycleCounter cycleCounter;
     @Used private final StackEngine stackEngine;
-    
+
     @Inject
     public ControlFlow(
-            CpuRegisters registers,
-            @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
+            @CpuVar(PC) ShortRegister programCounter,
+            @CpuVar(DO) DelegatingRegister decodedOperand,
+            @CpuVar(CC) CycleCounter cycleCounter,
             StackEngine stackEngine
     ) {
-        this.registers = registers;
+        this.programCounter = programCounter;
+        this.decodedOperand = decodedOperand;
         this.cycleCounter = cycleCounter;
         this.stackEngine = stackEngine;
     }
 
     /* package */ void branchIf(boolean condition) {
-        @Unsigned short jumpAddress = registers.dor().getAddress();
-        @Unsigned short currentPc = registers.pc().get();
+        @Unsigned short jumpAddress = decodedOperand.getAddress();
+        @Unsigned short currentPc = programCounter.get();
 
-        int jumpAddressHi = uint(jumpAddress) >> 8;
-        int pcHi = registers.pc().highAsInt();
+        int jumpAddressHi = sint(jumpAddress) >> 8;
+        int pcHi = programCounter.highAsInt();
         boolean pageChange = jumpAddressHi != pcHi;
 
         cycleCounter.maybeIncrement(condition);
         cycleCounter.maybeIncrement(condition && pageChange);
-        registers.pc().set(condition ? jumpAddress : currentPc); // hopefully cmov
+        programCounter.set(condition ? jumpAddress : currentPc); // hopefully cmov
     }
 
     /* package */ void jumpTo() {
-        registers.pc().set(registers.dor().getAddress());
+        programCounter.set(decodedOperand.getAddress());
     }
 
     public void call() {
-        final AddressRegister pc = registers.pc();
-
         // NOTE: not pc+2 here, because reading absolute address already did it?
-        stackEngine.push(pc);
+        stackEngine.push(programCounter);
 
-        pc.set(registers.dor().getAddress());
+        programCounter.set(decodedOperand.getAddress());
     }
 
     public void returnFromCall() {
-        AddressRegister pc = registers.pc();
-        stackEngine.pull(pc);
+        stackEngine.pull(programCounter);
 
-        pc.setAsShort(pc.getAsInt() + 1);
+        // FIXME: why?
+        programCounter.setAsShort(programCounter.getAsInt());
     }
 }

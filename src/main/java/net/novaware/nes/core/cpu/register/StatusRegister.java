@@ -2,13 +2,17 @@ package net.novaware.nes.core.cpu.register;
 
 import net.novaware.nes.core.register.Register;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
+
 /**
  * Processor status register
  */
-public class StatusRegister extends Register {
+public class StatusRegister extends Register { // TODO: consider renaming to CpuStatusRegister
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
+    //              expansion     // 5 - always one
+    //              break         // 4 - transient
 
     private boolean decimal;      // 3 - ADC and SBC in decimal mode
     private boolean irq_off;      // 2 - 0 if irq enabled, 1 if irq disabled
@@ -16,12 +20,12 @@ public class StatusRegister extends Register {
     private boolean carry;        // 0 - carry or !borrow flag
 
     /**
-     * Copy of status register that can be manipulated during stack operations
+     * Working copy of status register that can be manipulated during stack operations
      */
     private transient Status copy;
 
-    public StatusRegister(String name) {
-        super(name);
+    public StatusRegister() {
+        super(PS.doc());
 
         copy = new Status();
     }
@@ -93,6 +97,16 @@ public class StatusRegister extends Register {
         return this;
     }
 
+    /**
+     * Special shorthand for setting ZN flags
+     */
+    public StatusRegister maybeZeroOrNegative(int value) {
+        this.zero = (value & 0xFF) == 0;
+        this.negative = (value & 0x80) != 0;
+
+        return this;
+    }
+
     public boolean getCarry() {
         return carry;
     }
@@ -129,8 +143,22 @@ public class StatusRegister extends Register {
         negative = status.isNegative();
         overflow = status.isOverflow();
         decimal = status.isDecimal();
-        setIrqDisabled(status.isIrqDisabled());
+        irq_off = status.isIrqDisabled();
         zero = status.isZero();
         carry = status.getCarry();
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ": " +
+                (negative ? "N" : "_") + // 7
+                (overflow ? "V" : "_") + // 6
+                            "1" +        // 5 unused
+                            "_" +        // 4 break
+
+                (decimal  ? "D" : "_") + // 3
+                (irq_off  ? "I" : "_") + // 2
+                (zero     ? "Z" : "_") + // 1
+                (carry    ? "C" : "_");  // 0
     }
 }

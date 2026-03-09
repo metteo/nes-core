@@ -4,13 +4,13 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.instruction.AddressingMode.*;
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.*;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public enum Instruction {
 
     // region Row 0
 
-    Ox00(FORCE_BREAK,            IMPLIED,                0x00, 1),
+    Ox00(FORCE_BREAK,            IMMEDIATE,              0x00, 2), // or IMPLIED
     Ox01(BITWISE_OR,             PRE_INDEXED_INDIRECT_X, 0x01, 2),
 
     Ox05(BITWISE_OR,             ZERO_PAGE,              0x05, 2),
@@ -234,6 +234,8 @@ public enum Instruction {
 
     OxD8(CLR_DECIMAL,            IMPLIED,                0xD8, 1),
     OxD9(COMPARE_A_WITH_MEMORY,  INDEXED_ABSOLUTE_Y,     0xD9, 3),
+
+    OxDB(DEC_MEM_CMP_A,          INDEXED_ABSOLUTE_Y,     0xDB, 3), // FIXME: illegal
 
     OxDD(COMPARE_A_WITH_MEMORY,  INDEXED_ABSOLUTE_X,     0xDD, 3),
     OxDE(DECREMENT_MEMORY,       INDEXED_ABSOLUTE_X,     0xDE, 3),

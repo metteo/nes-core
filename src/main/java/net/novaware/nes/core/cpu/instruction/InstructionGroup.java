@@ -127,6 +127,11 @@ public enum InstructionGroup {
     TRANSFER_X_TO_SP        ("TXS", STACK_OPS),
 
     // endregion
+    // region Illegal
+
+    DEC_MEM_CMP_A           ("DCP", ILLEGAL), // or DCM
+
+    // endregion
 
     UNKNOWN                 ("???", InstructionCategory.UNKNOWN);
 

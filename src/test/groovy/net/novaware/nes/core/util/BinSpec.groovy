@@ -3,7 +3,7 @@ package net.novaware.nes.core.util
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Bin.s
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static UTypes.ubyte
 
 class BinSpec extends Specification {
 

@@ -1,20 +1,21 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
+
+import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
-import net.novaware.nes.core.memory.RecordingBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class StackEngineSpec extends Specification {
 
-    CpuRegisters regs = new CpuRegisters()
-    MemoryBus bus = new RecordingBus()
-    MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine engine = new StackEngine(regs, mmu)
+    def factory = newTestBoardFactory()
+    CpuRegFile regs = factory.newCpuRegisters()
+    MemoryBus bus = factory.newCpuBus()
+    StackEngine engine = factory.newStackEngine()
 
     def "should push accumulator on the stack"() {
         given:
@@ -25,21 +26,30 @@ class StackEngineSpec extends Specification {
         engine.push(regs.a())
 
         then:
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0x12)
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12)
         regs.sp().getAsInt() == 0xFC
     }
 
     def "should pull accumulator from the stack"() {
         given:
         regs.sp().setAsByte(0xFC)
-        bus.specifyAnd(ushort(0x01FD)).writeByte(ubyte(0x34))
+        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(value))
 
         when:
         engine.pull(regs.a())
 
         then:
-        regs.a().get() == ubyte(0x34)
+        regs.a().get() == ubyte(value)
         regs.sp().getAsInt() == 0xFD
+
+        regs.status().isZero() == zero
+        regs.status().isNegative() == neg
+
+        where:
+        value || zero  | neg
+        0x34  || false | false
+        0x00  || true  | false
+        0x80  || false | true
     }
 
     def "should push processor status on the stack"() {
@@ -48,10 +58,10 @@ class StackEngineSpec extends Specification {
         regs.status().initialize()
 
         when:
-        engine.pushStatus()
+        engine.pushStatus(true)
 
         then:
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)
         regs.sp().getAsInt() == 0xFC
     }
 
@@ -66,7 +76,7 @@ class StackEngineSpec extends Specification {
             .setOverflow(true)
             .setNegative(true)
 
-        bus.specifyAnd(ushort(0x01FD)).writeByte(ubyte(0b0011_0100))
+        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(0b0011_0100))
 
         Status s = regs.status().get() // we hold the reference to check break flag from the stack
 

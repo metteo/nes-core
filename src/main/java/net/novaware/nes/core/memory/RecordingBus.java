@@ -1,5 +1,8 @@
 package net.novaware.nes.core.memory;
 
+import jakarta.inject.Inject;
+import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.ShortRegister;
@@ -9,12 +12,13 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.*;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ;
 import static net.novaware.nes.core.memory.RecordingBus.OpType.WRITE;
-import static net.novaware.nes.core.util.UnsignedTypes.UBYTE_0;
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class RecordingBus implements MemoryBus {
 
@@ -43,7 +47,7 @@ public class RecordingBus implements MemoryBus {
         ACCESS, READ, WRITE
     }
 
-    private @Unsigned byte[] memory = new byte[0xFFFF];
+    private @Unsigned byte[] memory = new byte[CpuMemMap.MEMORY_SIZE];
 
     private final CycleCounter cycleCounter;
     private List<Op> activity = new ArrayList<>();
@@ -51,18 +55,13 @@ public class RecordingBus implements MemoryBus {
     private ShortRegister memoryAddress;
     private ByteRegister memoryData;
 
+    @Inject
     public RecordingBus(
-            CycleCounter cycleCounter,
-            ShortRegister memoryAddress,
-            ByteRegister memoryData
+        @CpuVar(CC) CycleCounter cycleCounter
     ) {
         this.cycleCounter = cycleCounter;
-        this.memoryAddress = memoryAddress;
-        this.memoryData = memoryData;
-    }
 
-    public RecordingBus() {
-        this.cycleCounter = new CycleCounter("CPUCC");
+        // TODO: change these into latches?
         this.memoryAddress = new ShortRegister("MAR");
         this.memoryData = new ByteRegister("MDR");
     }
@@ -102,12 +101,6 @@ public class RecordingBus implements MemoryBus {
     }
 
     @Override
-    public DataBus specifyAnd(@Unsigned short address) {
-        specify(address);
-        return this;
-    }
-
-    @Override
     public @Unsigned byte readByte() {
         @Unsigned byte b = memory[memoryAddress.getAsInt()];
         memoryData.set(b);
@@ -121,5 +114,10 @@ public class RecordingBus implements MemoryBus {
         memoryData.set(data);
         memory[memoryAddress.getAsInt()] = data;
         activity.add(new Op(WRITE, memoryAddress.get(), data));
+    }
+
+    @Override
+    public void attach(MemoryDevice memoryDevice) {
+        throw new UnsupportedOperationException("not implemented!");
     }
 }

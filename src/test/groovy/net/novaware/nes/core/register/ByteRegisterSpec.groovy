@@ -1,7 +1,7 @@
 package net.novaware.nes.core.register
 
 import spock.lang.Specification
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ubyte
 
 class ByteRegisterSpec extends Specification {
 

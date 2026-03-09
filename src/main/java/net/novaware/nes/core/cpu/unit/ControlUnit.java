@@ -1,143 +1,182 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.CpuRegisters;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.register.BooleanLatch;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
-import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.CpuModule.CPU_CYCLE_COUNTER;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 
 @BoardScope
 public class ControlUnit implements Unit {
 
-    @Used private final CpuRegisters registers;
+    @Owned private final ControlFlow flow;
+
+    @Used private final CpuRegFile registers;
+    @Used private final BooleanLatch interruptDisabled;
+
+    @Used private final ByteRegister currentInstruction;
+    @Used private final ShortRegister currentOperand;
+    @Used private final ByteRegister decodedInstruction;
+    @Used private final DelegatingRegister decodedOperand;
+
     @Used private final CycleCounter cycleCounter;
+
     @Used private final AddressGen addressGen;
     @Used private final ArithmeticLogic alu;
-    @Used private final MemoryMgmt mmu;
     @Used private final InstructionDecoder decoder;
-    @Used private final LoadStore loadStore;
-    @Used private final StackEngine stackEngine;
     @Used private final InterruptLogic interrupts;
-
-    @Owned private final ControlFlow flow;
+    @Used private final LoadStore loadStore;
+    @Used private final MemoryMgmt mmu;
+    @Used private final PrefetchUnit prefetch;
+    @Used private final StackEngine stackEngine;
 
     @Inject
     public ControlUnit(
-            CpuRegisters registers,
-            @Named(CPU_CYCLE_COUNTER) CycleCounter cycleCounter,
-            AddressGen addressGen,
-            ArithmeticLogic alu,
-            MemoryMgmt mmu,
-            InstructionDecoder decoder,
-            LoadStore loadStore,
-            StackEngine stackEngine,
-            InterruptLogic interrupts,
-            ControlFlow flow
+        ControlFlow flow,
+
+        CpuRegFile registers,
+        @CpuVar(ID) BooleanLatch interruptDisabled,
+        @CpuVar(CI) ByteRegister currentInstruction,
+        @CpuVar(CO) ShortRegister currentOperand,
+
+        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DO) DelegatingRegister decodedOperand,
+
+        @CpuVar(CC) CycleCounter cycleCounter,
+
+        AddressGen addressGen,
+        ArithmeticLogic alu,
+        InstructionDecoder decoder,
+        InterruptLogic interrupts,
+        LoadStore loadStore,
+        MemoryMgmt mmu,
+        PrefetchUnit prefetch,
+        StackEngine stackEngine
     ) {
+        this.flow = flow;
+
         this.registers = registers;
+        this.interruptDisabled = interruptDisabled;
+        this.currentInstruction = currentInstruction;
+        this.currentOperand = currentOperand;
+        this.decodedInstruction = decodedInstruction;
+        this.decodedOperand = decodedOperand;
+
         this.cycleCounter = cycleCounter;
+
         this.addressGen = addressGen;
         this.alu = alu;
-        this.mmu = mmu;
         this.decoder = decoder;
-        this.loadStore = loadStore;
-        this.stackEngine = stackEngine;
         this.interrupts = interrupts;
-        this.flow = flow;
+        this.loadStore = loadStore;
+        this.mmu = mmu;
+        this.prefetch = prefetch;
+        this.stackEngine = stackEngine;
     }
 
     @Override
     public void initialize() {
-        this.flow.initialize();
-
-        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
+        flow.initialize();
 
         registers.a().setAsByte(0);
         registers.x().setAsByte(0);
         registers.y().setAsByte(0);
-        registers.sp().setAsByte(0xFD);
+        registers.sp().setAsByte(0x00);
         registers.status().initialize();
-
-        // TODO: move to InterruptLogic unit
-        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        fetchOpcode();
     }
 
     @Override
     public void reset() {
-        this.flow.reset();
-
-        cycleCounter.setValue(3); // stabilizing after takes about n cycles, 6 cycles according to pdf
-
-        registers.pc().set(addressGen.fetchAddress(InterruptLogic.RES_VECTOR));
-        fetchOpcode();
-
+        cycleCounter.setValue(0L);
+        interruptDisabled.reset();
         registers.status().reset();
 
-        // TODO: move to stack engine
-        int sp = registers.sp().getAsInt();
-        sp -= 3;
-        registers.sp().setAsByte(sp);
+        flow.reset();
+
+        interrupts.hardwareReset(); // 1 - 7
+        prefetch.run();             // 8
     }
 
     /**
      * Last cycle of the instruction
      */
     public void fetchOpcode() {
-        @Unsigned short opcodeAddress = addressGen.getPc();
-        @Unsigned byte opcode = mmu.specifyAnd(opcodeAddress).readByte();
-
-        registers.cir().set(opcode);
+        prefetch.run();
     }
 
     public void fetchOperandLo() {
         @Unsigned short operandLoAddress = addressGen.getPc();
         @Unsigned byte operandLo = mmu.specifyAnd(operandLoAddress).readByte();
 
-        registers.cor().low(operandLo);
+        currentOperand.low(operandLo);
+
+        //System.out.print(Hex.s(operandLo).toUpperCase() + " ");
     }
 
     public void fetchOperandHi() {
-        int size = InstructionRegistry.fromOpcode(registers.cir().get()).size();
-
-        if (size < 3) { // TODO: maybe read the size from dedicated array and get rid of the if?
-            registers.cor().highAsByte(0x00);
-            return;
-        }
-
         @Unsigned short operandHiAddress = addressGen.getPc();
         @Unsigned byte operandHi = mmu.specifyAnd(operandHiAddress).readByte();
 
-        registers.cor().high(operandHi);
+        currentOperand.high(operandHi);
+
+        //System.out.print(Hex.s(operandHi).toUpperCase() + " ");
     }
 
     public void fetchOperand() {
-        fetchOperandLo();
-        fetchOperandHi();
+        int size = InstructionRegistry.fromOpcode(currentInstruction.get()).size();
+
+        switch (size) {
+            case 1 -> {
+                mmu.specifyAnd(registers.pc().get()); // no pc increment, data ignored
+                currentOperand.lowAsByte(0x00);
+                currentOperand.highAsByte(0x00);
+
+                //System.out.print("  " + " " + "  " + " ");
+            }
+            case 2 -> {
+                fetchOperandLo();
+                currentOperand.highAsByte(0x00);
+
+                //System.out.print("  " + " ");
+            }
+            case 3 -> {
+                fetchOperandLo();
+                fetchOperandHi();
+            }
+            default -> throw new IllegalArgumentException("Unsupported instruction size:" + size);
+        }
     }
 
     public void decode() {
         decoder.decode();
     }
 
+    // TODO: test that correct units are called
     public void execute() {
-        int instrGroup = registers.dir().getAsInt();
+        int instrGroup = decodedInstruction.getAsInt();
 
         InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
 
-        switch (instruction) {
-            case ADD_WITH_CARRY       -> alu.addWithCarry(registers.dor().getData());
-            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(registers.dor().getData());
+        switch (instruction) { // TODO: make these 0 argument methods
+            case ADD_WITH_CARRY       -> alu.addWithCarry(decodedOperand.getData());
+            case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(decodedOperand.getData());
 
             case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
             case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
@@ -160,9 +199,9 @@ public class ControlUnit implements Unit {
             case BRANCH_IF_OVERFLOW_SET -> flow.branchIf(registers.status().isOverflow());
             case BRANCH_IF_OVERFLOW_CLR -> flow.branchIf(!registers.status().isOverflow());
 
-            case COMPARE_A_WITH_MEMORY -> alu.compareA(registers.dor().getData());
-            case COMPARE_X_WITH_MEMORY -> alu.compareX(registers.dor().getData());
-            case COMPARE_Y_WITH_MEMORY -> alu.compareY(registers.dor().getData());
+            case COMPARE_A_WITH_MEMORY -> alu.compareA(decodedOperand.getData());
+            case COMPARE_X_WITH_MEMORY -> alu.compareX(decodedOperand.getData());
+            case COMPARE_Y_WITH_MEMORY -> alu.compareY(decodedOperand.getData());
 
             case JUMP_TO_LOCATION -> flow.jumpTo();
 
@@ -176,18 +215,18 @@ public class ControlUnit implements Unit {
             case SET_DECIMAL -> registers.status().setDecimal(true);
             case CLR_DECIMAL -> registers.status().setDecimal(false);
 
-            case SET_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(true);
-            case CLR_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(false);
+            case SET_INTERRUPT_DISABLE -> interruptDisabled.delayedSet(true);
+            case CLR_INTERRUPT_DISABLE -> interruptDisabled.delayedSet(false);
 
             case CLR_OVERFLOW -> registers.status().setOverflow(false);
 
             case FORCE_BREAK -> interrupts.forceBreak(); // TODO: what about unused operand that is skipped on return?
             case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
 
-            case BITWISE_AND -> alu.bitwiseAnd(registers.dor().getData());
-            case BITWISE_OR -> alu.bitwiseOr(registers.dor().getData());
-            case BITWISE_XOR -> alu.bitwiseXor(registers.dor().getData());
-            case BIT_TEST -> alu.bitTest(registers.dor().getData());
+            case BITWISE_AND -> alu.bitwiseAnd(decodedOperand.getData());
+            case BITWISE_OR -> alu.bitwiseOr();
+            case BITWISE_XOR -> alu.bitwiseXor(decodedOperand.getData());
+            case BIT_TEST -> alu.bitTest(decodedOperand.getData());
 
             case LOAD_A_WITH_MEMORY -> loadStore.load(registers.a());
             case STORE_A_IN_MEMORY -> loadStore.store(registers.a());
@@ -200,11 +239,11 @@ public class ControlUnit implements Unit {
 
             case NO_OPERATION -> {}
 
-            case TRANSFER_A_TO_X -> this.transfer(registers.a(), registers.x());
-            case TRANSFER_X_TO_A -> this.transfer(registers.x(), registers.a());
+            case TRANSFER_A_TO_X -> alu.transfer(registers.a(), registers.x());
+            case TRANSFER_X_TO_A -> alu.transfer(registers.x(), registers.a());
 
-            case TRANSFER_A_TO_Y -> this.transfer(registers.a(), registers.y());
-            case TRANSFER_Y_TO_A -> this.transfer(registers.y(), registers.a());
+            case TRANSFER_A_TO_Y -> alu.transfer(registers.a(), registers.y());
+            case TRANSFER_Y_TO_A -> alu.transfer(registers.y(), registers.a());
 
             case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
             case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
@@ -215,36 +254,33 @@ public class ControlUnit implements Unit {
             case PUSH_A_TO_SP   -> stackEngine.push(registers.a());
             case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
 
-            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus();
-            case PULL_STATUS_FROM_SP -> stackEngine.pullStatus();
+            case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus(true);
+            case PULL_STATUS_FROM_SP -> stackEngine.pullStatusWithDelayedInterruptDisable();
 
-            case TRANSFER_SP_TO_X -> this.transfer(registers.sp(), registers.x());
+            case TRANSFER_SP_TO_X -> alu.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
+
+            case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(decodedOperand.getData()); } // FIXME: test illegal
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
-        // execute the handler
-        // write back to mem / reg
-        // fetch the next instruction
     }
 
-    /* package */ void readModifyWrite(UByteUnaryOperator operator) {
-        @Unsigned byte data = registers.dor().getData(); // read
-        registers.dor().setData(data); // write unmodified
+    public void commitAll() {
+        interruptDisabled.commit();
+    }
+
+    /* package */ void readModifyWrite(UByteUnaryOperator operator) { // TODO: move to alu
+        @Unsigned byte data = decodedOperand.getData(); // read
+        decodedOperand.setData(data); // write unmodified
 
         @Unsigned byte newData = operator.applyAsUByte(data); // modify
-        registers.dor().setData(newData); // write
+        decodedOperand.setData(newData); // write
     }
 
-    /* package */ void transfer(DataRegister src, DataRegister dst) {
-        @Unsigned byte data = src.get();
-
-        dst.set(data);
-
-        int dataVal = uint(data);
-
-        registers.status()
-                .setZero(dataVal == 0)
-                .setNegative((dataVal & 0x80) != 0);
+    public void sampleInterrupts() {
+        interrupts.sample();
     }
+
+
 }

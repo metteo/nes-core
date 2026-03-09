@@ -2,7 +2,14 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.memory.MemoryMap;
+import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.signal.Interruptible;
+import net.novaware.nes.core.cpu.signal.Overflowable;
+import net.novaware.nes.core.cpu.signal.Signal;
+import net.novaware.nes.core.cpu.signal.Synchronizable;
+import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
+import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
@@ -11,6 +18,7 @@ import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
 import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.PowerMgmt;
+import net.novaware.nes.core.cpu.unit.PrefetchUnit;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
 import net.novaware.nes.core.util.uml.Owned;
@@ -18,33 +26,49 @@ import net.novaware.nes.core.util.uml.Owned;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RDY;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.S0H;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
+
 /**
  * https://web.archive.org/web/20221112231348if_/http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
  * TODO: test cpu https://github.com/SingleStepTests/65x02
  * TODO: https://github.com/christopherpow/nes-test-roms
  */
 @BoardScope
+@SuppressWarnings("unused") // @Owned unit fields are annotated only
 public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
     private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
-    @Owned private final CpuRegisters registers;
-
+    @Owned private final CpuRegFile registers;
     @Owned private final ControlUnit controlUnit;
+
     @Owned private final AddressGen addressGen;
     @Owned private final ArithmeticLogic alu;
     @Owned private final InstructionDecoder decoder;
     @Owned private final InterruptLogic interrupts;
     @Owned private final LoadStore loadStore;
-    @Owned private final PowerMgmt powerMgmt;
     @Owned private final MemoryMgmt mmu;
+    @Owned private final PowerMgmt powerMgmt;
+    @Owned private final PrefetchUnit prefetch;
     @Owned private final StackEngine stackEngine;
 
-    private List<Unit> units;
+    @Owned private final LevelDetector irq;
+    @Owned private final EdgeDetector nmi;
+    @Owned private final LevelDetector s0h;
+    @Owned private final LevelDetector res;
+    @Owned private final LevelDetector rdy;
+    @Owned private final EdgeDetector so;
+
+    private final List<Unit> units;
 
     @Inject
     public Cpu(
-        CpuRegisters registers,
+        CpuRegFile registers,
 
         ControlUnit controlUnit,
         AddressGen addressGen,
@@ -52,28 +76,44 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         InstructionDecoder decoder,
         InterruptLogic interrupts,
         LoadStore loadStore,
-        PowerMgmt powerMgmt,
         MemoryMgmt mmu,
-        StackEngine stackEngine
+        PowerMgmt powerMgmt,
+        PrefetchUnit prefetch,
+        StackEngine stackEngine,
+
+        @CpuVar(IRQ) LevelDetector irq,
+        @CpuVar(NMI) EdgeDetector nmi,
+        @CpuVar(S0H) LevelDetector s0h,
+        @CpuVar(RES) LevelDetector res,
+        @CpuVar(RDY) LevelDetector rdy,
+        @CpuVar(SOV) EdgeDetector so
     ) {
         this.registers = registers;
 
+
         this.units = List.of(
             this.controlUnit = controlUnit,
+
             this.addressGen = addressGen,
             this.alu = alu,
             this.decoder = decoder,
             this.interrupts = interrupts,
             this.loadStore = loadStore,
-            this.powerMgmt = powerMgmt,
             this.mmu = mmu,
+            this.powerMgmt = powerMgmt,
+            this.prefetch = prefetch,
             this.stackEngine = stackEngine
         );
+
+        this.irq = irq;
+        this.nmi = nmi;
+        this.s0h = s0h;
+        this.res = res;
+        this.rdy = rdy;
+        this.so = so;
     }
 
-    /* package */ void initialize() {
-        registers.getStackSegment().set(MemoryMap.STACK_SEGMENT_START);
-
+    public void initialize() {
         units.forEach(Unit::initialize);
     }
 
@@ -84,60 +124,79 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         units.forEach(Unit::reset);
     }
 
-    public void ready() {
-        // NOTE: input signal that allows to halt or single cycle the processor
-    }
-
-    public void cycle() {
-        controlUnit.execute();
+    /**
+     * Advance single instruction
+     */
+    // TODO: use one lone coder test assembly to verify ticks
+    public void advance() { // TODO: consider renaming to step()
+        if (res.isActive()) {
+            reset();
+            return;
+        }
 
         controlUnit.fetchOperand();
-        controlUnit.decode();
+        // low byte
+        // high byte*
 
-        // fetchOperand();
-        //   fetchLo();
-        //   fetchHi();
-        // decode();
-        //   fetchLo();
-        //   fetchHi();
-        // execute();
-        //   read(); //and maybe write original back
-        //   modify();
-        //   write();
-        // sampleInterrupts();
-        // fetchOpcode();
+        controlUnit.decode();
+        // low byte*
+        // high byte*
+        // indirect fetch* // TODO: maybe it should be part of execute?
+
+        controlUnit.execute();
+        // read* (and optionally write original back)
+        // modify
+        // write
+
+        controlUnit.sampleInterrupts(); // TODO: verify that irqDisable delay is honored
+
+        controlUnit.commitAll();
+
+        controlUnit.fetchOpcode();
+
+        // TODO: allow running for given cycle budget, efficiently stop before (or just after depending on strictness)
     }
 
     /**
      * Trigger IRQ of CPU on low
      */
     @Override
-    public void interruptRequest(boolean high) {
-
+    public void interruptRequest(Signal s) {
+        irq.set(s);
     }
 
     /**
      * Trigger NMI of CPU on low edge
      */
     @Override
-    public void nonMaskableInterrupt(boolean high) {
-
+    public void nonMaskableInterrupt(Signal s) {
+        nmi.set(s);
     }
 
     /**
-     * Trigger RST of the CPU on low
+     * Keep triggering RES of the CPU on low
      */
     @Override
-    public void reset(boolean high) {
+    public void reset(Signal s) {
+        res.set(s);
+    }
 
+    /**
+     * Trigger S0H of cpu on low
+     */
+    @Override
+    public void sprite0Hit(Signal s) {
+        s0h.set(s);
+
+        // TODO: decide if should wake up the cpu and jump to ppu status check?
     }
 
     /**
      * Trigger RDY halt/step the CPU on low edge
      */
     @Override
-    public void ready(boolean high) {
-
+    public void ready(Signal s) {
+        rdy.set(s);
     }
 
     @Override
@@ -150,14 +209,18 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         syncListeners.remove(listener);
     }
 
-    protected void fireSyncChange(boolean high) {
+    protected void fireSyncChange(Signal s) { // TODO: fire the event
         for (SyncListener listener : syncListeners) {
-            listener.onSyncChange(high);
+            listener.onSyncChange(s);
         }
     }
 
+    /**
+     * Set Overflow Processor Status flag on negative edge
+     * @param s
+     */
     @Override
-    public void setOverflow(boolean high) {
-
+    public void setOverflow(Signal s) {
+        so.set(s);
     }
 }

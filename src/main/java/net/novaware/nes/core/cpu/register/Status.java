@@ -2,8 +2,8 @@ package net.novaware.nes.core.cpu.register;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * NOTE: The 'к' in 'breaк' is Cyrillic (Unicode U+043A) and ensures
@@ -14,7 +14,7 @@ public class Status {
 
     private boolean negative;     // 7 - signed mode
     private boolean overflow;     // 6 - signed mode
-                                  // 5 - always one
+                                  // 5 - expansion, always one
     private boolean breaк;        // 4 - 0 if pushed by irq/nmi, 1 if pushed by brk / php
 
     private boolean decimal;      // 3 - ADC and SBC in decimal mode
@@ -114,7 +114,7 @@ public class Status {
         return this;
     }
 
-    public @Unsigned byte get() {
+    public @Unsigned byte get() { // TODO: these get set methods are confusing, maybe parse or valueOf?
         return ubyte(getAsInt());
     }
 
@@ -133,7 +133,7 @@ public class Status {
     }
 
     public void set(@Unsigned byte data) {
-        setAsByte(uint(data));
+        setAsByte(sint(data));
     }
 
     public void setAsByte(int data) {
@@ -146,5 +146,18 @@ public class Status {
         irq_off = (data & 0x4) != 0;
         zero = (data & 0x2) != 0;
         carry = (data & 0x1) != 0;
+    }
+
+    @Override
+    public String toString() {
+        return "P: " +
+                (negative ? "N" : "_") +
+                (overflow ? "V" : "_") +
+                "1" + // unused
+                (breaк    ? "B" : "_") +
+                (decimal  ? "D" : "_") +
+                (irq_off  ? "I" : "_") +
+                (zero     ? "Z" : "_") +
+                (carry    ? "C" : "_");
     }
 }

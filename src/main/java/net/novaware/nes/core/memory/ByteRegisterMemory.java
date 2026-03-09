@@ -1,35 +1,47 @@
 package net.novaware.nes.core.memory;
 
 import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
+import static net.novaware.nes.core.util.UTypes.sint;
 
-public class ByteRegisterMemory extends AbstractAddressable implements Addressable {
+public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
-    final ByteRegister[] registers; // TODO: make private
+    private final String name;
+
+    private final int offset;
+    private final ByteRegister[] registers;
     private final int size;
 
-    public ByteRegisterMemory(String name, ByteRegister[] registers) {
-        super(name);
+    private int index;
+
+    public ByteRegisterMemory(String name, int offset, ByteRegister[] registers) {
+        this.name = name;
+        this.offset = offset;
 
         this.registers = registers;
         this.size = registers.length;
     }
 
     @Override
-    public @Unsigned byte read(@Unsigned short address) {
-        int addressInt = uint(address);
-        int index = addressInt % size;
+    public void specify(@Unsigned short address) {
+        int addressInt = sint(address) - offset;
+        index = addressInt % size; // TODO: remainder is slow, see BankedMemory
+    }
 
+    @Override
+    public @Unsigned byte readByte() {
         return registers[index].get();
     }
 
     @Override
-    public void write(@Unsigned short address, @Unsigned byte data) {
-        int addressInt = uint(address);
-        int index = addressInt % size;
-
+    public void writeByte(@Unsigned byte data) {
         registers[index].set(data);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }

@@ -1,9 +1,11 @@
 package net.novaware.nes.core.register;
 
-import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryBus;
-import net.novaware.nes.core.util.UnsignedTypes;
+import net.novaware.nes.core.memory.MemoryDevice;
 import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 public class DelegatingRegister extends Register {
 
@@ -31,8 +33,8 @@ public class DelegatingRegister extends Register {
      * Removes old data before configuring for new data.
      */
     private void reset() {
-        data = UnsignedTypes.UBYTE_0;
-        address = UnsignedTypes.USHORT_0;
+        data = UBYTE_0;
+        address = USHORT_0;
 
         dataRegister = nullByteRegister;
         memoryBus = nullMemoryBus;
@@ -171,11 +173,6 @@ public class DelegatingRegister extends Register {
         }
 
         @Override
-        public DataBus specifyAnd(@Unsigned short address) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
         public @Unsigned byte readByte() {
             throw new IllegalStateException("Empty memory bus called");
         }
@@ -184,18 +181,23 @@ public class DelegatingRegister extends Register {
         public void writeByte(@Unsigned byte data) {
             throw new IllegalStateException("Empty memory bus called");
         }
+
+        @Override
+        public void attach(MemoryDevice memoryDevice) {
+            throw new IllegalStateException("Empty memory bus called");
+        }
     }
 
     class MemoryDelegate extends EmptyDelegate {
 
         @Override
         public @Unsigned byte getData() {
-            return memoryBus.specifyAnd(address).readByte();
+            return memoryBus.specifyThen(address).readByte();
         }
 
         @Override
         public void setData(@Unsigned byte data) {
-            memoryBus.specifyAnd(address).writeByte(data);
+            memoryBus.specifyThen(address).writeByte(data);
         }
 
         @Override
@@ -203,4 +205,6 @@ public class DelegatingRegister extends Register {
             return address;
         }
     }
+
+    // TODO: implement toString delegating to delegate. Do not trigger memory reads because it will affect cycles
 }

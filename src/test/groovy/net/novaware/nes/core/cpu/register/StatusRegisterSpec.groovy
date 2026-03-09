@@ -2,19 +2,18 @@ package net.novaware.nes.core.cpu.register
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ubyte
 
 class StatusRegisterSpec extends Specification {
 
+    def reg = new StatusRegister()
+
     def "should hold and return name"() {
         expect:
-        new StatusRegister("P").getName() == "P"
+        reg.getName() == "P"
     }
 
     def "should have correct power on state"() {
-        given:
-        def reg = new StatusRegister("P")
-
         when:
         reg.initialize()
 
@@ -30,7 +29,6 @@ class StatusRegisterSpec extends Specification {
 
     def "should update IRQ flag on reset"() {
         given:
-        def reg = new StatusRegister("P")
         reg.setIrqDisabled(false)
 
         when:
@@ -41,9 +39,6 @@ class StatusRegisterSpec extends Specification {
     }
 
     def "should set and get individual flags"() {
-        given:
-        def reg = new StatusRegister("P")
-
         expect:
         reg.setNegative(true).isNegative()
         reg.setOverflow(true).isOverflow()
@@ -54,9 +49,6 @@ class StatusRegisterSpec extends Specification {
     }
 
     def "should calculate aggregate status byte correctly"() {
-        given:
-        def reg = new StatusRegister("P")
-
         when: "all flags set"
         reg.setNegative(true)
            .setOverflow(true)
@@ -80,5 +72,24 @@ class StatusRegisterSpec extends Specification {
         then:
         reg.get().getAsInt() == 0x20
         reg.get().get() == ubyte(0x20)
+    }
+
+    def "updateZN sets flags correctly for 8-bit boundaries"() {
+        when:
+        reg.maybeZeroOrNegative(input)
+
+        then:
+        reg.isZero() == zero
+        reg.isNegative() == neg
+
+        where:
+        input || zero  | neg   | description
+        0x00  || true  | false | "Zero result"
+        0x01  || false | false | "Small positive"
+        0x7F  || false | false | "Max positive"
+        0x80  || false | true  | "Smallest negative"
+        0xFF  || false | true  | "Max negative (-1)"
+        0x100 || true  | false | "Overflow to 0 (Carry set)"
+        0x180 || false | true  | "Overflow to 0x80 (Carry set)"
     }
 }

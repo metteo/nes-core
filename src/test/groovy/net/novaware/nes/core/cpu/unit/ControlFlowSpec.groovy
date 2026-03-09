@@ -1,28 +1,31 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.cpu.CpuRegisters
-import net.novaware.nes.core.memory.RecordingBus
-import spock.lang.Specification
+import net.novaware.nes.core.cpu.register.CpuRegFile
+import net.novaware.nes.core.cpu.register.CpuInsFile
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
-class ControlFlowSpec extends Specification {
+class ControlFlowSpec extends ControlUnitBaseSpec {
 
-    CpuRegisters regs = new CpuRegisters()
-    RecordingBus bus = new RecordingBus()
-    MemoryMgmt mmu = new MemoryMgmt(regs, bus)
-    StackEngine stackEngine = new StackEngine(regs, mmu)
-    ControlFlow flow = new ControlFlow(regs, bus.cycleCounter(), stackEngine)
+    CpuRegFile regs
+    CpuInsFile extRegs
+    StackEngine stackEngine
+    ControlFlow flow
 
-    def "setup"() {
+    def setup() {
+        regs = registers
+        extRegs = factory.newExtRegisters()
+        stackEngine = factory.newStackEngine()
+        flow = factory.newControlFlow()
+
         regs.sp().setAsByte(0xFD)
     }
 
     def "should call a subroutine and return from it"() {
         given:
         regs.pc().setAsShort(0x1234)
-        regs.dor().configureMemory(bus, ushort(0x1278))
+        extRegs.dor().configureMemory(bus, ushort(0x1278))
 
         when:
         flow.call()
@@ -30,14 +33,14 @@ class ControlFlowSpec extends Specification {
         then:
         regs.pc().getAsInt() == 0x1278
 
-        bus.specifyAnd(ushort(0x01FC)).readByte() == ubyte(0x34) // ^
-        bus.specifyAnd(ushort(0x01FD)).readByte() == ubyte(0x12) // |
+        bus.specifyThen(ushort(0x01FC)).readByte() == ubyte(0x34) // ^
+        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12) // |
 
         and: "return"
         flow.returnFromCall()
 
         then:
-        regs.pc().getAsInt() == 0x1234 + 1
-        regs.sp().addressAsInt() == 0x01FD
+        regs.pc().getAsInt() == 0x1234
+        stackEngine.address() == ushort(0x01FD)
     }
 }

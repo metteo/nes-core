@@ -12,6 +12,8 @@ public enum InstructionCategory {
 
     FLAG_CONTROL,
 
+    ILLEGAL,
+
     INTERRUPTS,
 
     LOGICAL,

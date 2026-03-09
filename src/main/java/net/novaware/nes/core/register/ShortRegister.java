@@ -1,12 +1,13 @@
 package net.novaware.nes.core.register;
 
+import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UnsignedTypes.ubyte;
-import static net.novaware.nes.core.util.UnsignedTypes.uint;
-import static net.novaware.nes.core.util.UnsignedTypes.ushort;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
-public class ShortRegister extends AddressRegister {
+public final class ShortRegister extends AddressRegister {
 
     /*
      * Internally we keep 2 bytes because that's how it works in hardware
@@ -33,21 +34,21 @@ public class ShortRegister extends AddressRegister {
     }
 
     public int getAsInt() {
-        return uint(hi) << 8 | uint(lo);
+        return sint(hi) << 8 | sint(lo);
     }
 
     @Override
     public int highAsInt() {
-        return uint(hi);
+        return sint(hi);
     }
 
     @Override
     public int lowAsInt() {
-        return uint(lo);
+        return sint(lo);
     }
 
     public void set(@Unsigned short address) {
-        setAsShort(uint(address));
+        setAsShort(sint(address));
     }
 
     @Override
@@ -81,5 +82,10 @@ public class ShortRegister extends AddressRegister {
         this.lo = ubyte(lo);
 
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ": 0x" + Hex.s(get());
     }
 }

@@ -1,10 +1,11 @@
 package net.novaware.nes.core.cpu.unit
 
+import net.novaware.nes.core.cpu.signal.Signal
+
 import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.memory.RecordingBus.Op
 import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
-import static net.novaware.nes.core.util.UnsignedTypes.ushort
 
 // useful: bus.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {
@@ -17,10 +18,13 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         newControlUnit()
 
         then:
-        InterruptLogic.RES_VECTOR == ushort(0xFFFC)
-        bus.cycles() == 6
+        bus.cycles() == 0
         expectRegs(
-            sp: 0x01FD
+            a: 0,
+            x: 0,
+            y: 0,
+            sp: 0x00,
+            i: true
         )
     }
 
@@ -33,28 +37,15 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
         
         when:
+        factory.newCpu().res(Signal.LOW)
         cu.reset()
 
         then:
-        bus.cycles() == 6
+        bus.cycles() == 7 + 1 // 7 reset, 1 first opcode fetch
         expectRegs(
             pc: 0x8001,
-            sp: 0x01FA
+            sp: 0x01FD
         )
-    }
-
-    def "should jump to start of rom" () {
-        given:
-        ram(
-            0xFFFC, 0x00,
-            0xFFFD, 0x80
-        )
-
-        when:
-        newControlUnit()
-
-        then:
-        expectRegs pc: 0x8001 // pc+1 because of priming fetchOpcode
     }
 
     def "should bitwise or absolute"() {
@@ -117,13 +108,13 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
+        expectRegs pc: 0x0001 // nop is single byte instruction
         bus.cycles() == 2
         bus.activity() == [
             new Op(ACCESS, 0x0000, 0x00), // opcode
             new Op(READ,   0x0000, 0xEA),
 
-            new Op(ACCESS, 0x0001, 0x00), // required 2nd read
-            new Op(READ,   0x0001, 0x00),
+            new Op(ACCESS, 0x0001, 0x00), // required 2nd access, but no read
         ]
     }
 
@@ -335,18 +326,5 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         Ox70   | false | false | false | false | 0x0002 // BVS not taken
         Ox50   | false | false | false | false | 0x0007 // BVC taken
         Ox50   | false | false | false | true  | 0x0002 // BVC not taken
-    }
-
-    def "should transfer between registers and update flags"() {
-        given:
-        def cu = newControlUnit()
-
-        regs(a: 0x25)
-
-        when:
-        cu.transfer(registers.a(), registers.x()) // TAX
-
-        then:
-        expectRegs(x: 0x25, z: false, n: false)
     }
 }
