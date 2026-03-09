@@ -1,9 +1,12 @@
 package net.novaware.nes.core.cpu.unit
 
+import net.novaware.nes.core.cpu.signal.Signal
+
 import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.memory.RecordingBus.Op
 import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
 import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
+
 // useful: bus.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {
 
@@ -34,6 +37,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
         
         when:
+        factory.newCpu().res(Signal.LOW)
         cu.reset()
 
         then:

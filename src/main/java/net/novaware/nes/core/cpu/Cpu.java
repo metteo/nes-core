@@ -128,7 +128,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
      * Advance single instruction
      */
     // TODO: use one lone coder test assembly to verify ticks
-    public void advance() {
+    public void advance() { // TODO: consider renaming to step()
         if (res.isActive()) {
             reset();
             return;
@@ -148,7 +148,9 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         // modify
         // write
 
-        controlUnit.sampleInterrupts();
+        controlUnit.sampleInterrupts(); // TODO: verify that irqDisable delay is honored
+
+        controlUnit.commitAll();
 
         controlUnit.fetchOpcode();
 

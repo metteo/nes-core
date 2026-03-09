@@ -12,6 +12,7 @@ public enum CpuVarName {
 
     PS ("P", "processorStatus",    "Processor Status"),
     ES ("",  "extendedStatus",     "Extended Status"),
+    ID ("",  "interruptDisabled",  "Interrupt Disabled"),
 
     SP ("S", "stackPointer",       "Stack Pointer"),
 
@@ -52,7 +53,8 @@ public enum CpuVarName {
 
     IRQ ("", "interruptRequest", "Interrupt Request"),
     NMI ("", "nonMaskableInterrupt", "Non-Maskable Interrupt"),
-    S0H ("", "sprite0Hit", "Sprite 0 Hit"),
+    BRK ("", "forceBreak", "Force Break"),
+    S0H ("", "sprite0Hit", "Sprite 0 Hit"), // TODO: consider ppu agnostic name
     RES ("", "reset", "Reset"),
     RDY ("", "ready", "Ready"),
     SOV ("SO", "setOverflow", "Set Overflow"),

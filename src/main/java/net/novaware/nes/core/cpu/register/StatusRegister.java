@@ -143,7 +143,7 @@ public class StatusRegister extends Register { // TODO: consider renaming to Cpu
         negative = status.isNegative();
         overflow = status.isOverflow();
         decimal = status.isDecimal();
-        setIrqDisabled(status.isIrqDisabled());
+        irq_off = status.isIrqDisabled();
         zero = status.isZero();
         carry = status.getCarry();
     }

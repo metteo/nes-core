@@ -5,10 +5,11 @@ import dagger.Component;
 import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
-import net.novaware.nes.core.cpu.inject.CpuModule;
-import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuMemModule;
+import net.novaware.nes.core.cpu.inject.CpuModule;
 import net.novaware.nes.core.cpu.inject.CpuRegModule;
+import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuInsFile;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
@@ -70,6 +71,8 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
     public abstract ArithmeticLogic newArithmeticLogic();
 
     public abstract ControlFlow newControlFlow();
+
+    public abstract Cpu newCpu();
 
     @Component.Builder
     public static abstract class Builder {

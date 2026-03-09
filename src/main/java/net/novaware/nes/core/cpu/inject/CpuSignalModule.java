@@ -6,6 +6,7 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
 import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.BRK;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RDY;
@@ -16,6 +17,13 @@ import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 
 @Module
 public interface CpuSignalModule {
+
+    @Provides
+    @BoardScope
+    @CpuVar(BRK)
+    static LevelDetector provideBrkDetector() {
+        return new LevelDetector(BRK.name(), LOW);
+    }
 
     @Provides
     @BoardScope

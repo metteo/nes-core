@@ -2,10 +2,10 @@ package net.novaware.nes.core.easy
 
 import spock.lang.Specification
 
-import static net.novaware.nes.core.easy.EasyMap.*
+import static EasyMemMap.*
 import static net.novaware.nes.core.util.UTypes.sint
 
-class EasyMapSpec extends Specification {
+class EasyMemMapSpec extends Specification {
 
     def "should cross check sizes" () {
         expect:

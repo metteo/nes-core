@@ -1,5 +1,6 @@
 package net.novaware.nes.core.cpu.signal;
 
+// TODO: consider replacing this with a SignalBus?
 public interface Interruptible {
 
     void interruptRequest(Signal s);

@@ -3,6 +3,7 @@ package net.novaware.nes.core.cpu
 import net.novaware.nes.core.BoardFactory
 import net.novaware.nes.core.clock.ClockMode
 import net.novaware.nes.core.config.ImmutableCoreConfig
+import net.novaware.nes.core.cpu.signal.Signal
 import net.novaware.nes.core.memory.MemoryBus
 import spock.lang.Specification
 
@@ -28,7 +29,8 @@ class CpuCT extends Specification {
 
         when:
         cpu.initialize()
-        cpu.reset()
+        cpu.res(Signal.LOW)
+        cpu.advance()
 
         then:
         cpu.registers.pc().getAsInt() == 0x1234 + 1

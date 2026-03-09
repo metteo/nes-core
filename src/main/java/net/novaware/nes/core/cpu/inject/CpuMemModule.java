@@ -15,15 +15,19 @@ import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.memory.RecordingBus;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.SegmentRegister;
+import net.novaware.nes.core.register.ShortRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -132,5 +136,35 @@ public interface CpuMemModule {
         // FIXME: set start and limit in cartridge?
 
         return extraSegment;
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(NMI)
+    static ShortRegister provideNmiVector() {
+        ShortRegister vector = new ShortRegister(NMI.doc());
+        vector.set(CpuMemMap.NMI_VECTOR);
+
+        return vector;
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(RES)
+    static ShortRegister provideResVector() {
+        ShortRegister vector = new ShortRegister(RES.doc());
+        vector.set(CpuMemMap.RES_VECTOR);
+
+        return vector;
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(IRQ)
+    static ShortRegister provideIrqVector() {
+        ShortRegister vector = new ShortRegister(IRQ.doc());
+        vector.set(CpuMemMap.IRQ_VECTOR);
+
+        return vector;
     }
 }

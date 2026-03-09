@@ -58,4 +58,8 @@ public class CpuMemMap implements MemoryMap {
     public static final @Unsigned short CARTRIDGE_START = ushort(0x4020);
     public static final @Unsigned short CARTRIDGE_END = ushort(0xFFFF);
     public static final int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
+
+    public static final @Unsigned short NMI_VECTOR = ushort(0xFFFA);
+    public static final @Unsigned short RES_VECTOR = ushort(0xFFFC);
+    public static final @Unsigned short IRQ_VECTOR = ushort(0xFFFE);
 }

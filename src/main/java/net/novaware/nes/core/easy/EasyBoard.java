@@ -3,7 +3,6 @@ package net.novaware.nes.core.easy;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuVar;
-import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.memory.MemoryBus;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
@@ -66,12 +65,12 @@ public class EasyBoard {
     }
 
     public void preload(@Unsigned byte[] data) {
-        int offset = sint(EasyMap.CARTRIDGE_START);
+        int offset = sint(EasyMemMap.CARTRIDGE_START);
         for(int i = 0; i < data.length; i++) {
             bus.specifyThen(ushort(offset + i)).writeByte(data[i]);
         }
 
-        int reset = sint(InterruptLogic.RES_VECTOR);
+        int reset = sint(EasyMemMap.RES_VECTOR);
         bus.specifyThen(ushort(reset)).writeByte(ubyte(0x00));
         bus.specifyThen(ushort(reset + 1)).writeByte(ubyte(0x06)); // 0x600 in low endian
 

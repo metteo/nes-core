@@ -6,6 +6,7 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.register.StatusRegister;
+import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DelegatingRegister;
@@ -17,6 +18,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MD;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PC;
@@ -112,6 +114,13 @@ public interface CpuRegModule {
     @CpuVar(PS)
     static StatusRegister provideStatus() {
         return new StatusRegister();
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(ID)
+    static BooleanLatch provideInterruptDisabled(@CpuVar(PS) StatusRegister status) {
+        return new BooleanLatch(ID.name(), status::setIrqDisabled);
     }
 
     @Provides

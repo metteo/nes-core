@@ -10,7 +10,7 @@ public enum Instruction {
 
     // region Row 0
 
-    Ox00(FORCE_BREAK,            IMPLIED,                0x00, 1),
+    Ox00(FORCE_BREAK,            IMMEDIATE,              0x00, 2), // or IMPLIED
     Ox01(BITWISE_OR,             PRE_INDEXED_INDIRECT_X, 0x01, 2),
 
     Ox05(BITWISE_OR,             ZERO_PAGE,              0x05, 2),

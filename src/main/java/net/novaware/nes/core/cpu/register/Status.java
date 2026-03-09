@@ -114,7 +114,7 @@ public class Status {
         return this;
     }
 
-    public @Unsigned byte get() {
+    public @Unsigned byte get() { // TODO: these get set methods are confusing, maybe parse or valueOf?
         return ubyte(getAsInt());
     }
 

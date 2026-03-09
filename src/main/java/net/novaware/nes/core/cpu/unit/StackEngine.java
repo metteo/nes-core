@@ -7,10 +7,12 @@ import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.Status;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.AddressRegister;
+import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -23,16 +25,19 @@ public class StackEngine implements Unit {
     private final SegmentRegister stackSegment;
     private final DataRegister stackPointer;
     private final StatusRegister status;
+    private final BooleanLatch interruptDisabled;
 
     private final MemoryMgmt mmu;
 
     @Inject
     public StackEngine (
         @CpuVar(SS) SegmentRegister stackSegment,
+        @CpuVar(ID) BooleanLatch interruptDisabled,
         CpuRegFile registers,
         MemoryMgmt mmu
     ) {
-        this.stackSegment = stackSegment; // important, injection initializes value
+        this.stackSegment = stackSegment;
+        this.interruptDisabled = interruptDisabled;
         this.stackPointer = registers.getStackPointer();
         this.status = registers.getStatus();
 
@@ -113,9 +118,9 @@ public class StackEngine implements Unit {
     }
 
     void pushStatus(boolean brk) {
-        Status s = status.get().setBreak(brk);
+        Status toPush = status.get().setBreak(brk);
 
-        @Unsigned byte data = s.get();
+        @Unsigned byte data = toPush.get();
 
         mmu.specifyAnd(address())
                 .writeByte(data);
@@ -123,15 +128,28 @@ public class StackEngine implements Unit {
         decrement();
     }
 
-    void pullStatus() {
+    private Status pullStatus0() {
         increment();
 
         @Unsigned byte data = mmu.specifyAnd(address())
                 .readByte();
 
-        Status s = status.get();
-        s.set(data);
+        Status workingCopy = status.get();
+        workingCopy.set(data);
 
-        status.set(s);
+        return workingCopy;
+    }
+
+    public void pullStatus() {
+        status.set(pullStatus0());
+    }
+
+    public void pullStatusWithDelayedInterruptDisable() {
+        Status workingCopy = pullStatus0();
+
+        interruptDisabled.delayedSet(workingCopy.isIrqDisabled());
+        workingCopy.setIrqDisabled(status.isIrqDisabled());
+
+        status.set(workingCopy);
     }
 }

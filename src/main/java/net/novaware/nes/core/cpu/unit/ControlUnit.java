@@ -6,6 +6,7 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DelegatingRegister;
@@ -20,8 +21,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
-import static net.novaware.nes.core.cpu.unit.InterruptLogic.RES_VECTOR;
-import static net.novaware.nes.core.util.UTypes.ushort;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 
 @BoardScope
 public class ControlUnit implements Unit {
@@ -29,6 +29,7 @@ public class ControlUnit implements Unit {
     @Owned private final ControlFlow flow;
 
     @Used private final CpuRegFile registers;
+    @Used private final BooleanLatch interruptDisabled;
 
     @Used private final ByteRegister currentInstruction;
     @Used private final ShortRegister currentOperand;
@@ -51,6 +52,7 @@ public class ControlUnit implements Unit {
         ControlFlow flow,
 
         CpuRegFile registers,
+        @CpuVar(ID) BooleanLatch interruptDisabled,
         @CpuVar(CI) ByteRegister currentInstruction,
         @CpuVar(CO) ShortRegister currentOperand,
 
@@ -71,6 +73,7 @@ public class ControlUnit implements Unit {
         this.flow = flow;
 
         this.registers = registers;
+        this.interruptDisabled = interruptDisabled;
         this.currentInstruction = currentInstruction;
         this.currentOperand = currentOperand;
         this.decodedInstruction = decodedInstruction;
@@ -99,40 +102,16 @@ public class ControlUnit implements Unit {
         registers.status().initialize();
     }
 
-    /**
-     * Example 9.1: Illustration of Start Cycle
-     * https://web.archive.org/web/20200129081101/http://users.telenet.be:80/kim1-6502/6502/proman.html#126
-     */
     @Override
     public void reset() {
+        cycleCounter.setValue(0L);
+        interruptDisabled.reset();
+        registers.status().reset();
+
         flow.reset();
 
-        cycleCounter.setValue(0L);
-
-        int randomAddress = 0x0000;
-                                                     // Cycle
-        mmu.specifyAnd(ushort(randomAddress));       // 1
-        mmu.specifyAnd(ushort(randomAddress + 1)); // 2
-
-        // TODO: move to stack engine
-        int sp = registers.sp().getAsInt();
-
-        registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                  // 3
-
-        sp -= 1;
-        registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                  // 4
-
-        sp -= 2;
-        registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                  // 5
-
-        @Unsigned short resVector = addressGen.fetchAddress(RES_VECTOR); // 6, 7
-        registers.pc().set(resVector);
-        prefetch.run();                             // 8
-
-        registers.status().reset();
+        interrupts.hardwareReset(); // 1 - 7
+        prefetch.run();             // 8
     }
 
     /**
@@ -236,8 +215,8 @@ public class ControlUnit implements Unit {
             case SET_DECIMAL -> registers.status().setDecimal(true);
             case CLR_DECIMAL -> registers.status().setDecimal(false);
 
-            case SET_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(true);
-            case CLR_INTERRUPT_DISABLE -> registers.status().setIrqDisabled(false);
+            case SET_INTERRUPT_DISABLE -> interruptDisabled.delayedSet(true);
+            case CLR_INTERRUPT_DISABLE -> interruptDisabled.delayedSet(false);
 
             case CLR_OVERFLOW -> registers.status().setOverflow(false);
 
@@ -276,7 +255,7 @@ public class ControlUnit implements Unit {
             case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
 
             case PUSH_STATUS_TO_SP   -> stackEngine.pushStatus(true);
-            case PULL_STATUS_FROM_SP -> stackEngine.pullStatus();
+            case PULL_STATUS_FROM_SP -> stackEngine.pullStatusWithDelayedInterruptDisable();
 
             case TRANSFER_SP_TO_X -> alu.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
@@ -285,6 +264,10 @@ public class ControlUnit implements Unit {
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }
+    }
+
+    public void commitAll() {
+        interruptDisabled.commit();
     }
 
     /* package */ void readModifyWrite(UByteUnaryOperator operator) { // TODO: move to alu
@@ -298,4 +281,6 @@ public class ControlUnit implements Unit {
     public void sampleInterrupts() {
         interrupts.sample();
     }
+
+
 }

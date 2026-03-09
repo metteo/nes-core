@@ -5,7 +5,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-public class EasyMap {
+public class EasyMemMap {
 
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0xFFFF);
@@ -30,7 +30,12 @@ public class EasyMap {
     public static final @Unsigned short CARTRIDGE_END = ushort(0xFFF9);
     public static final int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
 
+    // TODO: remove this segment, use vectors below instead
     public static final @Unsigned short VECTOR_SEGMENT_START = ushort(0xFFFA);
     public static final @Unsigned short VECTOR_SEGMENT_END = ushort(0xFFFF);
     public static final int VECTOR_SEGMENT_SIZE = sint(VECTOR_SEGMENT_END) - sint(VECTOR_SEGMENT_START) + 1;
+
+    public static final @Unsigned short NMI_VECTOR = ushort(0xFFFA);
+    public static final @Unsigned short RES_VECTOR = ushort(0xFFFC);
+    public static final @Unsigned short IRQ_VECTOR = ushort(0xFFFE);
 }
