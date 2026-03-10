@@ -5,6 +5,7 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.StatusRegister;
+import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
@@ -16,6 +17,7 @@ import java.util.function.IntBinaryOperator;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -34,17 +36,22 @@ public class ArithmeticLogic implements Unit {
     @Used
     private final StatusRegister status;
 
+    @Used
+    private final EdgeDetector setOverflow;
+
     @Inject
     public ArithmeticLogic(
-        CpuRegFile registers,
-        @CpuVar(A) ByteRegister accumulator,
-        @CpuVar(DO) DelegatingRegister operand,
-        @CpuVar(PS) StatusRegister status
+            CpuRegFile registers,
+            @CpuVar(A) ByteRegister accumulator,
+            @CpuVar(DO) DelegatingRegister operand,
+            @CpuVar(PS) StatusRegister status,
+            @CpuVar(SOV) EdgeDetector setOverflow
     ) {
         this.registers = registers;
         this.accumulator = accumulator;
         this.operand2 = operand;
         this.status = status;
+        this.setOverflow = setOverflow;
     }
 
     public void addWithCarry(@Unsigned byte data) { // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
@@ -61,11 +68,13 @@ public class ArithmeticLogic implements Unit {
 
         int resultSign = byteResult >> 7;
 
+        boolean overflow = resultSign != aSign && resultSign != dataSign;
+
         registers.a().setAsByte(byteResult);
         registers.status()
                 .setCarry(result > 0xFF)
                 .setZero(byteResult == 0)
-                .setOverflow(resultSign != aSign && resultSign != dataSign)
+                .setOverflow(overflow || setOverflow.isActive())
                 .setNegative(resultSign == 1);
     }
 
@@ -83,10 +92,13 @@ public class ArithmeticLogic implements Unit {
 
         int resultSign = byteResult >> 7;
         registers.a().setAsByte(byteResult);
+
+        boolean overflow = resultSign != aSign && resultSign == dataSign;
+
         registers.status()
                 .setBorrow(result < 0)
                 .setZero(byteResult == 0)
-                .setOverflow(resultSign != aSign && resultSign == dataSign)
+                .setOverflow(overflow || setOverflow.isActive())
                 .setNegative(resultSign == 1);
     }
 

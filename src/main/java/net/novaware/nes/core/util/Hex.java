@@ -6,7 +6,8 @@ import java.util.HexFormat;
 
 public class Hex {
 
-    private static final HexFormat hexFormat = HexFormat.ofDelimiter(" ");
+    private static final HexFormat hexFormat = HexFormat.ofDelimiter(" ")
+            .withUpperCase();
 
     public static byte[] b(CharSequence input) {
         return hexFormat.parseHex(input);

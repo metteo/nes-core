@@ -23,6 +23,7 @@ class CpuSpec extends Specification {
     PowerMgmt powerMgmt = Mock()
     PrefetchUnit prefetch = Mock()
     StackEngine stackEngine = Mock()
+    DiagnosticUnit diagnostics = Mock()
     LevelDetector irq = Mock()
     EdgeDetector nmi = Mock()
     LevelDetector res = Mock()
@@ -42,6 +43,7 @@ class CpuSpec extends Specification {
         powerMgmt,
         prefetch,
         stackEngine,
+        diagnostics,
         irq, nmi, s0h, res, rdy, so
     )
 

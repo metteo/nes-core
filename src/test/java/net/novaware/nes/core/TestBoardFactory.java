@@ -2,6 +2,7 @@ package net.novaware.nes.core;
 
 import dagger.BindsInstance;
 import dagger.Component;
+import net.novaware.nes.core.apu.inject.ApuModule;
 import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
@@ -19,8 +20,10 @@ import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
 import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
+import net.novaware.nes.core.dma.inject.DmaModule;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.internal.PortModule;
+import net.novaware.nes.core.ppu.inject.PpuModule;
 import net.novaware.nes.core.register.DelegatingRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
@@ -28,6 +31,9 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 
 @BoardScope
 @Component(modules = {
+    DmaModule.class,
+    ApuModule.class, // TODO: do we want it here? RecordingBus doesn't need it
+    PpuModule.class,  // TODO: do we want it here? RecordingBus doesn't need it
     CpuModule.class,
     CpuRegModule.class,
     CpuMemModule.class,

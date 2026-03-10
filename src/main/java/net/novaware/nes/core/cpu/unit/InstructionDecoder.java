@@ -73,17 +73,6 @@ public class InstructionDecoder implements Unit {
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
 
-        // TODO: Hide log generation behind a flag. sout is sloooow
-//        System.out.println(" " + instruction.group().mnemonic() + "                            "
-//                + " A:" + Hex.s(registers.a().get()).toUpperCase()
-//                + " X:" + Hex.s(registers.x().get()).toUpperCase()
-//                + " Y:" + Hex.s(registers.y().get()).toUpperCase()
-//                + " P:" + Hex.s(registers.status().get().get()).toUpperCase()
-//                + " SP:" + Hex.s(registers.sp().get()).toUpperCase()
-//                + " PPU:       "
-//                + " CYC:" + cycleCounter.getValue()
-//        );
-
         // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
         decodedInstruction.setAsByte(instruction.group().ordinal());
 

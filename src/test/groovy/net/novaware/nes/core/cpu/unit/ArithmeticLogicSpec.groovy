@@ -142,6 +142,8 @@ class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
         0x80 | 0       | 0x80 || 0x00     | false | true  | 1     | 1  | "Signed: -128 + -128 = -256 (zero)"
     }
 
+    // TODO: add test cases for Set Overflow (ADC, SBC)
+
     def "should subtract with borrow"() {
         given:
         regs(

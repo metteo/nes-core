@@ -5,6 +5,7 @@ import net.novaware.nes.core.clock.ClockGenerator;
 import net.novaware.nes.core.clock.ClockGenerator.Handle;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
+import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
@@ -66,6 +67,10 @@ public class Board {
     }
 
     private void start() {
+        cpu.reset(Signal.LOW);
+        cpu.advance();
+        cpu.reset(Signal.HIGH);
+
         Handle cpuHandle = clock.schedule(() -> {
             try {
                 cpu.advance();

@@ -13,6 +13,7 @@ import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
+import net.novaware.nes.core.cpu.unit.DiagnosticUnit;
 import net.novaware.nes.core.cpu.unit.InstructionDecoder;
 import net.novaware.nes.core.cpu.unit.InterruptLogic;
 import net.novaware.nes.core.cpu.unit.LoadStore;
@@ -32,6 +33,8 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.RDY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.S0H;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
+import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
+import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 
 /**
  * https://web.archive.org/web/20221112231348if_/http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
@@ -42,6 +45,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
 @SuppressWarnings("unused") // @Owned unit fields are annotated only
 public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
+    // TODO: No need for multiple listeners or thread safety, this is board only, and hidden behind a port otherwise
     private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
 
     @Owned private final CpuRegFile registers;
@@ -56,6 +60,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
     @Owned private final PowerMgmt powerMgmt;
     @Owned private final PrefetchUnit prefetch;
     @Owned private final StackEngine stackEngine;
+    @Owned private final DiagnosticUnit diagnostics;
 
     @Owned private final LevelDetector irq;
     @Owned private final EdgeDetector nmi;
@@ -80,6 +85,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         PowerMgmt powerMgmt,
         PrefetchUnit prefetch,
         StackEngine stackEngine,
+        DiagnosticUnit diagnostics,
 
         @CpuVar(IRQ) LevelDetector irq,
         @CpuVar(NMI) EdgeDetector nmi,
@@ -102,7 +108,8 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
             this.mmu = mmu,
             this.powerMgmt = powerMgmt,
             this.prefetch = prefetch,
-            this.stackEngine = stackEngine
+            this.stackEngine = stackEngine,
+            this.diagnostics = diagnostics
         );
 
         this.irq = irq;
@@ -129,6 +136,11 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
      */
     // TODO: use one lone coder test assembly to verify ticks
     public void advance() { // TODO: consider renaming to step()
+        if (rdy.isActive()) {
+            // TODO: repeat last bus.read operation?
+            return;
+        }
+
         if (res.isActive()) {
             reset();
             return;
@@ -143,6 +155,8 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         // high byte*
         // indirect fetch* // TODO: maybe it should be part of execute?
 
+        diagnostics.run();
+
         controlUnit.execute();
         // read* (and optionally write original back)
         // modify
@@ -152,7 +166,9 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
         controlUnit.commitAll();
 
+        fireSyncChange(HIGH);
         controlUnit.fetchOpcode();
+        fireSyncChange(LOW);
 
         // TODO: allow running for given cycle budget, efficiently stop before (or just after depending on strictness)
     }
@@ -209,7 +225,9 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         syncListeners.remove(listener);
     }
 
-    protected void fireSyncChange(Signal s) { // TODO: fire the event
+    protected void fireSyncChange(Signal s) {
+        if (syncListeners.isEmpty()) { return; }
+
         for (SyncListener listener : syncListeners) {
             listener.onSyncChange(s);
         }

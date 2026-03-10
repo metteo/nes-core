@@ -1,17 +1,17 @@
 package net.novaware.nes.core.ppu.register;
 
-import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
 import net.novaware.nes.core.register.ShortRegister;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
  */
+@BoardScope
 public class PpuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("PPUCC");
@@ -32,15 +32,13 @@ public class PpuRegFile extends RegisterFile {
     private ShortRegister ppuScrollFull = new ShortRegister("PPUSCROLL_FULL");
     private ShortRegister ppuAddrFull = new ShortRegister("PPUADDR_FULL");
 
-    private @Nullable ByteRegister oamDma = null; // 0x4014
-
     // Internal
     private ByteRegister v = new ByteRegister("V");
     private ByteRegister t = new ByteRegister("T");
     private ByteRegister x = new ByteRegister("X");
     private ByteRegister w = new ByteRegister("W");
 
-    @Inject
+    //@Inject
     public PpuRegFile() {
         super("PPU_REG");
 

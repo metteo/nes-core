@@ -22,6 +22,7 @@ public enum CpuVarName {
     MA ("",  "memoryAddress",      "Memory Address"),
     MD ("",  "memoryData",         "Memory Data"),
 
+    PA ("",  "prefetchAddress",    "Prefetch Address"),
     CI ("",  "currentInstruction", "Current Instruction"),
     CO ("",  "currentOperand",     "Current Operand"),
 

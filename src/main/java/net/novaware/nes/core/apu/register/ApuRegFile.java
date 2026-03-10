@@ -1,16 +1,20 @@
 package net.novaware.nes.core.apu.register;
 
-import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
 
 import java.util.List;
 
+import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
+
 /**
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
  * @see <a href="https://www.nesdev.org/wiki/2A03">2A03 on nesdev.org</a>
  */
+@BoardScope
 public class ApuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("APUCC");
@@ -41,20 +45,24 @@ public class ApuRegFile extends RegisterFile {
     private ByteRegister noiseLo = new ByteRegister("NOISE_LO");
     private ByteRegister noiseHi = new ByteRegister("NOISE_HI");
 
-    // DMC Channel
-    private ByteRegister dmcFreq = new ByteRegister("DMC_FREQ");
+    // DMC Channel (APU DMA)
+    private ByteRegister dmcFreq = new ByteRegister("DMC_FREQ"); // 0x4010
     private ByteRegister dmcRaw = new ByteRegister("DMC_RAW");
     private ByteRegister dmcStart = new ByteRegister("DMC_START");
-    private ByteRegister dmcLength = new ByteRegister("DMC_LEN");
+    private ByteRegister dmcLength = new ByteRegister("DMC_LEN"); // 0x4013
 
-    private ByteRegister oamDma = new ByteRegister("OAMDMA"); // 0x4014 // FIXME: same instance as in PPU ? / !
+    private ByteRegister oamDma; // 0x4014
     private ByteRegister sndChn = new ByteRegister("SNDCHN"); // TODO: use dedicate status / control register
     private ByteRegister joy1 = new ByteRegister("JOY1");
     private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017
 
-    @Inject
-    public ApuRegFile() {
+    //@Inject
+    public ApuRegFile(
+        @DmaVar(OAM) ByteRegister oamDma
+    ) {
         super("APU_REG");
+
+        this.oamDma = oamDma;
 
         // TODO: inject with all the registers from module instead of creating them here
 

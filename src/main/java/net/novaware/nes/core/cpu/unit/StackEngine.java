@@ -66,6 +66,10 @@ public class StackEngine implements Unit {
         return stackSegment.getStartAsInt() + stackPointer.getAsInt();
     }
 
+    void peek() {
+        mmu.specifyAnd(address());
+    }
+
     void push(DataRegister register) {
         push(register.get());
     }
@@ -107,8 +111,7 @@ public class StackEngine implements Unit {
 
         register.set(data);
 
-        status.setZero(dataVal == 0)
-                .setNegative((dataVal & (1 << 7)) > 0);
+        status.maybeZeroOrNegative(dataVal);
     }
 
     void pull(AddressRegister register) {
