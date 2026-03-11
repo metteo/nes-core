@@ -4,6 +4,7 @@ import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class PhysicalMemory implements MemoryDevice { // TODO: Add nameable
 
@@ -30,6 +31,15 @@ public class PhysicalMemory implements MemoryDevice { // TODO: Add nameable
         this(buffer, 0);
     }
 
+    @Override
+    public @Unsigned short getStartAddress() {
+        return ushort(offset);
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() {
+        return ushort(offset + buffer.capacity() - 1);
+    }
 
     @Override
     public void specify(@Unsigned short address) {

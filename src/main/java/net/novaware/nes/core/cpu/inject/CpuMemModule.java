@@ -57,7 +57,7 @@ public interface CpuMemModule {
     @CpuVar(APU)
     static MemoryDevice provideApuRegs(ApuRegFile apuRegFile) {
         return new ByteRegisterMemory("APU_REGS",
-                sint(CpuMemMap.APU_IO_REGISTERS_START),
+                sint(CpuMemMap.APU_REGISTERS_START), // FIXME: Do not include IO!!!
                 apuRegFile.getCpuRegisters());
     }
 

@@ -44,6 +44,9 @@ class BankedMemorySpec extends Specification {
         memory.specifyThen(ushort(0xFFFF)).writeByte(ubyte(0xAA))
 
         then:
+        memory.getStartAddress() == ushort(0x8000)
+        memory.getEndAddress() == ushort(0xFFFF)
+
         memory.specifyThen(ushort(0x8000)).readByte() == ubyte(0x11)
         memory.specifyThen(ushort(0x9000)).readByte() == ubyte(0x22)
         memory.specifyThen(ushort(0xA000)).readByte() == ubyte(0x33)

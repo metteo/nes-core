@@ -44,6 +44,8 @@ public enum CpuVarName {
     RAM ("",  "?", "RAM"),
     PPU ("", "", "PPU"),
     APU ("", "", "APU"),
+    IO  ("", "", "IO"),
+    FDS ("", "", "FDS"),
     CART ("", "", "Cartridge"),
 
     // endregion

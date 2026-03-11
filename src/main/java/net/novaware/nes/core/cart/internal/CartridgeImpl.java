@@ -138,6 +138,16 @@ public class CartridgeImpl implements Cartridge {
         }
 
         @Override
+        public @Unsigned short getStartAddress() {
+            return ushort(0x6000);
+        }
+
+        @Override
+        public @Unsigned short getEndAddress() {
+            return ushort(0xFFFF);
+        }
+
+        @Override
         public @Unsigned byte readByte() {
             return currentProgramSegment.readByte();
         }
@@ -160,6 +170,16 @@ public class CartridgeImpl implements Cartridge {
             }
 
             currentVideoSegment.specify(currentVideoAddress);
+        }
+
+        @Override
+        public @Unsigned short getStartAddress() {
+            return ushort(0x0000);
+        }
+
+        @Override
+        public @Unsigned short getEndAddress() {
+            return ushort(0x1FFF);
         }
 
         @Override

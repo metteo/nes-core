@@ -5,6 +5,7 @@ import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
@@ -22,6 +23,16 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
         this.registers = registers;
         this.size = registers.length;
+    }
+
+    @Override
+    public @Unsigned short getStartAddress() {
+        return ushort(offset);
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() {
+        return ushort(offset + size - 1);
     }
 
     @Override

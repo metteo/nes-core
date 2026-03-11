@@ -14,8 +14,12 @@ class CpuBusSpec extends Specification {
         new CpuBus(
             cycleCounter,
             new PhysicalMemory(CpuMemMap.RAM_SIZE, sint(CpuMemMap.RAM_START)),
-            new PhysicalMemory(CpuMemMap.PPU_REGISTERS_SIZE + CpuMemMap.PPU_REGISTERS_MIRROR_SIZE, sint(CpuMemMap.PPU_REGISTERS_START)),
-            new PhysicalMemory(CpuMemMap.APU_IO_REGISTERS_SIZE, sint(CpuMemMap.APU_TEST_REGISTERS_START)),
+            new PhysicalMemory(CpuMemMap.PPU_REGISTERS_MIRROR_SIZE, sint(CpuMemMap.PPU_REGISTERS_START)),
+            new PhysicalMemory(CpuMemMap.APU_REGISTERS_SIZE, sint(CpuMemMap.APU_REGISTERS_START)),
+            null,
+            null,
+            null,
+            null
         )
     }
 

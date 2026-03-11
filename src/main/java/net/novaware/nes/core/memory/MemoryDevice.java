@@ -4,6 +4,10 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 public interface MemoryDevice extends AddressBus<DataBus>, DataBus {
 
+    @Unsigned short getStartAddress();
+
+    @Unsigned short getEndAddress();
+
     @Override
     default MemoryDevice specifyThen(@Unsigned short address) {
         specify(address);

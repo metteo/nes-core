@@ -9,57 +9,93 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/CPU_memory_map">CPU Memory Map on nesdev.org</a>
  */
-public class CpuMemMap implements MemoryMap {
+public interface CpuMemMap extends MemoryMap {
 
-    public static final @Unsigned short MEMORY_START = ushort(0x0000);
-    public static final @Unsigned short MEMORY_END = ushort(0xFFFF);
-    public static final int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
+    @Unsigned short MEMORY_START = ushort(0x0000);
+    @Unsigned short MEMORY_END = ushort(0xFFFF);
+    int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
 
-    public static final @Unsigned short RAM_START = ushort(0x0000);
-    public static final @Unsigned short RAM_END = ushort(0x07FF);
-    public static final int RAM_SIZE = sint(RAM_END) - sint(RAM_START) + 1;
+    // region RAM
 
-    public static final @Unsigned short STACK_SEGMENT_START = ushort(0x0100);
-    public static final @Unsigned short STACK_SEGMENT_END = ushort(0x01FF);
-    public static final int STACK_SEGMENT_SIZE = sint(STACK_SEGMENT_END) - sint(STACK_SEGMENT_START) + 1;
+    @Unsigned short RAM_START = ushort(0x0000);
+    @Unsigned short RAM_END = ushort(0x07FF);
+    int RAM_SIZE = sint(RAM_END) - sint(RAM_START) + 1;
 
-    public static final @Unsigned short OAM_SEGMENT_START = ushort(0x0200);
-    public static final @Unsigned short OAM_SEGMENT_END = ushort(0x02FF);
-    public static final int OAM_SEGMENT_SIZE = sint(OAM_SEGMENT_END) - sint(OAM_SEGMENT_START) + 1;
+    @Unsigned short RAM_MIRROR_END = ushort(0x1FFF);
+    int RAM_MIRROR_SIZE = sint(RAM_MIRROR_END) - sint(RAM_START) + 1;
 
-    public static final @Unsigned short RAM_MIRROR_1_START = ushort(0x0800);
-    public static final @Unsigned short RAM_MIRROR_1_END = ushort(0x0FFF);
-    public static final int RAM_MIRROR_1_SIZE = sint(RAM_MIRROR_1_END) - sint(RAM_MIRROR_1_START) + 1;
+    // endregion
+    // region RAM Segments
 
-    public static final @Unsigned short RAM_MIRROR_2_START = ushort(0x1000);
-    public static final @Unsigned short RAM_MIRROR_2_END = ushort(0x17FF);
-    public static final int RAM_MIRROR_2_SIZE = sint(RAM_MIRROR_2_END) - sint(RAM_MIRROR_2_START) + 1;
+    @Unsigned short ZERO_PAGE_START = ushort(0x0000);
+    @Unsigned short ZERO_PAGE_END = ushort(0x00FF);
+    int ZERO_PAGE_SIZE = sint(ZERO_PAGE_END) - sint(ZERO_PAGE_START) + 1;
 
-    public static final @Unsigned short RAM_MIRROR_3_START = ushort(0x1800);
-    public static final @Unsigned short RAM_MIRROR_3_END = ushort(0x1FFF);
-    public static final int RAM_MIRROR_3_SIZE = sint(RAM_MIRROR_3_END) - sint(RAM_MIRROR_3_START) + 1;
+    @Unsigned short STACK_SEGMENT_START = ushort(0x0100);
+    @Unsigned short STACK_SEGMENT_END = ushort(0x01FF);
+    int STACK_SEGMENT_SIZE = sint(STACK_SEGMENT_END) - sint(STACK_SEGMENT_START) + 1;
 
-    public static final @Unsigned short PPU_REGISTERS_START = ushort(0x2000);
-    public static final @Unsigned short PPU_REGISTERS_END = ushort(0x2007);
-    public static final int PPU_REGISTERS_SIZE = sint(PPU_REGISTERS_END) - sint(PPU_REGISTERS_START) + 1;
+    @Unsigned short OAM_SEGMENT_START = ushort(0x0200); // usual location
+    @Unsigned short OAM_SEGMENT_END = ushort(0x02FF);
+    int OAM_SEGMENT_SIZE = sint(OAM_SEGMENT_END) - sint(OAM_SEGMENT_START) + 1;
 
-    public static final @Unsigned short PPU_REGISTERS_MIRROR_START = ushort(0x2008);
-    public static final @Unsigned short PPU_REGISTERS_MIRROR_END = ushort(0x3FFF);
-    public static final int PPU_REGISTERS_MIRROR_SIZE = sint(PPU_REGISTERS_MIRROR_END) - sint(PPU_REGISTERS_MIRROR_START) + 1;
+    // endregion
+    // region PPU
 
-    public static final @Unsigned short APU_IO_REGISTERS_START = ushort(0x4000);
-    public static final @Unsigned short APU_IO_REGISTERS_END = ushort(0x4017);
-    public static final int APU_IO_REGISTERS_SIZE = sint(APU_IO_REGISTERS_END) - sint(APU_IO_REGISTERS_START) + 1;
+    @Unsigned short PPU_REGISTERS_START = ushort(0x2000);
+    @Unsigned short PPU_REGISTERS_END = ushort(0x2007);
+    int PPU_REGISTERS_SIZE = sint(PPU_REGISTERS_END) - sint(PPU_REGISTERS_START) + 1;
 
-    public static final @Unsigned short APU_TEST_REGISTERS_START = ushort(0x4018);
-    public static final @Unsigned short APU_TEST_REGISTERS_END = ushort(0x401F);
-    public static final int APU_TEST_REGISTERS_SIZE = sint(APU_TEST_REGISTERS_END) - sint(APU_TEST_REGISTERS_START) + 1;
+    @Unsigned short PPU_REGISTERS_MIRROR_END = ushort(0x3FFF);
+    int PPU_REGISTERS_MIRROR_SIZE = sint(PPU_REGISTERS_MIRROR_END) - sint(PPU_REGISTERS_START) + 1;
 
-    public static final @Unsigned short CARTRIDGE_START = ushort(0x4020);
-    public static final @Unsigned short CARTRIDGE_END = ushort(0xFFFF);
-    public static final int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
+    // endregion
+    // region APU / IO / Test / Timer / Cartridge FDS
 
-    public static final @Unsigned short NMI_VECTOR = ushort(0xFFFA);
-    public static final @Unsigned short RES_VECTOR = ushort(0xFFFC);
-    public static final @Unsigned short IRQ_VECTOR = ushort(0xFFFE);
+    @Unsigned short APU_REGISTERS_START = ushort(0x4000);
+    @Unsigned short APU_REGISTERS_END = ushort(0x4013);
+    int APU_REGISTERS_SIZE = sint(APU_REGISTERS_END) - sint(APU_REGISTERS_START) + 1;
+
+    @Unsigned short IO_REGISTERS_START = ushort(0x4014);
+    @Unsigned short IO_REGISTERS_END = ushort(0x4017);
+    int IO_REGISTERS_SIZE = sint(IO_REGISTERS_END) - sint(IO_REGISTERS_START) + 1;
+
+    @Unsigned short APU_TEST_REGISTERS_START = ushort(0x4018);
+    @Unsigned short APU_TEST_REGISTERS_END = ushort(0x401B);
+    int APU_TEST_REGISTERS_SIZE = sint(APU_TEST_REGISTERS_END) - sint(APU_TEST_REGISTERS_START) + 1;
+
+    @Unsigned short TIMER_REGISTERS_START = ushort(0x401C);
+    @Unsigned short TIMER_REGISTERS_END = ushort(0x401F);
+    int TIMER_REGISTERS_SIZE = sint(TIMER_REGISTERS_END) - sint(TIMER_REGISTERS_START) + 1;
+
+    @Unsigned short CARTRIDGE_FDS_START = ushort(0x4020);
+    @Unsigned short CARTRIDGE_FDS_END = ushort(0x40FF);
+    int CARTRIDGE_FDS_SIZE = sint(CARTRIDGE_FDS_END) - sint(CARTRIDGE_FDS_START) + 1;
+
+    // endregion
+    // region Cartridge
+
+    @Unsigned short CARTRIDGE_START = ushort(0x4100);
+    @Unsigned short CARTRIDGE_END = ushort(0xFFFF);
+    int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
+
+    // endregion
+    // region Cartridge Segments
+
+    @Unsigned short CARTRIDGE_RAM_START = ushort(0x6000);
+    @Unsigned short CARTRIDGE_RAM_END = ushort(0x7FFF);
+    int CARTRIDGE_RAM_SIZE = sint(CARTRIDGE_RAM_END) - sint(CARTRIDGE_RAM_START) + 1;
+
+    @Unsigned short CARTRIDGE_ROM_START = ushort(0x8000);
+    @Unsigned short CARTRIDGE_ROM_END = ushort(0xFFFF);
+    int CARTRIDGE_ROM_SIZE = sint(CARTRIDGE_ROM_END) - sint(CARTRIDGE_ROM_START) + 1;
+
+    // endregion
+    // region Vectors
+
+    @Unsigned short NMI_VECTOR = ushort(0xFFFA);
+    @Unsigned short RES_VECTOR = ushort(0xFFFC);
+    @Unsigned short IRQ_VECTOR = ushort(0xFFFE);
+
+    // endregion
 }

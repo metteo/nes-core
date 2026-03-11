@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class BankedMemory implements MemoryDevice {
 
@@ -92,6 +93,16 @@ public class BankedMemory implements MemoryDevice {
                     .order(LITTLE_ENDIAN)
             );
         }
+    }
+
+    @Override
+    public @Unsigned short getStartAddress() {
+        return startAddress;
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() { // FIXME: test
+        return ushort(sint(startAddress) + (bankSize.toBytes() * visibleBanks.length) - 1);
     }
 
     @Override
