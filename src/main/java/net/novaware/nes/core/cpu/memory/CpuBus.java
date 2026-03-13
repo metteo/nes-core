@@ -5,16 +5,22 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.OpenBus;
+import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.List;
 import java.util.function.IntPredicate;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ATM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.TMR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
@@ -25,13 +31,13 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.CARTRIDGE_FDS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.CARTRIDGE_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_START;
 import static net.novaware.nes.core.util.UTypes.sint;
-import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class CpuBus implements MemoryBus {
 
@@ -45,6 +51,9 @@ public class CpuBus implements MemoryBus {
 
     @Used
     private final CycleCounter cycleCounter;
+
+    @Owned
+    private final PagedMemory pagedMemory;
 
     @Used
     private MemoryDevice ram;
@@ -62,6 +71,9 @@ public class CpuBus implements MemoryBus {
     private MemoryDevice apuTestRegs;
 
     @Used
+    private MemoryDevice timerRegs;
+
+    @Used
     private MemoryDevice cartridge = new OpenBus(CARTRIDGE_START, CARTRIDGE_END);
 
     private MemoryDevice currentSegment;
@@ -70,21 +82,30 @@ public class CpuBus implements MemoryBus {
 
     @Inject
     public CpuBus(
-        @CpuVar(CC) CycleCounter cycleCounter,
-        @CpuVar(RAM) MemoryDevice ram,
-        @CpuVar(PPU) MemoryDevice ppuRegs,
-        @CpuVar(APU) MemoryDevice apuRegs,
-        @CpuVar(APU) MemoryDevice ioRegs, // TODO: IO
-        @CpuVar(APU) MemoryDevice apuTestRegs, // TODO: apu test
-        @CpuVar(APU) MemoryDevice timer, // TODO: timer
-        @CpuVar(APU) MemoryDevice fdsRegs // TODO: FDS
+            @CpuVar(CC) CycleCounter cycleCounter,
+            @CpuVar(RAM) MemoryDevice ram,
+            @CpuVar(PPU) MemoryDevice ppuRegs,
+            @CpuVar(APU) MemoryDevice apuRegs,
+            @CpuVar(IO)  MemoryDevice ioRegs,
+            @CpuVar(ATM) MemoryDevice apuTestRegs, // TODO: apu test
+            @CpuVar(TMR) MemoryDevice timerRegs // TODO: timer
     ) {
+        this.pagedMemory = new PagedMemory(new OpenBus(MEMORY_START, MEMORY_END));
+
         this.cycleCounter = cycleCounter;
         this.ram = ram;
         this.ppuRegs = ppuRegs;
         this.apuRegs = apuRegs;
         this.ioRegs = ioRegs;
         this.apuTestRegs = apuTestRegs;
+        this.timerRegs = timerRegs;
+
+        //this.page40 = new OffsetMemory(0x40, apuRegs, ioRegs, apuTestRegs, timerRegs);
+
+        pagedMemory.attach(ram);
+        pagedMemory.attach(ppuRegs);
+        //pagedMemory.attach(page40);
+        pagedMemory.attach(cartridge);
 
         currentSegment = ram;
         currentRange = RAM_RANGE;
@@ -105,7 +126,6 @@ public class CpuBus implements MemoryBus {
 
         if (RAM_RANGE.test(addressInt)) { // TODO: maybe switch to BankedMemory
             currentRange = RAM_RANGE;
-            addressLatch = ushort(addressInt & sint(RAM_END));
             currentSegment = ram;
 
         } else if (PPU_REGS_RANGE.test(addressInt)) {
@@ -153,5 +173,10 @@ public class CpuBus implements MemoryBus {
     @Override
     public void attach(MemoryDevice memoryDevice) { // FIXME: what about the address range?
         cartridge = memoryDevice;
+
+        List<MemoryDevice> replaced = pagedMemory.attach(memoryDevice);
+        if (!replaced.isEmpty()) {
+            System.out.println("Replaced following devices: " + replaced);
+        }
     }
 }

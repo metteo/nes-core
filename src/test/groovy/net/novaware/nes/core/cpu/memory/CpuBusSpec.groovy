@@ -4,6 +4,7 @@ import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.*
 
 class CpuBusSpec extends Specification {
@@ -13,13 +14,12 @@ class CpuBusSpec extends Specification {
     def newCpuBus() {
         new CpuBus(
             cycleCounter,
-            new PhysicalMemory(CpuMemMap.RAM_SIZE, sint(CpuMemMap.RAM_START)),
-            new PhysicalMemory(CpuMemMap.PPU_REGISTERS_MIRROR_SIZE, sint(CpuMemMap.PPU_REGISTERS_START)),
-            new PhysicalMemory(CpuMemMap.APU_REGISTERS_SIZE, sint(CpuMemMap.APU_REGISTERS_START)),
-            null,
-            null,
-            null,
-            null
+            new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE),
+            new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_END, PPU_REGISTERS_MIRROR_SIZE),
+            new PhysicalMemory("APU", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE),
+            new PhysicalMemory("IO",  IO_REGISTERS_START, IO_REGISTERS_END, IO_REGISTERS_SIZE),
+            new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE),
+            new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE)
         )
     }
 

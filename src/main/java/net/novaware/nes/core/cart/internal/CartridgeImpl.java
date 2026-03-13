@@ -61,7 +61,9 @@ public class CartridgeImpl implements Cartridge {
         this.mapper = new NROM(programDataQuantity.amount());
 
         programData = new BankedMemory(
+                "PRG-ROM",
                 ushort(0x8000),
+                ushort(0xFFFF),
             new Quantity(2, BANK_16KB),
             programDataQuantity
         );
@@ -72,13 +74,13 @@ public class CartridgeImpl implements Cartridge {
         programData.configure(1, programDataQuantity.amount() == 1 ? 0 : 1);
 
         // TODO: only if not disabled
-        programMemory = new PhysicalMemory(8 * 1024, 0x6000);
+        programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
         // TODO: only if battery
-        programStorage = new PhysicalMemory(8 * 1024, 0x6000);
+        programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
 
-        videoData = new PhysicalMemory(UByteBuffer.of(nesFile.data().video()));
-        videoMemory = new PhysicalMemory(8 * 1024, 0);
-        videoStorage = new PhysicalMemory(8 * 1024, 0);
+        videoData = new PhysicalMemory("CHR-ROM", ushort(0x2000), ushort(0x2FFF), UByteBuffer.of(nesFile.data().video()));
+        videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 8 * 1024);
+        videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 8 * 1024);
 
         currentProgramSegment = programData;
         currentVideoSegment = videoData;

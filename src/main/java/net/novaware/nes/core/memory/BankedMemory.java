@@ -1,5 +1,6 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
 import net.novaware.nes.core.util.UByteBuffer;
@@ -10,11 +11,14 @@ import java.nio.ByteBuffer;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
-import static net.novaware.nes.core.util.UTypes.ushort;
 
-public class BankedMemory implements MemoryDevice {
+public class BankedMemory implements MemoryDevice, Nameable {
+
+    private final String name;
 
     private final @Unsigned short startAddress;
+    private final @Unsigned short endAddress;
+
     private int bankIndex;
     private int bankAddress;
 
@@ -45,10 +49,15 @@ public class BankedMemory implements MemoryDevice {
     private Mode mode;
 
     public BankedMemory(
-        @Unsigned short offset,
-        Quantity visibleBanks, Quantity hiddenBanks
+        String name,
+        @Unsigned short startAddress,
+        @Unsigned short endAddress,
+        Quantity visibleBanks,
+        Quantity hiddenBanks
     ) {
-        this.startAddress = offset;
+        this.name = name;
+        this.startAddress = startAddress;
+        this.endAddress = endAddress;
         this.bankSize = new Quantity(1, visibleBanks.unit());
 
         assertArgument(visibleBanks.unit() != Unit.BYTES, "bytes not accepted as unit");
@@ -69,6 +78,11 @@ public class BankedMemory implements MemoryDevice {
         // for many to one (mirroring), set all visible banks to the hidden one
         // for 1 to 1 (direct), set up the pairs
         // for 1 to many (switching) set first to first, second to last (for program)
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     // TODO: expose method for copying over / setting data in the banks
@@ -102,7 +116,7 @@ public class BankedMemory implements MemoryDevice {
 
     @Override
     public @Unsigned short getEndAddress() { // FIXME: test
-        return ushort(sint(startAddress) + (bankSize.toBytes() * visibleBanks.length) - 1);
+        return endAddress;
     }
 
     @Override

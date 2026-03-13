@@ -45,7 +45,8 @@ public enum CpuVarName {
     PPU ("", "", "PPU"),
     APU ("", "", "APU"),
     IO  ("", "", "IO"),
-    FDS ("", "", "FDS"),
+    ATM ("", "", "ATM"), // APU Test Mode registers
+    TMR ("", "", "Timer"),
     CART ("", "", "Cartridge"),
 
     // endregion

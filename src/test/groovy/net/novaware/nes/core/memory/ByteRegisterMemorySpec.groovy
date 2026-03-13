@@ -14,7 +14,7 @@ class ByteRegisterMemorySpec extends Specification {
     def "should report start and end correctly"() {
         given:
         def registers = [reg0, reg1] as ByteRegister[]
-        def memory = new ByteRegisterMemory("test", 0x4000, registers)
+        def memory = new ByteRegisterMemory("test", ushort(0x4000), ushort(0x4001), registers)
 
         expect:
         memory.getStartAddress() == ushort(0x4000)
@@ -24,7 +24,7 @@ class ByteRegisterMemorySpec extends Specification {
     def "should read and write to correct register"() {
         given:
         def registers = [reg0, reg1] as ByteRegister[]
-        def memory = new ByteRegisterMemory("test", 0x4000, registers)
+        def memory = new ByteRegisterMemory("test", ushort(0x4000), ushort(0x4001), registers)
 
         when:
         memory.specifyThen(ushort(0x4000)).writeByte(ubyte(0x12))

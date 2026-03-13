@@ -13,7 +13,9 @@ class BankedMemorySpec extends Specification {
     def "should map 64KB of data over 32KB address space (switching)"() {
         given:
         def memory = new BankedMemory(
+            "NN",
             ushort(0x8000),
+            ushort(0xFFFF),
             new Quantity(2, BANK_16KB),
             new Quantity(4, BANK_16KB)
         )
@@ -22,7 +24,9 @@ class BankedMemorySpec extends Specification {
     def "should map 32KB of data over 32KB address space (direct)"() {
         given:
         def memory = new BankedMemory(
+                "NN",
                 ushort(0x8000),
+                ushort(0xFFFF),
                 new Quantity(2, BANK_16KB),
                 new Quantity(2, BANK_16KB)
         )
@@ -63,7 +67,9 @@ class BankedMemorySpec extends Specification {
     def "should mirror 16KB of data over 32KB address space (mirroring)"() {
         given:
         def memory = new BankedMemory(
+                "NN",
                 ushort(0x8000),
+                ushort(0xFFFF),
                 new Quantity(2, BANK_16KB),
                 new Quantity(1, BANK_16KB)
         )

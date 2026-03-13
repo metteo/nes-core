@@ -7,6 +7,7 @@ import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.register.ByteRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.easy.EasyMemMap.*;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_END;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_SIZE;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_START;
@@ -35,12 +36,12 @@ public class EasyBus implements MemoryBus {
     private ByteRegister rng = new ByteRegister("RNG"); // 0x00FE
     private ByteRegister key = new ByteRegister("KEY"); // 0x00FF
 
-    private final MemoryDevice ram = new PhysicalMemory(EasyMemMap.RAM_SIZE, sint(RAM_START));
-    private final MemoryDevice regs = new ByteRegisterMemory("EZ_REGS", sint(RNG_BYTE), new ByteRegister[]{ rng, key });
-    private final MemoryDevice stack = new PhysicalMemory(STACK_SEGMENT_SIZE, sint(STACK_SEGMENT_START));
-    private final MemoryDevice vram = new PhysicalMemory(PICTURE_SEGMENT_SIZE, sint(PICTURE_SEGMENT_START));
-    private final MemoryDevice rom = new PhysicalMemory(CARTRIDGE_SIZE, sint(CARTRIDGE_START));
-    private final MemoryDevice vectors = new PhysicalMemory(VECTOR_SEGMENT_SIZE, sint(VECTOR_SEGMENT_START));
+    private final MemoryDevice ram = new PhysicalMemory("RAM", RAM_START, RAM_END, RAM_SIZE);
+    private final MemoryDevice regs = new ByteRegisterMemory("EZ_REGS", RNG_BYTE, KEY_BYTE, new ByteRegister[]{ rng, key });
+    private final MemoryDevice stack = new PhysicalMemory("STACK", STACK_SEGMENT_START, STACK_SEGMENT_END, STACK_SEGMENT_SIZE);
+    private final MemoryDevice vram = new PhysicalMemory("VRAM", PICTURE_SEGMENT_START, PICTURE_SEGMENT_END, PICTURE_SEGMENT_SIZE);
+    private final MemoryDevice rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE);
+    private final MemoryDevice vectors = new PhysicalMemory("VECTORS", VECTOR_SEGMENT_START, VECTOR_SEGMENT_END, VECTOR_SEGMENT_SIZE);
 
     private MemoryDevice currentSegment = ram;
     private @Unsigned short currentAddress; // translated into specific segment range

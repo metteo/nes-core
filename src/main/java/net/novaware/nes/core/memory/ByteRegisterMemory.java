@@ -5,40 +5,53 @@ import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
-import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class ByteRegisterMemory implements MemoryDevice, Nameable {
 
     private final String name;
 
-    private final int offset;
+    private final @Unsigned short startAddress;
+    private final @Unsigned short endAddress;
+
     private final ByteRegister[] registers;
-    private final int size;
+    private final int mask;
 
     private int index;
 
-    public ByteRegisterMemory(String name, int offset, ByteRegister[] registers) {
+    public ByteRegisterMemory(
+        String name,
+        @Unsigned short startAddress,
+        @Unsigned short endAddress,
+
+        ByteRegister[] registers
+    ) {
         this.name = name;
-        this.offset = offset;
+        this.startAddress = startAddress;
+        this.endAddress = endAddress;
 
         this.registers = registers;
-        this.size = registers.length;
+        this.mask = registers.length - 1;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override
     public @Unsigned short getStartAddress() {
-        return ushort(offset);
+        return startAddress;
     }
 
     @Override
     public @Unsigned short getEndAddress() {
-        return ushort(offset + size - 1);
+        return endAddress;
     }
 
     @Override
     public void specify(@Unsigned short address) {
-        int addressInt = sint(address) - offset;
-        index = addressInt % size; // TODO: remainder is slow, see BankedMemory
+        int addressInt = sint(address) - sint(startAddress);
+        index = addressInt & mask;
     }
 
     @Override
@@ -49,10 +62,5 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
     @Override
     public void writeByte(@Unsigned byte data) {
         registers[index].set(data);
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 }
