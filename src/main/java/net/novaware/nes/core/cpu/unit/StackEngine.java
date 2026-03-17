@@ -67,7 +67,7 @@ public class StackEngine implements Unit {
     }
 
     void peek() {
-        mmu.specifyAnd(address());
+        mmu.specifyAnd(address()).readByte();
     }
 
     void push(DataRegister register) {

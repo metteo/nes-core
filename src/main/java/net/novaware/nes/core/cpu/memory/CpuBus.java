@@ -2,8 +2,10 @@ package net.novaware.nes.core.cpu.memory;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.memory.MemoryPage;
 import net.novaware.nes.core.memory.OpenBus;
 import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.register.CycleCounter;
@@ -17,7 +19,6 @@ import java.util.function.IntPredicate;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ATM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.IO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.TMR;
@@ -37,6 +38,7 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_EN
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_START;
+import static net.novaware.nes.core.memory.BusOp.ADDRESS;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 public class CpuBus implements MemoryBus {
@@ -52,29 +54,34 @@ public class CpuBus implements MemoryBus {
     @Used
     private final CycleCounter cycleCounter;
 
+    private BusOp currentOp = ADDRESS;
+
     @Owned
     private final PagedMemory pagedMemory;
+
+    @Owned
+    private final MemoryPage page40;
 
     @Used
     private MemoryDevice ram;
 
     @Used
-    private MemoryDevice ppuRegs;
+    private MemoryDevice ppu;
 
     @Used
-    private MemoryDevice apuRegs;
+    private MemoryDevice apu;
 
     @Used
-    private MemoryDevice ioRegs;
+    private MemoryDevice apuTest;
 
     @Used
-    private MemoryDevice apuTestRegs;
+    private MemoryDevice timer;
 
     @Used
-    private MemoryDevice timerRegs;
+    private MemoryDevice cartridge = new OpenBus(CARTRIDGE_FDS_START, CARTRIDGE_END);
 
     @Used
-    private MemoryDevice cartridge = new OpenBus(CARTRIDGE_START, CARTRIDGE_END);
+    private MemoryDevice expansion = new OpenBus(MEMORY_START, MEMORY_END);
 
     private MemoryDevice currentSegment;
     private IntPredicate currentRange;
@@ -84,28 +91,30 @@ public class CpuBus implements MemoryBus {
     public CpuBus(
             @CpuVar(CC) CycleCounter cycleCounter,
             @CpuVar(RAM) MemoryDevice ram,
-            @CpuVar(PPU) MemoryDevice ppuRegs,
-            @CpuVar(APU) MemoryDevice apuRegs,
-            @CpuVar(IO)  MemoryDevice ioRegs,
-            @CpuVar(ATM) MemoryDevice apuTestRegs, // TODO: apu test
-            @CpuVar(TMR) MemoryDevice timerRegs // TODO: timer
+            @CpuVar(PPU) MemoryDevice ppu,
+            @CpuVar(APU) MemoryDevice apu,
+            @CpuVar(ATM) MemoryDevice apuTest, // TODO: apu test
+            @CpuVar(TMR) MemoryDevice timer // TODO: timer
     ) {
         this.pagedMemory = new PagedMemory(new OpenBus(MEMORY_START, MEMORY_END));
+        this.page40 = new MemoryPage(40, new OpenBus(APU_REGISTERS_START, CARTRIDGE_FDS_END));
 
         this.cycleCounter = cycleCounter;
         this.ram = ram;
-        this.ppuRegs = ppuRegs;
-        this.apuRegs = apuRegs;
-        this.ioRegs = ioRegs;
-        this.apuTestRegs = apuTestRegs;
-        this.timerRegs = timerRegs;
-
-        //this.page40 = new OffsetMemory(0x40, apuRegs, ioRegs, apuTestRegs, timerRegs);
+        this.ppu = ppu;
+        this.apu = apu;
+        this.apuTest = apuTest;
+        this.timer = timer;
 
         pagedMemory.attach(ram);
-        pagedMemory.attach(ppuRegs);
-        //pagedMemory.attach(page40);
+        pagedMemory.attach(ppu);
+        pagedMemory.attach(page40);
         pagedMemory.attach(cartridge);
+
+        page40.attach(apu);
+        page40.attach(apuTest);
+        page40.attach(timer);
+        page40.attach(cartridge);
 
         currentSegment = ram;
         currentRange = RAM_RANGE;
@@ -113,6 +122,7 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public void specify(@Unsigned short address) {
+        currentOp = ADDRESS; // reset to force read or write
         addressLatch = address;
         cycleCounter.increment();
 
@@ -130,19 +140,19 @@ public class CpuBus implements MemoryBus {
 
         } else if (PPU_REGS_RANGE.test(addressInt)) {
             currentRange = PPU_REGS_RANGE;
-            currentSegment = ppuRegs;
+            currentSegment = ppu;
 
         } else if (APU_RANGE.test(addressInt)) {
             currentRange = APU_RANGE;
-            currentSegment = apuRegs;
+            currentSegment = apu;
 
         } else if (IO_RANGE.test(addressInt)) {
             currentRange = IO_RANGE;
-            currentSegment = apuRegs;
+            currentSegment = apu;
 
         } else if (APU_TEST_RANGE.test(addressInt)) {
-            // TODO: open bus
-            throw new RuntimeException("TODO: open bus");
+            currentRange = APU_TEST_RANGE;
+            currentSegment = apuTest;
 
         } else if (CARTRIDGE_FDS_RANGE.test(addressInt)) {
             currentRange = CARTRIDGE_FDS_RANGE;
@@ -160,13 +170,22 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public @Unsigned byte readByte() {
+        currentOp = BusOp.READ;
+
         @Unsigned byte data = currentSegment.specifyThen(addressLatch).readByte();
 
         return data;
     }
 
     @Override
+    public BusOp currentOp() {
+        return currentOp;
+    }
+
+    @Override
     public void writeByte(@Unsigned byte data) {
+        currentOp = BusOp.WRITE;
+
         currentSegment.specifyThen(addressLatch).writeByte(data);
     }
 

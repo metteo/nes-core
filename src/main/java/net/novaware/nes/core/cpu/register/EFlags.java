@@ -10,7 +10,7 @@ public class EFlags extends Register {
 
     private boolean trap; // ready line enables stepping
 
-    private boolean decimalDisable;
+    private boolean decimalDisable; // TODO: implement https://www.nesdev.org/wiki/Visual6502wiki/6502DecimalMode
 
     private boolean spriteInterrupt;
 

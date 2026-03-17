@@ -7,7 +7,6 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.memory.CpuBus;
-import net.novaware.nes.core.io.register.IoRegFile;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
@@ -35,8 +34,6 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_END;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_END;
@@ -82,17 +79,6 @@ public interface CpuMemModule {
             "APU_REGS",
             APU_REGISTERS_START, APU_REGISTERS_END,
             apuRegFile.getCpuRegisters()
-        );
-    }
-
-    @Provides
-    @BoardScope
-    @CpuVar(CpuVarName.IO)
-    static MemoryDevice provideIoRegs(IoRegFile ioRegFile) {
-        return new ByteRegisterMemory(
-            "IO_REGS",
-            IO_REGISTERS_START, IO_REGISTERS_END,
-            ioRegFile.getCpuRegisters()
         );
     }
 

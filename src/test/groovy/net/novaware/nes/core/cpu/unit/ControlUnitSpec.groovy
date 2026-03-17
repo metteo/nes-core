@@ -4,8 +4,7 @@ import net.novaware.nes.core.cpu.signal.Signal
 
 import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.memory.RecordingBus.Op
-import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
-import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
+import static net.novaware.nes.core.memory.BusOp.*
 
 // useful: bus.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {
@@ -79,16 +78,16 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         )
 
         bus.activity() == [
-            new Op(ACCESS, 0x0000, 0x00), // opcode
-            new Op(READ,   0x0000, 0x0D),
+            new Op(ADDRESS, 0x0000, 0x00), // opcode
+            new Op(READ,    0x0000, 0x0D),
 
-            new Op(ACCESS, 0x0001, 0x00), // absolute
-            new Op(READ,   0x0001, 0x54),
-            new Op(ACCESS, 0x0002, 0x00),
-            new Op(READ,   0x0002, 0x06),
+            new Op(ADDRESS, 0x0001, 0x00), // absolute
+            new Op(READ,    0x0001, 0x54),
+            new Op(ADDRESS, 0x0002, 0x00),
+            new Op(READ,    0x0002, 0x06),
 
-            new Op(ACCESS, 0x0654, 0x00), // operand
-            new Op(READ,   0x0654, 0xA6)
+            new Op(ADDRESS, 0x0654, 0x00), // operand
+            new Op(READ,    0x0654, 0xA6)
 	    ]
     }
 
@@ -111,10 +110,11 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         expectRegs pc: 0x0001 // nop is single byte instruction
         bus.cycles() == 2
         bus.activity() == [
-            new Op(ACCESS, 0x0000, 0x00), // opcode
-            new Op(READ,   0x0000, 0xEA),
+            new Op(ADDRESS, 0x0000, 0x00), // opcode
+            new Op(READ,    0x0000, 0xEA),
 
-            new Op(ACCESS, 0x0001, 0x00), // required 2nd access, but no read
+            new Op(ADDRESS, 0x0001, 0x00),
+            new Op(READ,    0x0001, 0x00),
         ]
     }
 

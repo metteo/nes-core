@@ -59,4 +59,8 @@ public class MemoryPage implements MemoryDevice { // TODO: test!
     public void writeByte(@Unsigned byte data) {
         offsetLatch.writeByte(data);
     }
+
+    public void attach(MemoryDevice memoryDevice) {
+        // FIXME: implement
+    }
 }

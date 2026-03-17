@@ -1,6 +1,7 @@
 package net.novaware.nes.core.util
 
 import net.novaware.nes.core.TestBoardFactory
+import net.novaware.nes.core.config.ImmutableCoreConfig
 import net.novaware.nes.core.cpu.instruction.Instruction
 import net.novaware.nes.core.cpu.register.CpuInsFile
 import net.novaware.nes.core.cpu.register.CpuRegFile
@@ -12,12 +13,20 @@ import static UTypes.ushort
 
 class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
 
-    def factory = TestBoardFactory.newTestBoardFactory()
+    def factory = TestBoardFactory.newTestBoardFactory(
+        ImmutableCoreConfig.builder()
+            .setCpuBusType(getCpuBusType())
+            .build()
+    )
 
     CpuRegFile registers = factory.newCpuRegisters()
     CpuInsFile insRegs = factory.newExtRegisters()
 
     T bus = factory.newCpuBus() as T
+
+    MemoryBus.Type getCpuBusType() {
+        return MemoryBus.Type.RECORDING
+    }
 
     def regs(Map args) {
         // 16-bit registers

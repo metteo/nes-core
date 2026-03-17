@@ -1,5 +1,6 @@
 package net.novaware.nes.core.cpu.memory
 
+import net.novaware.nes.core.memory.BusOp
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
@@ -10,63 +11,84 @@ import static net.novaware.nes.core.util.UTypes.*
 class CpuBusSpec extends Specification {
 
     def cycleCounter = new CycleCounter("CPUCC")
+    def ram = new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE)
+    def ppu = new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_END, PPU_REGISTERS_MIRROR_SIZE)
+    def apu = new PhysicalMemory("APU", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE)
+    def apuTestMode = new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE)
+    def timer = new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE)
 
-    def newCpuBus() {
-        new CpuBus(
-            cycleCounter,
-            new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE),
-            new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_END, PPU_REGISTERS_MIRROR_SIZE),
-            new PhysicalMemory("APU", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE),
-            new PhysicalMemory("IO",  IO_REGISTERS_START, IO_REGISTERS_END, IO_REGISTERS_SIZE),
-            new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE),
-            new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE)
-        )
-    }
+    def newCpuBus() { new CpuBus(cycleCounter, ram, ppu, apu, apuTestMode, timer) }
 
     def "should read and write to ram"() {
         given:
         CpuBus bus = newCpuBus()
-        def address = ushort(0x0002)
-        def data = ubyte(0x3)
+
+        def addrVal = ushort(address)
+        def dataVal = ubyte(data)
 
         when:
-        bus.specifyThen(address).writeByte(data)
+        bus.specifyThen(addrVal)
+        def firstSpecify = cycleCounter.diff()
+
+        cycleCounter.mark()
+        bus.writeByte(dataVal)
+        def afterWrite = cycleCounter.diff()
+        def controlAfterWrite = bus.currentOp()
+
+        cycleCounter.mark()
+        bus.specifyThen(addrVal)
+        def secondSpecify = cycleCounter.diff()
+
+        cycleCounter.mark()
         def read = bus.readByte()
+        def afterRead = cycleCounter.diff()
+        def controlAfterRead = bus.currentOp()
 
         then:
-        sint(read) == sint(data)
+        sint(read) == sint(dataVal)
+        firstSpecify == 1
+        secondSpecify == 1
+        afterWrite == 0
+        afterRead == 0
+        controlAfterRead == BusOp.READ
+        controlAfterWrite == BusOp.WRITE
 
-        and:
-        bus.specifyThen(ushort(0x4)).writeByte(ubyte(0x5))
+        where:
+        address | data
+        0x0000  | 0x12
+        0x07FF  | 0x34
+        0x0800  | 0x56
+        0x0FFF  | 0x78
+        0x1000  | 0x21
+        0x17FF  | 0x43
+        0x1800  | 0x65
+        0x1FFF  | 0x87
 
-        then:
-        bus.specify(address)
-        sint(bus.readByte()) == sint(data)
-
-        // TODO: verify mirroring works
     }
 
-    def "should read and write to ppu register"() {
+    def "should read and write to ppu"() {
         given:
         CpuBus bus = newCpuBus()
-        def address = ushort(0x2004)
-        def data = ubyte(0xAA)
+
+        def addrVal = ushort(address)
+        def dataVal = ubyte(data)
 
         when:
-        bus.specifyThen(address).writeByte(data)
+        bus.specifyThen(addrVal).writeByte(dataVal)
         def read = bus.readByte()
 
         then:
-        sint(read) == sint(data)
-        PhysicalMemory ppu = bus.ppuRegs
-        ppu.buffer.getAsInt(4) == sint(data)
+        sint(read) == sint(dataVal)
 
         and:
-        bus.specify(ushort(0x2004 + 0x8))
+        bus.specify(ushort(addrVal + 0x8))
         def read2 = bus.readByte()
 
-        //then:
-        // sint(read2) == sint(data) // FIXME: verify mirroring
+        // FIXME: verify mirroring
+
+        where:
+        address | data
+        0x2004  | 0xAA
     }
 
     // TODO: write tests for apu and cartridge

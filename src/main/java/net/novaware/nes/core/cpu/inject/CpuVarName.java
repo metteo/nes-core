@@ -42,11 +42,11 @@ public enum CpuVarName {
     // region Memory Areas
 
     RAM ("",  "?", "RAM"),
-    PPU ("", "", "PPU"),
-    APU ("", "", "APU"),
-    IO  ("", "", "IO"),
-    ATM ("", "", "ATM"), // APU Test Mode registers
-    TMR ("", "", "Timer"),
+    PPU ("", "", "Picture Processing Unit"),
+    APU ("", "", "Audio Processing Unit"),
+    IO  ("", "", "Input-Output"),
+    ATM ("", "", "APU Test Mode"),
+    TMR ("", "", "Timer Unit"),
     CART ("", "", "Cartridge"),
 
     // endregion
@@ -61,7 +61,7 @@ public enum CpuVarName {
     S0H ("", "sprite0Hit", "Sprite 0 Hit"), // TODO: consider ppu agnostic name
     RES ("", "reset", "Reset"),
     RDY ("", "ready", "Ready"),
-    SOV ("SO", "setOverflow", "Set Overflow"),
+    SOV ("SV", "setOverflow", "Set Overflow"),
 
     // endregion
     ;

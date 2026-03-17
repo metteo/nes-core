@@ -140,7 +140,7 @@ public class ControlUnit implements Unit {
 
         switch (size) {
             case 1 -> {
-                mmu.specifyAnd(registers.pc().get()); // no pc increment, data ignored
+                mmu.specifyAnd(registers.pc().get()).readByte(); // no pc increment, data ignored
                 currentOperand.lowAsByte(0x00);
                 currentOperand.highAsByte(0x00);
             }

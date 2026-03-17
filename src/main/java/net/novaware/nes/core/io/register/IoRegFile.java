@@ -16,6 +16,8 @@ public class IoRegFile extends RegisterFile {
     // FIXME: these registers are asymmetrical, writes do different things than reads
 
     private ByteRegister oamDma; // 0x4014
+
+    // TODO: these are not really registers but bytes that can trigger func (on write) or return value (on read)
     private ByteRegister sndChn = new ByteRegister("SNDCHN"); // TODO: use dedicate status / control register
     private ByteRegister joy1 = new ByteRegister("JOY1");
     private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017

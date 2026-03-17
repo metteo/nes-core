@@ -1,5 +1,6 @@
 package net.novaware.nes.core.easy;
 
+import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
@@ -7,7 +8,6 @@ import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.register.ByteRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.easy.EasyMemMap.*;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_END;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_SIZE;
 import static net.novaware.nes.core.easy.EasyMemMap.CARTRIDGE_START;
@@ -16,6 +16,7 @@ import static net.novaware.nes.core.easy.EasyMemMap.PICTURE_SEGMENT_END;
 import static net.novaware.nes.core.easy.EasyMemMap.PICTURE_SEGMENT_SIZE;
 import static net.novaware.nes.core.easy.EasyMemMap.PICTURE_SEGMENT_START;
 import static net.novaware.nes.core.easy.EasyMemMap.RAM_END;
+import static net.novaware.nes.core.easy.EasyMemMap.RAM_SIZE;
 import static net.novaware.nes.core.easy.EasyMemMap.RAM_START;
 import static net.novaware.nes.core.easy.EasyMemMap.RNG_BYTE;
 import static net.novaware.nes.core.easy.EasyMemMap.STACK_SEGMENT_END;
@@ -43,12 +44,15 @@ public class EasyBus implements MemoryBus {
     private final MemoryDevice rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE);
     private final MemoryDevice vectors = new PhysicalMemory("VECTORS", VECTOR_SEGMENT_START, VECTOR_SEGMENT_END, VECTOR_SEGMENT_SIZE);
 
+    private BusOp currentOp = BusOp.ADDRESS;
+
     private MemoryDevice currentSegment = ram;
     private @Unsigned short currentAddress; // translated into specific segment range
 
     @Override
     public void specify(@Unsigned short address) {
         currentAddress = address;
+        currentOp = BusOp.ADDRESS;
 
         int addrVal = sint(address);
         if (sint(RAM_START) <= addrVal && addrVal <= sint(RAM_END)) {
@@ -72,11 +76,18 @@ public class EasyBus implements MemoryBus {
 
     @Override
     public @Unsigned byte readByte() {
+        currentOp = BusOp.READ;
         return currentSegment.readByte();
     }
 
     @Override
+    public BusOp currentOp() {
+        return currentOp;
+    }
+
+    @Override
     public void writeByte(@Unsigned byte data) {
+        currentOp = BusOp.WRITE;
         currentSegment.writeByte(data);
     }
 

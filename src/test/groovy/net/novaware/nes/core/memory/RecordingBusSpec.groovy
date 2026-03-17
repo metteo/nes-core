@@ -4,7 +4,7 @@ import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
 
 import static net.novaware.nes.core.memory.RecordingBus.Op
-import static net.novaware.nes.core.memory.RecordingBus.OpType.*
+import static net.novaware.nes.core.memory.BusOp.*
 import static net.novaware.nes.core.util.UTypes.*
 
 class RecordingBusSpec extends Specification {
@@ -90,14 +90,14 @@ class RecordingBusSpec extends Specification {
         then:
         bus.cycles() == 5
         bus.activity() == [
-            new Op(ACCESS, 0x1111, 0),
-            new Op(ACCESS, 0x2222, 0),
-            new Op(READ,   0x2222, 0),
-            new Op(ACCESS, 0x3333, 0),
-            new Op(WRITE,  0x3333, 0x44),
-            new Op(ACCESS, 0x5555, 0),
-            new Op(ACCESS, 0x3333, 0),
-            new Op(READ,   0x3333, 0x44),
+            new Op(ADDRESS, 0x1111, 0),
+            new Op(ADDRESS, 0x2222, 0),
+            new Op(READ,    0x2222, 0),
+            new Op(ADDRESS, 0x3333, 0),
+            new Op(WRITE,   0x3333, 0x44),
+            new Op(ADDRESS, 0x5555, 0),
+            new Op(ADDRESS, 0x3333, 0),
+            new Op(READ,    0x3333, 0x44),
         ]
     }
 }
