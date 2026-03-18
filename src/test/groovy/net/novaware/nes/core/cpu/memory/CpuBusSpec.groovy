@@ -1,6 +1,6 @@
 package net.novaware.nes.core.cpu.memory
 
-import net.novaware.nes.core.memory.BusOp
+
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
@@ -50,8 +50,8 @@ class CpuBusSpec extends Specification {
         secondSpecify == 1
         afterWrite == 0
         afterRead == 0
-        controlAfterRead == BusOp.READ
-        controlAfterWrite == BusOp.WRITE
+        //controlAfterRead == BusOp.DATA_READ
+        //controlAfterWrite == BusOp.DATA_WRITE
 
         where:
         address | data

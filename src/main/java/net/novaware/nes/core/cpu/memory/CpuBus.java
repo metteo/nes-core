@@ -3,6 +3,8 @@ package net.novaware.nes.core.cpu.memory;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.BusOp;
+import net.novaware.nes.core.memory.ControlBus;
+import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.MemoryPage;
@@ -13,7 +15,6 @@ import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.util.List;
 import java.util.function.IntPredicate;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
@@ -38,7 +39,6 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_EN
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_START;
-import static net.novaware.nes.core.memory.BusOp.ADDRESS;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 public class CpuBus implements MemoryBus {
@@ -53,8 +53,6 @@ public class CpuBus implements MemoryBus {
 
     @Used
     private final CycleCounter cycleCounter;
-
-    private BusOp currentOp = ADDRESS;
 
     @Owned
     private final PagedMemory pagedMemory;
@@ -106,10 +104,10 @@ public class CpuBus implements MemoryBus {
         this.apuTest = apuTest;
         this.timer = timer;
 
-        pagedMemory.attach(ram);
-        pagedMemory.attach(ppu);
-        pagedMemory.attach(page40);
-        pagedMemory.attach(cartridge);
+//        pagedMemory.attach(ram);
+//        pagedMemory.attach(ppu);
+//        pagedMemory.attach(page40);
+//        pagedMemory.attach(cartridge);
 
         page40.attach(apu);
         page40.attach(apuTest);
@@ -122,7 +120,6 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public void specify(@Unsigned short address) {
-        currentOp = ADDRESS; // reset to force read or write
         addressLatch = address;
         cycleCounter.increment();
 
@@ -170,8 +167,6 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public @Unsigned byte readByte() {
-        currentOp = BusOp.READ;
-
         @Unsigned byte data = currentSegment.specifyThen(addressLatch).readByte();
 
         return data;
@@ -179,23 +174,49 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public BusOp currentOp() {
-        return currentOp;
+        return pagedMemory.currentOp();
     }
 
     @Override
     public void writeByte(@Unsigned byte data) {
-        currentOp = BusOp.WRITE;
-
         currentSegment.specifyThen(addressLatch).writeByte(data);
     }
 
     @Override
-    public void attach(MemoryDevice memoryDevice) { // FIXME: what about the address range?
+    public void attach(MemoryDevice memoryDevice) {
         cartridge = memoryDevice;
 
-        List<MemoryDevice> replaced = pagedMemory.attach(memoryDevice);
-        if (!replaced.isEmpty()) {
-            System.out.println("Replaced following devices: " + replaced);
-        }
+//        List<MemoryDevice> replaced = pagedMemory.attach(memoryDevice);
+//        if (!replaced.isEmpty()) {
+//            System.out.println("Replaced following devices: " + replaced);
+//        }
+    }
+
+    @Override
+    public ControlBus.Line access(@Unsigned short address) {
+        pagedMemory.access(address);
+        return this;
+    }
+
+    @Override
+    public DataBus.Read read() {
+        pagedMemory.read();
+        return this;
+    }
+
+    @Override
+    public DataBus.Write write() {
+        pagedMemory.write();
+        return this;
+    }
+
+    @Override
+    public @Unsigned byte data() {
+        return pagedMemory.data();
+    }
+
+    @Override
+    public void data(@Unsigned byte data) {
+        pagedMemory.data(data);
     }
 }

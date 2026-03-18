@@ -16,11 +16,17 @@ class OpenBusSpec extends Specification {
         openBus.getEndAddress() == ushort(0x1FFF)
     }
 
-    def "should return high byte of address" () {
+    def "should return previously specified values on the bus" () {
         given:
         def openBus = new OpenBus(ushort(0x6000), ushort(0x7FFF))
+        def address = ushort(0x6789)
+
+        // prime the bus with "old" values
+        openBus.onAccess(address)
+        openBus.onWrite(ubyte(0x67))
 
         expect:
-        openBus.specifyThen(ushort(0x6789)).readByte() == ubyte(0x67)
+        openBus.lastAccess() == address
+        openBus.onRead() == ubyte(0x67)
     }
 }

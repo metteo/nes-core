@@ -41,7 +41,7 @@ public enum CpuVarName {
     // endregion
     // region Memory Areas
 
-    RAM ("",  "?", "RAM"),
+    RAM ("",  "", "RAM"),
     PPU ("", "", "Picture Processing Unit"),
     APU ("", "", "Audio Processing Unit"),
     IO  ("", "", "Input-Output"),

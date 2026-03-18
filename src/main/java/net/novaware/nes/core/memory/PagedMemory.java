@@ -4,36 +4,49 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * Redirects calls to page specific device within index
  */
-public class PagedMemory implements MemoryDevice {
+// TODO: rename to PagedBus
+public class PagedMemory implements AddressBus.Line, ControlBus, ControlBus.Line, DataBus.Line { // TODO: switch to MemoryBus
 
-    private final MemoryDevice[] pages;
+    private final MemoryDevice.ReadWrite openBus;
 
-    private final MemoryDevice fallback;
+    private BusOp busOp = BusOp.DATA_READ; // TODO: randomize between data read / write
 
-    private MemoryDevice pageLatch;
+    private final MemoryDevice.ReadOnly[] readOnlyPages;
+    private final MemoryDevice.WriteOnly[] writeOnlyPages;
+
     private @Unsigned short addressLatch;
 
-    public PagedMemory(MemoryDevice fallback) {
-        this.fallback = fallback; // TODO: validate that fallback covers whole memory range?
+    private MemoryDevice.ReadOnly readOnlyPageLatch;
+    private MemoryDevice.WriteOnly writeOnlyPageLatch;
 
-        pages = new MemoryDevice[0xFF + 1];
-        IntStream.range(0, pages.length)
-                .forEach(i -> pages[i] = this.fallback);
+    public PagedMemory(MemoryDevice.ReadWrite openBus) {
+        this.openBus = openBus;
 
-        pageLatch = this.fallback;
-        addressLatch = this.fallback.getEndAddress();
+        final int length = 0xFF + 1;
+
+        readOnlyPages = new MemoryDevice.ReadOnly[length];
+        writeOnlyPages = new MemoryDevice.WriteOnly[length];
+
+        for(int i = 0; i < length; i++) {
+            readOnlyPages[i] = this.openBus;
+            writeOnlyPages[i] = this.openBus;
+        }
+
+        readOnlyPageLatch = this.openBus;
+        writeOnlyPageLatch = this.openBus;
+
+        addressLatch = this.openBus.getEndAddress();
     }
 
     @SuppressWarnings("not.interned")
-    public List<MemoryDevice> attach(MemoryDevice memoryDevice) {
-        List<MemoryDevice> replaced = new ArrayList<>();
+    public List<MemoryDevice.AccessOnly> attach(MemoryDevice.AccessOnly memoryDevice) {
+        List<MemoryDevice.AccessOnly> replaced = new ArrayList<>();
 
         for (int page = 0; page <= 0xFF; page++) {
             int pageStart = (page << 8);
@@ -43,11 +56,22 @@ public class PagedMemory implements MemoryDevice {
             int deviceEnd = sint(memoryDevice.getEndAddress());
 
             if (deviceStart <= pageStart && pageEnd <= deviceEnd) {
-                MemoryDevice previous = pages[page];
-                pages[page] = memoryDevice;
+                if (memoryDevice instanceof MemoryDevice.ReadOnly readOnlyDevice) {
+                    MemoryDevice.ReadOnly previousRead = readOnlyPages[page];
+                    readOnlyPages[page] = readOnlyDevice;
 
-                if (previous != fallback) {
-                    replaced.add(previous);
+                    if (previousRead != openBus) {
+                        replaced.add(previousRead);
+                    }
+                }
+
+                if (memoryDevice instanceof MemoryDevice.WriteOnly writeOnlyDevice) {
+                    MemoryDevice.WriteOnly previousWrite = writeOnlyPages[page];
+                    writeOnlyPages[page] = writeOnlyDevice;
+
+                    if (previousWrite != openBus) {
+                        replaced.add(previousWrite);
+                    }
                 }
             }
         }
@@ -56,32 +80,66 @@ public class PagedMemory implements MemoryDevice {
     }
 
     @Override
-    public @Unsigned short getStartAddress() {
-        return pages[0].getStartAddress();
-    }
+    public ControlBus.Line access(@Unsigned short address) {
+        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
 
-    @Override
-    public @Unsigned short getEndAddress() {
-        return pages[pages.length - 1].getEndAddress();
-    }
-
-    @Override
-    public void specify(@Unsigned short address) {
-        int page = (sint(address) & 0xFF00) >> 8;
-
-        pageLatch = pages[page];
+        busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;
 
-        pageLatch.specify(addressLatch);
+        int page = (sint(address) & 0xFF00) >> 8;
+
+        readOnlyPageLatch = readOnlyPages[page];
+        writeOnlyPageLatch = writeOnlyPages[page];
+
+        return this;
     }
 
     @Override
-    public @Unsigned byte readByte() {
-        return pageLatch.readByte();
+    public DataBus.Read read() {
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+        readOnlyPageLatch.onAccess(addressLatch);
+
+        busOp = BusOp.CONTROL_READ;
+
+        return this;
     }
 
     @Override
-    public void writeByte(@Unsigned byte data) {
-        pageLatch.writeByte(data);
+    public DataBus.Write write() {
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+        writeOnlyPageLatch.onAccess(addressLatch);
+
+        busOp = BusOp.CONTROL_WRITE;
+
+        return this;
+    }
+
+    @Override
+    public @Unsigned byte data() {
+        assert busOp == BusOp.CONTROL_READ; // compile out
+
+        busOp = BusOp.DATA_READ;
+
+        @Unsigned byte data = readOnlyPageLatch.onRead();
+        openBus.onWrite(data); // keep the last value
+
+        return data;
+    }
+
+
+
+    @Override
+    public void data(@Unsigned byte data) {
+        assert busOp == BusOp.CONTROL_WRITE; // compile out
+
+        busOp = BusOp.DATA_WRITE;
+
+        openBus.onWrite(data);
+        writeOnlyPageLatch.onWrite(data); // might be openBus too, no problem
+    }
+
+    @Override
+    public BusOp currentOp() {
+        return busOp;
     }
 }

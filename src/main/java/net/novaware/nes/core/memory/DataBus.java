@@ -21,4 +21,37 @@ public interface DataBus {
      * Write byte into memory under address specified using {@link AddressBus#specify(short)}
      */
     void writeByte(final @Unsigned byte data);
+
+    // region Experimental API
+
+    interface Mode {}
+
+    interface Read extends Mode {
+
+        @Unsigned byte data();
+    }
+    interface Write extends Mode {
+
+        void data(@Unsigned byte data);
+    }
+
+    interface Line extends Read, Write {}
+
+    interface Device { // simple device
+
+    }
+
+    interface ReadOnlyDevice extends Device {
+        @Unsigned byte onRead();
+    }
+
+    interface WriteOnlyDevice extends Device {
+        void onWrite(@Unsigned byte data);
+    }
+
+    interface ReadWriteDevice extends ReadOnlyDevice, WriteOnlyDevice {
+
+    }
+
+    // endregion
 }

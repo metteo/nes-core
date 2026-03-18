@@ -19,4 +19,21 @@ public interface AddressBus<T> {
     // Open bus behavior is usually hi byte of the address
 
     T specifyThen(@Unsigned short address);
+
+    // region Experimental API
+
+    interface Line { // TODO: make it just AddressBus after removing old methods?
+        ControlBus.Line access(@Unsigned short address);
+    }
+
+    interface Device {
+
+        @Unsigned short getStartAddress();
+
+        @Unsigned short getEndAddress();
+
+        void onAccess(@Unsigned short address);
+    }
+
+    // endregion
 }

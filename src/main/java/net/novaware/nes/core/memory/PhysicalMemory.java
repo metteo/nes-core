@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class PhysicalMemory implements MemoryDevice, Nameable {
+public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
 
@@ -57,6 +57,11 @@ public class PhysicalMemory implements MemoryDevice, Nameable {
     }
 
     @Override
+    public void onAccess(@Unsigned short address) {
+        specify(address);
+    }
+
+    @Override
     public void specify(@Unsigned short address) {
         // TODO: check how validation of address within range will affect performance (always vs assert)
         position = (sint(address) - sint(startAddress)) & mask;
@@ -72,5 +77,15 @@ public class PhysicalMemory implements MemoryDevice, Nameable {
     @Override
     public void writeByte(@Unsigned byte data) {
         buffer.put(position, data);
+    }
+
+    @Override
+    public @Unsigned byte onRead() {
+        return readByte();
+    }
+
+    @Override
+    public void onWrite(@Unsigned byte data) {
+        writeByte(data);
     }
 }

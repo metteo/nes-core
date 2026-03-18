@@ -14,4 +14,22 @@ public interface MemoryDevice extends AddressBus<MemoryDevice>, DataBus {
 
         return this;
     }
+
+    interface AccessOnly extends AddressBus.Device { // TODO: make this just MemoryDevice^ when old methods are removed
+        @Unsigned short getStartAddress();
+
+        @Unsigned short getEndAddress();
+    }
+
+    interface ReadOnly extends AccessOnly, DataBus.ReadOnlyDevice {
+
+    }
+
+    interface WriteOnly extends AccessOnly, DataBus.WriteOnlyDevice {
+
+    }
+
+    interface ReadWrite extends AccessOnly, ReadOnly, WriteOnly {
+
+    }
 }

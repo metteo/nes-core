@@ -71,7 +71,7 @@ class RecordingBusSpec extends Specification {
         bus.readByte() == c
         bus.cycles() == 2
         bus.address() == ushort(0xCCCC) // last address
-        bus.data() == c // last data
+        bus.data2() == c // last data
     }
 
     def "should record access, read and write operations"() {
@@ -90,14 +90,14 @@ class RecordingBusSpec extends Specification {
         then:
         bus.cycles() == 5
         bus.activity() == [
-            new Op(ADDRESS, 0x1111, 0),
-            new Op(ADDRESS, 0x2222, 0),
-            new Op(READ,    0x2222, 0),
-            new Op(ADDRESS, 0x3333, 0),
-            new Op(WRITE,   0x3333, 0x44),
-            new Op(ADDRESS, 0x5555, 0),
-            new Op(ADDRESS, 0x3333, 0),
-            new Op(READ,    0x3333, 0x44),
+            new Op(ADDRESS_ACCESS, 0x1111, 0),
+            new Op(ADDRESS_ACCESS, 0x2222, 0),
+            new Op(DATA_READ,      0x2222, 0),
+            new Op(ADDRESS_ACCESS, 0x3333, 0),
+            new Op(DATA_WRITE,     0x3333, 0x44),
+            new Op(ADDRESS_ACCESS, 0x5555, 0),
+            new Op(ADDRESS_ACCESS, 0x3333, 0),
+            new Op(DATA_READ,      0x3333, 0x44),
         ]
     }
 }

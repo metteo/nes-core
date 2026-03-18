@@ -7,4 +7,14 @@ package net.novaware.nes.core.memory;
 public interface ControlBus {
 
     BusOp currentOp();
+
+    // region Experimental API
+
+    interface Line {
+        DataBus.Read read();
+
+        DataBus.Write write();
+    }
+
+    // endregion
 }

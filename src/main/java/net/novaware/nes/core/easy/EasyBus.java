@@ -2,6 +2,7 @@ package net.novaware.nes.core.easy;
 
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
+import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
@@ -44,7 +45,7 @@ public class EasyBus implements MemoryBus {
     private final MemoryDevice rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE);
     private final MemoryDevice vectors = new PhysicalMemory("VECTORS", VECTOR_SEGMENT_START, VECTOR_SEGMENT_END, VECTOR_SEGMENT_SIZE);
 
-    private BusOp currentOp = BusOp.ADDRESS;
+    private BusOp currentOp = BusOp.ADDRESS_ACCESS;
 
     private MemoryDevice currentSegment = ram;
     private @Unsigned short currentAddress; // translated into specific segment range
@@ -52,7 +53,7 @@ public class EasyBus implements MemoryBus {
     @Override
     public void specify(@Unsigned short address) {
         currentAddress = address;
-        currentOp = BusOp.ADDRESS;
+        currentOp = BusOp.ADDRESS_ACCESS;
 
         int addrVal = sint(address);
         if (sint(RAM_START) <= addrVal && addrVal <= sint(RAM_END)) {
@@ -76,7 +77,7 @@ public class EasyBus implements MemoryBus {
 
     @Override
     public @Unsigned byte readByte() {
-        currentOp = BusOp.READ;
+        currentOp = BusOp.DATA_READ;
         return currentSegment.readByte();
     }
 
@@ -87,12 +88,37 @@ public class EasyBus implements MemoryBus {
 
     @Override
     public void writeByte(@Unsigned byte data) {
-        currentOp = BusOp.WRITE;
+        currentOp = BusOp.DATA_WRITE;
         currentSegment.writeByte(data);
     }
 
     @Override
     public void attach(MemoryDevice memoryDevice) {
         throw new UnsupportedOperationException("not implemented!");
+    }
+
+    @Override
+    public ControlBus.Line access(@Unsigned short address) {
+        return specifyThen(address);
+    }
+
+    @Override
+    public Read read() {
+        return this;
+    }
+
+    @Override
+    public Write write() {
+        return this;
+    }
+
+    @Override
+    public @Unsigned byte data() {
+        return readByte();
+    }
+
+    @Override
+    public void data(@Unsigned byte data) {
+        writeByte(data);
     }
 }

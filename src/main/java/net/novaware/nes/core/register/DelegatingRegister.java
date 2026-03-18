@@ -1,6 +1,7 @@
 package net.novaware.nes.core.register;
 
 import net.novaware.nes.core.memory.BusOp;
+import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -190,6 +191,31 @@ public class DelegatingRegister extends Register {
 
         @Override
         public BusOp currentOp() {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public ControlBus.Line access(@Unsigned short address) {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public Read read() {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public Write write() {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public @Unsigned byte data() {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public void data(@Unsigned byte data) {
             throw new IllegalStateException("Empty memory bus called");
         }
     }

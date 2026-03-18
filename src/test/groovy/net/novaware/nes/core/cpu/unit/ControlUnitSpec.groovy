@@ -78,16 +78,16 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         )
 
         bus.activity() == [
-            new Op(ADDRESS, 0x0000, 0x00), // opcode
-            new Op(READ,    0x0000, 0x0D),
+            new Op(ADDRESS_ACCESS, 0x0000, 0x00), // opcode
+            new Op(DATA_READ,      0x0000, 0x0D),
 
-            new Op(ADDRESS, 0x0001, 0x00), // absolute
-            new Op(READ,    0x0001, 0x54),
-            new Op(ADDRESS, 0x0002, 0x00),
-            new Op(READ,    0x0002, 0x06),
+            new Op(ADDRESS_ACCESS, 0x0001, 0x00), // absolute
+            new Op(DATA_READ,      0x0001, 0x54),
+            new Op(ADDRESS_ACCESS, 0x0002, 0x00),
+            new Op(DATA_READ,      0x0002, 0x06),
 
-            new Op(ADDRESS, 0x0654, 0x00), // operand
-            new Op(READ,    0x0654, 0xA6)
+            new Op(ADDRESS_ACCESS, 0x0654, 0x00), // operand
+            new Op(DATA_READ,      0x0654, 0xA6)
 	    ]
     }
 
@@ -110,11 +110,11 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         expectRegs pc: 0x0001 // nop is single byte instruction
         bus.cycles() == 2
         bus.activity() == [
-            new Op(ADDRESS, 0x0000, 0x00), // opcode
-            new Op(READ,    0x0000, 0xEA),
+            new Op(ADDRESS_ACCESS, 0x0000, 0x00), // opcode
+            new Op(DATA_READ,      0x0000, 0xEA),
 
-            new Op(ADDRESS, 0x0001, 0x00),
-            new Op(READ,    0x0001, 0x00),
+            new Op(ADDRESS_ACCESS, 0x0001, 0x00),
+            new Op(DATA_READ,      0x0001, 0x00),
         ]
     }
 

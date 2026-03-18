@@ -2,16 +2,28 @@ package net.novaware.nes.core.memory;
 
 public enum BusOp {
     /**
-     * {@link AddressBus#specify(short)}
+     * {@link AddressBus.Line#access(short)}
      */
-    ADDRESS,
+    ADDRESS_ACCESS,
+
     /**
-     * {@link DataBus#readByte()}
+     * {@link ControlBus.Line#read()}
      */
-    READ,
+    CONTROL_READ,
+
     /**
-     * {@link DataBus#writeByte(byte)}
+     * {@link ControlBus.Line#write()}
      */
-    WRITE,
+    CONTROL_WRITE,
+
+    /**
+     * {@link DataBus.Read#data()}
+     */
+    DATA_READ,
+
+    /**
+     * {@link DataBus.Write#data(byte)}
+     */
+    DATA_WRITE,
     ;
 }

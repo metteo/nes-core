@@ -32,9 +32,11 @@ public class RecordingBus implements MemoryBus {
 
         public String toTest() {
             String type = switch (this.type) {
-                case ADDRESS -> "ADDRESS,";
-                case READ   -> "READ,  ";
-                case WRITE  -> "WRITE, ";
+                case ADDRESS_ACCESS -> "ADDRESS_ACCESS,";
+                case CONTROL_READ   -> "CONTROL_READ,  ";
+                case CONTROL_WRITE  -> "CONTROL_WRITE, ";
+                case DATA_READ      -> "DATA_READ,     ";
+                case DATA_WRITE     -> "DATA_WRITE,    ";
             };
             return "new Op(" + type + " 0x" + Hex.s(address).toUpperCase() + ", 0x" + Hex.s(data).toUpperCase() + "),";
         }
@@ -55,7 +57,7 @@ public class RecordingBus implements MemoryBus {
         @CpuVar(CC) CycleCounter cycleCounter
     ) {
         this.cycleCounter = cycleCounter;
-        this.currentOp = BusOp.ADDRESS;
+        this.currentOp = BusOp.ADDRESS_ACCESS;
 
         // TODO: change these into latches?
         this.memoryAddress = new ShortRegister("MAR");
@@ -66,7 +68,7 @@ public class RecordingBus implements MemoryBus {
         return memoryAddress.get();
     }
 
-    public @Unsigned byte data() {
+    public @Unsigned byte data2() { // TODO: figure out the conflict
         return memoryData.get();
     }
 
@@ -93,7 +95,7 @@ public class RecordingBus implements MemoryBus {
 
         memoryAddress.set(address);
 
-        currentOp = BusOp.ADDRESS;
+        currentOp = BusOp.ADDRESS_ACCESS;
         activity.add(new Op(currentOp, address, UBYTE_0));
     }
 
@@ -102,7 +104,7 @@ public class RecordingBus implements MemoryBus {
         @Unsigned byte b = memory[memoryAddress.getAsInt()];
         memoryData.set(b);
 
-        currentOp = BusOp.READ;
+        currentOp = BusOp.DATA_READ;
         activity.add(new Op(currentOp, memoryAddress.get(), b));
 
         return b;
@@ -113,7 +115,7 @@ public class RecordingBus implements MemoryBus {
         memoryData.set(data);
         memory[memoryAddress.getAsInt()] = data;
 
-        currentOp = BusOp.WRITE;
+        currentOp = BusOp.DATA_WRITE;
         activity.add(new Op(currentOp, memoryAddress.get(), data));
     }
 
@@ -125,5 +127,30 @@ public class RecordingBus implements MemoryBus {
     @Override
     public void attach(MemoryDevice memoryDevice) {
         throw new UnsupportedOperationException("not implemented!");
+    }
+
+    @Override
+    public ControlBus.Line access(@Unsigned short address) {
+        return specifyThen(address);
+    }
+
+    @Override
+    public Read read() {
+        return this;
+    }
+
+    @Override
+    public Write write() {
+        return this;
+    }
+
+    @Override
+    public void data(@Unsigned byte data) {
+        writeByte(data);
+    }
+
+    @Override
+    public @Unsigned byte data() {
+        return readByte();
     }
 }
