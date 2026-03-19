@@ -5,17 +5,17 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.novaware.nes.core.memory.DataBus.*;
+import static net.novaware.nes.core.util.UTypes.USHORT_0;
+import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
  * Redirects calls to page specific device within index
  */
-// TODO: rename to PagedBus
-public class PagedMemory implements AddressBus.Line, ControlBus, ControlBus.Line, DataBus.Line { // TODO: switch to MemoryBus
+public class PagedMemory implements MemoryDevice.ReadWrite {
 
-    private final MemoryDevice.ReadWrite openBus;
-
-    private BusOp busOp = BusOp.DATA_READ; // TODO: randomize between data read / write
+    private final MemoryDevice.ReadWrite openBus; // TODO: consider switching to a plug returning 0xFF for ANDing later
 
     private final MemoryDevice.ReadOnly[] readOnlyPages;
     private final MemoryDevice.WriteOnly[] writeOnlyPages;
@@ -24,6 +24,8 @@ public class PagedMemory implements AddressBus.Line, ControlBus, ControlBus.Line
 
     private MemoryDevice.ReadOnly readOnlyPageLatch;
     private MemoryDevice.WriteOnly writeOnlyPageLatch;
+
+    private Line dataLine = new OpenCircuit();
 
     public PagedMemory(MemoryDevice.ReadWrite openBus) {
         this.openBus = openBus;
@@ -80,66 +82,53 @@ public class PagedMemory implements AddressBus.Line, ControlBus, ControlBus.Line
     }
 
     @Override
-    public ControlBus.Line access(@Unsigned short address) {
-        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
+    public @Unsigned short getStartAddress() {
+        return USHORT_0;
+    }
 
-        busOp = BusOp.ADDRESS_ACCESS;
+    @Override
+    public @Unsigned short getEndAddress() {
+        return USHORT_MAX_VALUE;
+    }
+
+    @Override
+    public void onAccess(@Unsigned short address) {
         addressLatch = address;
 
         int page = (sint(address) & 0xFF00) >> 8;
 
         readOnlyPageLatch = readOnlyPages[page];
         writeOnlyPageLatch = writeOnlyPages[page];
-
-        return this;
     }
 
     @Override
-    public DataBus.Read read() {
-        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+    public void onRead() {
         readOnlyPageLatch.onAccess(addressLatch);
-
-        busOp = BusOp.CONTROL_READ;
-
-        return this;
+        readOnlyPageLatch.onRead();
     }
 
     @Override
-    public DataBus.Write write() {
-        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+    public void onWrite() {
         writeOnlyPageLatch.onAccess(addressLatch);
-
-        busOp = BusOp.CONTROL_WRITE;
-
-        return this;
+        writeOnlyPageLatch.onWrite();
     }
 
     @Override
-    public @Unsigned byte data() {
-        assert busOp == BusOp.CONTROL_READ; // compile out
-
-        busOp = BusOp.DATA_READ;
-
-        @Unsigned byte data = readOnlyPageLatch.onRead();
-        openBus.onWrite(data); // keep the last value
-
-        return data;
+    public void onAttach(Line dataLine) {
+        this.dataLine = dataLine;
+        onAttachPages(dataLine);
     }
 
-
-
-    @Override
-    public void data(@Unsigned byte data) {
-        assert busOp == BusOp.CONTROL_WRITE; // compile out
-
-        busOp = BusOp.DATA_WRITE;
-
-        openBus.onWrite(data);
-        writeOnlyPageLatch.onWrite(data); // might be openBus too, no problem
+    private void onAttachPages(Line dataLine) {
+        for(int i = 0; i < readOnlyPages.length; i++) { // FIXME: call onAttach only for unique devices, one may be mapped to multiple pages
+            readOnlyPages[i].onAttach(dataLine);
+            writeOnlyPages[i].onAttach(dataLine);
+        }
     }
 
     @Override
-    public BusOp currentOp() {
-        return busOp;
+    public void onDetach() {
+        this.dataLine = new OpenCircuit();
+        onAttachPages(dataLine);
     }
 }

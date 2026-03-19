@@ -21,12 +21,18 @@ class OpenBusSpec extends Specification {
         def openBus = new OpenBus(ushort(0x6000), ushort(0x7FFF))
         def address = ushort(0x6789)
 
+        def dataLine = new DataBus.TempLine()
+        dataLine.data(ubyte(0x67))
+
+        openBus.onAttach(dataLine)
+
         // prime the bus with "old" values
         openBus.onAccess(address)
-        openBus.onWrite(ubyte(0x67))
+        openBus.onWrite()
+        openBus.onRead()
 
         expect:
-        openBus.lastAccess() == address
-        openBus.onRead() == ubyte(0x67)
+        openBus.lastAddress() == address
+        dataLine.data() == ubyte(0x67)
     }
 }

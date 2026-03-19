@@ -18,6 +18,8 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
 
     private int position;
 
+    private DataBus.Line dataLine = new OpenCircuit();
+
     public PhysicalMemory(
             String name,
             @Unsigned short startAddress,
@@ -57,16 +59,8 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     }
 
     @Override
-    public void onAccess(@Unsigned short address) {
-        specify(address);
-    }
-
-    @Override
     public void specify(@Unsigned short address) {
-        // TODO: check how validation of address within range will affect performance (always vs assert)
-        position = (sint(address) - sint(startAddress)) & mask;
-
-        buffer.position(position);
+        onAccess(address);
     }
 
     @Override
@@ -80,12 +74,30 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     }
 
     @Override
-    public @Unsigned byte onRead() {
-        return readByte();
+    public void onAccess(@Unsigned short address) {
+        // TODO: check how validation of address within range will affect performance (always vs assert)
+        position = (sint(address) - sint(startAddress)) & mask;
+
+        buffer.position(position);
     }
 
     @Override
-    public void onWrite(@Unsigned byte data) {
-        writeByte(data);
+    public void onRead() {
+        dataLine.data(readByte());
+    }
+
+    @Override
+    public void onWrite() {
+        writeByte(dataLine.data());
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onDetach() {
+        this.dataLine = new OpenCircuit();
     }
 }

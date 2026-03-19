@@ -66,9 +66,11 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
         cpu.rdy(Signal.LOW);
 
         // halt cycle
-        // align cycle* (if dma.read on cpu.write)
-        // read cycle (256x)
-        // write cycle (256x)
+        // align cycle* (if dma.read on cpubus.write)
+
+        // read cycle   \
+        //               > (256x)
+        // write cycle  /
 
         cpu.rdy(Signal.HIGH);
     }

@@ -125,11 +125,6 @@ public class RecordingBus implements MemoryBus {
     }
 
     @Override
-    public void attach(MemoryDevice memoryDevice) {
-        throw new UnsupportedOperationException("not implemented!");
-    }
-
-    @Override
     public ControlBus.Line access(@Unsigned short address) {
         return specifyThen(address);
     }
@@ -152,5 +147,25 @@ public class RecordingBus implements MemoryBus {
     @Override
     public @Unsigned byte data() {
         return readByte();
+    }
+
+    @Override
+    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+        throw new UnsupportedOperationException("not implemented!");
+    }
+
+    @Override
+    public void detachCartridge() {
+        throw new UnsupportedOperationException("not implemented!");
+    }
+
+    @Override
+    public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+        throw new UnsupportedOperationException("not implemented!");
+    }
+
+    @Override
+    public void detachExpansion() {
+        throw new UnsupportedOperationException("not implemented!");
     }
 }

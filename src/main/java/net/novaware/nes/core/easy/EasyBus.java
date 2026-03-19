@@ -93,11 +93,6 @@ public class EasyBus implements MemoryBus {
     }
 
     @Override
-    public void attach(MemoryDevice memoryDevice) {
-        throw new UnsupportedOperationException("not implemented!");
-    }
-
-    @Override
     public ControlBus.Line access(@Unsigned short address) {
         return specifyThen(address);
     }
@@ -120,5 +115,25 @@ public class EasyBus implements MemoryBus {
     @Override
     public void data(@Unsigned byte data) {
         writeByte(data);
+    }
+
+    @Override
+    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+
+    }
+
+    @Override
+    public void detachCartridge() {
+
+    }
+
+    @Override
+    public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+
+    }
+
+    @Override
+    public void detachExpansion() {
+
     }
 }

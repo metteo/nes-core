@@ -32,7 +32,7 @@ public interface AddressBus<T> {
 
         @Unsigned short getEndAddress();
 
-        void onAccess(@Unsigned short address);
+        void onAccess(@Unsigned short address); // one way so just value instead of line
     }
 
     // endregion

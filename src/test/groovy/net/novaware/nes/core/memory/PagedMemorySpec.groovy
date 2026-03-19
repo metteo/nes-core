@@ -1,10 +1,11 @@
 package net.novaware.nes.core.memory
 
+
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
-import static net.novaware.nes.core.util.UTypes.ubyte
-import static net.novaware.nes.core.util.UTypes.ushort
+import static net.novaware.nes.core.memory.DataBus.*
+import static net.novaware.nes.core.util.UTypes.*
 
 class PagedMemorySpec extends Specification {
 
@@ -13,20 +14,27 @@ class PagedMemorySpec extends Specification {
         MemoryDevice.ReadWrite openBus = Mock()
         def paged = new PagedMemory(openBus)
 
+        def tempLine = new TempLine()
+        tempLine.data(ubyte(0x34)) // previous value for open bus case
+        tempLine.cycle()
+
         when:
-        def read = paged.access(ushort(0x0000)).read().data()
-        paged.access(ushort(0xFFFF)).write().data(ubyte(0x12))
+        paged.onAccess(ushort(0x0000))
+        paged.onRead()
+        def read = tempLine.cycle()
+        paged.onAccess(ushort(0xFFFF))
+        tempLine.data(ubyte(0x12))
+        paged.onWrite()
 
         then:
+        // TODO: start and end address too.
         read == ubyte(0x34)
 
         1 * openBus.onAccess(ushort(0x0000))
-        1 * openBus.onRead() >> ubyte(0x34) // legitimate read
-        1 * openBus.onWrite(ubyte(0x34))    // remember last data bus value
+        1 * openBus.onRead()
 
         1 * openBus.onAccess(ushort(0xFFFF))
-        1 * openBus.onWrite(ubyte(0x12)) // legitimate write
-        1 * openBus.onWrite(ubyte(0x12)) // remember last data bus value
+        1 * openBus.onWrite()
     }
 
     def "should allow attaching devices"() {
@@ -34,15 +42,25 @@ class PagedMemorySpec extends Specification {
         MemoryDevice.ReadWrite openBus = Mock()
         def paged = new PagedMemory(openBus)
 
+        def tempLine = new TempLine()
+
         def rom = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
-        rom.specifyThen(ushort(CARTRIDGE_START)).writeByte(ubyte(0x12))
-        rom.specifyThen(ushort(CARTRIDGE_END)).writeByte(ubyte(0x34))
+        rom.specifyThen(CARTRIDGE_START).writeByte(ubyte(0x12))
+        rom.specifyThen(CARTRIDGE_END).writeByte(ubyte(0x34))
 
         def replaced = paged.attach(rom)
 
+        paged.onAttach(tempLine)
+        rom.onAttach(tempLine) // FIXME: should be handled during pagememory attachment
+
         when:
-        def cartStart = paged.access(ushort(CARTRIDGE_START)).read().data()
-        def cartEnd = paged.access(ushort(CARTRIDGE_END)).read().data()
+        paged.onAccess(CARTRIDGE_START)
+        paged.onRead()
+        def cartStart = tempLine.cycle()
+
+        paged.onAccess(CARTRIDGE_END)
+        paged.onRead()
+        def cartEnd = tempLine.cycle()
 
         then:
         replaced.isEmpty()

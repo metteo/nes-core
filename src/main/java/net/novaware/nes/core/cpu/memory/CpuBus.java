@@ -54,8 +54,19 @@ public class CpuBus implements MemoryBus {
     @Used
     private final CycleCounter cycleCounter;
 
+    private BusOp busOp = BusOp.DATA_READ; // TODO: randomize between data read / write
+
     @Owned
-    private final PagedMemory pagedMemory;
+    private final PagedMemory internal;
+
+    @Used
+    private MemoryDevice.ReadWrite cartridge = new MemoryDevice.EmptyDevice();
+
+    @Used
+    private MemoryDevice.ReadWrite expansion = new MemoryDevice.EmptyDevice();
+
+    @Owned
+    private final OpenBus openBus;
 
     @Owned
     private final MemoryPage page40;
@@ -75,12 +86,6 @@ public class CpuBus implements MemoryBus {
     @Used
     private MemoryDevice timer;
 
-    @Used
-    private MemoryDevice cartridge = new OpenBus(CARTRIDGE_FDS_START, CARTRIDGE_END);
-
-    @Used
-    private MemoryDevice expansion = new OpenBus(MEMORY_START, MEMORY_END);
-
     private MemoryDevice currentSegment;
     private IntPredicate currentRange;
     private @Unsigned short addressLatch; // translated into specific segment range
@@ -94,7 +99,10 @@ public class CpuBus implements MemoryBus {
             @CpuVar(ATM) MemoryDevice apuTest, // TODO: apu test
             @CpuVar(TMR) MemoryDevice timer // TODO: timer
     ) {
-        this.pagedMemory = new PagedMemory(new OpenBus(MEMORY_START, MEMORY_END));
+        this.openBus = new OpenBus(MEMORY_START, MEMORY_END);
+
+        this.internal = new PagedMemory(openBus);
+
         this.page40 = new MemoryPage(40, new OpenBus(APU_REGISTERS_START, CARTRIDGE_FDS_END));
 
         this.cycleCounter = cycleCounter;
@@ -104,15 +112,16 @@ public class CpuBus implements MemoryBus {
         this.apuTest = apuTest;
         this.timer = timer;
 
-//        pagedMemory.attach(ram);
-//        pagedMemory.attach(ppu);
-//        pagedMemory.attach(page40);
-//        pagedMemory.attach(cartridge);
+//        internal.attach(ram);
+//        internal.attach(ppu);
+//        internal.attach(page40);
+//        internal.attach(cartridge);
+        internal.onAttach(dataLine);
 
         page40.attach(apu);
         page40.attach(apuTest);
         page40.attach(timer);
-        page40.attach(cartridge);
+        //page40.attach(cartridge);
 
         currentSegment = ram;
         currentRange = RAM_RANGE;
@@ -153,15 +162,11 @@ public class CpuBus implements MemoryBus {
 
         } else if (CARTRIDGE_FDS_RANGE.test(addressInt)) {
             currentRange = CARTRIDGE_FDS_RANGE;
-            currentSegment = cartridge;
+            currentSegment = (MemoryDevice) cartridge;
 
         } else if (CARTRIDGE_RANGE.test(addressInt)) {
-            // TODO: cartridge can listen to full address range, not only 4020-FFFF
-            // TODO: cartridge can listen to all address bus calls since they don't break anything
-            // TODO: cartridge can listen to all writes since the cpu is the source (multiple devices may accept)
-            // TODO: cartridge can only respond to reads if there is no other device responding (how to detect open bus?)
             currentRange = CARTRIDGE_RANGE;
-            currentSegment = cartridge;
+            currentSegment = (MemoryDevice) cartridge;
         }
     }
 
@@ -174,7 +179,7 @@ public class CpuBus implements MemoryBus {
 
     @Override
     public BusOp currentOp() {
-        return pagedMemory.currentOp();
+        return busOp;
     }
 
     @Override
@@ -183,40 +188,89 @@ public class CpuBus implements MemoryBus {
     }
 
     @Override
-    public void attach(MemoryDevice memoryDevice) {
-        cartridge = memoryDevice;
+    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+        this.cartridge = cartridge;
+        this.cartridge.onAttach(dataLine);
+    }
 
-//        List<MemoryDevice> replaced = pagedMemory.attach(memoryDevice);
-//        if (!replaced.isEmpty()) {
-//            System.out.println("Replaced following devices: " + replaced);
-//        }
+    @Override
+    public void detachCartridge() {
+        cartridge.onDetach();
+        cartridge = new MemoryDevice.EmptyDevice();
+    }
+
+    @Override
+    public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+        this.expansion = expansion;
+        this.expansion.onAttach(dataLine);
+    }
+
+    @Override
+    public void detachExpansion() {
+        expansion.onDetach();
+        expansion = new MemoryDevice.EmptyDevice();
     }
 
     @Override
     public ControlBus.Line access(@Unsigned short address) {
-        pagedMemory.access(address);
+        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
+
+        busOp = BusOp.ADDRESS_ACCESS;
+        addressLatch = address;
+        cycleCounter.increment();
+
+        internal.onAccess(address);
+        cartridge.onAccess(address);
+        expansion.onAccess(address);
+
         return this;
     }
 
     @Override
     public DataBus.Read read() {
-        pagedMemory.read();
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+
+        busOp = BusOp.CONTROL_READ;
+
         return this;
     }
 
     @Override
     public DataBus.Write write() {
-        pagedMemory.write();
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+
+        busOp = BusOp.CONTROL_WRITE;
+
         return this;
     }
 
+    TempLine dataLine = new TempLine();
+
     @Override
     public @Unsigned byte data() {
-        return pagedMemory.data();
+        assert busOp == BusOp.CONTROL_READ; // compile out
+
+        busOp = BusOp.DATA_READ;
+
+        internal.onRead();
+        cartridge.onRead();
+        expansion.onRead();
+
+        return dataLine.cycle(); // CPU reading the line
     }
 
     @Override
     public void data(@Unsigned byte data) {
-        pagedMemory.data(data);
+        assert busOp == BusOp.CONTROL_WRITE; // compile out
+
+        busOp = BusOp.DATA_WRITE;
+
+        dataLine.data(data); // CPU driving the line
+
+        internal.onWrite();
+        cartridge.onWrite();
+        expansion.onWrite();
+
+        dataLine.cycle();
     }
 }

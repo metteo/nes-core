@@ -3,6 +3,8 @@ package net.novaware.nes.core.cpu.memory;
 import net.novaware.nes.core.memory.MemoryMap;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.UTypes.USHORT_0;
+import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
@@ -11,8 +13,8 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  */
 public interface CpuMemMap extends MemoryMap {
 
-    @Unsigned short MEMORY_START = ushort(0x0000);
-    @Unsigned short MEMORY_END = ushort(0xFFFF);
+    @Unsigned short MEMORY_START = USHORT_0;
+    @Unsigned short MEMORY_END = USHORT_MAX_VALUE;
     int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
 
     // region RAM

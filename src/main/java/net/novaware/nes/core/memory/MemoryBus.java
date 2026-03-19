@@ -19,6 +19,9 @@ public interface MemoryBus extends
         return this;
     }
 
-    void attach(MemoryDevice memoryDevice);
+    void attachCartridge(MemoryDevice.ReadWrite cartridge);
+    void detachCartridge();
 
+    void attachExpansion(MemoryDevice.ReadWrite expansion);
+    void detachExpansion();
 }

@@ -185,11 +185,6 @@ public class DelegatingRegister extends Register {
         }
 
         @Override
-        public void attach(MemoryDevice memoryDevice) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
         public BusOp currentOp() {
             throw new IllegalStateException("Empty memory bus called");
         }
@@ -217,6 +212,26 @@ public class DelegatingRegister extends Register {
         @Override
         public void data(@Unsigned byte data) {
             throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void detachCartridge() {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void detachExpansion() {
+            throw new UnsupportedOperationException("not implemented!");
         }
     }
 

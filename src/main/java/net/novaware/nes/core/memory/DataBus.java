@@ -2,6 +2,8 @@ package net.novaware.nes.core.memory;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
+
 /**
  * Bus interface hiding memory details from CPU
  *
@@ -27,30 +29,65 @@ public interface DataBus {
     interface Mode {}
 
     interface Read extends Mode {
-
         @Unsigned byte data();
     }
-    interface Write extends Mode {
 
+    interface Write extends Mode {
         void data(@Unsigned byte data);
     }
 
     interface Line extends Read, Write {}
 
-    interface Device { // simple device
+    class TempLine implements Line {
 
+        private boolean openBus = true;
+        private @Unsigned byte previous = UBYTE_MAX_VALUE;
+        private @Unsigned byte current = UBYTE_MAX_VALUE;
+
+        public boolean isOpenBus() {
+            return openBus;
+        }
+
+        public @Unsigned byte cycle() {
+            @Unsigned byte result = openBus ? previous : current;
+
+            openBus = true;
+            previous = current;
+            current = UBYTE_MAX_VALUE;
+
+            return result;
+        }
+
+        @Override
+        public @Unsigned byte data() {
+            return current;
+        }
+
+        @Override
+        public void data(@Unsigned byte data) {
+            openBus = false;
+            this.current = data;
+        }
     }
 
-    interface ReadOnlyDevice extends Device {
-        @Unsigned byte onRead();
+    class OpenCircuit implements Line {
+
+        private @Unsigned byte value = UBYTE_MAX_VALUE;
+
+        @Override
+        public @Unsigned byte data() {
+            return value;
+        }
+
+        @Override
+        public void data(@Unsigned byte data) {
+            value = data;
+        }
     }
 
-    interface WriteOnlyDevice extends Device {
-        void onWrite(@Unsigned byte data);
-    }
-
-    interface ReadWriteDevice extends ReadOnlyDevice, WriteOnlyDevice {
-
+    interface Device {
+        void onAttach(DataBus.Line dataLine);
+        void onDetach();
     }
 
     // endregion

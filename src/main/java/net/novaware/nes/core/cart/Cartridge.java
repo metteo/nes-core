@@ -22,9 +22,9 @@ public interface Cartridge {
 
     Config getConfig();
 
-    MemoryDevice getProgram();
+    MemoryDevice getProgram(); // TODO: rename to CpuBus part
 
-    MemoryDevice getVideo();
+    MemoryDevice getVideo(); // TODO: rename to PpuBus part
 
     static Cartridge of(NesFile nesFile) {
         return new CartridgeImpl(nesFile);
