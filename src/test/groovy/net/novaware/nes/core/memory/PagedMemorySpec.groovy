@@ -1,10 +1,9 @@
 package net.novaware.nes.core.memory
 
-
+import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
-import static net.novaware.nes.core.memory.DataBus.*
 import static net.novaware.nes.core.util.UTypes.*
 
 class PagedMemorySpec extends Specification {
@@ -14,7 +13,7 @@ class PagedMemorySpec extends Specification {
         MemoryDevice.ReadWrite openBus = Mock()
         def paged = new PagedMemory(openBus)
 
-        def tempLine = new TempLine()
+        def tempLine = new DataLine()
         tempLine.data(ubyte(0x34)) // previous value for open bus case
         tempLine.cycle()
 
@@ -42,11 +41,12 @@ class PagedMemorySpec extends Specification {
         MemoryDevice.ReadWrite openBus = Mock()
         def paged = new PagedMemory(openBus)
 
-        def tempLine = new TempLine()
+        def tempLine = new DataLine()
 
         def rom = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
-        rom.specifyThen(CARTRIDGE_START).writeByte(ubyte(0x12))
-        rom.specifyThen(CARTRIDGE_END).writeByte(ubyte(0x34))
+        def romBus = new TestBus(rom)
+        romBus.access(CARTRIDGE_START).write().data(ubyte(0x12))
+        romBus.access(CARTRIDGE_END)  .write().data(ubyte(0x34))
 
         def replaced = paged.attach(rom)
 

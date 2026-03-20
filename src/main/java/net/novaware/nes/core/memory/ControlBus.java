@@ -1,16 +1,14 @@
 package net.novaware.nes.core.memory;
 
 /**
- * Keeps track if current cycle is a read or write operation.
- * {@link DataBus} methods specify implicitly the RW̅ signal
+ * @see <a href="https://en.wikipedia.org/wiki/Control_bus">Control bus on wikipedia.org</a>
  */
 public interface ControlBus {
 
-    BusOp currentOp();
-
-    // region Experimental API
-
     interface Line {
+
+        BusOp currentOp();
+
         DataBus.Read read();
 
         DataBus.Write write();
@@ -33,6 +31,4 @@ public interface ControlBus {
     }
 
     interface ReadWriteDevice extends ReadOnlyDevice, WriteOnlyDevice {}
-
-    // endregion
 }

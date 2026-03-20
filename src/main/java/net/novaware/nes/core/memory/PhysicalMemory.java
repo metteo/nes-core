@@ -18,7 +18,7 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
 
     private int position;
 
-    private DataBus.Line dataLine = new OpenCircuit();
+    private DataBus.Line dataLine = new OpenLine();
 
     public PhysicalMemory(
             String name,
@@ -58,17 +58,10 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
         return endAddress;
     }
 
-    @Override
-    public void specify(@Unsigned short address) {
-        onAccess(address);
-    }
-
-    @Override
     public @Unsigned byte readByte() {
         return buffer.get(position); // get() advances position, we want to keep it
     }
 
-    @Override
     public void writeByte(@Unsigned byte data) {
         buffer.put(position, data);
     }
@@ -98,6 +91,6 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
 
     @Override
     public void onDetach() {
-        this.dataLine = new OpenCircuit();
+        this.dataLine = new OpenLine();
     }
 }

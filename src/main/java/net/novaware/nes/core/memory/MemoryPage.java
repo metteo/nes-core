@@ -7,22 +7,22 @@ import java.util.stream.IntStream;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-public class MemoryPage implements MemoryDevice { // TODO: test!
+public class MemoryPage implements MemoryDevice.ReadWrite { // TODO: test!
 
     private final int page;
-    private final MemoryDevice[] offsets;
+    private final MemoryDevice.ReadWrite[] offsets;
 
-    private final MemoryDevice fallback;
+    private final MemoryDevice.ReadWrite fallback;
 
-    private MemoryDevice offsetLatch;
+    private MemoryDevice.ReadWrite offsetLatch;
     private @Unsigned short addressLatch;
 
-    public MemoryPage(int page, MemoryDevice fallback) {
+    public MemoryPage(int page, MemoryDevice.ReadWrite fallback) {
         this.page = page & 0xFF;
 
         this.fallback = fallback; // TODO: validate that fallback covers whole page range?
 
-        offsets = new MemoryDevice[0xFF + 1];
+        offsets = new MemoryDevice.ReadWrite[0xFF + 1];
         IntStream.range(0, offsets.length)
                 .forEach(i -> offsets[i] = this.fallback);
 
@@ -41,23 +41,33 @@ public class MemoryPage implements MemoryDevice { // TODO: test!
     }
 
     @Override
-    public void specify(@Unsigned short address) {
+    public void onAccess(@Unsigned short address) {
         // TODO: verify the page?
 
         offsetLatch = offsets[sint(address) & 0xFF];
         addressLatch = address;
 
-        offsetLatch.specify(addressLatch);
+        offsetLatch.onAccess(addressLatch);
     }
 
     @Override
-    public @Unsigned byte readByte() {
-        return offsetLatch.readByte();
+    public void onRead() {
+        offsetLatch.onRead();
     }
 
     @Override
-    public void writeByte(@Unsigned byte data) {
-        offsetLatch.writeByte(data);
+    public void onWrite() {
+        offsetLatch.onWrite();
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        offsetLatch.onAttach(dataLine); // TODO: attach to all devices, not only currently accessed
+    }
+
+    @Override
+    public void onDetach() {
+        offsetLatch.onDetach();
     }
 
     public void attach(MemoryDevice memoryDevice) {

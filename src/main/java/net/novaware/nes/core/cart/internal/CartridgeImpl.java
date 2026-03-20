@@ -9,6 +9,7 @@ import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.mapper.Mapper;
 import net.novaware.nes.core.mapper.NROM;
 import net.novaware.nes.core.memory.BankedMemory;
+import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.util.Quantity;
@@ -32,17 +33,19 @@ public class CartridgeImpl implements Cartridge {
     private Mapper mapper;
 
     @Owned private BankedMemory programData;    // ROM
-    @Owned private MemoryDevice programMemory;  // Work RAM / WRAM
-    @Owned private MemoryDevice programStorage; // Save RAM / SRAM // TODO: use nes file to store save ram
+    @Owned private MemoryDevice.ReadWrite programMemory;  // Work RAM / WRAM
+    @Owned private MemoryDevice.ReadWrite programStorage; // Save RAM / SRAM // TODO: use nes file to store save ram
 
-    @Owned private MemoryDevice videoData;      // Video ROM / VROM
-    @Owned private MemoryDevice videoMemory;    // Video RAM / VRAM
-    @Owned private MemoryDevice videoStorage;   // Non-volatile Video RAM / NV-VRAM // TODO: store nvvram
+    @Owned private MemoryDevice.ReadWrite videoData;      // Video ROM / VROM
+    @Owned private MemoryDevice.ReadWrite videoMemory;    // Video RAM / VRAM
+    @Owned private MemoryDevice.ReadWrite videoStorage;   // Non-volatile Video RAM / NV-VRAM // TODO: store nvvram
 
-    private MemoryDevice currentProgramSegment;
+    private final MemoryDevice.ReadWrite emptyDevice = new MemoryDevice.Empty();
+
+    private MemoryDevice.ReadWrite currentProgramSegment;
     private @Unsigned short currentProgramAddress;
 
-    private MemoryDevice currentVideoSegment;
+    private MemoryDevice.ReadWrite currentVideoSegment;
     private @Unsigned short currentVideoAddress;
 
     public CartridgeImpl(NesFile nesFile) {
@@ -112,31 +115,33 @@ public class CartridgeImpl implements Cartridge {
     }
 
     @Override
-    public MemoryDevice getProgram() {
-        return new ProgramMemoryDevice();
+    public MemoryDevice.ReadWrite getCpuBusDevice() {
+        return new CpuBusDevice();
     }
 
     @Override
-    public MemoryDevice getVideo() {
-        return new VideoMemoryDevice();
+    public MemoryDevice.ReadWrite getPpuBusDevice() {
+        return new PpuBusDevice();
     }
 
-    private class ProgramMemoryDevice implements MemoryDevice {
+    private class CpuBusDevice implements MemoryDevice.ReadWrite {
 
         @Override
-        public void specify(@Unsigned short address) { // NOTE: cartridge can listen to all specify calls on address bus
+        public void onAccess(@Unsigned short address) {
             int addrVal = sint(address);
+
+            currentProgramAddress = address;
 
             if (0x6000 <= addrVal && addrVal <= 0x7FFF) {
                 currentProgramSegment = programMemory;
-                currentProgramAddress = address;
             } else if (0x8000 <= addrVal && addrVal <= 0xFFFF) {
                 currentProgramSegment = programData;
-                currentProgramAddress = address;
                 // TODO: mirror data in case of 1x 16KB bank
+            } else {
+                currentProgramSegment = emptyDevice;
             }
 
-            currentProgramSegment.specify(currentProgramAddress);
+            currentProgramSegment.onAccess(currentProgramAddress);
         }
 
         @Override
@@ -150,28 +155,45 @@ public class CartridgeImpl implements Cartridge {
         }
 
         @Override
-        public @Unsigned byte readByte() {
-            return currentProgramSegment.readByte();
+        public void onRead() {
+            currentProgramSegment.onRead();
         }
 
         @Override
-        public void writeByte(@Unsigned byte data) {
-            currentProgramSegment.writeByte(data);
+        public void onWrite() {
+            currentProgramSegment.onWrite();
+        }
+
+        @Override
+        public void onAttach(DataBus.Line dataLine) {
+            programData.onAttach(dataLine);
+            programMemory.onAttach(dataLine);
+            programStorage.onAttach(dataLine);
+        }
+
+        @Override
+        public void onDetach() {
+            programData.onDetach();
+            programMemory.onDetach();
+            programStorage.onDetach();
         }
     }
 
-    private class VideoMemoryDevice implements MemoryDevice {
+    private class PpuBusDevice implements MemoryDevice.ReadWrite {
 
         @Override
-        public void specify(@Unsigned short address) {
+        public void onAccess(@Unsigned short address) {
             int addrVal = sint(address);
+
+            currentVideoAddress = address; // TODO: translate
 
             if (0x0000 <= addrVal && addrVal <= 0x1FFF) {
                 currentVideoSegment = videoData;
-                currentVideoAddress = address; // TODO: translate
+            } else {
+                currentVideoSegment = emptyDevice;
             }
 
-            currentVideoSegment.specify(currentVideoAddress);
+            currentVideoSegment.onAccess(currentVideoAddress);
         }
 
         @Override
@@ -185,13 +207,27 @@ public class CartridgeImpl implements Cartridge {
         }
 
         @Override
-        public @Unsigned byte readByte() {
-            return currentVideoSegment.readByte();
+        public void onRead() {
+            currentVideoSegment.onRead();
         }
 
         @Override
-        public void writeByte(@Unsigned byte data) {
-            currentVideoSegment.writeByte(data);
+        public void onWrite() {
+            currentVideoSegment.onWrite();
+        }
+
+        @Override
+        public void onAttach(DataBus.Line dataLine) {
+            videoData.onAttach(dataLine);
+            videoMemory.onAttach(dataLine);
+            videoStorage.onAttach(dataLine);
+        }
+
+        @Override
+        public void onDetach() {
+            videoData.onDetach();
+            videoMemory.onDetach();
+            videoStorage.onDetach();
         }
     }
 }

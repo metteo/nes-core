@@ -1,9 +1,9 @@
 package net.novaware.nes.core.easy
 
-
+import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
-import static EasyMemMap.*
+import static net.novaware.nes.core.easy.EasyMemMap.*
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class EasyBusSpec extends Specification {
@@ -12,11 +12,11 @@ class EasyBusSpec extends Specification {
 
     def "should write to correct memory segments"() {
         when:
-        bus.specifyThen(absAddr).writeByte(ubyte(data))
+        bus.access(absAddr).write().data(ubyte(data))
 
         then:
-        bus.readByte() == ubyte(data)
-        bus.currentSegment.specifyThen(absAddr).readByte() == ubyte(data)
+        bus.access(absAddr).read().data() == ubyte(data)
+        new TestBus(bus.currentSegment).access(absAddr).read().data() == ubyte(data)
 
         where:
         absAddr               | data

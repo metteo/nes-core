@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.memory
 
-
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.register.CycleCounter
 import spock.lang.Specification
@@ -27,20 +26,20 @@ class CpuBusSpec extends Specification {
         def dataVal = ubyte(data)
 
         when:
-        bus.specifyThen(addrVal)
+        bus.access(addrVal)
         def firstSpecify = cycleCounter.diff()
 
         cycleCounter.mark()
-        bus.writeByte(dataVal)
+        bus.write().data(dataVal)
         def afterWrite = cycleCounter.diff()
         def controlAfterWrite = bus.currentOp()
 
         cycleCounter.mark()
-        bus.specifyThen(addrVal)
+        bus.access(addrVal)
         def secondSpecify = cycleCounter.diff()
 
         cycleCounter.mark()
-        def read = bus.readByte()
+        def read = bus.read().data()
         def afterRead = cycleCounter.diff()
         def controlAfterRead = bus.currentOp()
 
@@ -74,15 +73,15 @@ class CpuBusSpec extends Specification {
         def dataVal = ubyte(data)
 
         when:
-        bus.specifyThen(addrVal).writeByte(dataVal)
-        def read = bus.readByte()
+        bus.access(addrVal).write().data(dataVal)
+        def read = bus.access(addrVal).read().data()
 
         then:
         sint(read) == sint(dataVal)
 
         and:
-        bus.specify(ushort(addrVal + 0x8))
-        def read2 = bus.readByte()
+        bus.access(ushort(addrVal + 0x8))
+        def read2 = bus.read().data()
 
         // FIXME: verify mirroring
 

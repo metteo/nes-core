@@ -2,6 +2,7 @@ package net.novaware.nes.core.register;
 
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ControlBus;
+import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -170,21 +171,6 @@ public class DelegatingRegister extends Register {
     static class EmptyMemoryBus implements MemoryBus {
 
         @Override
-        public void specify(@Unsigned short address) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public @Unsigned byte readByte() {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public void writeByte(@Unsigned byte data) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
         public BusOp currentOp() {
             throw new IllegalStateException("Empty memory bus called");
         }
@@ -195,12 +181,12 @@ public class DelegatingRegister extends Register {
         }
 
         @Override
-        public Read read() {
+        public DataBus.Read read() {
             throw new IllegalStateException("Empty memory bus called");
         }
 
         @Override
-        public Write write() {
+        public DataBus.Write write() {
             throw new IllegalStateException("Empty memory bus called");
         }
 
@@ -239,12 +225,12 @@ public class DelegatingRegister extends Register {
 
         @Override
         public @Unsigned byte getData() {
-            return memoryBus.specifyThen(address).readByte();
+            return memoryBus.access(address).read().data();
         }
 
         @Override
         public void setData(@Unsigned byte data) {
-            memoryBus.specifyThen(address).writeByte(data);
+            memoryBus.access(address).write().data(data);
         }
 
         @Override

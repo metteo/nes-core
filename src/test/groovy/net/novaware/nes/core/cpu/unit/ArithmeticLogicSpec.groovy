@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.memory.RecordingBus
 import net.novaware.nes.core.register.DataRegister
 import net.novaware.nes.core.util.RegsAndRamBaseSpec
 import spock.lang.Subject
@@ -8,7 +7,7 @@ import spock.lang.Subject
 import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 
-class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
+class ArithmeticLogicSpec extends RegsAndRamBaseSpec {
 
     @Subject
     ArithmeticLogic alu = factory.newArithmeticLogic()

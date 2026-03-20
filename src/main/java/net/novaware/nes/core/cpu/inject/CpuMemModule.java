@@ -10,9 +10,8 @@ import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
-import net.novaware.nes.core.memory.OpenBus;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.memory.RecordingBus;
+import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
@@ -33,6 +32,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
@@ -47,6 +47,7 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.RES_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_START;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
@@ -56,14 +57,14 @@ public interface CpuMemModule {
     @Provides
     @BoardScope
     @CpuVar(RAM)
-    static MemoryDevice provideMemory() {
+    static MemoryDevice.ReadWrite provideMemory() {
         return new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE);
     }
 
     @Provides
     @BoardScope
     @CpuVar(PPU)
-    static MemoryDevice providePpuRegs(PpuRegFile ppuRegFile) {
+    static MemoryDevice.ReadWrite providePpuRegs(PpuRegFile ppuRegFile) {
         return new ByteRegisterMemory(
             "PPU_REGS",
             PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
@@ -74,7 +75,7 @@ public interface CpuMemModule {
     @Provides
     @BoardScope
     @CpuVar(APU)
-    static MemoryDevice provideApuRegs(ApuRegFile apuRegFile) {
+    static MemoryDevice.ReadWrite provideApuRegs(ApuRegFile apuRegFile) {
         return new ByteRegisterMemory(
             "APU_REGS",
             APU_REGISTERS_START, APU_REGISTERS_END,
@@ -85,15 +86,15 @@ public interface CpuMemModule {
     @Provides
     @BoardScope
     @CpuVar(CpuVarName.ATM)
-    static MemoryDevice provideApuTestModeRegs() {
-        return new OpenBus(APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END);
+    static MemoryDevice.ReadWrite provideApuTestModeRegs() { // TODO: change into a proper device
+        return new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE);
     }
 
     @Provides
     @BoardScope
     @CpuVar(CpuVarName.TMR)
-    static MemoryDevice provideTimerRegs() {
-        return new OpenBus(TIMER_REGISTERS_START, TIMER_REGISTERS_END);
+    static MemoryDevice.ReadWrite provideTimerRegs() { // TODO: change into proper device
+        return new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE);
     }
 
     @Provides
@@ -101,13 +102,16 @@ public interface CpuMemModule {
     @CpuVar(BUS)
     static MemoryBus provideMemoryBus(
         CoreConfig config,
-        Lazy<RecordingBus> recordingBus,
+        Lazy<RecordingDevice> recordingDevice, // TODO: get rid of this. Rec Expansion should be attached in test code
         Lazy<CpuBus> cpuBus
     ) {
-        return switch(config.getCpuBusType()) {
-            case RECORDING -> recordingBus.get();
-            case STANDARD -> cpuBus.get();
-        };
+        CpuBus theBus = cpuBus.get();
+
+        if (config.getRecordCpuBus()) {
+            theBus.attachExpansion(recordingDevice.get());
+        }
+
+        return theBus;
     }
 
     @Provides

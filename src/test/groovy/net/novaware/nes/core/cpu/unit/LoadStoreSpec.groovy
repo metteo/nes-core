@@ -46,7 +46,7 @@ class LoadStoreSpec extends Specification {
         loadStore.store(regs.a())
 
         then:
-        bus.specifyThen(ushort(0x1234)).readByte() == ubyte(0x56)
+        bus.access(ushort(0x1234)).read().data() == ubyte(0x56)
         // doesn't affect the flags
     }
 }

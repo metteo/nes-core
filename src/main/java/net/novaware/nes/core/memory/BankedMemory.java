@@ -12,9 +12,11 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class BankedMemory implements MemoryDevice, Nameable {
+public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
+
+    private DataBus.Line dataLine = new OpenLine();
 
     private final @Unsigned short startAddress;
     private final @Unsigned short endAddress;
@@ -120,7 +122,7 @@ public class BankedMemory implements MemoryDevice, Nameable {
     }
 
     @Override
-    public void specify(@Unsigned short address) {
+    public void onAccess(@Unsigned short address) {
         int addrVal = sint(address);
         int visibleAddress = addrVal - sint(startAddress);
 
@@ -142,13 +144,31 @@ public class BankedMemory implements MemoryDevice, Nameable {
         visibleBanks[bankIndex].position(bankAddress);
     }
 
-    @Override
     public @Unsigned byte readByte() {
         return visibleBanks[bankIndex].get(bankAddress);
     }
 
-    @Override
     public void writeByte(@Unsigned byte data) {
         visibleBanks[bankIndex].put(bankAddress, data);
+    }
+
+    @Override
+    public void onRead() {
+        dataLine.data(readByte());
+    }
+
+    @Override
+    public void onWrite() {             // TODO: block writes so it behaves like ROM
+        writeByte(dataLine.data());
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onDetach() {
+        this.dataLine = new OpenLine();
     }
 }

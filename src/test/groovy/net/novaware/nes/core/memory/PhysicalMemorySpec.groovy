@@ -1,6 +1,6 @@
 package net.novaware.nes.core.memory
 
-
+import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
@@ -21,16 +21,17 @@ class PhysicalMemorySpec extends Specification {
 
     def "should mirror addresses outside of specified size" () {
         given:
-        def memory = new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE)
+        def ram = new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE)
+        def memory = new TestBus(ram)
 
         when:
-        memory.specifyThen(ushort(address)).writeByte(ubyte(data))
+        memory.access(ushort(address)).write().data(ubyte(data))
 
         then:
-        memory.specifyThen(ushort(address + 0 * 0x800)).readByte() == ubyte(data)
-        memory.specifyThen(ushort(address + 1 * 0x800)).readByte() == ubyte(data)
-        memory.specifyThen(ushort(address + 2 * 0x800)).readByte() == ubyte(data)
-        memory.specifyThen(ushort(address + 3 * 0x800)).readByte() == ubyte(data)
+        memory.access(ushort(address + 0 * 0x800)).read().data() == ubyte(data)
+        memory.access(ushort(address + 1 * 0x800)).read().data() == ubyte(data)
+        memory.access(ushort(address + 2 * 0x800)).read().data() == ubyte(data)
+        memory.access(ushort(address + 3 * 0x800)).read().data() == ubyte(data)
 
         where:
         address | data
@@ -41,13 +42,14 @@ class PhysicalMemorySpec extends Specification {
 
     def "should offset addresses if not starting at 0x0000"() {
         given:
-        def memory = new PhysicalMemory("?", ushort(0x1000), ushort(0x1FFF), 0x1000)
+        def ram = new PhysicalMemory("?", ushort(0x1000), ushort(0x1FFF), 0x1000)
+        def memory = new TestBus(ram)
 
         when:
-        memory.specifyThen(ushort(address)).writeByte(ubyte(data))
+        memory.access(ushort(address)).write().data(ubyte(data))
 
         then:
-        memory.specifyThen(ushort(address)).readByte() == ubyte(data)
+        memory.access(ushort(address)).read().data() == ubyte(data)
 
         where:
         address | data

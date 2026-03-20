@@ -22,9 +22,9 @@ public interface Cartridge {
 
     Config getConfig();
 
-    MemoryDevice getProgram(); // TODO: rename to CpuBus part
+    MemoryDevice.ReadWrite getCpuBusDevice();
 
-    MemoryDevice getVideo(); // TODO: rename to PpuBus part
+    MemoryDevice.ReadWrite getPpuBusDevice();
 
     static Cartridge of(NesFile nesFile) {
         return new CartridgeImpl(nesFile);

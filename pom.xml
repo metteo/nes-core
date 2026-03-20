@@ -300,6 +300,7 @@
                         ${jpms.opens}.ppu.memory=ALL-UNNAMED
                         ${jpms.opens}.ppu.register=ALL-UNNAMED
                         ${jpms.opens}.register=ALL-UNNAMED
+                        ${jpms.opens}.test=ALL-UNNAMED
                         ${jpms.opens}.util=ALL-UNNAMED
                         ${jpms.opens}.util.uml=ALL-UNNAMED
                     </argLine>

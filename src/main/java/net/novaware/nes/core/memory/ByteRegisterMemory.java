@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class ByteRegisterMemory implements MemoryDevice, Nameable {
+public class ByteRegisterMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
 
@@ -17,6 +17,8 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
     private final int mask;
 
     private int index;
+
+    private DataBus.Line dataLine = new OpenLine();
 
     public ByteRegisterMemory(
         String name,
@@ -49,18 +51,36 @@ public class ByteRegisterMemory implements MemoryDevice, Nameable {
     }
 
     @Override
-    public void specify(@Unsigned short address) {
+    public void onAccess(@Unsigned short address) {
         int addressInt = sint(address) - sint(startAddress);
         index = addressInt & mask;
     }
 
-    @Override
     public @Unsigned byte readByte() {
         return registers[index].get();
     }
 
-    @Override
     public void writeByte(@Unsigned byte data) {
         registers[index].set(data);
+    }
+
+    @Override
+    public void onRead() {
+        dataLine.data(readByte());
+    }
+
+    @Override
+    public void onWrite() {
+        writeByte(dataLine.data());
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onDetach() {
+        this.dataLine = new OpenLine();
     }
 }

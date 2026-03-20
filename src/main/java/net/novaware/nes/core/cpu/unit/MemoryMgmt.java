@@ -16,7 +16,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.MD;
  * MMU
  */
 @BoardScope
-public class MemoryMgmt implements Unit {
+public class MemoryMgmt implements Unit { // TODO: get rid of this unit and move the registers to the bus.
 
     private final ShortRegister memoryAddress;
     private final ByteRegister memoryData;
@@ -34,15 +34,15 @@ public class MemoryMgmt implements Unit {
         this.memoryBus = memoryBus;
     }
 
-    public MemoryMgmt specifyAnd(@Unsigned short address) { // TODO: rename to specifyThen
+    public MemoryMgmt specifyAnd(@Unsigned short address) {
         memoryAddress.set(address);
-        memoryBus.specify(address);
+        memoryBus.access(address);
 
         return this;
     }
 
     public @Unsigned byte readByte() {
-        @Unsigned byte data = memoryBus.readByte();
+        @Unsigned byte data = memoryBus.read().data();
         memoryData.set(data);
 
         return data;
@@ -50,6 +50,6 @@ public class MemoryMgmt implements Unit {
 
     public void writeByte(@Unsigned byte data) {
         memoryData.set(data);
-        memoryBus.writeByte(data);
+        memoryBus.write().data(data);
     }
 }

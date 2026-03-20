@@ -1,31 +1,33 @@
 package net.novaware.nes.core.util
 
 import net.novaware.nes.core.TestBoardFactory
-import net.novaware.nes.core.config.ImmutableCoreConfig
+import net.novaware.nes.core.cart.Cartridge
 import net.novaware.nes.core.cpu.instruction.Instruction
+import net.novaware.nes.core.cpu.memory.CpuBus
 import net.novaware.nes.core.cpu.register.CpuInsFile
 import net.novaware.nes.core.cpu.register.CpuRegFile
-import net.novaware.nes.core.memory.MemoryBus
+import net.novaware.nes.core.file.NesFileBuilder
+import net.novaware.nes.core.memory.RecordingDevice
 import spock.lang.Specification
 
 import static UTypes.ubyte
 import static UTypes.ushort
 
-class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
+class RegsAndRamBaseSpec extends Specification {
 
-    def factory = TestBoardFactory.newTestBoardFactory(
-        ImmutableCoreConfig.builder()
-            .setCpuBusType(getCpuBusType())
-            .build()
-    )
+    def factory = TestBoardFactory.newTestBoardFactory()
 
     CpuRegFile registers = factory.newCpuRegisters()
     CpuInsFile insRegs = factory.newExtRegisters()
 
-    T bus = factory.newCpuBus() as T
+    CpuBus bus = factory.newCpuBus() as CpuBus
 
-    MemoryBus.Type getCpuBusType() {
-        return MemoryBus.Type.RECORDING
+    Cartridge cart = Cartridge.of(NesFileBuilder.marioBros().build())
+
+    RecordingDevice rec = factory.newRecordingDevice()
+
+    def setup() {
+        bus.attachCartridge(cart.getCpuBusDevice())
     }
 
     def regs(Map args) {
@@ -66,6 +68,7 @@ class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
         }
     }
 
+    // TODO: rename to mem()
     def ram(Object... addr_data) {
         assert addr_data.size() % 2 == 0 : "ram must be in pairs [address, value]. current size: ${addr_data.size()}"
 
@@ -83,7 +86,7 @@ class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
                 default          -> throw new IllegalArgumentException("Unknown data type: ${data.class}")
             }
 
-            bus.specifyThen(ushort(address)).writeByte(ubyte(value))
+            bus.access(ushort(address)).write().data(ubyte(value))
         }
     }
 
@@ -110,11 +113,12 @@ class RegsAndRamBaseSpec<T extends MemoryBus> extends Specification {
         return true
     }
 
+    // TODO: rename to expectMem
     def expectRam(Object... addrData) { // TODO: improve, maybe do a string based assertion?
         addrData.collate(2).each { pair ->
             def (addr, expected) = pair
 
-            assert bus.specifyThen(ushort(addr as int)).readByte() == ubyte(expected as int)
+            assert bus.access(ushort(addr as int)).read().data() == ubyte(expected as int)
         }
         return true
     }

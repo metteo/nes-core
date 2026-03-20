@@ -25,7 +25,7 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
     private MemoryDevice.ReadOnly readOnlyPageLatch;
     private MemoryDevice.WriteOnly writeOnlyPageLatch;
 
-    private Line dataLine = new OpenCircuit();
+    private Line dataLine = new OpenLine();
 
     public PagedMemory(MemoryDevice.ReadWrite openBus) {
         this.openBus = openBus;
@@ -47,8 +47,8 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
     }
 
     @SuppressWarnings("not.interned")
-    public List<MemoryDevice.AccessOnly> attach(MemoryDevice.AccessOnly memoryDevice) {
-        List<MemoryDevice.AccessOnly> replaced = new ArrayList<>();
+    public List<MemoryDevice> attach(MemoryDevice memoryDevice) {
+        List<MemoryDevice> replaced = new ArrayList<>();
 
         for (int page = 0; page <= 0xFF; page++) {
             int pageStart = (page << 8);
@@ -128,7 +128,7 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
 
     @Override
     public void onDetach() {
-        this.dataLine = new OpenCircuit();
+        this.dataLine = new OpenLine();
         onAttachPages(dataLine);
     }
 }

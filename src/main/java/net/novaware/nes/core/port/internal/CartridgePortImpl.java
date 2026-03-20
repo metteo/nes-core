@@ -5,7 +5,6 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.MemoryBus;
-import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.port.CartridgePort;
 import org.jspecify.annotations.Nullable;
 
@@ -42,7 +41,7 @@ public class CartridgePortImpl implements CartridgePort {
         // TODO: check if cartridge config compatible with the board config
 
 
-        cpuBus.attachCartridge((MemoryDevice.ReadWrite) cartridge.getProgram());
+        cpuBus.attachCartridge(cartridge.getCpuBusDevice());
         //TODO: ppuBus.attach(cartridge.getVideo());
     }
 

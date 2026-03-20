@@ -1,10 +1,10 @@
 package net.novaware.nes.core.cart.internal
 
 import net.novaware.nes.core.file.NesFileBuilder
+import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UTypes.ubyte
-import static net.novaware.nes.core.util.UTypes.ushort
+import static net.novaware.nes.core.util.UTypes.sint
 
 class CartridgeImplSpec extends Specification {
 
@@ -14,21 +14,21 @@ class CartridgeImplSpec extends Specification {
         def programData = nesFile.data().program()
         def cartridge = new CartridgeImpl(nesFile)
 
-        def program = cartridge.getProgram()
-        def video = cartridge.getVideo()
+        def program = new TestBus(cartridge.getCpuBusDevice())
+        def video = cartridge.getPpuBusDevice()
 
-        program.specifyThen(ushort(0x6000)).writeByte(ubyte(0xAB))
-        program.specifyThen(ushort(0x7FFF)).writeByte(ubyte(0xCD))
+        program.write(0x6000, 0xAB)
+        program.write(0x7FFF, 0xCD)
 
         expect:
-        program.specifyThen(ushort(0x6000)).readByte() == ubyte(0xAB)
-        program.specifyThen(ushort(0x7FFF)).readByte() == ubyte(0xCD)
+        program.read(0x6000) == 0xAB
+        program.read(0x7FFF) == 0xCD
 
-        program.specifyThen(ushort(0x8000)).readByte() == programData.get(0)
-        program.specifyThen(ushort(0xBFFF)).readByte() == programData.get(0x3FFF)
+        program.read(0x8000) == sint(programData.get(0))
+        program.read(0xBFFF) == sint(programData.get(0x3FFF))
 
         // mirroring in second 16 KB
-        program.specifyThen(ushort(0xC000)).readByte() == programData.get(0)
-        program.specifyThen(ushort(0xFFFF)).readByte() == programData.get(0x3FFF)
+        program.read(0xC000) == sint(programData.get(0))
+        program.read(0xFFFF) == sint(programData.get(0x3FFF))
     }
 }

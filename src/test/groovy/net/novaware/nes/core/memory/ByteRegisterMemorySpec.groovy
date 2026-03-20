@@ -1,6 +1,7 @@
 package net.novaware.nes.core.memory
 
 import net.novaware.nes.core.register.ByteRegister
+import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -25,16 +26,17 @@ class ByteRegisterMemorySpec extends Specification {
         given:
         def registers = [reg0, reg1] as ByteRegister[]
         def memory = new ByteRegisterMemory("test", ushort(0x4000), ushort(0x4001), registers)
+        def bus = new TestBus(memory)
 
         when:
-        memory.specifyThen(ushort(0x4000)).writeByte(ubyte(0x12))
+        bus.access(ushort(0x4000)).write().data(ubyte(0x12))
         reg1.setAsByte(0x34)
 
         then:
         reg0.getAsInt() == 0x12
 
         when:
-        int reg1Val = memory.specifyThen(ushort(0x4001)).readByte()
+        int reg1Val = bus.access(ushort(0x4001)).read().data()
 
         then:
         reg1Val == 0x34

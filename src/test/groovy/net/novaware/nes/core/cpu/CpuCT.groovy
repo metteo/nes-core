@@ -1,10 +1,9 @@
 package net.novaware.nes.core.cpu
 
 import net.novaware.nes.core.cpu.signal.Signal
-import net.novaware.nes.core.memory.RecordingBus
 import net.novaware.nes.core.util.RegsAndRamBaseSpec
 
-class CpuCT extends RegsAndRamBaseSpec<RecordingBus> {
+class CpuCT extends RegsAndRamBaseSpec {
 
     def "should start at reset vector"() {
         given:
@@ -47,21 +46,21 @@ class CpuCT extends RegsAndRamBaseSpec<RecordingBus> {
         cpu.res(Signal.LOW)
         cpu.advance()
         cpu.res(Signal.HIGH)
-        bus.cycleCounter().mark()
+        rec.record()
         cpu.advance()
 
         then:
-        bus.cycleCounter().diff() == 6
+        rec.cycleCounter().diff() == 6
         expectRegs(
             pc: 0xC72D + 1
         )
 
         and:
-        bus.cycleCounter().mark()
+        rec.record()
         cpu.advance()
 
         then:
-        bus.cycleCounter().diff() == 6
+        rec.cycleCounter().diff() == 6
         expectRegs(
             pc: 0x1237 + 1
         )

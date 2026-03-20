@@ -1,8 +1,11 @@
 package net.novaware.nes.core.easy;
 
+import jakarta.inject.Inject;
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.ControlBus;
+import net.novaware.nes.core.memory.DataBus;
+import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
@@ -38,20 +41,32 @@ public class EasyBus implements MemoryBus {
     private ByteRegister rng = new ByteRegister("RNG"); // 0x00FE
     private ByteRegister key = new ByteRegister("KEY"); // 0x00FF
 
-    private final MemoryDevice ram = new PhysicalMemory("RAM", RAM_START, RAM_END, RAM_SIZE);
-    private final MemoryDevice regs = new ByteRegisterMemory("EZ_REGS", RNG_BYTE, KEY_BYTE, new ByteRegister[]{ rng, key });
-    private final MemoryDevice stack = new PhysicalMemory("STACK", STACK_SEGMENT_START, STACK_SEGMENT_END, STACK_SEGMENT_SIZE);
-    private final MemoryDevice vram = new PhysicalMemory("VRAM", PICTURE_SEGMENT_START, PICTURE_SEGMENT_END, PICTURE_SEGMENT_SIZE);
-    private final MemoryDevice rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE);
-    private final MemoryDevice vectors = new PhysicalMemory("VECTORS", VECTOR_SEGMENT_START, VECTOR_SEGMENT_END, VECTOR_SEGMENT_SIZE);
+    private final MemoryDevice.ReadWrite ram = new PhysicalMemory("RAM", RAM_START, RAM_END, RAM_SIZE);
+    private final MemoryDevice.ReadWrite regs = new ByteRegisterMemory("EZ_REGS", RNG_BYTE, KEY_BYTE, new ByteRegister[]{ rng, key });
+    private final MemoryDevice.ReadWrite stack = new PhysicalMemory("STACK", STACK_SEGMENT_START, STACK_SEGMENT_END, STACK_SEGMENT_SIZE);
+    private final MemoryDevice.ReadWrite vram = new PhysicalMemory("VRAM", PICTURE_SEGMENT_START, PICTURE_SEGMENT_END, PICTURE_SEGMENT_SIZE);
+    private final MemoryDevice.ReadWrite rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE);
+    private final MemoryDevice.ReadWrite vectors = new PhysicalMemory("VECTORS", VECTOR_SEGMENT_START, VECTOR_SEGMENT_END, VECTOR_SEGMENT_SIZE);
 
     private BusOp currentOp = BusOp.ADDRESS_ACCESS;
 
-    private MemoryDevice currentSegment = ram;
+    private MemoryDevice.ReadWrite currentSegment = ram;
     private @Unsigned short currentAddress; // translated into specific segment range
 
+    private final DataLine dataLine = new DataLine();
+
+    @Inject
+    public EasyBus() {
+        ram.onAttach(dataLine);
+        regs.onAttach(dataLine);
+        stack.onAttach(dataLine);
+        vram.onAttach(dataLine);
+        rom.onAttach(dataLine);
+        vectors.onAttach(dataLine);
+    }
+
     @Override
-    public void specify(@Unsigned short address) {
+    public ControlBus.Line access(@Unsigned short address) {
         currentAddress = address;
         currentOp = BusOp.ADDRESS_ACCESS;
 
@@ -72,13 +87,9 @@ public class EasyBus implements MemoryBus {
             throw new IllegalStateException("impossibru!");
         }
 
-        currentSegment.specify(currentAddress);
-    }
+        currentSegment.onAccess(currentAddress);
 
-    @Override
-    public @Unsigned byte readByte() {
-        currentOp = BusOp.DATA_READ;
-        return currentSegment.readByte();
+        return this;
     }
 
     @Override
@@ -87,34 +98,35 @@ public class EasyBus implements MemoryBus {
     }
 
     @Override
-    public void writeByte(@Unsigned byte data) {
-        currentOp = BusOp.DATA_WRITE;
-        currentSegment.writeByte(data);
-    }
-
-    @Override
-    public ControlBus.Line access(@Unsigned short address) {
-        return specifyThen(address);
-    }
-
-    @Override
-    public Read read() {
+    public DataBus.Read read() {
+        currentOp = BusOp.CONTROL_READ;
         return this;
     }
 
     @Override
-    public Write write() {
+    public DataBus.Write write() {
+        currentOp = BusOp.CONTROL_WRITE;
         return this;
     }
 
     @Override
     public @Unsigned byte data() {
-        return readByte();
+        currentOp = BusOp.DATA_READ;
+
+        currentSegment.onRead();
+
+        return dataLine.cycle();
     }
 
     @Override
     public void data(@Unsigned byte data) {
-        writeByte(data);
+        currentOp = BusOp.DATA_WRITE;
+
+        dataLine.data(data);
+
+        currentSegment.onWrite();
+
+        dataLine.cycle();
     }
 
     @Override
