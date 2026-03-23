@@ -189,6 +189,12 @@ public class CartridgeImpl implements Cartridge {
 
             if (0x0000 <= addrVal && addrVal <= 0x1FFF) {
                 currentVideoSegment = videoData;
+
+            } else if (0x2000 <= addrVal && addrVal <= 0x2FFF) {
+                currentVideoSegment = videoMemory;
+                // TODO: mirror data: vertical / horizontal / 1s / 4s
+            } else if (0x3000 <= addrVal && addrVal <= 0x3EFF) {
+                currentVideoSegment = emptyDevice; // unused, TODO: mirror 0x2000-2EFF
             } else {
                 currentVideoSegment = emptyDevice;
             }

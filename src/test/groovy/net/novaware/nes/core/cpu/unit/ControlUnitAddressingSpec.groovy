@@ -148,11 +148,12 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         cu.decode()
 
         then:
-        rec.cycles() == 2
+        rec.cycles() == 3
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
+    // TODO: this doesn't correctly test wrapping. it should be 0x00FF, 0x0000
     def "should decode pre indexed indirect x mode with zero page wrap"() {
         given:
         def cu = newControlUnit()
@@ -173,7 +174,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         cu.decode()
 
         then:
-        rec.cycles() == 2
+        rec.cycles() == 3
         insRegs.decodedOperand.getData() == ubyte(0x99)
     }
 
@@ -184,11 +185,11 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         insRegs.currentInstruction.set(Instruction.Ox11.opcode())
         insRegs.currentOperand.setAsShort(address)
 
-        regs y: 0x02
+        regs y: y
         ram(
-            address        , 0x80,
-            address+1      , 0x60,
-            (0x6080 + 0x02), 0x77
+            address        , 0xFD,
+            (address+1)%256, 0x60,
+            (0x60FD + y), 0x77
         )
 
         rec.record()
@@ -202,9 +203,10 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         insRegs.decodedOperand.getData() == ubyte(0x77)
 
         where:
-        address | cycles
-        0x00FE  | 2
-        0x00FF  | 3
+        address | y | cycles | comment
+        0x00FE  | 1 | 2      | "no wrap"
+        0x00FF  | 2 | 2      | "zero page wrap"
+        0x00AB  | 3 | 3      | "mem page wrap"
     }
 
     def "should decode zero page mode"() {

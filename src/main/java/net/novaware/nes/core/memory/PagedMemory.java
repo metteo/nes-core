@@ -15,7 +15,9 @@ import static net.novaware.nes.core.util.UTypes.sint;
  */
 public class PagedMemory implements MemoryDevice.ReadWrite {
 
-    private final MemoryDevice.ReadWrite openBus; // TODO: consider switching to a plug returning 0xFF for ANDing later
+    private final MemoryDevice.ReadWrite fallback;
+
+    private final List<MemoryDevice> devices = new ArrayList<>();
 
     private final MemoryDevice.ReadOnly[] readOnlyPages;
     private final MemoryDevice.WriteOnly[] writeOnlyPages;
@@ -27,8 +29,8 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
 
     private Line dataLine = new OpenLine();
 
-    public PagedMemory(MemoryDevice.ReadWrite openBus) {
-        this.openBus = openBus;
+    public PagedMemory(MemoryDevice.ReadWrite fallback) {
+        this.fallback = fallback;
 
         final int length = 0xFF + 1;
 
@@ -36,18 +38,20 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
         writeOnlyPages = new MemoryDevice.WriteOnly[length];
 
         for(int i = 0; i < length; i++) {
-            readOnlyPages[i] = this.openBus;
-            writeOnlyPages[i] = this.openBus;
+            readOnlyPages[i] = this.fallback;
+            writeOnlyPages[i] = this.fallback;
         }
 
-        readOnlyPageLatch = this.openBus;
-        writeOnlyPageLatch = this.openBus;
+        readOnlyPageLatch = this.fallback;
+        writeOnlyPageLatch = this.fallback;
 
-        addressLatch = this.openBus.getEndAddress();
+        addressLatch = this.fallback.getEndAddress();
     }
 
     @SuppressWarnings("not.interned")
     public List<MemoryDevice> attach(MemoryDevice memoryDevice) {
+        devices.add(memoryDevice);
+
         List<MemoryDevice> replaced = new ArrayList<>();
 
         for (int page = 0; page <= 0xFF; page++) {
@@ -62,7 +66,7 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
                     MemoryDevice.ReadOnly previousRead = readOnlyPages[page];
                     readOnlyPages[page] = readOnlyDevice;
 
-                    if (previousRead != openBus) {
+                    if (previousRead != fallback) {
                         replaced.add(previousRead);
                     }
                 }
@@ -71,7 +75,7 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
                     MemoryDevice.WriteOnly previousWrite = writeOnlyPages[page];
                     writeOnlyPages[page] = writeOnlyDevice;
 
-                    if (previousWrite != openBus) {
+                    if (previousWrite != fallback) {
                         replaced.add(previousWrite);
                     }
                 }
@@ -116,14 +120,15 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
     @Override
     public void onAttach(Line dataLine) {
         this.dataLine = dataLine;
+
         onAttachPages(dataLine);
     }
 
     private void onAttachPages(Line dataLine) {
-        for(int i = 0; i < readOnlyPages.length; i++) { // FIXME: call onAttach only for unique devices, one may be mapped to multiple pages
-            readOnlyPages[i].onAttach(dataLine);
-            writeOnlyPages[i].onAttach(dataLine);
-        }
+        devices.stream()
+                .filter(d -> d instanceof DataBus.Device)
+                .map(d -> (DataBus.Device) d)
+                .forEach(d -> d.onAttach(dataLine));
     }
 
     @Override

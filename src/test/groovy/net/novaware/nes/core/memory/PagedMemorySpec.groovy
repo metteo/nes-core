@@ -1,10 +1,13 @@
 package net.novaware.nes.core.memory
 
+
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
-import static net.novaware.nes.core.util.UTypes.*
+import static net.novaware.nes.core.util.UTypes.sint
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class PagedMemorySpec extends Specification {
 
@@ -43,10 +46,13 @@ class PagedMemorySpec extends Specification {
 
         def tempLine = new DataLine()
 
-        def rom = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
+        def start = ushort(0x4100) // TODO: switch to 4020 when page 40 is implemented properly
+        def size = sint(CARTRIDGE_END) - sint(start) + 1
+
+        def rom = new PhysicalMemory("CART", start, CARTRIDGE_END, size)
         def romBus = new TestBus(rom)
-        romBus.access(CARTRIDGE_START).write().data(ubyte(0x12))
-        romBus.access(CARTRIDGE_END)  .write().data(ubyte(0x34))
+        romBus.access(start).write().data(ubyte(0x12))
+        romBus.access(CARTRIDGE_END).write().data(ubyte(0x34))
 
         def replaced = paged.attach(rom)
 
@@ -54,7 +60,7 @@ class PagedMemorySpec extends Specification {
         rom.onAttach(tempLine) // FIXME: should be handled during pagememory attachment
 
         when:
-        paged.onAccess(CARTRIDGE_START)
+        paged.onAccess(start)
         paged.onRead()
         def cartStart = tempLine.cycle()
 

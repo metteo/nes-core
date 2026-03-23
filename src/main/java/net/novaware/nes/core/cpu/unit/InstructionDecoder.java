@@ -79,6 +79,8 @@ public class InstructionDecoder implements Unit {
         AddressingMode addressingMode = instruction.addressingMode();
         @Unsigned short operand = currentOperand.get();
 
+        decodedOperand.setIndexed(false);
+
         switch (addressingMode) {
             case IMPLIED -> decodeImplied();
             case IMMEDIATE -> decodeImmediate(operand);
@@ -97,13 +99,13 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodePostIndexedIndirectY(@Unsigned short operand) {
-        int address = sint(addressGen.fetchAddress(operand));
+        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
         int result = address + yVal;
 
-        boolean pageChange = (operand & 0xFF) == 0xFF;
-        cycleCounter.maybeIncrement(pageChange);
+        boolean pageChange = (address & 0xFF00) != (result & 0xFF00);
+        cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -112,10 +114,10 @@ public class InstructionDecoder implements Unit {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
+        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
         int indirectAddress = address + xVal;
 
-        // FIXME: it is supposed to be without carry for this and fetchAddress?
-        @Unsigned short result = addressGen.fetchAddress(ushort(indirectAddress & 0xFF));
+        @Unsigned short result = addressGen.buggyFetchAddress(ushort(indirectAddress & 0xFF)); // stay within zero page
         decodedOperand.configureMemory(memoryBus, result);
     }
 
@@ -128,6 +130,7 @@ public class InstructionDecoder implements Unit {
         cycleCounter.maybeIncrement(pageChange);
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
+        //decodedOperand.setIndexed(true); // FIXME: this is really hacky...
     }
 
     private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {

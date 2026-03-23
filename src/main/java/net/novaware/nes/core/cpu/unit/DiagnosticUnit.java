@@ -91,7 +91,7 @@ public class DiagnosticUnit implements Unit, Runnable {
 
         log.append("PPU:").append("   ,   ").append(" ");
 
-        // we are counting the cycles as they happen, so at the end of instruction there are already added
+        // we are counting the cycles as they happen, so at the end of instruction decode some were already added
         log.append("CYC:").append(cycleCounter.getValue() - cycleCounter.getSubValue());
 
         System.out.println(log);

@@ -19,7 +19,7 @@ public interface CpuMemMap extends MemoryMap {
 
     // region RAM
 
-    @Unsigned short RAM_START = ushort(0x0000);
+    @Unsigned short RAM_START = USHORT_0;
     @Unsigned short RAM_END = ushort(0x07FF);
     int RAM_SIZE = sint(RAM_END) - sint(RAM_START) + 1;
 
@@ -29,7 +29,7 @@ public interface CpuMemMap extends MemoryMap {
     // endregion
     // region RAM Segments
 
-    @Unsigned short ZERO_PAGE_START = ushort(0x0000);
+    @Unsigned short ZERO_PAGE_START = USHORT_0;
     @Unsigned short ZERO_PAGE_END = ushort(0x00FF);
     int ZERO_PAGE_SIZE = sint(ZERO_PAGE_END) - sint(ZERO_PAGE_START) + 1;
 
@@ -52,7 +52,7 @@ public interface CpuMemMap extends MemoryMap {
     int PPU_REGISTERS_MIRROR_SIZE = sint(PPU_REGISTERS_MIRROR_END) - sint(PPU_REGISTERS_START) + 1;
 
     // endregion
-    // region APU / IO / Test / Timer / Cartridge FDS
+    // region APU / IO / Test / Timer
 
     @Unsigned short APU_REGISTERS_START = ushort(0x4000);
     @Unsigned short APU_REGISTERS_END = ushort(0x4013);
@@ -70,27 +70,12 @@ public interface CpuMemMap extends MemoryMap {
     @Unsigned short TIMER_REGISTERS_END = ushort(0x401F);
     int TIMER_REGISTERS_SIZE = sint(TIMER_REGISTERS_END) - sint(TIMER_REGISTERS_START) + 1;
 
-    @Unsigned short CARTRIDGE_FDS_START = ushort(0x4020);
-    @Unsigned short CARTRIDGE_FDS_END = ushort(0x40FF);
-    int CARTRIDGE_FDS_SIZE = sint(CARTRIDGE_FDS_END) - sint(CARTRIDGE_FDS_START) + 1;
-
     // endregion
     // region Cartridge
 
-    @Unsigned short CARTRIDGE_START = ushort(0x4100);
-    @Unsigned short CARTRIDGE_END = ushort(0xFFFF);
+    @Unsigned short CARTRIDGE_START = ushort(0x4020);
+    @Unsigned short CARTRIDGE_END = USHORT_MAX_VALUE;
     int CARTRIDGE_SIZE = sint(CARTRIDGE_END) - sint(CARTRIDGE_START) + 1;
-
-    // endregion
-    // region Cartridge Segments
-
-    @Unsigned short CARTRIDGE_RAM_START = ushort(0x6000);
-    @Unsigned short CARTRIDGE_RAM_END = ushort(0x7FFF);
-    int CARTRIDGE_RAM_SIZE = sint(CARTRIDGE_RAM_END) - sint(CARTRIDGE_RAM_START) + 1;
-
-    @Unsigned short CARTRIDGE_ROM_START = ushort(0x8000);
-    @Unsigned short CARTRIDGE_ROM_END = ushort(0xFFFF);
-    int CARTRIDGE_ROM_SIZE = sint(CARTRIDGE_ROM_END) - sint(CARTRIDGE_ROM_START) + 1;
 
     // endregion
     // region Vectors

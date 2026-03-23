@@ -200,13 +200,10 @@ public class ArithmeticLogic implements Unit {
         int dataVal = sint(data);
 
         int result = regVal - dataVal;
-        int resultByte = result & 0xFF;
-
 
         registers.status()
                 .setBorrow(result < 0)
-                .setZero(resultByte == 0)
-                .setNegative((resultByte & (1 << 7)) > 0);
+                .maybeZeroOrNegative(result);
     }
 
     public @Unsigned byte rotateLeft(@Unsigned byte data) {

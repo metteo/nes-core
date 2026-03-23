@@ -21,10 +21,7 @@ class CpuMemMapSpec extends Specification {
         IO_REGISTERS_SIZE == 0x4
         APU_TEST_REGISTERS_SIZE == 0x4
         TIMER_REGISTERS_SIZE == 0x4
-        CARTRIDGE_FDS_SIZE == 0x00E0
-        CARTRIDGE_SIZE == 0xBF00
-        CARTRIDGE_RAM_SIZE == 0x2000
-        CARTRIDGE_ROM_SIZE == 0x8000
+        CARTRIDGE_SIZE == 0xBFE0
 
         MEMORY_SIZE == RAM_MIRROR_SIZE +
                 PPU_REGISTERS_MIRROR_SIZE +
@@ -32,7 +29,6 @@ class CpuMemMapSpec extends Specification {
                 IO_REGISTERS_SIZE +
                 APU_TEST_REGISTERS_SIZE +
                 TIMER_REGISTERS_SIZE +
-                CARTRIDGE_FDS_SIZE +
                 CARTRIDGE_SIZE
     }
 
@@ -44,8 +40,7 @@ class CpuMemMapSpec extends Specification {
         sint(APU_REGISTERS_END) + 1        == sint(IO_REGISTERS_START)
         sint(IO_REGISTERS_END) + 1         == sint(APU_TEST_REGISTERS_START)
         sint(APU_TEST_REGISTERS_END) + 1   == sint(TIMER_REGISTERS_START)
-        sint(TIMER_REGISTERS_END) + 1      == sint(CARTRIDGE_FDS_START)
-        sint(CARTRIDGE_FDS_END) + 1        == sint(CARTRIDGE_START)
+        sint(TIMER_REGISTERS_END) + 1      == sint(CARTRIDGE_START)
         sint(CARTRIDGE_END)                == sint(MEMORY_END)
     }
 }

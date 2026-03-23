@@ -106,8 +106,7 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         for (int i = 0; i < divider; i++) {
             hiddenBanks[i] = UByteBuffer.of(data
                     .slice(i * bankSize, bankSize)
-                    .order(LITTLE_ENDIAN)
-            );
+                    .order(LITTLE_ENDIAN));
         }
     }
 

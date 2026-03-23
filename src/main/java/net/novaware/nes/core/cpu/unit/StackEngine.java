@@ -50,6 +50,7 @@ public class StackEngine implements Unit {
 
     private void increment() {
         int sp = stackPointer.getAsInt();
+        // TODO: maybe do a peek here before adding one
         stackPointer.setAsByte(sp + 1);
     }
 
@@ -106,6 +107,8 @@ public class StackEngine implements Unit {
     }
 
     void pull(DataRegister register) {
+        peek(); // additional cycle to read current sp // TODO: maybe move to increment()
+
         @Unsigned byte data = pull();
         int dataVal = sint(data);
 
@@ -132,6 +135,7 @@ public class StackEngine implements Unit {
     }
 
     private Status pullStatus0() {
+        peek();                    // additional cycle to read current sp // TODO: maybe move to increment()
         increment();
 
         @Unsigned byte data = mmu.specifyAnd(address())
