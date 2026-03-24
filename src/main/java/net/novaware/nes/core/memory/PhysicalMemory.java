@@ -1,5 +1,6 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -92,5 +93,10 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public void onDetach() {
         this.dataLine = new OpenLine();
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
     }
 }

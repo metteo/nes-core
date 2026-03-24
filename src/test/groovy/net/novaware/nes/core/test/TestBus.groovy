@@ -1,5 +1,6 @@
 package net.novaware.nes.core.test
 
+import groovy.util.logging.Log
 import net.novaware.nes.core.memory.*
 import org.checkerframework.checker.signedness.qual.Unsigned
 
@@ -11,6 +12,7 @@ import static net.novaware.nes.core.util.UTypes.*
  *
  * Doesn't support attach / detach on purpose
  */
+@Log
 class TestBus implements MemoryBus {
 
     MemoryDevice.ReadWrite device
@@ -21,6 +23,8 @@ class TestBus implements MemoryBus {
     TestBus(MemoryDevice.ReadWrite device) {
         this.device = device
 
+        // Useful when same device gets attached for init and then attached again for testing
+        log.info("Attaching device: " + device + "to TestBus")
         device.onAttach(dataLine)
     }
 
@@ -28,7 +32,8 @@ class TestBus implements MemoryBus {
         device.onAccess(ushort(address))
         device.onRead()
 
-        return sint(dataLine.cycle())
+        def read = dataLine.cycle()
+        return sint(read)
     }
 
     void write(int address, int data) {

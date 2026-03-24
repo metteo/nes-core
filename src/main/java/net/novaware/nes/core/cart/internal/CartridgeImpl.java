@@ -12,6 +12,7 @@ import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
 import net.novaware.nes.core.util.uml.Owned;
@@ -126,6 +127,9 @@ public class CartridgeImpl implements Cartridge {
 
     private class CpuBusDevice implements MemoryDevice.ReadWrite {
 
+        // TODO: Make this class a PagedMemory
+        // TODO: mapper is a MemoryDevice listening on some / all address ranges and reconfiguring banks, etc?
+
         @Override
         public void onAccess(@Unsigned short address) {
             int addrVal = sint(address);
@@ -176,6 +180,11 @@ public class CartridgeImpl implements Cartridge {
             programData.onDetach();
             programMemory.onDetach();
             programStorage.onDetach();
+        }
+
+        @Override
+        public String toString() {
+            return "CART.PROGRAM (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
         }
     }
 
@@ -234,6 +243,11 @@ public class CartridgeImpl implements Cartridge {
             videoData.onDetach();
             videoMemory.onDetach();
             videoStorage.onDetach();
+        }
+
+        @Override
+        public String toString() {
+            return "CART.VIDEO (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
         }
     }
 }

@@ -1,11 +1,14 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.novaware.nes.core.memory.DataBus.*;
+import static net.novaware.nes.core.memory.DataBus.Line;
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -13,76 +16,41 @@ import static net.novaware.nes.core.util.UTypes.sint;
 /**
  * Redirects calls to page specific device within index
  */
-public class PagedMemory implements MemoryDevice.ReadWrite {
+public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
+    private final String name;
     private final MemoryDevice.ReadWrite fallback;
 
     private final List<MemoryDevice> devices = new ArrayList<>();
 
-    private final MemoryDevice.ReadOnly[] readOnlyPages;
-    private final MemoryDevice.WriteOnly[] writeOnlyPages;
+    private final MemoryDevice.ReadOnly[] readPages;
+    private final MemoryDevice.WriteOnly[] writePages;
 
     private @Unsigned short addressLatch;
 
-    private MemoryDevice.ReadOnly readOnlyPageLatch;
-    private MemoryDevice.WriteOnly writeOnlyPageLatch;
+    private MemoryDevice.ReadOnly readPageLatch;
+    private MemoryDevice.WriteOnly writePageLatch;
 
     private Line dataLine = new OpenLine();
 
-    public PagedMemory(MemoryDevice.ReadWrite fallback) {
+    public PagedMemory(String name, MemoryDevice.ReadWrite fallback) {
+        this.name = name;
         this.fallback = fallback;
 
         final int length = 0xFF + 1;
 
-        readOnlyPages = new MemoryDevice.ReadOnly[length];
-        writeOnlyPages = new MemoryDevice.WriteOnly[length];
+        readPages = new MemoryDevice.ReadOnly[length];
+        writePages = new MemoryDevice.WriteOnly[length];
 
         for(int i = 0; i < length; i++) {
-            readOnlyPages[i] = this.fallback;
-            writeOnlyPages[i] = this.fallback;
+            readPages[i] = this.fallback;
+            writePages[i] = this.fallback;
         }
 
-        readOnlyPageLatch = this.fallback;
-        writeOnlyPageLatch = this.fallback;
+        readPageLatch = this.fallback;
+        writePageLatch = this.fallback;
 
         addressLatch = this.fallback.getEndAddress();
-    }
-
-    @SuppressWarnings("not.interned")
-    public List<MemoryDevice> attach(MemoryDevice memoryDevice) {
-        devices.add(memoryDevice);
-
-        List<MemoryDevice> replaced = new ArrayList<>();
-
-        for (int page = 0; page <= 0xFF; page++) {
-            int pageStart = (page << 8);
-            int pageEnd = pageStart | 0xFF;
-
-            int deviceStart = sint(memoryDevice.getStartAddress());
-            int deviceEnd = sint(memoryDevice.getEndAddress());
-
-            if (deviceStart <= pageStart && pageEnd <= deviceEnd) {
-                if (memoryDevice instanceof MemoryDevice.ReadOnly readOnlyDevice) {
-                    MemoryDevice.ReadOnly previousRead = readOnlyPages[page];
-                    readOnlyPages[page] = readOnlyDevice;
-
-                    if (previousRead != fallback) {
-                        replaced.add(previousRead);
-                    }
-                }
-
-                if (memoryDevice instanceof MemoryDevice.WriteOnly writeOnlyDevice) {
-                    MemoryDevice.WriteOnly previousWrite = writeOnlyPages[page];
-                    writeOnlyPages[page] = writeOnlyDevice;
-
-                    if (previousWrite != fallback) {
-                        replaced.add(previousWrite);
-                    }
-                }
-            }
-        }
-
-        return replaced;
     }
 
     @Override
@@ -95,32 +63,64 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
         return USHORT_MAX_VALUE;
     }
 
+    @SuppressWarnings("not.interned")
+    public void attach(MemoryDevice memoryDevice) {
+        devices.add(memoryDevice);
+
+        for (int page = 0; page <= 0xFF; page++) {
+            int pageStart = (page << 8);
+            int pageEnd = pageStart | 0xFF;
+
+            int deviceStart = sint(memoryDevice.getStartAddress());
+            int deviceEnd = sint(memoryDevice.getEndAddress());
+
+            if (deviceStart <= pageStart && pageEnd <= deviceEnd) {
+                if (memoryDevice instanceof MemoryDevice.ReadOnly readDevice) {
+                    MemoryDevice.ReadOnly previousRead = readPages[page];
+
+                    assertArgument(previousRead == fallback, "Attempting to replace R " + previousRead +
+                            " with " + readDevice);
+
+                    readPages[page] = readDevice;
+                }
+
+                if (memoryDevice instanceof MemoryDevice.WriteOnly writeDevice) {
+                    MemoryDevice.WriteOnly previousWrite = writePages[page];
+
+                    assertArgument(previousWrite == fallback, "Attempting to replace W " + previousWrite +
+                            " with " + writeDevice);
+
+                    writePages[page] = writeDevice;
+                }
+            }
+        }
+    }
+
     @Override
     public void onAccess(@Unsigned short address) {
         addressLatch = address;
 
         int page = (sint(address) & 0xFF00) >> 8;
 
-        readOnlyPageLatch = readOnlyPages[page];
-        writeOnlyPageLatch = writeOnlyPages[page];
+        readPageLatch = readPages[page];
+        writePageLatch = writePages[page];
     }
 
     @Override
     public void onRead() {
-        readOnlyPageLatch.onAccess(addressLatch);
-        readOnlyPageLatch.onRead();
+        readPageLatch.onAccess(addressLatch);
+        readPageLatch.onRead();
     }
 
     @Override
     public void onWrite() {
-        writeOnlyPageLatch.onAccess(addressLatch);
-        writeOnlyPageLatch.onWrite();
+        writePageLatch.onAccess(addressLatch);
+        writePageLatch.onWrite();
     }
 
     @Override
     public void onAttach(Line dataLine) {
         this.dataLine = dataLine;
-
         onAttachPages(dataLine);
     }
 
@@ -135,5 +135,15 @@ public class PagedMemory implements MemoryDevice.ReadWrite {
     public void onDetach() {
         this.dataLine = new OpenLine();
         onAttachPages(dataLine);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
     }
 }

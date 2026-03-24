@@ -8,6 +8,7 @@ module net.novaware.nes.core {
     requires org.jspecify;
     requires org.checkerframework.checker.qual;
     requires java.desktop; // TODO: temporary for testing easy6502, move to tests later
+    requires java.logging;
 
     exports net.novaware.nes.core;
     exports net.novaware.nes.core.config;

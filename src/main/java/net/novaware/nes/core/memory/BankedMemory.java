@@ -1,5 +1,6 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
@@ -169,5 +170,10 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     @Override
     public void onDetach() {
         this.dataLine = new OpenLine();
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
     }
 }

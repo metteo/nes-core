@@ -15,78 +15,62 @@ import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ATM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.TMR;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class CpuBus implements MemoryBus {
 
     @Used
     private final CycleCounter cycleCounter;
 
-    private final DataLine dataLine = new DataLine();
-
-    private BusOp busOp = BusOp.DATA_READ; // TODO: randomize between data read / write
-
     @Owned
-    private final PagedMemory internal;
+    private final PagedMemory internal = new PagedMemory("INTERNAL", new MemoryDevice.Empty());
 
     @Used
-    private MemoryDevice.ReadWrite cartridge = new MemoryDevice.Empty();
+    private MemoryDevice.ReadWrite cartridge = new MemoryDevice.Empty(); // TODO: consider using single injected instance to allow testing
 
     @Used
     private MemoryDevice.ReadWrite expansion = new MemoryDevice.Empty();
 
-    @Owned
-    private final MemoryPage page40;
+    private final DataLine dataLine = new DataLine();
 
-    @Used
-    private MemoryDevice ram;
-
-    @Used
-    private MemoryDevice ppu;
-
-    @Used
-    private MemoryDevice apu;
-
-    @Used
-    private MemoryDevice apuTest;
-
-    @Used
-    private MemoryDevice timer;
+    private BusOp busOp = BusOp.DATA_READ; // TODO: randomize between data read / write
 
     private @Unsigned short addressLatch;
 
     @Inject
     public CpuBus(
-            @CpuVar(CC) CycleCounter cycleCounter,
-            @CpuVar(RAM) MemoryDevice.ReadWrite ram,
-            @CpuVar(PPU) MemoryDevice.ReadWrite ppu,
-            @CpuVar(APU) MemoryDevice.ReadWrite apu,
-            @CpuVar(ATM) MemoryDevice.ReadWrite apuTest, // TODO: apu test
-            @CpuVar(TMR) MemoryDevice.ReadWrite timer // TODO: timer
+        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(RAM) MemoryDevice.ReadWrite ram,
+        @CpuVar(PPU) MemoryDevice.ReadWrite ppu,
+        @CpuVar(ACR) MemoryDevice.WriteOnly apuChannelRegs,
+        @CpuVar(DMA) MemoryDevice.WriteOnly oamDma,
+        @CpuVar(APU) MemoryDevice.ReadWrite apuStatus,
+        @CpuVar(JOY) MemoryDevice.ReadWrite joy, // TODO: joy
+        @CpuVar(ATM) MemoryDevice.ReadWrite apuTest, // TODO: apu test
+        @CpuVar(TMR) MemoryDevice.ReadWrite timer // TODO: timer
     ) {
-        this.internal = new PagedMemory(new MemoryDevice.Empty());
-
-        this.page40 = new MemoryPage(40, new MemoryDevice.Empty()); // TODO: handle the fallback, preferably open bus
-
         this.cycleCounter = cycleCounter;
-        this.ram = ram;
-        this.ppu = ppu;
-        this.apu = apu;
-        this.apuTest = apuTest;
-        this.timer = timer;
+
+        MemoryPage page40 = new MemoryPage(ubyte(0x40), new MemoryDevice.Empty());
+        page40.attach(apuChannelRegs);
+        page40.attach(oamDma);
+        page40.attach(apuStatus);
+        page40.attach(joy);
+        page40.attach(apuTest);
+        page40.attach(timer);
 
         internal.attach(ram);
         internal.attach(ppu);
         internal.attach(page40);
-
-        page40.attach(apu);
-        page40.attach(apuTest);
-        page40.attach(timer);
 
         internal.onAttach(dataLine);
     }

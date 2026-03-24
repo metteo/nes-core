@@ -1,9 +1,10 @@
 package net.novaware.nes.core.dma;
 
+import dagger.Lazy;
 import jakarta.inject.Inject;
+import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.signal.Signal;
-import net.novaware.nes.core.cpu.signal.Synchronizable;
 import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
@@ -46,7 +47,7 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
     private final ByteRegister oamDma;
 
     @Used
-    private final Synchronizable cpu;
+    private final Lazy<Cpu> cpu; // top level chip so lazy injected to prevent stack overflow during construction
 
     @Used
     private final MemoryBus cpuBus;
@@ -54,7 +55,7 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
     @Inject
     public Dma(
             @DmaVar(OAM) ByteRegister oamDma,
-            Synchronizable cpu,
+            Lazy<Cpu> cpu,
             @CpuVar(BUS) MemoryBus cpuBus
     ) {
         this.oamDma = oamDma;
@@ -63,7 +64,7 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
     }
 
     public void triggerDma() {
-        cpu.rdy(Signal.LOW);
+        cpu.get().rdy(Signal.LOW);
 
         // halt cycle
         // align cycle* (if dma.read on cpubus.write)
@@ -72,6 +73,6 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
         //               > (256x)
         // write cycle  /
 
-        cpu.rdy(Signal.HIGH);
+        cpu.get().rdy(Signal.HIGH);
     }
 }

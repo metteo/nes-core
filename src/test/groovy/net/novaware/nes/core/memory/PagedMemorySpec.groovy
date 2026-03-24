@@ -1,77 +1,75 @@
 package net.novaware.nes.core.memory
 
-
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
-import static net.novaware.nes.core.util.UTypes.sint
-import static net.novaware.nes.core.util.UTypes.ubyte
-import static net.novaware.nes.core.util.UTypes.ushort
+import static net.novaware.nes.core.util.UTypes.*
 
 class PagedMemorySpec extends Specification {
 
-    def "should construct with open bus only"() {
+    def "should construct with fallback only"() {
         given:
-        MemoryDevice.ReadWrite openBus = Mock()
-        def paged = new PagedMemory(openBus)
-
-        def tempLine = new DataLine()
-        tempLine.data(ubyte(0x34)) // previous value for open bus case
-        tempLine.cycle()
+        MemoryDevice.ReadWrite fallback = Mock()
+        def paged = new PagedMemory("TEST", fallback)
+        def bus = new TestBus(paged)
 
         when:
-        paged.onAccess(ushort(0x0000))
-        paged.onRead()
-        def read = tempLine.cycle()
-        paged.onAccess(ushort(0xFFFF))
-        tempLine.data(ubyte(0x12))
-        paged.onWrite()
+        def read = bus.access(USHORT_0).read().data()
+        bus.access(USHORT_MAX_VALUE).write().data(ubyte(0x12))
 
         then:
-        // TODO: start and end address too.
-        read == ubyte(0x34)
+        paged.getName() == "TEST"
+        paged.getStartAddress() == USHORT_0
+        paged.getEndAddress() == USHORT_MAX_VALUE
 
-        1 * openBus.onAccess(ushort(0x0000))
-        1 * openBus.onRead()
+        read == ubyte(0xFF) // open bus, initial data line value
 
-        1 * openBus.onAccess(ushort(0xFFFF))
-        1 * openBus.onWrite()
+        1 * fallback.onAccess(ushort(0x0000))
+        1 * fallback.onRead()
+
+        1 * fallback.onAccess(ushort(0xFFFF))
+        1 * fallback.onWrite()
     }
 
     def "should allow attaching devices"() {
         given:
-        MemoryDevice.ReadWrite openBus = Mock()
-        def paged = new PagedMemory(openBus)
+        def ppuRegs = new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
+        PPU_REGISTERS_MIRROR_SIZE)
 
-        def tempLine = new DataLine()
+        def ppuBus = new TestBus(ppuRegs)
+        ppuBus.access(PPU_REGISTERS_START).write().data(ubyte(0x12))
+        ppuBus.access(PPU_REGISTERS_MIRROR_END).write().data(ubyte(0x34))
+        ppuRegs.onDetach()
 
-        def start = ushort(0x4100) // TODO: switch to 4020 when page 40 is implemented properly
-        def size = sint(CARTRIDGE_END) - sint(start) + 1
+        MemoryDevice.ReadWrite fallback = Mock()
+        def paged = new PagedMemory("TEST", fallback)
+        paged.attach(ppuRegs)
 
-        def rom = new PhysicalMemory("CART", start, CARTRIDGE_END, size)
-        def romBus = new TestBus(rom)
-        romBus.access(start).write().data(ubyte(0x12))
-        romBus.access(CARTRIDGE_END).write().data(ubyte(0x34))
+        def bus = new TestBus(paged)
 
-        def replaced = paged.attach(rom)
+        expect:
+        bus.access(PPU_REGISTERS_START).read().data() == ubyte(0x12)
+        bus.access(PPU_REGISTERS_MIRROR_END).read().data() == ubyte(0x34)
+    }
 
-        paged.onAttach(tempLine)
-        rom.onAttach(tempLine) // FIXME: should be handled during pagememory attachment
+    def "should disallow replacing devices"() {
+        given:
+        def ppuRegs1 = new PhysicalMemory("PPU1", PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
+                PPU_REGISTERS_MIRROR_SIZE)
+
+        def ppuRegs2 = new PhysicalMemory("PPU2", PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
+                PPU_REGISTERS_MIRROR_SIZE)
+
+        MemoryDevice.ReadWrite fallback = Mock()
+        def paged = new PagedMemory("TEST", fallback)
+        paged.attach(ppuRegs1)
 
         when:
-        paged.onAccess(start)
-        paged.onRead()
-        def cartStart = tempLine.cycle()
-
-        paged.onAccess(CARTRIDGE_END)
-        paged.onRead()
-        def cartEnd = tempLine.cycle()
+        paged.attach(ppuRegs2)
 
         then:
-        replaced.isEmpty()
-
-        cartStart == ubyte(0x12)
-        cartEnd == ubyte(0x34)
+        def thrown = thrown(IllegalArgumentException)
+        thrown.message == "Attempting to replace R PPU1 (2000:3FFF) with PPU2 (2000:3FFF)"
     }
 }

@@ -52,13 +52,17 @@ public interface CpuMemMap extends MemoryMap {
     int PPU_REGISTERS_MIRROR_SIZE = sint(PPU_REGISTERS_MIRROR_END) - sint(PPU_REGISTERS_START) + 1;
 
     // endregion
-    // region APU / IO / Test / Timer
+    // region APU / OAM DMA / IO / Test / Timer
 
     @Unsigned short APU_REGISTERS_START = ushort(0x4000);
     @Unsigned short APU_REGISTERS_END = ushort(0x4013);
     int APU_REGISTERS_SIZE = sint(APU_REGISTERS_END) - sint(APU_REGISTERS_START) + 1;
 
-    @Unsigned short IO_REGISTERS_START = ushort(0x4014);
+    @Unsigned short OAM_DMA_REGISTER = ushort(0x4014);
+    @Unsigned short APU_STATUS_REGISTER = ushort(0x4015);
+
+    // TODO: rename to JOY_... ?
+    @Unsigned short IO_REGISTERS_START = ushort(0x4016);
     @Unsigned short IO_REGISTERS_END = ushort(0x4017);
     int IO_REGISTERS_SIZE = sint(IO_REGISTERS_END) - sint(IO_REGISTERS_START) + 1;
 

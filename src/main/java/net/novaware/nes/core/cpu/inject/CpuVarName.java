@@ -39,15 +39,16 @@ public enum CpuVarName {
     DS ("", "dataSegment",  "Data Segment"),
 
     // endregion
-    // region Memory Areas
+    // region Memory Devices
 
-    RAM ("",  "", "RAM"),
+    RAM ("", "", "RAM"),
     PPU ("", "", "Picture Processing Unit"),
+    ACR ("", "", "APU Channel Registers"),
+    DMA ("", "", "Direct Memory Access"),
     APU ("", "", "Audio Processing Unit"),
-    IO  ("", "", "Input-Output"),
+    JOY ("", "", "Joypad Input-Output"),
     ATM ("", "", "APU Test Mode"),
     TMR ("", "", "Timer Unit"),
-    CART ("", "", "Cartridge"),
 
     // endregion
 

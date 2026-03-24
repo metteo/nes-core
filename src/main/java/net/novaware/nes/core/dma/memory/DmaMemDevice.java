@@ -1,33 +1,39 @@
 package net.novaware.nes.core.dma.memory;
 
+import dagger.Lazy;
 import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.dma.Dma;
 import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.OpenLine;
 import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_DMA_REGISTER;
 import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class DmaMemDevice implements MemoryDevice.WriteOnly {
+@BoardScope
+public class DmaMemDevice implements MemoryDevice.WriteOnly, Nameable {
 
     @Used
     private final ByteRegister oamDma;
 
     @Used
-    private final Dma dma;
+    private final Lazy<Dma> dma; // top level chip so lazy injected to prevent stack overflow during construction
 
     private DataBus.Line dataLine = new OpenLine();
 
     @Inject
     public DmaMemDevice(
         @DmaVar(OAM) ByteRegister oamDma,
-        Dma dma
+        Lazy<Dma> dma
     ) {
         this.oamDma = oamDma;
         this.dma = dma;
@@ -35,12 +41,12 @@ public class DmaMemDevice implements MemoryDevice.WriteOnly {
 
     @Override
     public @Unsigned short getStartAddress() {
-        return 0;
+        return OAM_DMA_REGISTER;
     }
 
     @Override
     public @Unsigned short getEndAddress() {
-        return 0;
+        return OAM_DMA_REGISTER;
     }
 
     @Override
@@ -51,7 +57,7 @@ public class DmaMemDevice implements MemoryDevice.WriteOnly {
     public void writeByte(@Unsigned byte data) {
         oamDma.set(data);
 
-        dma.triggerDma();
+        dma.get().triggerDma();
     }
 
     @Override
@@ -67,5 +73,15 @@ public class DmaMemDevice implements MemoryDevice.WriteOnly {
     @Override
     public void onDetach() {
         this.dataLine = new OpenLine();
+    }
+
+    @Override
+    public String toString() {
+        return getName() + " (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
+    }
+
+    @Override
+    public String getName() {
+        return "DMA";
     }
 }

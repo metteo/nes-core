@@ -122,4 +122,9 @@ public class RecordingDevice implements MemoryDevice.ReadWrite {
     public void onDetach() {
         this.dataLine = new OpenLine();
     }
+
+    @Override
+    public String toString() {
+        return "REC (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
+    }
 }

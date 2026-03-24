@@ -1,27 +1,34 @@
 package net.novaware.nes.core.cpu.inject;
 
+import dagger.Binds;
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.apu.memory.ApuMemDevice;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.memory.CpuBus;
+import net.novaware.nes.core.dma.memory.DmaMemDevice;
+import net.novaware.nes.core.io.register.IoRegFile;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
@@ -34,6 +41,8 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_END;
@@ -74,12 +83,33 @@ public interface CpuMemModule {
 
     @Provides
     @BoardScope
-    @CpuVar(APU)
-    static MemoryDevice.ReadWrite provideApuRegs(ApuRegFile apuRegFile) {
+    @CpuVar(ACR)
+    static MemoryDevice.WriteOnly provideApuRegs(ApuRegFile apuRegFile) {
         return new ByteRegisterMemory(
             "APU_REGS",
             APU_REGISTERS_START, APU_REGISTERS_END,
             apuRegFile.getCpuRegisters()
+        );
+    }
+
+    @Binds
+    @BoardScope
+    @CpuVar(DMA)
+    MemoryDevice.WriteOnly bindOamDma(DmaMemDevice dmaMemDevice);
+
+    @Binds
+    @BoardScope
+    @CpuVar(CpuVarName.APU)
+    MemoryDevice.ReadWrite bindApuStatus(ApuMemDevice apuMemDevice);
+
+    @Provides
+    @BoardScope
+    @CpuVar(JOY)
+    static MemoryDevice.ReadWrite provideJoy(IoRegFile joyRegFile) {
+        return new ByteRegisterMemory( // FIXME: replace with a proper device separating reads and writes
+                "JOY_REGS",
+                IO_REGISTERS_START, IO_REGISTERS_END,
+                new ByteRegister[]{ joyRegFile.getJoy1Data(), joyRegFile.getJoy2Data() }
         );
     }
 

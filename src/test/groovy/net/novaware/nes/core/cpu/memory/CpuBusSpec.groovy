@@ -12,11 +12,14 @@ class CpuBusSpec extends Specification {
     def cycleCounter = new CycleCounter("CPUCC")
     def ram = new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE)
     def ppu = new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_END, PPU_REGISTERS_MIRROR_SIZE)
-    def apu = new PhysicalMemory("APU", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE)
+    def apuChannelRegs = new PhysicalMemory("ACR", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE)
+    def dma = new PhysicalMemory("DMA", OAM_DMA_REGISTER, OAM_DMA_REGISTER, 1)
+    def apuStatus = new PhysicalMemory("APU_STATUS", APU_STATUS_REGISTER, APU_STATUS_REGISTER, 1)
+    def joy = new PhysicalMemory("JOY", IO_REGISTERS_START, IO_REGISTERS_END, IO_REGISTERS_SIZE)
     def apuTestMode = new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE)
     def timer = new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE)
 
-    def newCpuBus() { new CpuBus(cycleCounter, ram, ppu, apu, apuTestMode, timer) }
+    def newCpuBus() { new CpuBus(cycleCounter, ram, ppu, apuChannelRegs, dma, apuStatus, joy, apuTestMode, timer) }
 
     def "should read and write to ram"() {
         given:

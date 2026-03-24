@@ -23,5 +23,6 @@ public interface MemoryDevice extends AddressBus.Device {
         @Override public void onWrite() {}
         @Override public void onAttach(DataBus.Line dataLine) {}
         @Override public void onDetach() {}
+        @Override public String toString() { return "EMPTY"; }
     }
 }
