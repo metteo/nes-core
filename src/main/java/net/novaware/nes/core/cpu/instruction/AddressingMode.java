@@ -1,49 +1,71 @@
 package net.novaware.nes.core.cpu.instruction;
 
+import static net.novaware.nes.core.cpu.instruction.AddressingCategory.DIRECT;
+import static net.novaware.nes.core.cpu.instruction.AddressingCategory.INDEXED;
+import static net.novaware.nes.core.cpu.instruction.AddressingCategory.INDIRECT;
+import static net.novaware.nes.core.cpu.instruction.AddressingCategory.NONE;
+
 public enum AddressingMode {
 
-    // region Immediate and Single Operand
+    // region Implied / Implicit
 
-    IMMEDIATE(1),              // #$NN (Value is the operand)
-
-    IMPLIED(0),                // No operand (e.g., NOP, TAX)
-    ACCUMULATOR(0),            // Operand is the A register (e.g., ASL A)
+    IMPLIED                  ("",  AddressingCategory.IMPLIED, NONE, 0), // also IMPLICIT
+    ACCUMULATOR              ("A", AddressingCategory.IMPLIED, NONE, 0),
 
     // endregion
-    // region Direct Memory (Non-Indexed)
+    // region Immediate
 
-    ZERO_PAGE(1),              // $NN
-    ABSOLUTE(2),               // $NNNN
-
-    // endregion
-    // region Indexed Memory
-
-    INDEXED_ZERO_PAGE_X(1),    // $NN,X
-    INDEXED_ZERO_PAGE_Y(1),    // $NN,Y
-    INDEXED_ABSOLUTE_X(2),     // $NNNN,X
-    INDEXED_ABSOLUTE_Y(2),     // $NNNN,Y
+    IMMEDIATE                ("#BYTE", AddressingCategory.IMMEDIATE, NONE, 1),
 
     // endregion
-    // region Indirect
+    // region Relative
 
-    ABSOLUTE_INDIRECT(2),      // Used only by JMP ($NNNN)
-
-    PRE_INDEXED_INDIRECT_X(1), // ($NN,X)
-    POST_INDEXED_INDIRECT_Y(1),// ($NN),Y
+    RELATIVE                 ("SBYTE", AddressingCategory.RELATIVE,  NONE, 1),
 
     // endregion
-    // region Control Flow
+    // region Zero Page
 
-    RELATIVE(1),               // Used only by Branch* (e.g., BEQ Label)
+    ZERO_PAGE                ("BYTE",      DIRECT,   NONE,    1),
+
+    ZERO_PAGE_X              ("BYTE, X",   INDEXED,  NONE,    1),
+    ZERO_PAGE_Y              ("BYTE, Y",   INDEXED,  NONE,    1),
+
+    ZERO_PAGE_X_INDIRECT     ("(BYTE, X)", INDIRECT, INDEXED, 1),
+
+    ZERO_PAGE_INDIRECT_Y     ("(BYTE), Y", INDIRECT, INDEXED, 1),
+    ZERO_PAGE_INDIRECT_Y_R   ("(BYTE), Y", INDIRECT, INDEXED, 1),
+    ZERO_PAGE_INDIRECT_Y_W   ("(BYTE), Y", INDIRECT, INDEXED, 1),
+
+    // endregion
+    // region Absolute
+
+    ABSOLUTE          ("WORD",    DIRECT,   NONE, 2),
+
+    ABSOLUTE_X        ("WORD, X", INDEXED,  NONE, 2), // TODO: maybe remove?
+    ABSOLUTE_X_R      ("WORD, X", INDEXED,  NONE, 2),
+    ABSOLUTE_X_W      ("WORD, X", INDEXED,  NONE, 2),
+
+    ABSOLUTE_Y        ("WORD, Y", INDEXED,  NONE, 2), // TODO: maybe remove
+    ABSOLUTE_Y_R      ("WORD, Y", INDEXED,  NONE, 2),
+    ABSOLUTE_Y_W      ("WORD, Y", INDEXED,  NONE, 2),
+
+    ABSOLUTE_INDIRECT ("(WORD)",  INDIRECT, NONE, 2),
 
     // endregion
 
     // NOTE: -2 to satisfy instruction / addressing mode size relation
-    UNKNOWN(-2);               // NULL Object
+    UNKNOWN                  ("?", NONE, NONE, -2); // NULL Object
 
-    AddressingMode(int size) {
+    AddressingMode(String format, AddressingCategory primary, AddressingCategory secondary, int size) {
+        this.format = format;
+        this.primary = primary;
+        this.secondary = secondary;
         this.size = size;
     }
+
+    private String format;
+    private AddressingCategory primary;
+    private AddressingCategory secondary;
 
     /**
      * Number of bytes the operand takes up

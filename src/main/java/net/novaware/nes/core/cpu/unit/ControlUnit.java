@@ -263,6 +263,9 @@ public class ControlUnit implements Unit {
     }
 
     /* package */ void readModifyWrite(UByteUnaryOperator operator) { // TODO: move to alu
+        cycleCounter.maybeIncrement(decodedOperand.isRmwAbsX()); // 4th cycle for internal calc
+        decodedOperand.setRmwAbsX(false);
+
         @Unsigned byte data = decodedOperand.getData(); // read
         decodedOperand.setData(data); // write unmodified
 

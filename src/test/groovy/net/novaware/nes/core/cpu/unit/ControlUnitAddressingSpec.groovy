@@ -247,7 +247,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         cu.decode()
 
         then:
-        rec.cycles() == 0
+        rec.cycles() == 1 // memory read without adding index register
         insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x55)
 
