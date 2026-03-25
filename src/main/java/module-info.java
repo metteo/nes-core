@@ -8,11 +8,13 @@ module net.novaware.nes.core {
     requires org.jspecify;
     requires org.checkerframework.checker.qual;
     requires java.desktop; // TODO: temporary for testing easy6502, move to tests later
+    requires java.logging;
 
     exports net.novaware.nes.core;
     exports net.novaware.nes.core.config;
     exports net.novaware.nes.core.port;
     exports net.novaware.nes.core.cart;
+    exports net.novaware.nes.core.util;
 
     exports net.novaware.nes.core.memory; // TODO: Consider creating a dedicated package for peripherals like MemoryDevice
     // TODO: should not be exposed

@@ -12,8 +12,8 @@ public enum InstructionGroup {
     ADD_WITH_CARRY          ("ADC", ARITHMETIC),
     SUBTRACT_WITH_BORROW    ("SBC", ARITHMETIC),
 
-    INCREMENT_MEMORY        ("INC", ARITHMETIC),
-    DECREMENT_MEMORY        ("DEC", ARITHMETIC),
+    INCREMENT_MEMORY        ("INC", ARITHMETIC), // RMW
+    DECREMENT_MEMORY        ("DEC", ARITHMETIC), // RMW
 
     INCREMENT_X             ("INX", ARITHMETIC),
     DECREMENT_X             ("DEX", ARITHMETIC),
@@ -108,11 +108,11 @@ public enum InstructionGroup {
     // endregion
     // region Shifts & Rotates
 
-    SHIFT_LEFT              ("ASL", SHIFTS_ROTATES),
-    SHIFT_RIGHT             ("LSR", SHIFTS_ROTATES),
+    SHIFT_LEFT              ("ASL", SHIFTS_ROTATES), // RMW
+    SHIFT_RIGHT             ("LSR", SHIFTS_ROTATES), // RMW
 
-    ROTATE_LEFT             ("ROL", SHIFTS_ROTATES),
-    ROTATE_RIGHT            ("ROR", SHIFTS_ROTATES),
+    ROTATE_LEFT             ("ROL", SHIFTS_ROTATES), // RMW
+    ROTATE_RIGHT            ("ROR", SHIFTS_ROTATES), // RMW
 
     // endregion
     // region Stack Operations

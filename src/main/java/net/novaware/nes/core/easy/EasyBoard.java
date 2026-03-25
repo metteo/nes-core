@@ -67,12 +67,12 @@ public class EasyBoard {
     public void preload(@Unsigned byte[] data) {
         int offset = sint(EasyMemMap.CARTRIDGE_START);
         for(int i = 0; i < data.length; i++) {
-            bus.specifyThen(ushort(offset + i)).writeByte(data[i]);
+            bus.access(ushort(offset + i)).write().data(data[i]);
         }
 
         int reset = sint(EasyMemMap.RES_VECTOR);
-        bus.specifyThen(ushort(reset)).writeByte(ubyte(0x00));
-        bus.specifyThen(ushort(reset + 1)).writeByte(ubyte(0x06)); // 0x600 in low endian
+        bus.access(ushort(reset)).write().data(ubyte(0x00));
+        bus.access(ushort(reset + 1)).write().data(ubyte(0x06)); // 0x600 in low endian
 
     }
 

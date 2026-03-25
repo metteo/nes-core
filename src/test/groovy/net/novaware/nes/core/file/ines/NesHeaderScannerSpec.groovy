@@ -134,7 +134,7 @@ class NesHeaderScannerSpec extends Specification {
         problems.size() == 1
         problems.get(0) == new Problem(
                 Problem.Severity.MINOR,
-                "More than 75% of magic number is matching: 4e 46 53 1a"
+                "More than 75% of magic number is matching: 4E 46 53 1A"
         )
     }
 

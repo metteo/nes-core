@@ -1,5 +1,7 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.Quantity.Unit;
 import net.novaware.nes.core.util.UByteBuffer;
@@ -11,9 +13,15 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class BankedMemory implements MemoryDevice {
+public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
+
+    private final String name;
+
+    private DataBus.Line dataLine = new OpenLine();
 
     private final @Unsigned short startAddress;
+    private final @Unsigned short endAddress;
+
     private int bankIndex;
     private int bankAddress;
 
@@ -44,10 +52,15 @@ public class BankedMemory implements MemoryDevice {
     private Mode mode;
 
     public BankedMemory(
-        @Unsigned short offset,
-        Quantity visibleBanks, Quantity hiddenBanks
+        String name,
+        @Unsigned short startAddress,
+        @Unsigned short endAddress,
+        Quantity visibleBanks,
+        Quantity hiddenBanks
     ) {
-        this.startAddress = offset;
+        this.name = name;
+        this.startAddress = startAddress;
+        this.endAddress = endAddress;
         this.bankSize = new Quantity(1, visibleBanks.unit());
 
         assertArgument(visibleBanks.unit() != Unit.BYTES, "bytes not accepted as unit");
@@ -70,6 +83,11 @@ public class BankedMemory implements MemoryDevice {
         // for 1 to many (switching) set first to first, second to last (for program)
     }
 
+    @Override
+    public String getName() {
+        return name;
+    }
+
     // TODO: expose method for copying over / setting data in the banks
 
     // TODO: change to a chain call pointVisible(1).toHidden(0) or similar
@@ -89,13 +107,22 @@ public class BankedMemory implements MemoryDevice {
         for (int i = 0; i < divider; i++) {
             hiddenBanks[i] = UByteBuffer.of(data
                     .slice(i * bankSize, bankSize)
-                    .order(LITTLE_ENDIAN)
-            );
+                    .order(LITTLE_ENDIAN));
         }
     }
 
     @Override
-    public void specify(@Unsigned short address) {
+    public @Unsigned short getStartAddress() {
+        return startAddress;
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() { // FIXME: test
+        return endAddress;
+    }
+
+    @Override
+    public void onAccess(@Unsigned short address) {
         int addrVal = sint(address);
         int visibleAddress = addrVal - sint(startAddress);
 
@@ -117,13 +144,36 @@ public class BankedMemory implements MemoryDevice {
         visibleBanks[bankIndex].position(bankAddress);
     }
 
-    @Override
     public @Unsigned byte readByte() {
         return visibleBanks[bankIndex].get(bankAddress);
     }
 
-    @Override
     public void writeByte(@Unsigned byte data) {
         visibleBanks[bankIndex].put(bankAddress, data);
+    }
+
+    @Override
+    public void onRead() {
+        dataLine.data(readByte());
+    }
+
+    @Override
+    public void onWrite() {             // TODO: block writes so it behaves like ROM
+        writeByte(dataLine.data());
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onDetach() {
+        this.dataLine = new OpenLine();
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
     }
 }

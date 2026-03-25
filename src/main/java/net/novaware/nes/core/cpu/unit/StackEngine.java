@@ -50,6 +50,7 @@ public class StackEngine implements Unit {
 
     private void increment() {
         int sp = stackPointer.getAsInt();
+        // TODO: maybe do a peek here before adding one
         stackPointer.setAsByte(sp + 1);
     }
 
@@ -64,6 +65,10 @@ public class StackEngine implements Unit {
 
     private int addressInt() {
         return stackSegment.getStartAsInt() + stackPointer.getAsInt();
+    }
+
+    void peek() {
+        mmu.specifyAnd(address()).readByte();
     }
 
     void push(DataRegister register) {
@@ -102,13 +107,14 @@ public class StackEngine implements Unit {
     }
 
     void pull(DataRegister register) {
+        peek(); // additional cycle to read current sp // TODO: maybe move to increment()
+
         @Unsigned byte data = pull();
         int dataVal = sint(data);
 
         register.set(data);
 
-        status.setZero(dataVal == 0)
-                .setNegative((dataVal & (1 << 7)) > 0);
+        status.maybeZeroOrNegative(dataVal);
     }
 
     void pull(AddressRegister register) {
@@ -129,6 +135,7 @@ public class StackEngine implements Unit {
     }
 
     private Status pullStatus0() {
+        peek();                    // additional cycle to read current sp // TODO: maybe move to increment()
         increment();
 
         @Unsigned byte data = mmu.specifyAnd(address())

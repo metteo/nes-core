@@ -1,5 +1,8 @@
 package net.novaware.nes.core.config;
 
+/**
+ * @see <a href="https://www.nesdev.org/wiki/Cycle_reference_chart">Cycle reference chart on nesdev.org</a>
+ */
 public enum VideoStandard {
 
     NTSC      (21_477_272L, 12, 4, 262),

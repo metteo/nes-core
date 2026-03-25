@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.unit
 
-
 import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
@@ -26,14 +25,14 @@ class StackEngineSpec extends Specification {
         engine.push(regs.a())
 
         then:
-        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12)
+        bus.access(ushort(0x01FD)).read().data() == ubyte(0x12)
         regs.sp().getAsInt() == 0xFC
     }
 
     def "should pull accumulator from the stack"() {
         given:
         regs.sp().setAsByte(0xFC)
-        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(value))
+        bus.access(ushort(0x01FD)).write().data(ubyte(value))
 
         when:
         engine.pull(regs.a())
@@ -61,7 +60,7 @@ class StackEngineSpec extends Specification {
         engine.pushStatus(true)
 
         then:
-        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0b0011_0100)
+        bus.access(ushort(0x01FD)).read().data() == ubyte(0b0011_0100)
         regs.sp().getAsInt() == 0xFC
     }
 
@@ -76,7 +75,7 @@ class StackEngineSpec extends Specification {
             .setOverflow(true)
             .setNegative(true)
 
-        bus.specifyThen(ushort(0x01FD)).writeByte(ubyte(0b0011_0100))
+        bus.access(ushort(0x01FD)).write().data(ubyte(0b0011_0100))
 
         Status s = regs.status().get() // we hold the reference to check break flag from the stack
 

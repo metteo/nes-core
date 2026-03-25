@@ -24,6 +24,7 @@ class ControlFlowSpec extends ControlUnitBaseSpec {
 
     def "should call a subroutine and return from it"() {
         given:
+        flow.prefetchAddress.setAsShort(0x1231)
         regs.pc().setAsShort(0x1234)
         extRegs.dor().configureMemory(bus, ushort(0x1278))
 
@@ -33,8 +34,8 @@ class ControlFlowSpec extends ControlUnitBaseSpec {
         then:
         regs.pc().getAsInt() == 0x1278
 
-        bus.specifyThen(ushort(0x01FC)).readByte() == ubyte(0x34) // ^
-        bus.specifyThen(ushort(0x01FD)).readByte() == ubyte(0x12) // |
+        bus.access(ushort(0x01FC)).read().data() == ubyte(0x33) // ^
+        bus.access(ushort(0x01FD)).read().data() == ubyte(0x12) // |
 
         and: "return"
         flow.returnFromCall()

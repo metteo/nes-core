@@ -1,6 +1,6 @@
 package net.novaware.nes.core.apu.register;
 
-import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
@@ -11,11 +11,12 @@ import java.util.List;
  * @see <a href="https://www.nesdev.org/wiki/APU_registers">APU Registers on nesdev.org</a>
  * @see <a href="https://www.nesdev.org/wiki/2A03">2A03 on nesdev.org</a>
  */
+@BoardScope
 public class ApuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("APUCC");
 
-    // FIXME: there registers are asymetrical, writes are accepted, reads cause open bus (mostly)
+    // FIXME: these registers are asymmetrical, writes are accepted, reads cause open bus
 
     // Pulse 1 Channel
     private ByteRegister sq1Vol = new ByteRegister("SQ1_VOL"); // 0x4000
@@ -27,10 +28,10 @@ public class ApuRegFile extends RegisterFile {
     private ByteRegister sq2Vol = new ByteRegister("SQ2_VOL");
     private ByteRegister sq2Sweep = new ByteRegister("SQ2_SWEEP");
     private ByteRegister sq2Lo = new ByteRegister("SQ2_LO");
-    private ByteRegister sq2Hi = new ByteRegister("SQ2_HI");
+    private ByteRegister sq2Hi = new ByteRegister("SQ2_HI"); // 0x4007
 
     // Triangle Channel
-    private ByteRegister triLinear = new ByteRegister("TRI_LINEAR");
+    private ByteRegister triLinear = new ByteRegister("TRI_LINEAR"); // 0x4008
     private ByteRegister triUnused = new ByteRegister("TRI_UNUSED");
     private ByteRegister triLo = new ByteRegister("TRI_LO");
     private ByteRegister triHi = new ByteRegister("TRI_HI");
@@ -39,21 +40,18 @@ public class ApuRegFile extends RegisterFile {
     private ByteRegister noiseVol = new ByteRegister("NOISE_VOL");
     private ByteRegister noiseUnused = new ByteRegister("NOISE_UNUSED");
     private ByteRegister noiseLo = new ByteRegister("NOISE_LO");
-    private ByteRegister noiseHi = new ByteRegister("NOISE_HI");
+    private ByteRegister noiseHi = new ByteRegister("NOISE_HI"); // 0x400F
 
-    // DMC Channel
-    private ByteRegister dmcFreq = new ByteRegister("DMC_FREQ");
+    // DMC Channel (APU DMA)
+    private ByteRegister dmcFreq = new ByteRegister("DMC_FREQ"); // 0x4010
     private ByteRegister dmcRaw = new ByteRegister("DMC_RAW");
     private ByteRegister dmcStart = new ByteRegister("DMC_START");
-    private ByteRegister dmcLength = new ByteRegister("DMC_LEN");
+    private ByteRegister dmcLength = new ByteRegister("DMC_LEN"); // 0x4013
 
-    private ByteRegister oamDma = new ByteRegister("OAMDMA"); // 0x4014 // FIXME: same instance as in PPU ? / !
-    private ByteRegister sndChn = new ByteRegister("SNDCHN"); // TODO: use dedicate status / control register
-    private ByteRegister joy1 = new ByteRegister("JOY1");
-    private ByteRegister joy2 = new ByteRegister("JOY2"); // 0x4017
+    //@Inject
+    public ApuRegFile(
 
-    @Inject
-    public ApuRegFile() {
+    ) {
         super("APU_REG");
 
         // TODO: inject with all the registers from module instead of creating them here
@@ -64,8 +62,7 @@ public class ApuRegFile extends RegisterFile {
             sq2Vol,     sq2Sweep,    sq2Lo,    sq2Hi,
             triLinear,  triUnused,   triLo,    triHi,
             noiseVol,   noiseUnused, noiseLo,  noiseHi,
-            dmcFreq,    dmcRaw,      dmcStart, dmcLength,
-            oamDma,     sndChn,      joy1,     joy2
+            dmcFreq,    dmcRaw,      dmcStart, dmcLength
         );
 
         addressRegisters = List.of();
@@ -77,9 +74,7 @@ public class ApuRegFile extends RegisterFile {
                 sq2Vol, sq2Sweep, sq2Lo, sq2Hi,
                 triLinear, triUnused, triLo, triHi,
                 noiseVol, noiseUnused, noiseLo, noiseHi,
-                dmcFreq, dmcRaw, dmcStart, dmcLength,
-                oamDma, sndChn, joy1, joy2
+                dmcFreq, dmcRaw, dmcStart, dmcLength
         };
     }
-
 }

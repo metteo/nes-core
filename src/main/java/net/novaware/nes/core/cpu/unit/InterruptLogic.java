@@ -103,21 +103,21 @@ public class InterruptLogic implements Unit {
      */
     public void hardwareReset() {
         int randomAddress = 0x0000;                        // Cycles
-        mmu.specifyAnd(ushort(randomAddress));             // 1
-        mmu.specifyAnd(ushort(randomAddress + 1));         // 2
+        mmu.specifyAnd(ushort(randomAddress)).readByte();  // 1
+        mmu.specifyAnd(ushort(randomAddress + 1)).readByte();// 2
 
         int sp = registers.sp().getAsInt();
 
         registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                        // 3
+        mmu.specifyAnd(ushort(sp)).readByte();             // 3
 
         sp -= 1;
         registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                        // 4
+        mmu.specifyAnd(ushort(sp)).readByte();             // 4
 
         sp -= 2;
         registers.sp().setAsByte(sp);
-        mmu.specifyAnd(ushort(sp));                        // 5
+        mmu.specifyAnd(ushort(sp)).readByte();             // 5
 
         registers.pc().set(fetchVector());                 // 6, 7
     }
@@ -139,8 +139,8 @@ public class InterruptLogic implements Unit {
 
     private void hardwareInterrupt() {
         int pcVal = registers.pc().getAsInt();             // Cycles
-        mmu.specifyAnd(ushort(pcVal));                     // 1
-        mmu.specifyAnd(ushort(pcVal + 1));                 // 2
+        mmu.specifyAnd(ushort(pcVal)).readByte();          // 1
+        mmu.specifyAnd(ushort(pcVal + 1)).readByte();      // 2
 
         performInterrupt();                                // 3 - 7
     }

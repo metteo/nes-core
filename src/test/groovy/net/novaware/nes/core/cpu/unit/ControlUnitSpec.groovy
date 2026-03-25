@@ -3,9 +3,8 @@ package net.novaware.nes.core.cpu.unit
 import net.novaware.nes.core.cpu.signal.Signal
 
 import static net.novaware.nes.core.cpu.instruction.Instruction.*
-import static net.novaware.nes.core.memory.RecordingBus.Op
-import static net.novaware.nes.core.memory.RecordingBus.OpType.ACCESS
-import static net.novaware.nes.core.memory.RecordingBus.OpType.READ
+import static net.novaware.nes.core.memory.BusOp.*
+import static net.novaware.nes.core.memory.RecordingDevice.Op
 
 // useful: bus.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {
@@ -18,7 +17,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         newControlUnit()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         expectRegs(
             a: 0,
             x: 0,
@@ -32,7 +31,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         given:
         ram(
             0xFFFC, 0x00,
-            0xFFFD, 0x80
+            0xFFFD, 0x01
         )
         def cu = newControlUnit()
         
@@ -41,9 +40,9 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.reset()
 
         then:
-        bus.cycles() == 7 + 1 // 7 reset, 1 first opcode fetch
+        rec.cycles() == 7 + 1 // 7 reset, 1 first opcode fetch
         expectRegs(
-            pc: 0x8001,
+            pc: 0x0101,
             sp: 0x01FD
         )
     }
@@ -62,7 +61,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
 
         regs pc: 0x0000, a: 0b0101_1001
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -71,24 +70,28 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == 4
+        rec.cycles() == 4
         expectRegs(
             a: 0b1111_1111,
             z: false,
             n: true
         )
 
-        bus.activity() == [
-            new Op(ACCESS, 0x0000, 0x00), // opcode
-            new Op(READ,   0x0000, 0x0D),
+        rec.activity() == [
+                new Op(ADDRESS_ACCESS, 0x0000, 0x00), // opcode
+                new Op(CONTROL_READ,   0x0000, 0x00),
+                new Op(DATA_READ,      0x0000, 0x0D),
 
-            new Op(ACCESS, 0x0001, 0x00), // absolute
-            new Op(READ,   0x0001, 0x54),
-            new Op(ACCESS, 0x0002, 0x00),
-            new Op(READ,   0x0002, 0x06),
+                new Op(ADDRESS_ACCESS, 0x0001, 0x00), // absolute lo
+                new Op(CONTROL_READ,   0x0001, 0x00),
+                new Op(DATA_READ,      0x0001, 0x54),
+                new Op(ADDRESS_ACCESS, 0x0002, 0x00), // absolute hi
+                new Op(CONTROL_READ,   0x0002, 0x00),
+                new Op(DATA_READ,      0x0002, 0x06),
 
-            new Op(ACCESS, 0x0654, 0x00), // operand
-            new Op(READ,   0x0654, 0xA6)
+                new Op(ADDRESS_ACCESS, 0x0654, 0x00), // operand
+                new Op(CONTROL_READ,   0x0654, 0x00),
+                new Op(DATA_READ,      0x0654, 0xA6)
 	    ]
     }
 
@@ -99,7 +102,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         ram 0x0000, OxEA
         regs pc: 0x0000
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -109,12 +112,15 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
 
         then:
         expectRegs pc: 0x0001 // nop is single byte instruction
-        bus.cycles() == 2
-        bus.activity() == [
-            new Op(ACCESS, 0x0000, 0x00), // opcode
-            new Op(READ,   0x0000, 0xEA),
+        rec.cycles() == 2
+        rec.activity() == [
+            new Op(ADDRESS_ACCESS, 0x0000, 0x00), // opcode
+            new Op(CONTROL_READ,   0x0000, 0x00),
+            new Op(DATA_READ,      0x0000, 0xEA),
 
-            new Op(ACCESS, 0x0001, 0x00), // required 2nd access, but no read
+            new Op(ADDRESS_ACCESS, 0x0001, 0x00), // required cycle
+            new Op(CONTROL_READ,   0x0001, 0x00),
+            new Op(DATA_READ,      0x0001, 0x00),
         ]
     }
 
@@ -129,7 +135,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
 
         regs pc: 0x0000, a: 0x0F
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -138,7 +144,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == 2
+        rec.cycles() == 2
         expectRegs(
             a: 0x0F,
             z: false,
@@ -161,7 +167,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             a: 0xF0
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -170,7 +176,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == 3
+        rec.cycles() == 3
         expectRegs(
             a: 0xF0,
             z: false,
@@ -190,7 +196,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             c: true
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -199,7 +205,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == 2
+        rec.cycles() == 2
         expectRegs(
             a: 0b00101011,
             z: false,
@@ -223,7 +229,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             c: false
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -232,7 +238,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == 5
+        rec.cycles() == 5
         expectRam 0x0005, 0b1110_0000
         expectRegs(
             z: false,
@@ -255,7 +261,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
             n: negative
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.fetchOpcode()
@@ -264,7 +270,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
         cu.execute()
 
         then:
-        bus.cycles() == cycles
+        rec.cycles() == cycles
         expectRegs(
             pc: targetPc
         )

@@ -11,8 +11,10 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PC;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
  * Subunit of Control Unit responsible for handling control flow instructions
@@ -21,6 +23,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 @BoardScope
 public class ControlFlow implements Unit {
 
+    @Used private final ShortRegister prefetchAddress;
     @Used private final ShortRegister programCounter;
     @Used private final DelegatingRegister decodedOperand;
     @Used private final CycleCounter cycleCounter;
@@ -28,11 +31,13 @@ public class ControlFlow implements Unit {
 
     @Inject
     public ControlFlow(
+            @CpuVar(PA) ShortRegister prefetchAddress,
             @CpuVar(PC) ShortRegister programCounter,
             @CpuVar(DO) DelegatingRegister decodedOperand,
             @CpuVar(CC) CycleCounter cycleCounter,
             StackEngine stackEngine
     ) {
+        this.prefetchAddress = prefetchAddress;
         this.programCounter = programCounter;
         this.decodedOperand = decodedOperand;
         this.cycleCounter = cycleCounter;
@@ -57,16 +62,23 @@ public class ControlFlow implements Unit {
     }
 
     public void call() {
-        // NOTE: not pc+2 here, because reading absolute address already did it?
-        stackEngine.push(programCounter);
+        stackEngine.peek(); // internal cycle
+
+        int returnAddress = prefetchAddress.getAsInt() + 2; // pc is already +3 at this point
+
+        stackEngine.push(ushort(returnAddress));
 
         programCounter.set(decodedOperand.getAddress());
     }
 
-    public void returnFromCall() {
-        stackEngine.pull(programCounter);
+    public void returnFromCall() {                         // Cycles
+                                                           // 1, 2 - opcode, ignored operand
+        stackEngine.pull(programCounter);                  // 3, 4 - pull PCL, PCH
 
-        // FIXME: why?
-        programCounter.setAsShort(programCounter.getAsInt());
+        int newPc = programCounter.getAsInt() + 1;
+        stackEngine.peek();                                // 5 - inc PC
+
+        programCounter.set(ushort(newPc));
+        cycleCounter.increment();                          // 6 - set PC // TODO: should be mmu.specify(newPc)
     }
 }

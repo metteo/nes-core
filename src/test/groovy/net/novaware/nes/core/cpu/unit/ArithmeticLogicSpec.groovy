@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.memory.RecordingBus
 import net.novaware.nes.core.register.DataRegister
 import net.novaware.nes.core.util.RegsAndRamBaseSpec
 import spock.lang.Subject
@@ -8,7 +7,7 @@ import spock.lang.Subject
 import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 
-class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
+class ArithmeticLogicSpec extends RegsAndRamBaseSpec {
 
     @Subject
     ArithmeticLogic alu = factory.newArithmeticLogic()
@@ -141,6 +140,8 @@ class ArithmeticLogicSpec extends RegsAndRamBaseSpec<RecordingBus> {
         0x80 | 0       | 0xFF || 0x7F     | false | false | 1     | 1  | "Signed: -128 + -1 = -129 (positive)"
         0x80 | 0       | 0x80 || 0x00     | false | true  | 1     | 1  | "Signed: -128 + -128 = -256 (zero)"
     }
+
+    // TODO: add test cases for Set Overflow (ADC, SBC)
 
     def "should subtract with borrow"() {
         given:

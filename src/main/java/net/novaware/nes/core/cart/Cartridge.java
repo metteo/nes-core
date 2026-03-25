@@ -22,9 +22,9 @@ public interface Cartridge {
 
     Config getConfig();
 
-    MemoryDevice getProgram();
+    MemoryDevice.ReadWrite getCpuBusDevice();
 
-    MemoryDevice getVideo();
+    MemoryDevice.ReadWrite getPpuBusDevice();
 
     static Cartridge of(NesFile nesFile) {
         return new CartridgeImpl(nesFile);

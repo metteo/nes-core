@@ -1,28 +1,34 @@
 package net.novaware.nes.core.cpu.inject;
 
+import dagger.Binds;
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.apu.memory.ApuMemDevice;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.memory.CpuBus;
-import net.novaware.nes.core.cpu.memory.CpuMemMap;
+import net.novaware.nes.core.dma.memory.DmaMemDevice;
+import net.novaware.nes.core.io.register.IoRegFile;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.memory.RecordingBus;
+import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
@@ -30,7 +36,28 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
-import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_SIZE;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_MIRROR_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_SIZE;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.RES_VECTOR;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_SIZE;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_START;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 @Module
@@ -39,26 +66,65 @@ public interface CpuMemModule {
     @Provides
     @BoardScope
     @CpuVar(RAM)
-    static MemoryDevice provideMemory() {
-        return new PhysicalMemory(CpuMemMap.RAM_SIZE, sint(CpuMemMap.RAM_START));
+    static MemoryDevice.ReadWrite provideMemory() {
+        return new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE);
     }
 
     @Provides
     @BoardScope
     @CpuVar(PPU)
-    static MemoryDevice providePpuRegs(PpuRegFile ppuRegFile) {
-        return new ByteRegisterMemory("PPU_REGS",
-                sint(CpuMemMap.PPU_REGISTERS_START),
-                ppuRegFile.getCpuRegisters());
+    static MemoryDevice.ReadWrite providePpuRegs(PpuRegFile ppuRegFile) {
+        return new ByteRegisterMemory(
+            "PPU_REGS",
+            PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
+            ppuRegFile.getCpuRegisters()
+        );
     }
 
     @Provides
     @BoardScope
-    @CpuVar(APU)
-    static MemoryDevice provideApuRegs(ApuRegFile apuRegFile) {
-        return new ByteRegisterMemory("APU_REGS",
-                sint(CpuMemMap.APU_IO_REGISTERS_START),
-                apuRegFile.getCpuRegisters());
+    @CpuVar(ACR)
+    static MemoryDevice.WriteOnly provideApuRegs(ApuRegFile apuRegFile) {
+        return new ByteRegisterMemory(
+            "APU_REGS",
+            APU_REGISTERS_START, APU_REGISTERS_END,
+            apuRegFile.getCpuRegisters()
+        );
+    }
+
+    @Binds
+    @BoardScope
+    @CpuVar(DMA)
+    MemoryDevice.WriteOnly bindOamDma(DmaMemDevice dmaMemDevice);
+
+    @Binds
+    @BoardScope
+    @CpuVar(CpuVarName.APU)
+    MemoryDevice.ReadWrite bindApuStatus(ApuMemDevice apuMemDevice);
+
+    @Provides
+    @BoardScope
+    @CpuVar(JOY)
+    static MemoryDevice.ReadWrite provideJoy(IoRegFile joyRegFile) {
+        return new ByteRegisterMemory( // FIXME: replace with a proper device separating reads and writes
+                "JOY_REGS",
+                IO_REGISTERS_START, IO_REGISTERS_END,
+                new ByteRegister[]{ joyRegFile.getJoy1Data(), joyRegFile.getJoy2Data() }
+        );
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(CpuVarName.ATM)
+    static MemoryDevice.ReadWrite provideApuTestModeRegs() { // TODO: change into a proper device
+        return new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE);
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(CpuVarName.TMR)
+    static MemoryDevice.ReadWrite provideTimerRegs() { // TODO: change into proper device
+        return new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE);
     }
 
     @Provides
@@ -66,13 +132,16 @@ public interface CpuMemModule {
     @CpuVar(BUS)
     static MemoryBus provideMemoryBus(
         CoreConfig config,
-        Lazy<RecordingBus> recordingBus,
+        Lazy<RecordingDevice> recordingDevice, // TODO: get rid of this. Rec Expansion should be attached in test code
         Lazy<CpuBus> cpuBus
     ) {
-        return switch(config.getCpuBusType()) {
-            case RECORDING -> recordingBus.get();
-            case STANDARD -> cpuBus.get();
-        };
+        CpuBus theBus = cpuBus.get();
+
+        if (config.getRecordCpuBus()) {
+            theBus.attachExpansion(recordingDevice.get());
+        }
+
+        return theBus;
     }
 
     @Provides
@@ -80,7 +149,7 @@ public interface CpuMemModule {
     @CpuVar(ZP)
     static SegmentRegister provideZeroPage() {
         SegmentRegister zeroPage = new SegmentRegister(ZP.name());
-        zeroPage.setStart(CpuMemMap.RAM_START);
+        zeroPage.setStart(RAM_START);
         zeroPage.setLimit(ushort(0x00FF)); // TODO: move to memory map?
 
         return zeroPage;
@@ -91,8 +160,8 @@ public interface CpuMemModule {
     @CpuVar(SS)
     static SegmentRegister provideStackSegment() {
         SegmentRegister stackSegment = new SegmentRegister(SS.name());
-        stackSegment.setStart(CpuMemMap.STACK_SEGMENT_START);
-        stackSegment.setLimit(CpuMemMap.STACK_SEGMENT_END);
+        stackSegment.setStart(STACK_SEGMENT_START);
+        stackSegment.setLimit(STACK_SEGMENT_END);
 
         return stackSegment;
     }
@@ -102,8 +171,8 @@ public interface CpuMemModule {
     @CpuVar(OS)
     static SegmentRegister provideOamSegment() {
         SegmentRegister oamSegment = new SegmentRegister(OS.name());
-        oamSegment.setStart(CpuMemMap.OAM_SEGMENT_START);
-        oamSegment.setLimit(CpuMemMap.OAM_SEGMENT_END);
+        oamSegment.setStart(OAM_SEGMENT_START);
+        oamSegment.setLimit(OAM_SEGMENT_END);
 
         return oamSegment;
     }
@@ -143,7 +212,7 @@ public interface CpuMemModule {
     @CpuVar(NMI)
     static ShortRegister provideNmiVector() {
         ShortRegister vector = new ShortRegister(NMI.doc());
-        vector.set(CpuMemMap.NMI_VECTOR);
+        vector.set(NMI_VECTOR);
 
         return vector;
     }
@@ -153,7 +222,7 @@ public interface CpuMemModule {
     @CpuVar(RES)
     static ShortRegister provideResVector() {
         ShortRegister vector = new ShortRegister(RES.doc());
-        vector.set(CpuMemMap.RES_VECTOR);
+        vector.set(RES_VECTOR);
 
         return vector;
     }
@@ -163,7 +232,7 @@ public interface CpuMemModule {
     @CpuVar(IRQ)
     static ShortRegister provideIrqVector() {
         ShortRegister vector = new ShortRegister(IRQ.doc());
-        vector.set(CpuMemMap.IRQ_VECTOR);
+        vector.set(IRQ_VECTOR);
 
         return vector;
     }

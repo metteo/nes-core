@@ -14,7 +14,7 @@ public abstract class ImmutableCoreConfig implements CoreConfig {
 
     @AutoValue.Builder
     public static abstract class Builder {
-        public abstract Builder setCpuBusType(MemoryBus.Type type);
+        public abstract Builder setRecordCpuBus(boolean record);
 
         public abstract ImmutableCoreConfig build();
     }

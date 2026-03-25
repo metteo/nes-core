@@ -21,6 +21,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MD;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SP;
@@ -56,6 +57,13 @@ public interface CpuRegModule {
     @CpuVar(MD)
     static ByteRegister provideMemoryData() {
         return new ByteRegister("MDR");
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(PA)
+    static ShortRegister providePrefetchAddress() {
+        return new ShortRegister(PA.name());
     }
 
     /** @see Instruction#opcode() */

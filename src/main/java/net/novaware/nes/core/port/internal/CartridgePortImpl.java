@@ -41,7 +41,7 @@ public class CartridgePortImpl implements CartridgePort {
         // TODO: check if cartridge config compatible with the board config
 
 
-        cpuBus.attach(cartridge.getProgram());
+        cpuBus.attachCartridge(cartridge.getCpuBusDevice());
         //TODO: ppuBus.attach(cartridge.getVideo());
     }
 

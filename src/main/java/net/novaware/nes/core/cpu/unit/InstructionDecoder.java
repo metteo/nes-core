@@ -73,17 +73,6 @@ public class InstructionDecoder implements Unit {
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
 
-        // TODO: Hide log generation behind a flag. sout is sloooow
-//        System.out.println(" " + instruction.group().mnemonic() + "                            "
-//                + " A:" + Hex.s(registers.a().get()).toUpperCase()
-//                + " X:" + Hex.s(registers.x().get()).toUpperCase()
-//                + " Y:" + Hex.s(registers.y().get()).toUpperCase()
-//                + " P:" + Hex.s(registers.status().get().get()).toUpperCase()
-//                + " SP:" + Hex.s(registers.sp().get()).toUpperCase()
-//                + " PPU:       "
-//                + " CYC:" + cycleCounter.getValue()
-//        );
-
         // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
         decodedInstruction.setAsByte(instruction.group().ordinal());
 
@@ -92,29 +81,55 @@ public class InstructionDecoder implements Unit {
 
         switch (addressingMode) {
             case IMPLIED -> decodeImplied();
-            case IMMEDIATE -> decodeImmediate(operand);
             case ACCUMULATOR -> decodeAccumulator();
-            case ZERO_PAGE, ABSOLUTE -> decodeAbsolute(operand); // 0x00NN or 0xNNNN
-            case ABSOLUTE_INDIRECT -> decodeAbsoluteIndirect(operand); // only jump
+
+            case IMMEDIATE -> decodeImmediate(operand);
+
             case RELATIVE -> decodeRelative(operand); // only branches
-            case INDEXED_ZERO_PAGE_X -> decodeIndexedZeroPage(registers.x(), operand);
-            case INDEXED_ZERO_PAGE_Y -> decodeIndexedZeroPage(registers.y(), operand);
-            case INDEXED_ABSOLUTE_X -> decodeIndexedAbsolute(registers.x(), operand);
-            case INDEXED_ABSOLUTE_Y -> decodeIndexedAbsolute(registers.y(), operand);
-            case PRE_INDEXED_INDIRECT_X -> decodePreIndexedIndirectX(operand);
-            case POST_INDEXED_INDIRECT_Y -> decodePostIndexedIndirectY(operand);
+
+            case ZERO_PAGE -> decodeAbsolute(operand);
+
+            case ZERO_PAGE_X -> decodeIndexedZeroPage(registers.x(), operand);
+            case ZERO_PAGE_Y -> decodeIndexedZeroPage(registers.y(), operand);
+
+            case ZERO_PAGE_X_INDIRECT -> decodePreIndexedIndirectX(operand);
+
+            case ZERO_PAGE_INDIRECT_Y_R -> decodePostIndexedIndirectY(operand);
+            case ZERO_PAGE_INDIRECT_Y_W -> decodePostIndexedIndirectYWrite(operand);
+
+            case ABSOLUTE -> decodeAbsolute(operand); // 0x00NN or 0xNNNN
+
+            case ABSOLUTE_X_R -> decodeIndexedAbsolute(registers.x(), operand);
+            case ABSOLUTE_X_W -> decodeIndexedAbsoluteWrite(registers.x(), operand);
+
+            case ABSOLUTE_Y_R -> decodeIndexedAbsolute(registers.y(), operand);
+            case ABSOLUTE_Y_W -> decodeIndexedAbsoluteWrite(registers.y(), operand);
+
+            case ABSOLUTE_INDIRECT -> decodeAbsoluteIndirect(operand); // only jump
+
             case UNKNOWN -> throw new UnsupportedOperationException("Unsupported opcode: " + Hex.s(opcode));
         }
     }
 
     private void decodePostIndexedIndirectY(@Unsigned short operand) {
-        int address = sint(addressGen.fetchAddress(operand));
+        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
         int result = address + yVal;
 
-        boolean pageChange = (operand & 0xFF) == 0xFF;
-        cycleCounter.maybeIncrement(pageChange);
+        boolean pageChange = (address & 0xFF00) != (result & 0xFF00);
+        cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
+
+        decodedOperand.configureMemory(memoryBus, ushort(result));
+    }
+
+    private void decodePostIndexedIndirectYWrite(@Unsigned short operand) {
+        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+        int yVal = registers.y().getAsInt();
+
+        int result = address + yVal;
+
+        cycleCounter.increment(); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -123,10 +138,10 @@ public class InstructionDecoder implements Unit {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
+        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
         int indirectAddress = address + xVal;
 
-        // FIXME: it is supposed to be without carry for this and fetchAddress?
-        @Unsigned short result = addressGen.fetchAddress(ushort(indirectAddress & 0xFF));
+        @Unsigned short result = addressGen.buggyFetchAddress(ushort(indirectAddress & 0xFF)); // stay within zero page
         decodedOperand.configureMemory(memoryBus, result);
     }
 
@@ -141,9 +156,20 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
+    private void decodeIndexedAbsoluteWrite(DataRegister indexRegister, @Unsigned short operand) {
+        int indexVal = indexRegister.getAsInt();
+
+        int result = indexVal + sint(operand);
+
+        cycleCounter.increment(); // FIXME: always increment on write, change into proper bus op
+
+        decodedOperand.configureMemory(memoryBus, ushort(result));
+    }
+
     private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
+        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
         int result = (indexVal + sint(operand)) & 0xFF;
 
         decodedOperand.configureMemory(memoryBus, ushort(result));

@@ -25,14 +25,14 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
 
         Status stackStatus = registers.status().get()
 
-        bus.cycleCounter().mark()
+        rec.cycleCounter().mark()
 
         when:
         interrupts.forceBreak()
         interrupts.sample()
 
         then:
-        bus.cycleCounter().diff() == 7 - 2 // opcode & ignored operand done in CU
+        rec.cycleCounter().diff() == 7 - 2 // opcode & ignored operand done in CU
 
         expectRegs(
             pc: 0xABCD,
@@ -86,7 +86,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
 
         Status stackStatus = registers.status().get()
 
-        bus.cycleCounter().mark()
+        rec.cycleCounter().mark()
 
         when:
         cpu.nmi(LOW)
@@ -94,7 +94,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         cpu.nmi(HIGH)
 
         then:
-        bus.cycleCounter().diff() == 7
+        rec.cycleCounter().diff() == 7
 
         expectRegs(
             pc: 0xABCD,
@@ -148,7 +148,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
 
         Status stackStatus = registers.status().get()
 
-        bus.cycleCounter().mark()
+        rec.cycleCounter().mark()
 
         when:
         cpu.irq(LOW)
@@ -156,7 +156,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         cpu.irq(HIGH)
 
         then:
-        bus.cycleCounter().diff() == 7
+        rec.cycleCounter().diff() == 7
 
         expectRegs(
             pc: 0xABCD,
@@ -203,7 +203,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
             0xFFFF, 0xAB,
         )
 
-        bus.cycleCounter().mark()
+        rec.cycleCounter().mark()
 
         when:
         cpu.irq(LOW)
@@ -211,7 +211,7 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         cpu.irq(HIGH)
 
         then:
-        bus.cycleCounter().diff() == 0
+        rec.cycleCounter().diff() == 0
 
         expectRegs(
             pc: 0x1234,

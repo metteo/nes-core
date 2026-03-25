@@ -10,7 +10,7 @@ public interface ApuRegModule {
 
     @Provides
     @BoardScope
-    static ApuRegFile provideApuRegFile() { // TODO: use @Inject instead
-        return new ApuRegFile();
+    static ApuRegFile provideApuRegFile() {
+        return new ApuRegFile(); // TODO: use @Inject instead
     }
 }

@@ -1,5 +1,8 @@
 package net.novaware.nes.core.register;
 
+import net.novaware.nes.core.memory.BusOp;
+import net.novaware.nes.core.memory.ControlBus;
+import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -168,23 +171,53 @@ public class DelegatingRegister extends Register {
     static class EmptyMemoryBus implements MemoryBus {
 
         @Override
-        public void specify(@Unsigned short address) {
+        public BusOp currentOp() {
             throw new IllegalStateException("Empty memory bus called");
         }
 
         @Override
-        public @Unsigned byte readByte() {
+        public ControlBus.Line access(@Unsigned short address) {
             throw new IllegalStateException("Empty memory bus called");
         }
 
         @Override
-        public void writeByte(@Unsigned byte data) {
+        public DataBus.Read read() {
             throw new IllegalStateException("Empty memory bus called");
         }
 
         @Override
-        public void attach(MemoryDevice memoryDevice) {
+        public DataBus.Write write() {
             throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public @Unsigned byte data() {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public void data(@Unsigned byte data) {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
+        public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void detachCartridge() {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+            throw new UnsupportedOperationException("not implemented!");
+        }
+
+        @Override
+        public void detachExpansion() {
+            throw new UnsupportedOperationException("not implemented!");
         }
     }
 
@@ -192,12 +225,12 @@ public class DelegatingRegister extends Register {
 
         @Override
         public @Unsigned byte getData() {
-            return memoryBus.specifyThen(address).readByte();
+            return memoryBus.access(address).read().data();
         }
 
         @Override
         public void setData(@Unsigned byte data) {
-            memoryBus.specifyThen(address).writeByte(data);
+            memoryBus.access(address).write().data(data);
         }
 
         @Override

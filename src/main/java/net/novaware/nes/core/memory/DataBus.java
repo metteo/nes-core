@@ -10,15 +10,20 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
  */
 public interface DataBus {
 
-    /**
-     * Read byte from memory under address specified using {@link AddressBus#specify(short)}
-     *
-     * @return byte of data
-     */
-    @Unsigned byte readByte();
+    interface Mode {}
 
-    /**
-     * Write byte into memory under address specified using {@link AddressBus#specify(short)}
-     */
-    void writeByte(final @Unsigned byte data);
+    interface Read extends Mode {
+        @Unsigned byte data();
+    }
+
+    interface Write extends Mode {
+        void data(@Unsigned byte data);
+    }
+
+    interface Line extends Read, Write {}
+
+    interface Device {
+        void onAttach(DataBus.Line dataLine);
+        void onDetach();
+    }
 }

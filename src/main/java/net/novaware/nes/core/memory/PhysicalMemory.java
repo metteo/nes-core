@@ -1,50 +1,102 @@
 package net.novaware.nes.core.memory;
 
+import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public class PhysicalMemory implements MemoryDevice { // TODO: Add nameable
+public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nameable {
+
+    private final String name;
+
+    private final @Unsigned short startAddress;
+    private final @Unsigned short endAddress;
 
     private final UByteBuffer buffer;
-    private final int offset;
+    private final int mask;
 
     private int position;
 
-    public PhysicalMemory(int size, int offset) { // TODO: move offset as first param (or second after name)
-        buffer = UByteBuffer.allocate(size);
-        this.offset = offset;
-    }
+    private DataBus.Line dataLine = new OpenLine();
 
-    public PhysicalMemory(int size) {
-        this(size, 0);
-    }
+    public PhysicalMemory(
+            String name,
+            @Unsigned short startAddress,
+            @Unsigned short endAddress,
+            UByteBuffer buffer
+    ) {
+        this.name = name;
+        this.startAddress = startAddress;
+        this.endAddress = endAddress;
 
-    public PhysicalMemory(UByteBuffer buffer, int offset) {
         this.buffer = buffer;
-        this.offset = offset;
+        this.mask = buffer.capacity() - 1;
     }
 
-    public PhysicalMemory(UByteBuffer buffer) {
-        this(buffer, 0);
+    public PhysicalMemory(
+        String name,
+        @Unsigned short startAddress,
+        @Unsigned short endAddress,
+        int size
+    ) {
+        this(name, startAddress, endAddress, UByteBuffer.allocate(size));
     }
-
 
     @Override
-    public void specify(@Unsigned short address) {
-        position = sint(address) - offset;
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public @Unsigned short getStartAddress() {
+        return startAddress;
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() {
+        return endAddress;
+    }
+
+    public @Unsigned byte readByte() {
+        return buffer.get(position); // get() advances position, we want to keep it
+    }
+
+    public void writeByte(@Unsigned byte data) {
+        buffer.put(position, data);
+    }
+
+    @Override
+    public void onAccess(@Unsigned short address) {
+        // TODO: check how validation of address within range will affect performance (always vs assert)
+        position = (sint(address) - sint(startAddress)) & mask;
 
         buffer.position(position);
     }
 
     @Override
-    public @Unsigned byte readByte() {
-        return buffer.get(position); // get() advances position, we want to keep it
+    public void onRead() {
+        dataLine.data(readByte());
     }
 
     @Override
-    public void writeByte(@Unsigned byte data) {
-        buffer.put(position, data);
+    public void onWrite() {
+        writeByte(dataLine.data());
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onDetach() {
+        this.dataLine = new OpenLine();
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
     }
 }

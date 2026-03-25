@@ -18,13 +18,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         regs a: 0x28
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x28)
     }
@@ -33,18 +33,18 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         given:
         def cu = newControlUnit()
 
-        insRegs.currentInstruction.set(Instruction.Ox0E.opcode())
+        insRegs.currentInstruction.set(Ox0E.opcode())
         insRegs.currentOperand.setAsShort(0x1234)
 
         ram 0x1234, 0x42
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x42)
     }
@@ -61,21 +61,21 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
             (0x2345 + x + y), 0x13
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == cycles
+        rec.cycles() == cycles
         insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x13)
 
         where:
         instr | x    | y    | cycles
-        Ox1E  | 0xBC | 0    | 1 // oops
-        Ox1E  | 0x01 | 0    | 0
-        Ox19  | 0    | 0xCD | 1 // oops
+        Ox1E  | 0xBC | 0    | 1 // write oops
+        Ox1E  | 0x01 | 0    | 1 // write oops
+        Ox19  | 0    | 0xCD | 1 // page cross oops
         Ox19  | 0    | 0x02 | 0
     }
 
@@ -86,13 +86,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         insRegs.currentInstruction.set(Ox09.opcode())
         insRegs.currentOperand.setAsShort(0x78)
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x78)
     }
@@ -112,13 +112,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
             0x0401, 0x90  // dd
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 2
+        rec.cycles() == 2
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO_LOCATION.ordinal()
         insRegs.decodedOperand.getAddress() == ushort(result)
 
@@ -137,22 +137,23 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         regs x: 0x04
         ram(
-            0x0024, 0x78, // Lo
-            0x0025, 0x56, // Hi
-            0x5678, 0x42  // Target
+            0x0024, 0x12, // Lo
+            0x0025, 0x60, // Hi
+            0x6012, 0x42  // Target
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 2
+        rec.cycles() == 3
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
+    // TODO: this doesn't correctly test wrapping. it should be 0x00FF, 0x0000
     def "should decode pre indexed indirect x mode with zero page wrap"() {
         given:
         def cu = newControlUnit()
@@ -162,18 +163,18 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         regs x: 0x01
         ram(
-            0x0000, 0x78, // (0xFF + 0x01) & 0xFF == 0x00
-            0x0001, 0x56,
-            0x5678, 0x99
+            0x0000, 0x12, // (0xFF + 0x01) & 0xFF == 0x00
+            0x0001, 0x60,
+            0x6012, 0x99
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 2
+        rec.cycles() == 3
         insRegs.decodedOperand.getData() == ubyte(0x99)
     }
 
@@ -184,27 +185,28 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         insRegs.currentInstruction.set(Instruction.Ox11.opcode())
         insRegs.currentOperand.setAsShort(address)
 
-        regs y: 0x02
+        regs y: y
         ram(
-            address        , 0x80,
-            address+1      , 0x40,
-            (0x4080 + 0x02), 0x77
+            address        , 0xFD,
+            (address+1)%256, 0x60,
+            (0x60FD + y), 0x77
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == cycles
+        rec.cycles() == cycles
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x77)
 
         where:
-        address | cycles
-        0x00FE  | 2
-        0x00FF  | 3
+        address | y | cycles | comment
+        0x00FE  | 1 | 2      | "no wrap"
+        0x00FF  | 2 | 2      | "zero page wrap"
+        0x00AB  | 3 | 3      | "mem page wrap"
     }
 
     def "should decode zero page mode"() {
@@ -216,13 +218,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         ram 0x0042, 0x13
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x13)
     }
@@ -239,13 +241,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
             ((0x0080 + x + y) & 0xFF), 0x55
         )
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 1 // memory read without adding index register
         insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
         insRegs.decodedOperand.getData() == ubyte(0x55)
 
@@ -263,13 +265,13 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         insRegs.currentInstruction.set(OxD0.opcode())
         insRegs.currentOperand.setAsShort(operand)
 
-        bus.record()
+        rec.record()
 
         when:
         cu.decode()
 
         then:
-        bus.cycles() == 0
+        rec.cycles() == 0
         insRegs.decodedInstruction.getAsInt() == BRANCH_IF_ZERO_CLR.ordinal()
         insRegs.decodedOperand.getAddress() == ushort(0x0025 + operand)
 

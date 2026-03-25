@@ -1,21 +1,10 @@
 package net.novaware.nes.core.memory;
 
-import org.checkerframework.checker.signedness.qual.Unsigned;
+public interface MemoryBus extends AddressBus.Line, ControlBus.Line, DataBus.Line {
 
-public interface MemoryBus extends AddressBus<DataBus>, DataBus {
+    void attachCartridge(MemoryDevice.ReadWrite cartridge);
+    void detachCartridge();
 
-    enum Type {
-        STANDARD,
-        RECORDING
-    }
-
-    @Override
-    default MemoryBus specifyThen(@Unsigned short address) {
-        specify(address);
-
-        return this;
-    }
-
-    void attach(MemoryDevice memoryDevice);
-
+    void attachExpansion(MemoryDevice.ReadWrite expansion);
+    void detachExpansion();
 }

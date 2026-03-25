@@ -126,8 +126,6 @@ public class ControlUnit implements Unit {
         @Unsigned byte operandLo = mmu.specifyAnd(operandLoAddress).readByte();
 
         currentOperand.low(operandLo);
-
-        //System.out.print(Hex.s(operandLo).toUpperCase() + " ");
     }
 
     public void fetchOperandHi() {
@@ -135,8 +133,6 @@ public class ControlUnit implements Unit {
         @Unsigned byte operandHi = mmu.specifyAnd(operandHiAddress).readByte();
 
         currentOperand.high(operandHi);
-
-        //System.out.print(Hex.s(operandHi).toUpperCase() + " ");
     }
 
     public void fetchOperand() {
@@ -144,17 +140,13 @@ public class ControlUnit implements Unit {
 
         switch (size) {
             case 1 -> {
-                mmu.specifyAnd(registers.pc().get()); // no pc increment, data ignored
+                mmu.specifyAnd(registers.pc().get()).readByte(); // no pc increment, data ignored
                 currentOperand.lowAsByte(0x00);
                 currentOperand.highAsByte(0x00);
-
-                //System.out.print("  " + " " + "  " + " ");
             }
             case 2 -> {
                 fetchOperandLo();
                 currentOperand.highAsByte(0x00);
-
-                //System.out.print("  " + " ");
             }
             case 3 -> {
                 fetchOperandLo();

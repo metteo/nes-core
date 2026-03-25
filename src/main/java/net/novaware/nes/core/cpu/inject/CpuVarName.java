@@ -22,6 +22,7 @@ public enum CpuVarName {
     MA ("",  "memoryAddress",      "Memory Address"),
     MD ("",  "memoryData",         "Memory Data"),
 
+    PA ("",  "prefetchAddress",    "Prefetch Address"),
     CI ("",  "currentInstruction", "Current Instruction"),
     CO ("",  "currentOperand",     "Current Operand"),
 
@@ -38,12 +39,16 @@ public enum CpuVarName {
     DS ("", "dataSegment",  "Data Segment"),
 
     // endregion
-    // region Memory Areas
+    // region Memory Devices
 
-    RAM ("",  "?", "RAM"),
-    PPU ("", "", "PPU"),
-    APU ("", "", "APU"),
-    CART ("", "", "Cartridge"),
+    RAM ("", "", "RAM"),
+    PPU ("", "", "Picture Processing Unit"),
+    ACR ("", "", "APU Channel Registers"),
+    DMA ("", "", "Direct Memory Access"),
+    APU ("", "", "Audio Processing Unit"),
+    JOY ("", "", "Joypad Input-Output"),
+    ATM ("", "", "APU Test Mode"),
+    TMR ("", "", "Timer Unit"),
 
     // endregion
 
@@ -57,7 +62,7 @@ public enum CpuVarName {
     S0H ("", "sprite0Hit", "Sprite 0 Hit"), // TODO: consider ppu agnostic name
     RES ("", "reset", "Reset"),
     RDY ("", "ready", "Ready"),
-    SOV ("SO", "setOverflow", "Set Overflow"),
+    SOV ("SV", "setOverflow", "Set Overflow"),
 
     // endregion
     ;
