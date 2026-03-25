@@ -2,6 +2,15 @@ package net.novaware.nes.core.cpu.instruction;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Stream;
+
+import static java.util.Comparator.comparing;
+import static java.util.Map.Entry.comparingByKey;
+import static java.util.stream.Collectors.groupingBy;
+
 import static net.novaware.nes.core.cpu.instruction.AddressingMode.*;
 import static net.novaware.nes.core.cpu.instruction.InstructionGroup.*;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -316,5 +325,38 @@ public enum Instruction {
      */
     public int size() {
         return size;
+    }
+
+    static void main() {
+        Stream.of(values())
+                .collect(groupingBy(Instruction::group))
+                .entrySet().stream()
+                .sorted(comparingByKey())
+                .flatMap(group -> {
+                    String groupName = group.getKey().name().replace("_", " ");
+
+                    List<String> groupValues = group.getValue().stream()
+                            .sorted(comparing(Instruction::addressingMode))
+                            .map(Instruction::toMnemonicWithOperand)
+                            .map(l -> "\t" + l)
+                            .toList();
+
+                    List<String> all = new ArrayList<>();
+                    all.add(groupName);
+                    all.addAll(groupValues);
+
+                    return all.stream();
+                })
+                .map(l -> l.replace("SBYTE", "$NN"))
+                .map(l -> l.replace("BYTE", "$NN"))
+                .map(l -> l.replace("WORD", "$NNNN"))
+                .forEach(System.out::println);
+    }
+
+    private static String toMnemonicWithOperand(Instruction i) {
+        String assembly = i.group().mnemonic() + " " + i.addressingMode().format();
+        String description = i.addressingMode().name().toLowerCase(Locale.US).replace("_", " ");
+
+        return "\"" + assembly.trim() + "\" - " + description;
     }
 }

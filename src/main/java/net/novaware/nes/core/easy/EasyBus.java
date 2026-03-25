@@ -98,6 +98,11 @@ public class EasyBus implements MemoryBus {
     }
 
     @Override
+    public @Unsigned byte peek(@Unsigned short address) {
+        return 0; // TODO: implement
+    }
+
+    @Override
     public DataBus.Read read() {
         currentOp = BusOp.CONTROL_READ;
         return this;

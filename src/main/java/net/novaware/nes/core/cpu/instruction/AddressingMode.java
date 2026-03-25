@@ -9,44 +9,44 @@ public enum AddressingMode {
 
     // region Implied / Implicit
 
-    IMPLIED                  ("",  AddressingCategory.IMPLIED, NONE, 0), // also IMPLICIT
-    ACCUMULATOR              ("A", AddressingCategory.IMPLIED, NONE, 0),
+    IMPLIED     ("",  AddressingCategory.IMPLIED,       NONE, 0), // also IMPLICIT
+    ACCUMULATOR ("A", AddressingCategory.IMPLIED,       NONE, 0),
 
     // endregion
     // region Immediate
 
-    IMMEDIATE                ("#BYTE", AddressingCategory.IMMEDIATE, NONE, 1),
+    IMMEDIATE   ("#BYTE", AddressingCategory.IMMEDIATE, NONE, 1),
 
     // endregion
     // region Relative
 
-    RELATIVE                 ("SBYTE", AddressingCategory.RELATIVE,  NONE, 1),
+    RELATIVE    ("SBYTE", AddressingCategory.RELATIVE,  NONE, 1),
 
     // endregion
     // region Zero Page
 
-    ZERO_PAGE                ("BYTE",      DIRECT,   NONE,    1),
+    ZERO_PAGE                ("BYTE",     DIRECT,   NONE,    1),
 
-    ZERO_PAGE_X              ("BYTE, X",   INDEXED,  NONE,    1),
-    ZERO_PAGE_Y              ("BYTE, Y",   INDEXED,  NONE,    1),
+    ZERO_PAGE_X              ("BYTE,X",   INDEXED,  NONE,    1),
+    ZERO_PAGE_Y              ("BYTE,Y",   INDEXED,  NONE,    1),
 
-    ZERO_PAGE_X_INDIRECT     ("(BYTE, X)", INDIRECT, INDEXED, 1),
+    ZERO_PAGE_X_INDIRECT     ("(BYTE,X)", INDIRECT, INDEXED, 1),
 
-    ZERO_PAGE_INDIRECT_Y_R   ("(BYTE), Y", INDIRECT, INDEXED, 1), // page cross oops
-    ZERO_PAGE_INDIRECT_Y_W   ("(BYTE), Y", INDIRECT, INDEXED, 1), // write oops
+    ZERO_PAGE_INDIRECT_Y_R   ("(BYTE),Y", INDIRECT, INDEXED, 1), // page cross oops
+    ZERO_PAGE_INDIRECT_Y_W   ("(BYTE),Y", INDIRECT, INDEXED, 1), // write oops
 
     // endregion
     // region Absolute
 
-    ABSOLUTE          ("WORD",    DIRECT,   NONE, 2),
+    ABSOLUTE          ("WORD",   DIRECT,   NONE, 2),
 
-    ABSOLUTE_X_R      ("WORD, X", INDEXED,  NONE, 2), // page cross oops
-    ABSOLUTE_X_W      ("WORD, X", INDEXED,  NONE, 2), // write oops
+    ABSOLUTE_X_R      ("WORD,X", INDEXED,  NONE, 2), // page cross oops
+    ABSOLUTE_X_W      ("WORD,X", INDEXED,  NONE, 2), // write oops
 
-    ABSOLUTE_Y_R      ("WORD, Y", INDEXED,  NONE, 2), // page cross oops
-    ABSOLUTE_Y_W      ("WORD, Y", INDEXED,  NONE, 2), // write oops
+    ABSOLUTE_Y_R      ("WORD,Y", INDEXED,  NONE, 2), // page cross oops
+    ABSOLUTE_Y_W      ("WORD,Y", INDEXED,  NONE, 2), // write oops
 
-    ABSOLUTE_INDIRECT ("(WORD)",  INDIRECT, NONE, 2),
+    ABSOLUTE_INDIRECT ("(WORD)", INDIRECT, NONE, 2),
 
     // endregion
 
@@ -60,15 +60,35 @@ public enum AddressingMode {
         this.size = size;
     }
 
-    private String format;
-    private AddressingCategory primary;
-    private AddressingCategory secondary;
+    private final String format;
+    private final AddressingCategory primary;
+    private final AddressingCategory secondary;
+    private final int size;
+
+    /**
+     * Format of the operand
+     * Uses following for encoding data / address:
+     * <ul>
+     *     <li>BYTE - 8 bit unsigned</li>
+     *     <li>SBYTE - 8 bit signed</li>
+     *     <li>WORD - 16 bit unsigned</li>
+     * </ul>
+     */
+    public String format() {
+        return format;
+    }
+
+    public AddressingCategory primary() {
+        return primary;
+    }
+
+    public AddressingCategory secondary() {
+        return secondary;
+    }
 
     /**
      * Number of bytes the operand takes up
      */
-    private final int size;
-
     public int size() {
         return size;
     }

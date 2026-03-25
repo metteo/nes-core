@@ -28,6 +28,11 @@ class TestBus implements MemoryBus {
         device.onAttach(dataLine)
     }
 
+    @Override
+    byte peek(@Unsigned short address) {
+        return read(address)
+    }
+
     int read(int address) {
         device.onAccess(ushort(address))
         device.onRead()

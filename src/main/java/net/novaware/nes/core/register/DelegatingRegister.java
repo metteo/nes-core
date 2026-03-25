@@ -176,6 +176,11 @@ public class DelegatingRegister extends Register {
         }
 
         @Override
+        public @Unsigned byte peek(@Unsigned short address) {
+            throw new IllegalStateException("Empty memory bus called");
+        }
+
+        @Override
         public ControlBus.Line access(@Unsigned short address) {
             throw new IllegalStateException("Empty memory bus called");
         }

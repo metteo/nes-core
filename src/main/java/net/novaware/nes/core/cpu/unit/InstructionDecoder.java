@@ -85,25 +85,25 @@ public class InstructionDecoder implements Unit {
 
             case IMMEDIATE -> decodeImmediate(operand);
 
-            case RELATIVE -> decodeRelative(operand); // only branches
+            case RELATIVE -> decodeRelative(operand);
 
-            case ZERO_PAGE -> decodeAbsolute(operand);
+            case ZERO_PAGE -> decodeZeroPage(operand);
 
-            case ZERO_PAGE_X -> decodeIndexedZeroPage(registers.x(), operand);
-            case ZERO_PAGE_Y -> decodeIndexedZeroPage(registers.y(), operand);
+            case ZERO_PAGE_X -> decodeZeroPageIndexed(registers.x(), operand);
+            case ZERO_PAGE_Y -> decodeZeroPageIndexed(registers.y(), operand);
 
-            case ZERO_PAGE_X_INDIRECT -> decodePreIndexedIndirectX(operand);
+            case ZERO_PAGE_X_INDIRECT -> decodeZeroPageIndexed_X_Indirect(operand);
 
-            case ZERO_PAGE_INDIRECT_Y_R -> decodePostIndexedIndirectY(operand);
-            case ZERO_PAGE_INDIRECT_Y_W -> decodePostIndexedIndirectYWrite(operand);
+            case ZERO_PAGE_INDIRECT_Y_R -> decodeZeroPageIndexed_Y_IndirectRead(operand);
+            case ZERO_PAGE_INDIRECT_Y_W -> decodeZeroPageIndexed_Y_IndirectWrite(operand);
 
-            case ABSOLUTE -> decodeAbsolute(operand); // 0x00NN or 0xNNNN
+            case ABSOLUTE -> decodeAbsolute(operand);
 
-            case ABSOLUTE_X_R -> decodeIndexedAbsolute(registers.x(), operand);
-            case ABSOLUTE_X_W -> decodeIndexedAbsoluteWrite(registers.x(), operand);
+            case ABSOLUTE_X_R -> decodeAbsoluteIndexedRead(registers.x(), operand);
+            case ABSOLUTE_X_W -> decodeAbsoluteIndexedWrite(registers.x(), operand);
 
-            case ABSOLUTE_Y_R -> decodeIndexedAbsolute(registers.y(), operand);
-            case ABSOLUTE_Y_W -> decodeIndexedAbsoluteWrite(registers.y(), operand);
+            case ABSOLUTE_Y_R -> decodeAbsoluteIndexedRead(registers.y(), operand);
+            case ABSOLUTE_Y_W -> decodeAbsoluteIndexedWrite(registers.y(), operand);
 
             case ABSOLUTE_INDIRECT -> decodeAbsoluteIndirect(operand); // only jump
 
@@ -111,7 +111,7 @@ public class InstructionDecoder implements Unit {
         }
     }
 
-    private void decodePostIndexedIndirectY(@Unsigned short operand) {
+    private void decodeZeroPageIndexed_Y_IndirectRead(@Unsigned short operand) {
         int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
@@ -123,7 +123,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodePostIndexedIndirectYWrite(@Unsigned short operand) {
+    private void decodeZeroPageIndexed_Y_IndirectWrite(@Unsigned short operand) {
         int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
@@ -134,7 +134,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodePreIndexedIndirectX(@Unsigned short operand) {
+    private void decodeZeroPageIndexed_X_Indirect(@Unsigned short operand) {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
@@ -145,7 +145,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, result);
     }
 
-    private void decodeIndexedAbsolute(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedRead(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         int result = indexVal + sint(operand);
@@ -156,7 +156,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodeIndexedAbsoluteWrite(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedWrite(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         int result = indexVal + sint(operand);
@@ -166,7 +166,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeZeroPageIndexed(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
@@ -189,6 +189,10 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeAbsolute(@Unsigned short operand) {
+        decodedOperand.configureMemory(memoryBus, operand);
+    }
+
+    private void decodeZeroPage(@Unsigned short operand) {
         decodedOperand.configureMemory(memoryBus, operand);
     }
 

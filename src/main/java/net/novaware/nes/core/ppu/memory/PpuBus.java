@@ -47,6 +47,11 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
+    public @Unsigned byte peek(@Unsigned short address) {
+        return 0; // TODO: implement
+    }
+
+    @Override
     public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
 
     }
