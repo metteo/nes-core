@@ -48,10 +48,6 @@ public class LoadStore implements Unit {
     void store(DataRegister register) {
         @Unsigned byte data = register.get();
 
-        // FIXME: it should be a bus read of uncorrected address
-        cycleCounter.maybeIncrement(decodedOperand.isSTAIndexed() && !decodedOperand.isPageCrossed());
-        decodedOperand.setSTAIndexed(false);
-
         decodedOperand.setData(data);
     }
 }

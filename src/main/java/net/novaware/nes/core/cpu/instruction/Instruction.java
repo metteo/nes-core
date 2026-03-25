@@ -27,16 +27,16 @@ public enum Instruction {
     // region Row 1
 
     Ox10(BRANCH_IF_NEGATIVE_CLR, RELATIVE,               0x10, 2),
-    Ox11(BITWISE_OR,             ZERO_PAGE_INDIRECT_Y,   0x11, 2),
+    Ox11(BITWISE_OR,             ZERO_PAGE_INDIRECT_Y_R, 0x11, 2),
 
     Ox15(BITWISE_OR,             ZERO_PAGE_X,            0x15, 2),
     Ox16(SHIFT_LEFT,             ZERO_PAGE_X,            0x16, 2),
 
     Ox18(CLR_CARRY,              IMPLIED,                0x18, 1),
-    Ox19(BITWISE_OR,             ABSOLUTE_Y,             0x19, 3),
+    Ox19(BITWISE_OR,             ABSOLUTE_Y_R,           0x19, 3),
 
-    Ox1D(BITWISE_OR,             ABSOLUTE_X,             0x1D, 3),
-    Ox1E(SHIFT_LEFT,             ABSOLUTE_X,             0x1E, 3),
+    Ox1D(BITWISE_OR,             ABSOLUTE_X_R,           0x1D, 3),
+    Ox1E(SHIFT_LEFT,             ABSOLUTE_X_W,           0x1E, 3),
 
     // endregion
     // region Row 2
@@ -60,16 +60,16 @@ public enum Instruction {
     // region Row 3
 
     Ox30(BRANCH_IF_NEGATIVE_SET, RELATIVE,               0x30, 2),
-    Ox31(BITWISE_AND,            ZERO_PAGE_INDIRECT_Y,   0x31, 2),
+    Ox31(BITWISE_AND,            ZERO_PAGE_INDIRECT_Y_R, 0x31, 2),
 
     Ox35(BITWISE_AND,            ZERO_PAGE_X,            0x35, 2),
     Ox36(ROTATE_LEFT,            ZERO_PAGE_X,            0x36, 2),
 
     Ox38(SET_CARRY,              IMPLIED,                0x38, 1),
-    Ox39(BITWISE_AND,            ABSOLUTE_Y,             0x39, 3),
+    Ox39(BITWISE_AND,            ABSOLUTE_Y_R,           0x39, 3),
 
-    Ox3D(BITWISE_AND,            ABSOLUTE_X,             0x3D, 3),
-    Ox3E(ROTATE_LEFT,            ABSOLUTE_X,             0x3E, 3),
+    Ox3D(BITWISE_AND,            ABSOLUTE_X_R,           0x3D, 3),
+    Ox3E(ROTATE_LEFT,            ABSOLUTE_X_W,           0x3E, 3),
 
     // endregion
     // region Row 4
@@ -92,16 +92,16 @@ public enum Instruction {
     // region Row 5
 
     Ox50(BRANCH_IF_OVERFLOW_CLR, RELATIVE,               0x50, 2),
-    Ox51(BITWISE_XOR,            ZERO_PAGE_INDIRECT_Y,   0x51, 2),
+    Ox51(BITWISE_XOR,            ZERO_PAGE_INDIRECT_Y_R, 0x51, 2),
 
     Ox55(BITWISE_XOR,            ZERO_PAGE_X,            0x55, 2),
     Ox56(SHIFT_RIGHT,            ZERO_PAGE_X,            0x56, 2),
 
     Ox58(CLR_INTERRUPT_DISABLE,  IMPLIED,                0x58, 1),
-    Ox59(BITWISE_XOR,            ABSOLUTE_Y,             0x59, 3),
+    Ox59(BITWISE_XOR,            ABSOLUTE_Y_R,           0x59, 3),
 
-    Ox5D(BITWISE_XOR,            ABSOLUTE_X,             0x5D, 3),
-    Ox5E(SHIFT_RIGHT,            ABSOLUTE_X,             0x5E, 3),
+    Ox5D(BITWISE_XOR,            ABSOLUTE_X_R,           0x5D, 3),
+    Ox5E(SHIFT_RIGHT,            ABSOLUTE_X_W,           0x5E, 3),
 
     // endregion
     // region Row 6
@@ -124,16 +124,16 @@ public enum Instruction {
     // region Row 7
 
     Ox70(BRANCH_IF_OVERFLOW_SET, RELATIVE,               0x70, 2),
-    Ox71(ADD_WITH_CARRY,         ZERO_PAGE_INDIRECT_Y,   0x71, 2),
+    Ox71(ADD_WITH_CARRY,         ZERO_PAGE_INDIRECT_Y_R, 0x71, 2),
 
     Ox75(ADD_WITH_CARRY,         ZERO_PAGE_X,            0x75, 2),
     Ox76(ROTATE_RIGHT,           ZERO_PAGE_X,            0x76, 2),
 
     Ox78(SET_INTERRUPT_DISABLE,  IMPLIED,                0x78, 1),
-    Ox79(ADD_WITH_CARRY,         ABSOLUTE_Y,             0x79, 3),
+    Ox79(ADD_WITH_CARRY,         ABSOLUTE_Y_R,           0x79, 3),
 
-    Ox7D(ADD_WITH_CARRY,         ABSOLUTE_X,             0x7D, 3),
-    Ox7E(ROTATE_RIGHT,           ABSOLUTE_X,             0x7E, 3),
+    Ox7D(ADD_WITH_CARRY,         ABSOLUTE_X_R,           0x7D, 3),
+    Ox7E(ROTATE_RIGHT,           ABSOLUTE_X_W,           0x7E, 3),
 
     // endregion
     // region Row 8
@@ -191,19 +191,19 @@ public enum Instruction {
     // region Row B
 
     OxB0(BRANCH_IF_CARRY_SET,    RELATIVE,               0xB0, 2),
-    OxB1(LOAD_A_WITH_MEMORY,     ZERO_PAGE_INDIRECT_Y,   0xB1, 2),
+    OxB1(LOAD_A_WITH_MEMORY,     ZERO_PAGE_INDIRECT_Y_R, 0xB1, 2),
 
     OxB4(LOAD_Y_WITH_MEMORY,     ZERO_PAGE_X,            0xB4, 2),
     OxB5(LOAD_A_WITH_MEMORY,     ZERO_PAGE_X,            0xB5, 2),
     OxB6(LOAD_X_WITH_MEMORY,     ZERO_PAGE_Y,            0xB6, 2),
 
     OxB8(CLR_OVERFLOW,           IMPLIED,                0xB8, 1),
-    OxB9(LOAD_A_WITH_MEMORY,     ABSOLUTE_Y,             0xB9, 3),
+    OxB9(LOAD_A_WITH_MEMORY,     ABSOLUTE_Y_R,           0xB9, 3),
     OxBA(TRANSFER_SP_TO_X,       IMPLIED,                0xBA, 1),
 
-    OxBC(LOAD_Y_WITH_MEMORY,     ABSOLUTE_X,             0xBC, 3),
-    OxBD(LOAD_A_WITH_MEMORY,     ABSOLUTE_X,             0xBD, 3),
-    OxBE(LOAD_X_WITH_MEMORY,     ABSOLUTE_Y,             0xBE, 3),
+    OxBC(LOAD_Y_WITH_MEMORY,     ABSOLUTE_X_R,           0xBC, 3),
+    OxBD(LOAD_A_WITH_MEMORY,     ABSOLUTE_X_R,           0xBD, 3),
+    OxBE(LOAD_X_WITH_MEMORY,     ABSOLUTE_Y_R,           0xBE, 3),
 
     // endregion
     // region Row C
@@ -227,18 +227,18 @@ public enum Instruction {
     // region Row D
 
     OxD0(BRANCH_IF_ZERO_CLR,     RELATIVE,               0xD0, 2),
-    OxD1(COMPARE_A_WITH_MEMORY,  ZERO_PAGE_INDIRECT_Y,   0xD1, 2),
+    OxD1(COMPARE_A_WITH_MEMORY,  ZERO_PAGE_INDIRECT_Y_R, 0xD1, 2),
 
     OxD5(COMPARE_A_WITH_MEMORY,  ZERO_PAGE_X,            0xD5, 2),
     OxD6(DECREMENT_MEMORY,       ZERO_PAGE_X,            0xD6, 2),
 
     OxD8(CLR_DECIMAL,            IMPLIED,                0xD8, 1),
-    OxD9(COMPARE_A_WITH_MEMORY,  ABSOLUTE_Y,             0xD9, 3),
+    OxD9(COMPARE_A_WITH_MEMORY,  ABSOLUTE_Y_R,           0xD9, 3),
 
-    OxDB(DEC_MEM_CMP_A,          ABSOLUTE_Y,             0xDB, 3), // FIXME: illegal
+    OxDB(DEC_MEM_CMP_A,          ABSOLUTE_Y_R,           0xDB, 3), // FIXME: illegal
 
-    OxDD(COMPARE_A_WITH_MEMORY,  ABSOLUTE_X,             0xDD, 3),
-    OxDE(DECREMENT_MEMORY,       ABSOLUTE_X,             0xDE, 3),
+    OxDD(COMPARE_A_WITH_MEMORY,  ABSOLUTE_X_R,           0xDD, 3),
+    OxDE(DECREMENT_MEMORY,       ABSOLUTE_X_W,           0xDE, 3),
 
     // endregion
     // region Row E
@@ -262,16 +262,16 @@ public enum Instruction {
     // region Row F
 
     OxF0(BRANCH_IF_ZERO_SET,     RELATIVE,               0xF0, 2),
-    OxF1(SUBTRACT_WITH_BORROW,   ZERO_PAGE_INDIRECT_Y,   0xF1, 2),
+    OxF1(SUBTRACT_WITH_BORROW,   ZERO_PAGE_INDIRECT_Y_R, 0xF1, 2),
 
     OxF5(SUBTRACT_WITH_BORROW,   ZERO_PAGE_X,            0xF5, 2),
     OxF6(INCREMENT_MEMORY,       ZERO_PAGE_X,            0xF6, 2),
 
     OxF8(SET_DECIMAL,            IMPLIED,                0xF8, 1),
-    OxF9(SUBTRACT_WITH_BORROW,   ABSOLUTE_Y,             0xF9, 3),
+    OxF9(SUBTRACT_WITH_BORROW,   ABSOLUTE_Y_R,           0xF9, 3),
 
-    OxFD(SUBTRACT_WITH_BORROW,   ABSOLUTE_X,             0xFD, 3),
-    OxFE(INCREMENT_MEMORY,       ABSOLUTE_X,             0xFE, 3),
+    OxFD(SUBTRACT_WITH_BORROW,   ABSOLUTE_X_R,           0xFD, 3),
+    OxFE(INCREMENT_MEMORY,       ABSOLUTE_X_W,           0xFE, 3),
 
     // endregion
 

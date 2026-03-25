@@ -73,9 +73,9 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         where:
         instr | x    | y    | cycles
-        Ox1E  | 0xBC | 0    | 1 // oops
-        Ox1E  | 0x01 | 0    | 0
-        Ox19  | 0    | 0xCD | 1 // oops
+        Ox1E  | 0xBC | 0    | 1 // write oops
+        Ox1E  | 0x01 | 0    | 1 // write oops
+        Ox19  | 0    | 0xCD | 1 // page cross oops
         Ox19  | 0    | 0x02 | 0
     }
 

@@ -21,10 +21,6 @@ public class DelegatingRegister extends Register {
     private final ByteRegisterDelegate byteRegisterDelegate = new ByteRegisterDelegate();
     private final MemoryDelegate memoryDelegate = new MemoryDelegate();
 
-    private boolean indexed; // FIXME: for STA INDEXED Y OP cycles (always 6), figure out another way to do this
-    private boolean rmwAbsX;
-    private boolean pageCrossed; // FIXME: possibly change into address that will be used for bus operation?
-
     private @Unsigned byte data;
     private @Unsigned short address;
 
@@ -82,31 +78,6 @@ public class DelegatingRegister extends Register {
         this.memoryBus = memoryBus;
         this.address = address;
         this.delegate = memoryDelegate;
-    }
-
-    public void setSTAIndexed(boolean indexed) {
-        this.indexed = indexed;
-    }
-
-    public boolean isSTAIndexed() {
-        return indexed;
-    }
-
-    public boolean isRmwAbsX() {
-        return rmwAbsX;
-    }
-
-    public DelegatingRegister setRmwAbsX(boolean rmwAbsX) {
-        this.rmwAbsX = rmwAbsX;
-        return this;
-    }
-
-    public void setPageCrossed(boolean pageCrossed) {
-        this.pageCrossed = pageCrossed;
-    }
-
-    public boolean isPageCrossed() {
-        return pageCrossed;
     }
 
     public @Unsigned byte getData() {

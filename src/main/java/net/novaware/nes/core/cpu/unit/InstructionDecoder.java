@@ -5,7 +5,6 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
-import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -25,16 +24,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
-import static net.novaware.nes.core.cpu.instruction.AddressingMode.ABSOLUTE_X;
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox91;
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox99;
-import static net.novaware.nes.core.cpu.instruction.Instruction.Ox9D;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.DECREMENT_MEMORY;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.INCREMENT_MEMORY;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.ROTATE_LEFT;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.ROTATE_RIGHT;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.SHIFT_LEFT;
-import static net.novaware.nes.core.cpu.instruction.InstructionGroup.SHIFT_RIGHT;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -90,10 +79,6 @@ public class InstructionDecoder implements Unit {
         AddressingMode addressingMode = instruction.addressingMode();
         @Unsigned short operand = currentOperand.get();
 
-        decodedOperand.setSTAIndexed(false);
-        decodedOperand.setRmwAbsX(false);
-        decodedOperand.setPageCrossed(false);
-
         switch (addressingMode) {
             case IMPLIED -> decodeImplied();
             case ACCUMULATOR -> decodeAccumulator();
@@ -109,41 +94,21 @@ public class InstructionDecoder implements Unit {
 
             case ZERO_PAGE_X_INDIRECT -> decodePreIndexedIndirectX(operand);
 
-            case ZERO_PAGE_INDIRECT_Y, ZERO_PAGE_INDIRECT_Y_R -> decodePostIndexedIndirectY(operand);
-            case ZERO_PAGE_INDIRECT_Y_W -> decodePostIndexedIndirectY(operand);
+            case ZERO_PAGE_INDIRECT_Y_R -> decodePostIndexedIndirectY(operand);
+            case ZERO_PAGE_INDIRECT_Y_W -> decodePostIndexedIndirectYWrite(operand);
 
             case ABSOLUTE -> decodeAbsolute(operand); // 0x00NN or 0xNNNN
 
-            case ABSOLUTE_X, ABSOLUTE_X_R -> decodeIndexedAbsolute(registers.x(), operand);
-            case ABSOLUTE_X_W -> decodeIndexedAbsolute(registers.x(), operand);
+            case ABSOLUTE_X_R -> decodeIndexedAbsolute(registers.x(), operand);
+            case ABSOLUTE_X_W -> decodeIndexedAbsoluteWrite(registers.x(), operand);
 
-            case ABSOLUTE_Y, ABSOLUTE_Y_R -> decodeIndexedAbsolute(registers.y(), operand);
-            case ABSOLUTE_Y_W -> decodeIndexedAbsolute(registers.y(), operand);
+            case ABSOLUTE_Y_R -> decodeIndexedAbsolute(registers.y(), operand);
+            case ABSOLUTE_Y_W -> decodeIndexedAbsoluteWrite(registers.y(), operand);
 
             case ABSOLUTE_INDIRECT -> decodeAbsoluteIndirect(operand); // only jump
 
             case UNKNOWN -> throw new UnsupportedOperationException("Unsupported opcode: " + Hex.s(opcode));
         }
-
-        // FIXME: absolutely disgusting hack
-        // FIXME: create separate addressing modes for R, W, RMW abs x mode and update instruction table
-        // FIXME: same for abs y and ind y
-        decodedOperand.setSTAIndexed(
-                instruction == Ox99 || // STA abs, y
-                instruction == Ox9D || // STA abs, x
-                instruction == Ox91    // STA ind, y
-        );
-
-        InstructionGroup group = instruction.group();
-
-        decodedOperand.setRmwAbsX(addressingMode == ABSOLUTE_X && (
-            group == INCREMENT_MEMORY ||
-            group == DECREMENT_MEMORY ||
-            group == SHIFT_LEFT ||
-            group == SHIFT_RIGHT ||
-            group == ROTATE_LEFT ||
-            group == ROTATE_RIGHT
-        ));
     }
 
     private void decodePostIndexedIndirectY(@Unsigned short operand) {
@@ -154,7 +119,17 @@ public class InstructionDecoder implements Unit {
 
         boolean pageChange = (address & 0xFF00) != (result & 0xFF00);
         cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
-        decodedOperand.setPageCrossed(pageChange);
+
+        decodedOperand.configureMemory(memoryBus, ushort(result));
+    }
+
+    private void decodePostIndexedIndirectYWrite(@Unsigned short operand) {
+        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+        int yVal = registers.y().getAsInt();
+
+        int result = address + yVal;
+
+        cycleCounter.increment(); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -177,7 +152,16 @@ public class InstructionDecoder implements Unit {
 
         boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
         cycleCounter.maybeIncrement(pageChange);
-        decodedOperand.setPageCrossed(pageChange);
+
+        decodedOperand.configureMemory(memoryBus, ushort(result));
+    }
+
+    private void decodeIndexedAbsoluteWrite(DataRegister indexRegister, @Unsigned short operand) {
+        int indexVal = indexRegister.getAsInt();
+
+        int result = indexVal + sint(operand);
+
+        cycleCounter.increment(); // FIXME: always increment on write, change into proper bus op
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }

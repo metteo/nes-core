@@ -32,22 +32,19 @@ public enum AddressingMode {
 
     ZERO_PAGE_X_INDIRECT     ("(BYTE, X)", INDIRECT, INDEXED, 1),
 
-    ZERO_PAGE_INDIRECT_Y     ("(BYTE), Y", INDIRECT, INDEXED, 1),
-    ZERO_PAGE_INDIRECT_Y_R   ("(BYTE), Y", INDIRECT, INDEXED, 1),
-    ZERO_PAGE_INDIRECT_Y_W   ("(BYTE), Y", INDIRECT, INDEXED, 1),
+    ZERO_PAGE_INDIRECT_Y_R   ("(BYTE), Y", INDIRECT, INDEXED, 1), // page cross oops
+    ZERO_PAGE_INDIRECT_Y_W   ("(BYTE), Y", INDIRECT, INDEXED, 1), // write oops
 
     // endregion
     // region Absolute
 
     ABSOLUTE          ("WORD",    DIRECT,   NONE, 2),
 
-    ABSOLUTE_X        ("WORD, X", INDEXED,  NONE, 2), // TODO: maybe remove?
-    ABSOLUTE_X_R      ("WORD, X", INDEXED,  NONE, 2),
-    ABSOLUTE_X_W      ("WORD, X", INDEXED,  NONE, 2),
+    ABSOLUTE_X_R      ("WORD, X", INDEXED,  NONE, 2), // page cross oops
+    ABSOLUTE_X_W      ("WORD, X", INDEXED,  NONE, 2), // write oops
 
-    ABSOLUTE_Y        ("WORD, Y", INDEXED,  NONE, 2), // TODO: maybe remove
-    ABSOLUTE_Y_R      ("WORD, Y", INDEXED,  NONE, 2),
-    ABSOLUTE_Y_W      ("WORD, Y", INDEXED,  NONE, 2),
+    ABSOLUTE_Y_R      ("WORD, Y", INDEXED,  NONE, 2), // page cross oops
+    ABSOLUTE_Y_W      ("WORD, Y", INDEXED,  NONE, 2), // write oops
 
     ABSOLUTE_INDIRECT ("(WORD)",  INDIRECT, NONE, 2),
 
