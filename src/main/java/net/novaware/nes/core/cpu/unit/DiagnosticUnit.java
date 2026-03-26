@@ -3,10 +3,9 @@ package net.novaware.nes.core.cpu.unit;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
-import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
-import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -29,14 +28,14 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
  */
 public class DiagnosticUnit implements Unit, Runnable {
 
-    private static final boolean logging = true; // TODO: parametrize, but keep as compile time constant somehow
+    private static final boolean logging = !true; // TODO: parametrize, but keep as compile time constant somehow
 
     @Used
     private final ShortRegister prefetchAddress;
 
     @Used private final ByteRegister currentInstruction;
     private final ShortRegister currentOperand;
-    private final ByteRegister decodedInstruction;
+    private final InstructionRegister decodedInstruction;
     private final DelegatingRegister decodedOperand;
     private final CpuRegFile registers;
     private final CycleCounter cycleCounter;
@@ -48,7 +47,7 @@ public class DiagnosticUnit implements Unit, Runnable {
         @CpuVar(CI) ByteRegister currentInstruction,
         @CpuVar(CO) ShortRegister currentOperand,
 
-        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
         CpuRegFile registers,
@@ -78,14 +77,14 @@ public class DiagnosticUnit implements Unit, Runnable {
 
         log.append(Hex.s(currentInstruction.get())).append(" ");
 
-        Instruction instruction = InstructionRegistry.fromOpcode(currentInstruction.get());
-        AddressingMode addressing = instruction.addressingMode();
+        InstructionGroup instruction = decodedInstruction.getGroup();
+        AddressingMode addressing = decodedInstruction.getAddressing();
 
         // decodedOperand configured for memory breaks cycle accuracy
         @Unsigned byte operandData = cpuBus.peek(currentOperand.get());
 
-        String absolutePreview = instruction.group() != InstructionGroup.JUMP_TO_LOCATION
-                && instruction.group() != InstructionGroup.JUMP_TO_SUBROUTINE
+        String absolutePreview = instruction != InstructionGroup.JUMP_TO_LOCATION
+                && instruction != InstructionGroup.JUMP_TO_SUBROUTINE
                 ? " = " + Hex.s(operandData)
                 : "     ";
 
@@ -97,7 +96,7 @@ public class DiagnosticUnit implements Unit, Runnable {
 
         log.append("  ");
 
-        log.append(instruction.group().mnemonic()).append(" ");
+        log.append(instruction.mnemonic()).append(" ");
 
         switch (addressing) {
             case IMMEDIATE ->
@@ -110,31 +109,38 @@ public class DiagnosticUnit implements Unit, Runnable {
 
             case ZERO_PAGE ->
                     log.append(addressing.format().replace("BYTE", "$" + Hex.s(currentOperand.low())))
-                            .append(" = ").append(Hex.s(operandData)).append("                    ");
+                            .append(" = ").append(Hex.s(operandData))
+                            .append("                    ");
 
             case ABSOLUTE ->
                     log.append(addressing.format().replace("WORD", "$" + Hex.s(currentOperand.get())))
-                            .append(absolutePreview).append("                  ");
+                            .append(absolutePreview)
+                            .append("                  ");
 
             case ZERO_PAGE_X_INDIRECT ->
                     log.append(addressing.format().replace("BYTE", "$" + Hex.s(currentOperand.low())))
-                            .append(" @ NN = NNNN = ").append("NN").append("    ");
+                            .append(" @ NN = NNNN = ").append("NN")
+                            .append("    ");
 
             case ZERO_PAGE_INDIRECT_Y_R, ZERO_PAGE_INDIRECT_Y_W ->
                     log.append(addressing.format().replace("BYTE", "$" + Hex.s(currentOperand.low())))
-                            .append(" = NNNN @ NNNN = ").append("NN").append("  ");
+                            .append(" = NNNN @ NNNN = ").append("NN")
+                            .append("  ");
 
             case ZERO_PAGE_X, ZERO_PAGE_Y ->
                     log.append(addressing.format().replace("BYTE", "$" + Hex.s(currentOperand.low())))
-                            .append(" @ NN = ").append("NN").append("             ");
+                            .append(" @ NN = ").append("NN")
+                            .append("             ");
 
             case ABSOLUTE_INDIRECT ->
                     log.append(addressing.format().replace("WORD", "$" + Hex.s(currentOperand.get())))
-                            .append(" = ").append(Hex.s(decodedOperand.getAddress())).append("              ");
+                            .append(" = ").append(Hex.s(decodedOperand.getAddress()))
+                            .append("              ");
 
-            case ABSOLUTE_X_R, ABSOLUTE_X_W, ABSOLUTE_Y_R, ABSOLUTE_Y_W
-                    -> log.append(addressing.format().replace("WORD", "$" + Hex.s(currentOperand.get())))
-                    .append(" @ NNNN = NN").append("         ");
+            case ABSOLUTE_X_R, ABSOLUTE_X_W, ABSOLUTE_Y_R, ABSOLUTE_Y_W ->
+                    log.append(addressing.format().replace("WORD", "$" + Hex.s(currentOperand.get())))
+                            .append(" @ NNNN = NN")
+                            .append("         ");
 
             case IMPLIED     -> log.append("                            ");
             case ACCUMULATOR -> log.append("A                           ");

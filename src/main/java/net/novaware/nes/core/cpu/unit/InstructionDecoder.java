@@ -7,6 +7,7 @@ import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -35,7 +36,7 @@ public class InstructionDecoder implements Unit {
 
     @Used private final ByteRegister currentInstruction;
     @Used private final ShortRegister currentOperand;
-    @Used private final ByteRegister decodedInstruction;
+    @Used private final InstructionRegister decodedInstruction;
     @Used private final DelegatingRegister decodedOperand;
 
     @Used private final CycleCounter cycleCounter;
@@ -49,7 +50,7 @@ public class InstructionDecoder implements Unit {
         @CpuVar(CI) ByteRegister currentInstruction,
         @CpuVar(CO) ShortRegister currentOperand,
 
-        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
         @CpuVar(CC) CycleCounter cycleCounter,
@@ -72,9 +73,7 @@ public class InstructionDecoder implements Unit {
         @Unsigned byte opcode = currentInstruction.get();
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
-
-        // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
-        decodedInstruction.setAsByte(instruction.group().ordinal());
+        decodedInstruction.set(instruction);
 
         AddressingMode addressingMode = instruction.addressingMode();
         @Unsigned short operand = currentOperand.get();

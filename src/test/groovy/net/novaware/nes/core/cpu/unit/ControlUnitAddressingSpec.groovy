@@ -25,7 +25,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 0
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.SHIFT_LEFT
         insRegs.decodedOperand.getData() == ubyte(0x28)
     }
 
@@ -45,7 +45,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 0
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.SHIFT_LEFT.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.SHIFT_LEFT
         insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
@@ -68,7 +68,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == cycles
-        insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
+        insRegs.decodedInstruction.getGroup() == instr.group()
         insRegs.decodedOperand.getData() == ubyte(0x13)
 
         where:
@@ -93,7 +93,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 0
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.BITWISE_OR
         insRegs.decodedOperand.getData() == ubyte(0x78)
     }
 
@@ -119,7 +119,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 2
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.JUMP_TO_LOCATION.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.JUMP_TO_LOCATION
         insRegs.decodedOperand.getAddress() == ushort(result)
 
         where:
@@ -149,7 +149,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 3
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.BITWISE_OR
         insRegs.decodedOperand.getData() == ubyte(0x42)
     }
 
@@ -199,7 +199,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == cycles
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.BITWISE_OR
         insRegs.decodedOperand.getData() == ubyte(0x77)
 
         where:
@@ -225,7 +225,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 0
-        insRegs.decodedInstruction.getAsInt() == InstructionGroup.BITWISE_OR.ordinal()
+        insRegs.decodedInstruction.getGroup() == InstructionGroup.BITWISE_OR
         insRegs.decodedOperand.getData() == ubyte(0x13)
     }
 
@@ -248,7 +248,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 1 // memory read without adding index register
-        insRegs.decodedInstruction.getAsInt() == instr.group().ordinal()
+        insRegs.decodedInstruction.getGroup() == instr.group()
         insRegs.decodedOperand.getData() == ubyte(0x55)
 
         where:
@@ -272,7 +272,7 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
 
         then:
         rec.cycles() == 0
-        insRegs.decodedInstruction.getAsInt() == BRANCH_IF_ZERO_CLR.ordinal()
+        insRegs.decodedInstruction.getGroup() == BRANCH_IF_ZERO_CLR
         insRegs.decodedOperand.getAddress() == ushort(0x0025 + operand)
 
         where:

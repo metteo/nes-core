@@ -6,6 +6,7 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -33,7 +34,7 @@ public class ControlUnit implements Unit {
 
     @Used private final ByteRegister currentInstruction;
     @Used private final ShortRegister currentOperand;
-    @Used private final ByteRegister decodedInstruction;
+    @Used private final InstructionRegister decodedInstruction;
     @Used private final DelegatingRegister decodedOperand;
 
     @Used private final CycleCounter cycleCounter;
@@ -56,7 +57,7 @@ public class ControlUnit implements Unit {
         @CpuVar(CI) ByteRegister currentInstruction,
         @CpuVar(CO) ShortRegister currentOperand,
 
-        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
         @CpuVar(CC) CycleCounter cycleCounter,
@@ -136,7 +137,7 @@ public class ControlUnit implements Unit {
     }
 
     public void fetchOperand() {
-        int size = InstructionRegistry.fromOpcode(currentInstruction.get()).size();
+        int size = InstructionRegistry.fromOpcode(currentInstruction.get()).size(); // TODO: consider dedicated instruction size index
 
         switch (size) {
             case 1 -> {
@@ -162,9 +163,7 @@ public class ControlUnit implements Unit {
 
     // TODO: test that correct units are called
     public void execute() {
-        int instrGroup = decodedInstruction.getAsInt();
-
-        InstructionGroup instruction = InstructionGroup.valueOf(instrGroup);
+        InstructionGroup instruction = decodedInstruction.getGroup();
 
         switch (instruction) { // TODO: make these 0 argument methods
             case ADD_WITH_CARRY       -> alu.addWithCarry(decodedOperand.getData());
