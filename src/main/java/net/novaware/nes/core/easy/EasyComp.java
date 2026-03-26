@@ -2,14 +2,13 @@ package net.novaware.nes.core.easy;
 
 import dagger.Component;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.cpu.inject.CpuSignalModule;
-import net.novaware.nes.core.cpu.inject.CpuRegModule;
+import net.novaware.nes.core.easy.inject.EasyCpuModule;
+import net.novaware.nes.core.easy.inject.EasyModule;
 
 @BoardScope
 @Component(modules = {
     EasyModule.class,
-    CpuRegModule.class,
-    CpuSignalModule.class
+    EasyCpuModule.class,
 })
 public abstract class EasyComp {
 

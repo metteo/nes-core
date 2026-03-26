@@ -1,30 +1,53 @@
 package net.novaware.nes.core.easy
 
+import net.novaware.nes.core.easy.inject.EasyMemModule
+import net.novaware.nes.core.easy.memory.EasyBus
+import net.novaware.nes.core.memory.MemoryDevice
+import net.novaware.nes.core.memory.PhysicalMemory
+import net.novaware.nes.core.register.CycleCounter
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.easy.EasyMemMap.*
+import static net.novaware.nes.core.easy.memory.EasyMemMap.*
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class EasyBusSpec extends Specification {
 
-    EasyBus bus = new EasyBus()
+    CycleCounter cycleCounter = new CycleCounter("CPU")
+    MemoryDevice.ReadWrite ram = EasyMemModule.provideMemory()
+    MemoryDevice.ReadWrite stack = EasyMemModule.provideStack()
+    MemoryDevice.ReadWrite vram = EasyMemModule.provideVideoMemory()
+    MemoryDevice.ReadWrite cartridge = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
+
+    EasyBus bus = new EasyBus(cycleCounter, ram, stack, vram)
 
     def "should write to correct memory segments"() {
+        given:
+        bus.attachCartridge(cartridge)
+
+        def devices = [
+            "ram":   ram,
+            "stack": stack,
+            "vram":  vram,
+            "cart":  cartridge
+        ]
+
         when:
-        bus.access(absAddr).write().data(ubyte(data))
+        bus.access(address).write().data(ubyte(data))
 
         then:
-        bus.access(absAddr).read().data() == ubyte(data)
-        new TestBus(bus.currentSegment).access(absAddr).read().data() == ubyte(data)
+        bus.access(address).read().data() == ubyte(data)
+        new TestBus(devices[device]).access(address).read().data() == ubyte(data)
 
         where:
-        absAddr               | data
-        RAM_START             | 0x11
-        RNG_BYTE              | 0x22
-        STACK_SEGMENT_START   | 0x33
-        PICTURE_SEGMENT_START | 0x44
-        CARTRIDGE_START       | 0x55
-        VECTOR_SEGMENT_START  | 0x66
+        device  | address               | data
+        "ram"   | RAM_START             | 0x11
+        "ram"   | RAM_END               | 0x22
+        "stack" | STACK_SEGMENT_START   | 0x33
+        "stack" | STACK_SEGMENT_END     | 0x44
+        "vram"  | PICTURE_SEGMENT_START | 0x55
+        "vram"  | PICTURE_SEGMENT_END   | 0x66
+        "cart"  | CARTRIDGE_START       | 0x77
+        "cart"  | CARTRIDGE_END         | 0x88
     }
 }

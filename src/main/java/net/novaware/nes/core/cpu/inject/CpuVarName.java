@@ -49,6 +49,7 @@ public enum CpuVarName {
     JOY ("", "", "Joypad Input-Output"),
     ATM ("", "", "APU Test Mode"),
     TMR ("", "", "Timer Unit"),
+    RNG ("", "", "Random Number Generator"), // easy
 
     // endregion
 

@@ -25,4 +25,6 @@ module net.novaware.nes.core {
     exports net.novaware.nes.core.cpu.memory;
     exports net.novaware.nes.core.cpu.inject;
     exports net.novaware.nes.core.cpu.register;
+    exports net.novaware.nes.core.easy.inject;
+    exports net.novaware.nes.core.easy.memory;
 }

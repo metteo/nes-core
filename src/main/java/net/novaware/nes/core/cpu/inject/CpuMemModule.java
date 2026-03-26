@@ -58,7 +58,8 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_START;
-import static net.novaware.nes.core.util.UTypes.ushort;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_START;
 
 @Module
 public interface CpuMemModule {
@@ -149,8 +150,8 @@ public interface CpuMemModule {
     @CpuVar(ZP)
     static SegmentRegister provideZeroPage() {
         SegmentRegister zeroPage = new SegmentRegister(ZP.name());
-        zeroPage.setStart(RAM_START);
-        zeroPage.setLimit(ushort(0x00FF)); // TODO: move to memory map?
+        zeroPage.setStart(ZERO_PAGE_START);
+        zeroPage.setLimit(ZERO_PAGE_END);
 
         return zeroPage;
     }

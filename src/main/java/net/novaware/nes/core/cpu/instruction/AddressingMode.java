@@ -5,6 +5,9 @@ import static net.novaware.nes.core.cpu.instruction.AddressingCategory.INDEXED;
 import static net.novaware.nes.core.cpu.instruction.AddressingCategory.INDIRECT;
 import static net.novaware.nes.core.cpu.instruction.AddressingCategory.NONE;
 
+/**
+ * @see <a href="https://www.masswerk.at/6502/6502_instruction_set.html#modes">Addressing modes at masswerk.at</a>
+ */
 public enum AddressingMode {
 
     // region Implied / Implicit
