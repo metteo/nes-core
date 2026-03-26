@@ -111,7 +111,7 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeZeroPageIndexed_Y_IndirectRead(@Unsigned short operand) {
-        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+        int address = sint(addressGen.fetchAddressPageWrap(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
         int result = address + yVal;
@@ -123,12 +123,11 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeZeroPageIndexed_Y_IndirectWrite(@Unsigned short operand) {
-        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+        int address = sint(addressGen.fetchAddressPageWrap(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
+        memoryBus.access(ushort(address)).read().data(); // sum cycle
         int result = address + yVal;
-
-        cycleCounter.increment(); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -137,10 +136,10 @@ public class InstructionDecoder implements Unit {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
-        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
-        int indirectAddress = address + xVal;
+        memoryBus.access(operand).read().data(); // sum cycle
+        int indirectAddress = (address + xVal) & 0xFF; // stay within zero page
 
-        @Unsigned short result = addressGen.buggyFetchAddress(ushort(indirectAddress & 0xFF)); // stay within zero page
+        @Unsigned short result = addressGen.fetchAddressPageWrap(ushort(indirectAddress));
         decodedOperand.configureMemory(memoryBus, result);
     }
 
@@ -150,7 +149,7 @@ public class InstructionDecoder implements Unit {
         int result = indexVal + sint(operand);
 
         boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
-        cycleCounter.maybeIncrement(pageChange);
+        cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -158,9 +157,8 @@ public class InstructionDecoder implements Unit {
     private void decodeAbsoluteIndexedWrite(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
+        memoryBus.access(operand).read().data(); // sum cycle
         int result = indexVal + sint(operand);
-
-        cycleCounter.increment(); // FIXME: always increment on write, change into proper bus op
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -168,8 +166,8 @@ public class InstructionDecoder implements Unit {
     private void decodeZeroPageIndexed(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
-        int result = (indexVal + sint(operand)) & 0xFF;
+        memoryBus.access(operand).read().data(); // sum cycle
+        int result = (sint(operand) + indexVal) & 0xFF;
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -183,7 +181,7 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeAbsoluteIndirect(@Unsigned short operand) {
-        @Unsigned short address = addressGen.buggyFetchAddress(operand);
+        @Unsigned short address = addressGen.fetchAddressPageWrap(operand); // stay within the page
         decodedOperand.configureMemory(memoryBus, address);
     }
 
