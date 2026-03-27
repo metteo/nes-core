@@ -5,12 +5,16 @@ import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
 
+import javax.swing.*;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -38,6 +42,10 @@ public class EasyBoard {
     private final DelegatingRegister rng;
     private final DelegatingRegister joy;
 
+    private final Random random = new Random();
+
+    private @Nullable EasyGui gui;
+
     @Inject
     /* package */ EasyBoard(
         final Cpu cpu,
@@ -51,13 +59,23 @@ public class EasyBoard {
         this.joy = joy;
     }
 
-    public void powerOn() {
+    public void powerOn(boolean showGui) {
         initialize();
+        if (showGui) { showGui(); }
         start();
     }
 
     private void initialize() {
         cpu.initialize();
+    }
+
+    private void showGui() {
+        SwingUtilities.invokeLater(() -> {
+            gui = new EasyGui(bus, b -> {
+                executor.submit(() -> joy.setData(ubyte(b)));
+            });
+            gui.setVisible(true);
+        });
     }
 
     private void start() {
@@ -71,17 +89,32 @@ public class EasyBoard {
 
         future = executor.scheduleAtFixedRate(() -> {
             try {
-                // TODO: update rng
-                // TODO: update key
-                cpu.advance();
-                // TODO: update display
+                for (int i = 0; i < 100; i++) {
+                    rng.setData(ubyte(random.nextInt(256)));
+                    cpu.advance();
+                }
+
+                if (gui != null) {
+                    gui.refresh();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                pause();
             }
         }, 0, 15, MILLISECONDS);
     }
 
     private void stop() {
+        pause();
+
+        if (gui != null) {
+            final EasyGui currentGui = gui;
+            SwingUtilities.invokeLater(currentGui::dispose);
+            gui = null;
+        }
+    }
+
+    private void pause() {
         if (future != null) {
             future.cancel(true);
             future = null;
@@ -92,7 +125,11 @@ public class EasyBoard {
         UByteBuffer buffer = UByteBuffer.allocate(CARTRIDGE_SIZE);
         buffer.put(0, data);
 
-        PhysicalMemory cartridge = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, buffer);
+        PhysicalMemory rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, buffer);
+
+        PagedMemory cartridge = new PagedMemory("CART", new MemoryDevice.Empty());
+        cartridge.attach(rom);
+
         bus.attachCartridge(cartridge);
 
         int reset = sint(RES_VECTOR);
@@ -103,6 +140,4 @@ public class EasyBoard {
     public void powerOff() {
         stop();
     }
-
-    interface Drawing { void draw(int x, int y, int color); }
 }
