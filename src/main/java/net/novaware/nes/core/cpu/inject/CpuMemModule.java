@@ -26,7 +26,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
@@ -182,30 +181,14 @@ public interface CpuMemModule {
     @BoardScope
     @CpuVar(CS)
     static SegmentRegister provideCodeSegment() {
-        SegmentRegister codeSegment = new SegmentRegister(CS.name());
-        // FIXME: set start and limit in cartridge?
-
-        return codeSegment;
+        return new SegmentRegister(CS.name()); // configured during cartridge attach
     }
 
     @Provides
     @BoardScope
     @CpuVar(DS)
     static SegmentRegister provideDataSegment() {
-        SegmentRegister dataSegment = new SegmentRegister(DS.name());
-        // FIXME: set start and limit in cartridge?
-
-        return dataSegment;
-    }
-
-    @Provides
-    @BoardScope
-    @CpuVar(ES)
-    static SegmentRegister provideExtraSegment() {
-        SegmentRegister extraSegment = new SegmentRegister(ES.name());
-        // FIXME: set start and limit in cartridge?
-
-        return extraSegment;
+        return new SegmentRegister(DS.name()); // configured during cartridge attach
     }
 
     @Provides

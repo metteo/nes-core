@@ -24,7 +24,7 @@ class TestBus implements MemoryBus {
         this.device = device
 
         // Useful when same device gets attached for init and then attached again for testing
-        log.info("Attaching device: " + device + "to TestBus")
+        log.info("Attaching device: " + device + " to TestBus")
         device.onAttach(dataLine)
     }
 

@@ -15,6 +15,7 @@ import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
@@ -88,6 +89,13 @@ public interface EasyMemModule {
         stackSegment.setStart(EasyMemMap.STACK_SEGMENT_START);
 
         return stackSegment;
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(CS)
+    static SegmentRegister provideCodeSegment() {
+        return new SegmentRegister(CS.name());
     }
 
     @Provides

@@ -35,8 +35,9 @@ public enum CpuVarName {
     ZP ("", "zeroPage",     "Zero Page"),
     SS ("", "stackSegment", "Stack Segment"),
     OS ("", "oamSegment",   "OAM Segment"),
-    CS ("", "codeSegment",  "Code Segment"),
-    DS ("", "dataSegment",  "Data Segment"),
+    // TODO: maybe name them differently?
+    CS ("", "codeSegment",  "Code Segment"), // rom?
+    DS ("", "dataSegment",  "Data Segment"), // additional ram?
 
     // endregion
     // region Memory Devices

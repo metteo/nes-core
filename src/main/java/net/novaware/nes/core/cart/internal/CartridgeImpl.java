@@ -116,7 +116,7 @@ public class CartridgeImpl implements Cartridge {
     }
 
     @Override
-    public MemoryDevice.ReadWrite getCpuBusDevice() {
+    public MemoryDevice.ReadWrite getCpuBusDevice() { // TODO: provide code and data segment registers somehow?
         return new CpuBusDevice();
     }
 

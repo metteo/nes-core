@@ -10,14 +10,17 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
+import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 
 /**
  * Easy 6502 Bus implementation
@@ -29,6 +32,8 @@ public class EasyBus implements MemoryBus {
     @Owned
     private final PagedMemory internal = new PagedMemory("INTERNAL", new MemoryDevice.Empty());
     private final CycleCounter cycleCounter;
+
+    private final SegmentRegister codeSegment;
 
     @Used
     private MemoryDevice.ReadWrite cartridge = new MemoryDevice.Empty();
@@ -44,9 +49,11 @@ public class EasyBus implements MemoryBus {
         @CpuVar(CC)  CycleCounter cycleCounter,
         @CpuVar(RAM) MemoryDevice.ReadWrite ram,
         @CpuVar(SS)  MemoryDevice.ReadWrite stack,
-        @CpuVar(PPU) MemoryDevice.ReadWrite vram
+        @CpuVar(PPU) MemoryDevice.ReadWrite vram,
+        @CpuVar(CS)  SegmentRegister codeSegment
     ) {
         this.cycleCounter = cycleCounter;
+        this.codeSegment = codeSegment;
 
         internal.attach(ram);
         internal.attach(stack);
@@ -63,12 +70,20 @@ public class EasyBus implements MemoryBus {
     @Override
     public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
         this.cartridge = cartridge;
+
+        codeSegment.setStart(cartridge.getStartAddress());
+        codeSegment.setLimit(cartridge.getEndAddress());
+
         this.cartridge.onAttach(dataLine);
     }
 
     @Override
     public void detachCartridge() {
         cartridge.onDetach();
+
+        codeSegment.setStart(USHORT_MAX_VALUE);
+        codeSegment.setLimit(USHORT_MAX_VALUE);
+
         cartridge = new MemoryDevice.Empty();
     }
 
