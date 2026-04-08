@@ -4,6 +4,7 @@ import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.cpu.signal.internal.Detector;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.mapper.Mapper;
@@ -121,8 +122,18 @@ public class CartridgeImpl implements Cartridge {
     }
 
     @Override
-    public MemoryDevice.ReadWrite getPpuBusDevice() {
+    public void setIrqDetector(Detector irqDetector) {}
+
+    @Override
+    public MemoryDevice.ReadWrite getPpuBusDevice(MemoryDevice.ReadWrite ppuVideoMemory) {
         return new PpuBusDevice();
+    }
+
+    @Override
+    public void disconnect() {
+        // TODO: disconnect from irq
+        // TODO: disconnect from PPU CIRAM / video memory
+        // TODO: maybe onDetach cpu and ppu bus devices
     }
 
     private class CpuBusDevice implements MemoryDevice.ReadWrite {

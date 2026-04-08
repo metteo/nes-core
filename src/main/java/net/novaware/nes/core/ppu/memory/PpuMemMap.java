@@ -14,6 +14,8 @@ public class PpuMemMap implements MemoryMap {
     // TODO: segment registers: Video Segment, configured by mappers for debug view
     //       e.g. where is nametable, where is pallete etc.
 
+    // region Cartridge (CPU / DMA and PPU)
+
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0x3FFF);
     public static final int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
@@ -36,11 +38,14 @@ public class PpuMemMap implements MemoryMap {
     public static final @Unsigned short UNUSED_END = ushort(0x3EFF);
     public static final int UNUSED_SIZE = sint(UNUSED_END) - sint(UNUSED_START) + 1;
 
+    // region Internal (for CPU access)
+
     public static final @Unsigned short PALETTE_RAM_START = ushort(0x3F00);
     public static final @Unsigned short PALETTE_RAM_END = ushort(0x3F1F);
     public static final int PALETTE_RAM_SIZE = sint(PALETTE_RAM_END) - sint(PALETTE_RAM_START) + 1;
 
-    public static final @Unsigned short PALETTE_RAM_MIRROR_START = ushort(0x3F20);
     public static final @Unsigned short PALETTE_RAM_MIRROR_END = ushort(0x3FFF);
-    public static final int PALETTE_RAM_MIRROR_SIZE = sint(PALETTE_RAM_MIRROR_END) - sint(PALETTE_RAM_MIRROR_START) + 1;
+    public static final int PALETTE_RAM_MIRROR_SIZE = sint(PALETTE_RAM_MIRROR_END) - sint(PALETTE_RAM_START) + 1;
+
+    // endregion
 }

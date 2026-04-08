@@ -27,6 +27,7 @@ public class LevelDetector implements Detector {
         return activeState == current;
     }
 
+    @Override
     public void set(Signal state) {
         this.current = state;
     }

@@ -30,6 +30,7 @@ public class EdgeDetector implements Detector {
         return current == activeState && previous != current;
     }
 
+    @Override
     public void set(Signal s) {
         previous = current;
         current = s;

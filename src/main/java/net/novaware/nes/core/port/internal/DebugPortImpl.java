@@ -12,7 +12,7 @@ public class DebugPortImpl implements DebugPort {
 
     private final CpuRegFile registers;
 
-    private @Nullable Receiver receiver;
+    private @Nullable Receiver receiver; // replace with null object
 
     @Inject
     public DebugPortImpl(
