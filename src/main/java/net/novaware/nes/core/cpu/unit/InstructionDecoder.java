@@ -7,6 +7,7 @@ import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
+import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
@@ -35,7 +36,7 @@ public class InstructionDecoder implements Unit {
 
     @Used private final ByteRegister currentInstruction;
     @Used private final ShortRegister currentOperand;
-    @Used private final ByteRegister decodedInstruction;
+    @Used private final InstructionRegister decodedInstruction;
     @Used private final DelegatingRegister decodedOperand;
 
     @Used private final CycleCounter cycleCounter;
@@ -49,7 +50,7 @@ public class InstructionDecoder implements Unit {
         @CpuVar(CI) ByteRegister currentInstruction,
         @CpuVar(CO) ShortRegister currentOperand,
 
-        @CpuVar(DI) ByteRegister decodedInstruction,
+        @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
         @CpuVar(CC) CycleCounter cycleCounter,
@@ -72,9 +73,7 @@ public class InstructionDecoder implements Unit {
         @Unsigned byte opcode = currentInstruction.get();
 
         Instruction instruction = InstructionRegistry.fromOpcode(opcode);
-
-        // TODO: this won't work. Make it a single switch and be done with it. Or maybe it will?
-        decodedInstruction.setAsByte(instruction.group().ordinal());
+        decodedInstruction.set(instruction);
 
         AddressingMode addressingMode = instruction.addressingMode();
         @Unsigned short operand = currentOperand.get();
@@ -85,25 +84,25 @@ public class InstructionDecoder implements Unit {
 
             case IMMEDIATE -> decodeImmediate(operand);
 
-            case RELATIVE -> decodeRelative(operand); // only branches
+            case RELATIVE -> decodeRelative(operand);
 
-            case ZERO_PAGE -> decodeAbsolute(operand);
+            case ZERO_PAGE -> decodeZeroPage(operand);
 
-            case ZERO_PAGE_X -> decodeIndexedZeroPage(registers.x(), operand);
-            case ZERO_PAGE_Y -> decodeIndexedZeroPage(registers.y(), operand);
+            case ZERO_PAGE_X -> decodeZeroPageIndexed(registers.x(), operand);
+            case ZERO_PAGE_Y -> decodeZeroPageIndexed(registers.y(), operand);
 
-            case ZERO_PAGE_X_INDIRECT -> decodePreIndexedIndirectX(operand);
+            case ZERO_PAGE_X_INDIRECT -> decodeZeroPageIndexed_X_Indirect(operand);
 
-            case ZERO_PAGE_INDIRECT_Y_R -> decodePostIndexedIndirectY(operand);
-            case ZERO_PAGE_INDIRECT_Y_W -> decodePostIndexedIndirectYWrite(operand);
+            case ZERO_PAGE_INDIRECT_Y_R -> decodeZeroPageIndexed_Y_IndirectRead(operand);
+            case ZERO_PAGE_INDIRECT_Y_W -> decodeZeroPageIndexed_Y_IndirectWrite(operand);
 
-            case ABSOLUTE -> decodeAbsolute(operand); // 0x00NN or 0xNNNN
+            case ABSOLUTE -> decodeAbsolute(operand);
 
-            case ABSOLUTE_X_R -> decodeIndexedAbsolute(registers.x(), operand);
-            case ABSOLUTE_X_W -> decodeIndexedAbsoluteWrite(registers.x(), operand);
+            case ABSOLUTE_X_R -> decodeAbsoluteIndexedRead(registers.x(), operand);
+            case ABSOLUTE_X_W -> decodeAbsoluteIndexedWrite(registers.x(), operand);
 
-            case ABSOLUTE_Y_R -> decodeIndexedAbsolute(registers.y(), operand);
-            case ABSOLUTE_Y_W -> decodeIndexedAbsoluteWrite(registers.y(), operand);
+            case ABSOLUTE_Y_R -> decodeAbsoluteIndexedRead(registers.y(), operand);
+            case ABSOLUTE_Y_W -> decodeAbsoluteIndexedWrite(registers.y(), operand);
 
             case ABSOLUTE_INDIRECT -> decodeAbsoluteIndirect(operand); // only jump
 
@@ -111,8 +110,8 @@ public class InstructionDecoder implements Unit {
         }
     }
 
-    private void decodePostIndexedIndirectY(@Unsigned short operand) {
-        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+    private void decodeZeroPageIndexed_Y_IndirectRead(@Unsigned short operand) {
+        int address = sint(addressGen.fetchAddressPageWrap(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
         int result = address + yVal;
@@ -123,54 +122,52 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodePostIndexedIndirectYWrite(@Unsigned short operand) {
-        int address = sint(addressGen.buggyFetchAddress(operand)); // stay within zero page
+    private void decodeZeroPageIndexed_Y_IndirectWrite(@Unsigned short operand) {
+        int address = sint(addressGen.fetchAddressPageWrap(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
+        memoryBus.access(ushort(address)).read().data(); // sum cycle
         int result = address + yVal;
-
-        cycleCounter.increment(); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodePreIndexedIndirectX(@Unsigned short operand) {
+    private void decodeZeroPageIndexed_X_Indirect(@Unsigned short operand) {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
-        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
-        int indirectAddress = address + xVal;
+        memoryBus.access(operand).read().data(); // sum cycle
+        int indirectAddress = (address + xVal) & 0xFF; // stay within zero page
 
-        @Unsigned short result = addressGen.buggyFetchAddress(ushort(indirectAddress & 0xFF)); // stay within zero page
+        @Unsigned short result = addressGen.fetchAddressPageWrap(ushort(indirectAddress));
         decodedOperand.configureMemory(memoryBus, result);
     }
 
-    private void decodeIndexedAbsolute(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedRead(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         int result = indexVal + sint(operand);
 
         boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
-        cycleCounter.maybeIncrement(pageChange);
+        cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodeIndexedAbsoluteWrite(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedWrite(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
+        memoryBus.access(operand).read().data(); // sum cycle
         int result = indexVal + sint(operand);
 
-        cycleCounter.increment(); // FIXME: always increment on write, change into proper bus op
-
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
 
-    private void decodeIndexedZeroPage(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeZeroPageIndexed(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        memoryBus.access(operand).read().data(); // internal cycle wasted for addition below
-        int result = (indexVal + sint(operand)) & 0xFF;
+        memoryBus.access(operand).read().data(); // sum cycle
+        int result = (sint(operand) + indexVal) & 0xFF;
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -184,11 +181,15 @@ public class InstructionDecoder implements Unit {
     }
 
     private void decodeAbsoluteIndirect(@Unsigned short operand) {
-        @Unsigned short address = addressGen.buggyFetchAddress(operand);
+        @Unsigned short address = addressGen.fetchAddressPageWrap(operand); // stay within the page
         decodedOperand.configureMemory(memoryBus, address);
     }
 
     private void decodeAbsolute(@Unsigned short operand) {
+        decodedOperand.configureMemory(memoryBus, operand);
+    }
+
+    private void decodeZeroPage(@Unsigned short operand) {
         decodedOperand.configureMemory(memoryBus, operand);
     }
 

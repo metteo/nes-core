@@ -286,6 +286,8 @@
                         ${jpms.opens}.cpu.signal.internal=ALL-UNNAMED
                         ${jpms.opens}.cpu.unit=ALL-UNNAMED
                         ${jpms.opens}.easy=ALL-UNNAMED
+                        ${jpms.opens}.easy.inject=ALL-UNNAMED
+                        ${jpms.opens}.easy.memory=ALL-UNNAMED
                         ${jpms.opens}.file=ALL-UNNAMED
                         ${jpms.opens}.file.ines=ALL-UNNAMED
                         ${jpms.opens}.file.nesy=ALL-UNNAMED

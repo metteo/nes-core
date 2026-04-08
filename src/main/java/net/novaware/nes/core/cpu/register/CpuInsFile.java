@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.inject.CpuVarName;
 import net.novaware.nes.core.cpu.instruction.Instruction;
-import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
@@ -23,8 +22,7 @@ public class CpuInsFile extends RegisterFile {
     private final DataRegister currentInstruction;
     private final ShortRegister currentOperand;
 
-    /** @see InstructionGroup#ordinal() TODO: use aaa000cc bits */
-    private final DataRegister  decodedInstruction; // TODO: consider holding enum value or handler to improve perf
+    private final InstructionRegister  decodedInstruction;
     private final DelegatingRegister decodedOperand;
 
     @Inject
@@ -32,22 +30,20 @@ public class CpuInsFile extends RegisterFile {
         @CpuVar(CpuVarName.CI) ByteRegister currentInstruction,
         @CpuVar(CpuVarName.CO) ShortRegister currentOperand,
 
-        @CpuVar(CpuVarName.DI) ByteRegister decodedInstruction,
+        @CpuVar(CpuVarName.DI) InstructionRegister decodedInstruction,
         @CpuVar(CpuVarName.DO) DelegatingRegister decodedOperand
     ) {
         super("CPU_INS");
 
         dataRegisters = List.of(
-            this.currentInstruction = currentInstruction,
-            this.decodedInstruction = decodedInstruction
-
-
+            this.currentInstruction = currentInstruction
         );
 
         addressRegisters = List.of(
             this.currentOperand = currentOperand
         );
 
+        this.decodedInstruction = decodedInstruction;
         this.decodedOperand = decodedOperand;
     }
 
@@ -69,12 +65,12 @@ public class CpuInsFile extends RegisterFile {
         return currentOperand;
     }
 
-    public DataRegister getDecodedInstruction() {
+    public InstructionRegister getDecodedInstruction() {
         return decodedInstruction;
     }
 
     /** @see #getDecodedInstruction() */
-    public DataRegister dir() {
+    public InstructionRegister dir() {
         return decodedInstruction;
     }
 

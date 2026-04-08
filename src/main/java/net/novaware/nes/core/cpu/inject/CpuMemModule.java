@@ -26,7 +26,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.ES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
@@ -58,7 +57,8 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.STACK_SEGMENT_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_START;
-import static net.novaware.nes.core.util.UTypes.ushort;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_START;
 
 @Module
 public interface CpuMemModule {
@@ -149,8 +149,8 @@ public interface CpuMemModule {
     @CpuVar(ZP)
     static SegmentRegister provideZeroPage() {
         SegmentRegister zeroPage = new SegmentRegister(ZP.name());
-        zeroPage.setStart(RAM_START);
-        zeroPage.setLimit(ushort(0x00FF)); // TODO: move to memory map?
+        zeroPage.setStart(ZERO_PAGE_START);
+        zeroPage.setLimit(ZERO_PAGE_END);
 
         return zeroPage;
     }
@@ -181,30 +181,14 @@ public interface CpuMemModule {
     @BoardScope
     @CpuVar(CS)
     static SegmentRegister provideCodeSegment() {
-        SegmentRegister codeSegment = new SegmentRegister(CS.name());
-        // FIXME: set start and limit in cartridge?
-
-        return codeSegment;
+        return new SegmentRegister(CS.name()); // configured during cartridge attach
     }
 
     @Provides
     @BoardScope
     @CpuVar(DS)
     static SegmentRegister provideDataSegment() {
-        SegmentRegister dataSegment = new SegmentRegister(DS.name());
-        // FIXME: set start and limit in cartridge?
-
-        return dataSegment;
-    }
-
-    @Provides
-    @BoardScope
-    @CpuVar(ES)
-    static SegmentRegister provideExtraSegment() {
-        SegmentRegister extraSegment = new SegmentRegister(ES.name());
-        // FIXME: set start and limit in cartridge?
-
-        return extraSegment;
+        return new SegmentRegister(DS.name()); // configured during cartridge attach
     }
 
     @Provides

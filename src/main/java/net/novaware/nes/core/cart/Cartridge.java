@@ -4,8 +4,10 @@ import net.novaware.nes.core.cart.internal.CartridgeImpl;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.cpu.signal.internal.Detector;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.port.CartridgePort;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/Cartridge_connector">Cartridge connector on nesdev.org</a>
@@ -22,15 +24,38 @@ public interface Cartridge {
 
     Config getConfig();
 
+    /**
+     * CPU A0-A15, D0-D7, R/W
+     */
     MemoryDevice.ReadWrite getCpuBusDevice();
 
-    MemoryDevice.ReadWrite getPpuBusDevice();
+    /**
+     * ___
+     * IRQ (to CPU)
+     */
+    void setIrqDetector(Detector irqDetector); // TODO: consider moving from internal and change the name?
+
+    /**
+     * @param ppuVideoMemory CIRAM A10, /CE
+     * @return PPU A0-A13, D0-D7, /RD, /WR
+     */
+    MemoryDevice.ReadWrite getPpuBusDevice(MemoryDevice.ReadWrite ppuVideoMemory);
+
+    /**
+     * @param in Audio from 2A03
+     * @return out Audio to "RF"
+     */
+    default Object setAudio(Object in) { return in; } // TODO: placeholder, refine the typing when implementing APU
+
+    /**
+     * Called by {@link CartridgePort#disconnect()}
+     */
+    void disconnect();
 
     static Cartridge of(NesFile nesFile) {
         return new CartridgeImpl(nesFile);
     }
 
-    // TODO: expose IRQ from the processor
     // TODO: maybe add clock?
     // TODO: add store method to save SRAM/NVVRAM (call on emu/game close, game change, power off / reset)
     // TODO: sram store heuristic: 5s delay starting from a write, don't reset the delay on following writes

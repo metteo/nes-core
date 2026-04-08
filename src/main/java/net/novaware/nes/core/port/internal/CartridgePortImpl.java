@@ -17,7 +17,7 @@ public class CartridgePortImpl implements CartridgePort {
     private MemoryBus cpuBus;
     // ppu bus too
 
-    private @Nullable Cartridge cartridge;
+    private @Nullable Cartridge cartridge; // TODO: replace with null object
 
     @Inject
     public CartridgePortImpl(
@@ -29,6 +29,7 @@ public class CartridgePortImpl implements CartridgePort {
     @Override
     public void disconnect() {
         // TODO: disconnect the cpu and ppu bus from the cartridge
+        if (cartridge != null) { cartridge.disconnect(); }
         throw new UnsupportedOperationException("not implemented!");
     }
 

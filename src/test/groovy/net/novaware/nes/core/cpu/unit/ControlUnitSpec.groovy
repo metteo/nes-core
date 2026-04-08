@@ -6,7 +6,7 @@ import static net.novaware.nes.core.cpu.instruction.Instruction.*
 import static net.novaware.nes.core.memory.BusOp.*
 import static net.novaware.nes.core.memory.RecordingDevice.Op
 
-// useful: bus.activity().forEach { println it.toTest() }
+// useful: rec.activity().forEach { println it.toTest() }
 class ControlUnitSpec extends ControlUnitBaseSpec {
 
     // TODO: have separate tests for fetching, decoding and execution

@@ -7,9 +7,7 @@ import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
-import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.register.CycleCounter;
-import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -19,9 +17,7 @@ public class PpuBus implements MemoryBus {
     @Used
     private CycleCounter cycleCounter;
 
-    @Owned
-    private final PagedMemory internal = new PagedMemory("INTERNAL", new MemoryDevice.Empty());
-
+    // TODO: cart and expansion don't have the pallete indexes and don't hear anything above 0x3F00 (excl.)
     @Used
     private MemoryDevice.ReadWrite cartridge = new MemoryDevice.Empty(); // TODO: consider using single injected instance to allow testing
 
@@ -36,9 +32,7 @@ public class PpuBus implements MemoryBus {
 
     @Inject
     public PpuBus() {
-        // TODO: Pattern tables from cartridge
-        // TODO: nametables (vram) with mirroring
-        // TODO: pallete
+
     }
 
     @Override
@@ -47,8 +41,15 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
-    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+    public @Unsigned byte peek(@Unsigned short address) {
+        return 0; // TODO: implement
+    }
 
+    @Override
+    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+        // TODO: Pattern tables from cartridge
+        // TODO: nametables (internal vram) with mirroring
+        // TODO: external vram
     }
 
     @Override
@@ -68,6 +69,9 @@ public class PpuBus implements MemoryBus {
 
     @Override
     public ControlBus.Line access(@Unsigned short address) {
+        cartridge.onAccess(addressLatch);
+        expansion.onAccess(addressLatch);
+
         return null;
     }
 

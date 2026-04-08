@@ -137,6 +137,35 @@ public class CpuBus implements MemoryBus {
         return this;
     }
 
+    @Override // TODO: verify that the bus is reverted to correct state
+    public @Unsigned byte peek(@Unsigned short address) {
+        // perform the read
+        internal.onAccess(address);
+        cartridge.onAccess(address);
+        expansion.onAccess(address);
+
+        internal.onRead();
+        cartridge.onRead();
+        expansion.onRead();
+
+        var peeked = dataLine.cycle();
+
+        // return the bus to the previous state
+        internal.onAccess(addressLatch);
+        cartridge.onAccess(addressLatch);
+        expansion.onAccess(addressLatch);
+
+        // TODO: what if previous op was write?
+        internal.onRead();
+        cartridge.onRead();
+        expansion.onRead();
+
+        dataLine.cycle();
+
+        // return the data
+        return peeked;
+    }
+
     @Override
     public @Unsigned byte data() {
         assert busOp == BusOp.CONTROL_READ; // compile out

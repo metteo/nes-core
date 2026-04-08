@@ -37,13 +37,19 @@ public class AddressGen implements Unit {
         return ushort(pcVal);
     }
 
+    /**
+     * Can cross pages
+     */
     public @Unsigned short fetchAddress(@Unsigned short address) {
         @Unsigned byte addrLo = mmu.specifyAnd(address).readByte();
         @Unsigned byte addrHi = mmu.specifyAnd(ushort(sint(address) + 1)).readByte();
         return ushort(sint(addrHi) << 8 | sint(addrLo));
     }
 
-    public @Unsigned short buggyFetchAddress(@Unsigned short address) {
+    /**
+     * Doesn't cross pages
+     */
+    public @Unsigned short fetchAddressPageWrap(@Unsigned short address) {
         int source = sint(address);
 
         int sourceLo = 0x00FF & source;

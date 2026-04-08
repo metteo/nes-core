@@ -4,7 +4,7 @@ import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.instruction.Instruction;
-import net.novaware.nes.core.cpu.instruction.InstructionGroup;
+import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
@@ -81,12 +81,11 @@ public interface CpuRegModule {
         return new ShortRegister("COR");
     }
 
-    /** @see InstructionGroup#ordinal() TODO: use aaa000cc bits */
     @Provides
     @BoardScope
     @CpuVar(DI)
-    static ByteRegister provideDecodedInstruction() {
-        return new ByteRegister("DIR"); // TODO: consider holding enum value or handler to improve perf
+    static InstructionRegister provideDecodedInstruction() {
+        return new InstructionRegister("DIR");
     }
 
     @Provides
