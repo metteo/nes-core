@@ -4,51 +4,46 @@ import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.cpu.signal.internal.Detector;
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.mapper.Mapper;
 import net.novaware.nes.core.mapper.NROM;
 import net.novaware.nes.core.memory.BankedMemory;
-import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.memory.PagedMemory;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.util.Hex;
+import net.novaware.nes.core.ppu.memory.PpuMemMap;
 import net.novaware.nes.core.util.Quantity;
-import net.novaware.nes.core.util.UByteBuffer;
-import net.novaware.nes.core.util.uml.Owned;
-import org.checkerframework.checker.signedness.qual.Unsigned;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC;
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.NTSC_DUAL;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
-import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.Quantity.Unit.BANK_1KB;
+import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
 import static net.novaware.nes.core.util.UTypes.ushort;
+
+// TODO: use nes file to store save ram and nvvram
 
 public class CartridgeImpl implements Cartridge {
 
     private final NesFile nesFile;
 
+    // TODO: mapper is a MemoryDevice listening on some / all address ranges and reconfiguring banks, etc?
     private Mapper mapper;
-
-    @Owned private BankedMemory programData;    // ROM
-    @Owned private MemoryDevice.ReadWrite programMemory;  // Work RAM / WRAM
-    @Owned private MemoryDevice.ReadWrite programStorage; // Save RAM / SRAM // TODO: use nes file to store save ram
-
-    @Owned private MemoryDevice.ReadWrite videoData;      // Video ROM / VROM
-    @Owned private MemoryDevice.ReadWrite videoMemory;    // Video RAM / VRAM
-    @Owned private MemoryDevice.ReadWrite videoStorage;   // Non-volatile Video RAM / NV-VRAM // TODO: store nvvram
 
     private final MemoryDevice.ReadWrite emptyDevice = new MemoryDevice.Empty();
 
-    private MemoryDevice.ReadWrite currentProgramSegment;
-    private @Unsigned short currentProgramAddress;
+    private final PagedMemory cpuBusDevice = new PagedMemory("CART.CPU", CpuMemMap.MEMORY_SIZE, emptyDevice);
+    private final PagedMemory ppuBusDevice = new PagedMemory("CART.PPU", PpuMemMap.MEMORY_SIZE, emptyDevice);
 
-    private MemoryDevice.ReadWrite currentVideoSegment;
-    private @Unsigned short currentVideoAddress;
+    private @Nullable BankedMemory ppuVideoMemory;
 
     public CartridgeImpl(NesFile nesFile) {
         this.nesFile = nesFile;
@@ -65,34 +60,35 @@ public class CartridgeImpl implements Cartridge {
         Quantity programDataQuantity = nesFile.meta().programData();
         this.mapper = new NROM(programDataQuantity.amount());
 
-        programData = new BankedMemory(
-                "PRG-ROM",
-                ushort(0x8000),
-                ushort(0xFFFF),
-            new Quantity(2, BANK_16KB),
-            programDataQuantity
-        );
+        BankedMemory programData = new BankedMemory("PRG-ROM", ushort(0x8000), new Quantity(1, BANK_16KB))
+                .setVisibleBanks(new Quantity(2, BANK_16KB))
+                .setHiddenBanks(programDataQuantity);
 
-        programData.preload(program);
+        programData.preloadHiddenBanks(program);
 
-        programData.configure(0, 0);
-        programData.configure(1, programDataQuantity.amount() == 1 ? 0 : 1);
+        programData.configureVisibleBank(0, 0);
+        programData.configureVisibleBank(1, programDataQuantity.amount() == 1 ? 0 : 1);
+        cpuBusDevice.attach(programData);
 
         // TODO: only if not disabled
-        programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
+        PhysicalMemory programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
+        cpuBusDevice.attach(programMemory);
+
         // TODO: only if battery
-        programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
+        PhysicalMemory programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
 
-        videoData = new PhysicalMemory("CHR-ROM", ushort(0x2000), ushort(0x2FFF), UByteBuffer.of(nesFile.data().video()));
-        videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 8 * 1024);
-        videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 8 * 1024);
+        BankedMemory videoData = new BankedMemory("CHR-ROM", ushort(0x0000), new Quantity(1, BANK_8KB))
+                .setVisibleBanks(new Quantity(1, BANK_8KB))
+                .setHiddenBanks(new Quantity(1, BANK_8KB));
 
-        currentProgramSegment = programData;
-        currentVideoSegment = videoData;
+        videoData.preloadHiddenBanks(nesFile.data().video());
+        videoData.configureVisibleBank(0, 0);
 
-        // TODO: adjust to mirroring mode / layout
-        // TODO: adjust to mapper
-        //
+        // TODO: banked memory but only if 4 screen
+        PhysicalMemory videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024);
+        PhysicalMemory videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024);
+
+        ppuBusDevice.attach(videoData);
     }
 
     @Override
@@ -117,148 +113,54 @@ public class CartridgeImpl implements Cartridge {
     }
 
     @Override
-    public MemoryDevice.ReadWrite getCpuBusDevice() { // TODO: provide code and data segment registers somehow?
-        return new CpuBusDevice();
+    public MemoryDevice.ReadWrite getCpuBusDevice() {
+        return cpuBusDevice;
     }
 
     @Override
     public void setIrqDetector(Detector irqDetector) {}
 
     @Override
-    public MemoryDevice.ReadWrite getPpuBusDevice(MemoryDevice.ReadWrite ppuVideoMemory) {
-        return new PpuBusDevice();
+    public MemoryDevice.ReadWrite getPpuBusDevice(
+        BankedMemory ppuVideoMemory
+    ) {
+        this.ppuVideoMemory = ppuVideoMemory;
+
+        configurePpuVideoMemory();
+
+        return ppuBusDevice;
+    }
+
+    private void configurePpuVideoMemory() {
+        final BankedMemory ppuVideoMemory = assertNonNull(this.ppuVideoMemory, "ppuVideoMemory should not be null");
+
+        ppuVideoMemory
+            .setVisibleBanks(new Quantity(4, BANK_1KB));
+
+        switch(nesFile.meta().videoData().layout()) {
+            case STANDARD_VERTICAL, ALTERNATIVE_VERTICAL -> ppuVideoMemory
+                .configureVisibleBank(0, 0)
+                .configureVisibleBank(1, 0)
+                .configureVisibleBank(2, 1)
+                .configureVisibleBank(3, 1);
+            case STANDARD_HORIZONTAL, ALTERNATIVE_HORIZONTAL -> ppuVideoMemory
+                .configureVisibleBank(0, 0)
+                .configureVisibleBank(1, 1)
+                .configureVisibleBank(2, 0)
+                .configureVisibleBank(3, 1);
+        }
+
+        ppuBusDevice.attach(ppuVideoMemory);
     }
 
     @Override
     public void disconnect() {
+        if (ppuVideoMemory != null) {
+            ppuBusDevice.detach(ppuVideoMemory);
+            ppuVideoMemory = null;
+        }
+
         // TODO: disconnect from irq
-        // TODO: disconnect from PPU CIRAM / video memory
         // TODO: maybe onDetach cpu and ppu bus devices
-    }
-
-    private class CpuBusDevice implements MemoryDevice.ReadWrite {
-
-        // TODO: Make this class a PagedMemory
-        // TODO: mapper is a MemoryDevice listening on some / all address ranges and reconfiguring banks, etc?
-
-        @Override
-        public void onAccess(@Unsigned short address) {
-            int addrVal = sint(address);
-
-            currentProgramAddress = address;
-
-            if (0x6000 <= addrVal && addrVal <= 0x7FFF) {
-                currentProgramSegment = programMemory;
-            } else if (0x8000 <= addrVal && addrVal <= 0xFFFF) {
-                currentProgramSegment = programData;
-                // TODO: mirror data in case of 1x 16KB bank
-            } else {
-                currentProgramSegment = emptyDevice;
-            }
-
-            currentProgramSegment.onAccess(currentProgramAddress);
-        }
-
-        @Override
-        public @Unsigned short getStartAddress() {
-            return ushort(0x6000);
-        }
-
-        @Override
-        public @Unsigned short getEndAddress() {
-            return ushort(0xFFFF);
-        }
-
-        @Override
-        public void onRead() {
-            currentProgramSegment.onRead();
-        }
-
-        @Override
-        public void onWrite() {
-            currentProgramSegment.onWrite();
-        }
-
-        @Override
-        public void onAttach(DataBus.Line dataLine) {
-            programData.onAttach(dataLine);
-            programMemory.onAttach(dataLine);
-            programStorage.onAttach(dataLine);
-        }
-
-        @Override
-        public void onDetach() {
-            programData.onDetach();
-            programMemory.onDetach();
-            programStorage.onDetach();
-        }
-
-        @Override
-        public String toString() {
-            return "CART.PROGRAM (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
-        }
-    }
-
-    private class PpuBusDevice implements MemoryDevice.ReadWrite {
-
-        @Override
-        public void onAccess(@Unsigned short address) {
-            int addrVal = sint(address);
-
-            currentVideoAddress = address; // TODO: translate
-
-            if (0x0000 <= addrVal && addrVal <= 0x1FFF) {
-                currentVideoSegment = videoData;
-
-            } else if (0x2000 <= addrVal && addrVal <= 0x2FFF) {
-                currentVideoSegment = videoMemory;
-                // TODO: mirror data: vertical / horizontal / 1s / 4s
-            } else if (0x3000 <= addrVal && addrVal <= 0x3EFF) {
-                currentVideoSegment = emptyDevice; // unused, TODO: mirror 0x2000-2EFF
-            } else {
-                currentVideoSegment = emptyDevice;
-            }
-
-            currentVideoSegment.onAccess(currentVideoAddress);
-        }
-
-        @Override
-        public @Unsigned short getStartAddress() {
-            return ushort(0x0000);
-        }
-
-        @Override
-        public @Unsigned short getEndAddress() {
-            return ushort(0x1FFF);
-        }
-
-        @Override
-        public void onRead() {
-            currentVideoSegment.onRead();
-        }
-
-        @Override
-        public void onWrite() {
-            currentVideoSegment.onWrite();
-        }
-
-        @Override
-        public void onAttach(DataBus.Line dataLine) {
-            videoData.onAttach(dataLine);
-            videoMemory.onAttach(dataLine);
-            videoStorage.onAttach(dataLine);
-        }
-
-        @Override
-        public void onDetach() {
-            videoData.onDetach();
-            videoMemory.onDetach();
-            videoStorage.onDetach();
-        }
-
-        @Override
-        public String toString() {
-            return "CART.VIDEO (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
-        }
     }
 }

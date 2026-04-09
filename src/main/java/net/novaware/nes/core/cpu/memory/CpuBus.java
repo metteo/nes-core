@@ -32,7 +32,7 @@ public class CpuBus implements MemoryBus {
     private final CycleCounter cycleCounter;
 
     @Owned
-    private final PagedMemory internal = new PagedMemory("INTERNAL", new MemoryDevice.Empty());
+    private final PagedMemory internal = new PagedMemory("INTERNAL", CpuMemMap.MEMORY_SIZE, new MemoryDevice.Empty());
 
     @Used
     private MemoryDevice.ReadWrite cartridge = new MemoryDevice.Empty(); // TODO: consider using single injected instance to allow testing

@@ -6,6 +6,7 @@ import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.internal.Detector;
 import net.novaware.nes.core.file.NesFile;
+import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.port.CartridgePort;
 
@@ -27,7 +28,7 @@ public interface Cartridge {
     /**
      * CPU A0-A15, D0-D7, R/W
      */
-    MemoryDevice.ReadWrite getCpuBusDevice();
+    MemoryDevice.ReadWrite getCpuBusDevice(); // TODO: provide code and data segment registers somehow?
 
     /**
      * ___
@@ -39,7 +40,7 @@ public interface Cartridge {
      * @param ppuVideoMemory CIRAM A10, /CE
      * @return PPU A0-A13, D0-D7, /RD, /WR
      */
-    MemoryDevice.ReadWrite getPpuBusDevice(MemoryDevice.ReadWrite ppuVideoMemory);
+    MemoryDevice.ReadWrite getPpuBusDevice(BankedMemory ppuVideoMemory);
 
     /**
      * @param in Audio from 2A03

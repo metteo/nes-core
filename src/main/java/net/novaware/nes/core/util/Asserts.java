@@ -1,5 +1,8 @@
 package net.novaware.nes.core.util;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -29,6 +32,18 @@ public final class Asserts {
         requireNonNull(message, MESSAGE_SUPPLIER_NOT_NULL);
 
         assertArgument(assertion, message.get());
+    }
+
+    @SuppressWarnings("nullness")
+    public static <T> @NonNull T assertNonNull(final @Nullable T object, final String message) {
+        requireNonNull(message, MESSAGE_NOT_NULL);
+        return requireNonNull(object, message);
+    }
+
+    @SuppressWarnings("nullness")
+    public static <T> @NonNull T assertNonNull(final @Nullable T object, final Supplier<String> message) {
+        requireNonNull(message, MESSAGE_SUPPLIER_NOT_NULL);
+        return assertNonNull(object, message.get());
     }
 
     public static void assertState(final boolean assertion, final String message) {

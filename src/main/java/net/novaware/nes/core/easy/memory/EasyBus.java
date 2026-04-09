@@ -20,6 +20,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
+import static net.novaware.nes.core.easy.memory.EasyMemMap.MEMORY_SIZE;
 import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 
 /**
@@ -30,7 +31,7 @@ import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 public class EasyBus implements MemoryBus {
 
     @Owned
-    private final PagedMemory internal = new PagedMemory("INTERNAL", new MemoryDevice.Empty());
+    private final PagedMemory internal = new PagedMemory("INTERNAL", MEMORY_SIZE, new MemoryDevice.Empty());
     private final CycleCounter cycleCounter;
 
     private final SegmentRegister codeSegment;
