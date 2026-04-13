@@ -18,8 +18,8 @@ class CartridgeImplSpec extends Specification {
         def programData = nesFile.data().program()
         def cartridge = new CartridgeImpl(nesFile)
         def vram = new BankedMemory("VRAM", PpuMemMap.VRAM_START, new Quantity(1, BANK_1KB))
-                .setHiddenBanks(new Quantity(2, BANK_1KB))
-                .allocateHiddenBanks();
+                .setPhysicalBanks(new Quantity(2, BANK_1KB))
+                .allocatePhysicalBanks();
 
         def program = new TestBus(cartridge.getCpuBusDevice())
         def video = new TestBus(cartridge.getPpuBusDevice(vram))

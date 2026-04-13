@@ -13,32 +13,13 @@ import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-// visible bank size & count
-// hidden bank size & count
-
-// if visible bank size sum > hidden = mirror
-// if visible bank size sum < hidden = switch
-
-// for program: 16KB (standard), 8KB (e.g. MMC3,...), 32KB (AxROM)
-// for video: 8KB (whole tileset), 4KB (bg and fg), 1-2KB (animation every frame, MMC3)
-
-// Special cases:
-// power of 2 mirroring
-// fixed vs swappable banks
-// mirroring modes: v, h, 1 screen, 4 screen
-// write protection: throw error or ignore writes
-
-// TODO: initial configuration
-// for many to one (mirroring), set all visible banks to the hidden one
-// for 1 to 1 (direct), set up the pairs
-// for 1 to many (switching) set first to first, second to last (for program)
-
 /**
  * Usage stages:
  * 1. Instantiate
- * 2. Set Visible / Hidden bank quantities
- * 3. Allocate / Preload HiddenBanks
- * 4. Configure Visible banks
+ * 2. Set Physical bank quantity
+ * 3. Allocate / Preload Physical Banks
+ * 4. Set Virtual bank quantity
+ * 5. Map Virtual banks to Physical banks
  */
 public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
 
@@ -46,11 +27,11 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     private final @Unsigned short startAddress;
     private final Quantity bankSize;
 
+    private UByteBuffer[] physicalBanks;  // data
+    private UByteBuffer[] virtualBanks;   // refs
+
     private int bankIndex;
     private int bankAddress;
-
-    private UByteBuffer[] visibleBanks; // refs
-    private UByteBuffer[] hiddenBanks;  // data
 
     private DataBus.Line dataLine = new OpenLine();
 
@@ -66,8 +47,8 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         this.startAddress = startAddress;
         this.bankSize = bankSize;
 
-        visibleBanks = new UByteBuffer[0];
-        hiddenBanks = new UByteBuffer[0];
+        virtualBanks = new UByteBuffer[0];
+        physicalBanks = new UByteBuffer[0];
     }
 
     @Override
@@ -75,47 +56,54 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         return name;
     }
 
-    public BankedMemory setHiddenBanks(Quantity hiddenBanks) {
-        assertArgument(hiddenBanks.unit() == bankSize.unit(), "hidden banks unit different from bank size");
+    public BankedMemory setPhysicalBanks(Quantity physicalBanks) {
+        assertArgument(physicalBanks.unit() == bankSize.unit(), "physical banks unit different from bank size");
 
-        this.hiddenBanks = new UByteBuffer[hiddenBanks.amount()];
+        this.physicalBanks = new UByteBuffer[physicalBanks.amount()];
         return this;
     }
 
-    public BankedMemory allocateHiddenBanks() {
-        for (int i = 0; i < this.hiddenBanks.length; i++) {
-            this.hiddenBanks[i] = UByteBuffer.allocate(bankSize.toBytes());
+    public Quantity getPhysicalBankCount() {
+        return new Quantity(physicalBanks.length, bankSize.unit());
+    }
+
+    public BankedMemory allocatePhysicalBanks() {
+        for (int i = 0; i < this.physicalBanks.length; i++) {
+            this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes());
         }
 
         return this;
     }
 
-    public void preloadHiddenBanks(ByteBuffer data) {
-        // TODO: assert hidden banks sum size == data.size()
+    public void preloadPhysicalBanks(ByteBuffer data) {
+        assertArgument(data.capacity() == getPhysicalBankCount().toBytes(), "mismatch between data and physical banks");
 
-        int divider = hiddenBanks.length;
+        int divider = physicalBanks.length;
         int bankSize = this.bankSize.toBytes();
 
         for (int i = 0; i < divider; i++) {
-            hiddenBanks[i] = UByteBuffer.of(data
+            physicalBanks[i] = UByteBuffer.of(data
                     .slice(i * bankSize, bankSize)
                     .order(LITTLE_ENDIAN));
         }
     }
 
-    public BankedMemory setVisibleBanks(Quantity visibleBanks) {
-        assertArgument(visibleBanks.unit() == bankSize.unit(), "visible banks unit different from bank size");
+    public BankedMemory setVirtualBanks(Quantity virtualBanks) {
+        assertArgument(virtualBanks.unit() == bankSize.unit(), "virtual banks unit different from bank size");
 
-        this.visibleBanks = new UByteBuffer[visibleBanks.amount()];
+        this.virtualBanks = new UByteBuffer[virtualBanks.amount()];
         return this;
     }
 
-    // TODO: change to a chain call pointVisible(1).toHidden(0) or similar
-    public BankedMemory configureVisibleBank(int visibleBank, int hiddenBank) {
-        assertArgument(0 <= visibleBank && visibleBank < visibleBanks.length, "visible bank out of range");
-        assertArgument(hiddenBank >= 0, "hidden bank out of range");
+    public Quantity getVirtualBankCount() {
+        return new Quantity(virtualBanks.length, bankSize.unit());
+    }
 
-        this.visibleBanks[visibleBank] = this.hiddenBanks[hiddenBank % hiddenBanks.length];
+    public BankedMemory mapVirtualToPhysical(int virtualBank, int physicalBank) {
+        assertArgument(0 <= virtualBank && virtualBank < virtualBanks.length, "virtual bank out of range");
+        assertArgument(physicalBank >= 0, "physical bank out of range");
+
+        this.virtualBanks[virtualBank] = this.physicalBanks[physicalBank % physicalBanks.length];
 
         return this;
     }
@@ -127,38 +115,38 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     @Override
     public @Unsigned short getEndAddress() {
-        return ushort(sint(startAddress) + (visibleBanks.length * bankSize.toBytes()) - 1);
+        return ushort(sint(startAddress) + (virtualBanks.length * bankSize.toBytes()) - 1);
     }
 
     @Override
     public void onAccess(@Unsigned short address) {
         int addrVal = sint(address);
-        int visibleAddress = addrVal - sint(startAddress);
+        int virtualAddress = addrVal - sint(startAddress);
 
         // TODO: slow in hot code, change to shifting / masking
-        bankIndex = visibleAddress / bankSize.toBytes();
-        bankAddress = visibleAddress % bankSize.toBytes();
+        bankIndex = virtualAddress / bankSize.toBytes();
+        bankAddress = virtualAddress % bankSize.toBytes();
 
         // Assuming bankSize is a power of two, TODO: don't assume, assert in constructor!
         // TODO: maybe make as fields
         int shift = Integer.numberOfTrailingZeros(bankSize.toBytes());
         int mask = bankSize.toBytes() - 1;
 
-        int bankIndex2 = visibleAddress >> shift;
-        int bankAddress2 = visibleAddress & mask;
+        int bankIndex2 = virtualAddress >> shift;
+        int bankAddress2 = virtualAddress & mask;
 
         assertArgument(bankIndex == bankIndex2, "shift produced wrong value");
         assertArgument(bankAddress == bankAddress2, "mask produced wrong value");
 
-        visibleBanks[bankIndex].position(bankAddress);
+        virtualBanks[bankIndex].position(bankAddress);
     }
 
     public @Unsigned byte readByte() {
-        return visibleBanks[bankIndex].get(bankAddress);
+        return virtualBanks[bankIndex].get(bankAddress);
     }
 
     public void writeByte(@Unsigned byte data) {
-        visibleBanks[bankIndex].put(bankAddress, data);
+        virtualBanks[bankIndex].put(bankAddress, data);
     }
 
     @Override

@@ -19,11 +19,13 @@ class BankedMemorySpec extends Specification {
             new Quantity(1, BANK_16KB)
         )
         bankedMemory
-            .setVisibleBanks(new Quantity(2, BANK_16KB))
-            .setHiddenBanks(new Quantity(4, BANK_16KB))
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .setPhysicalBanks(new Quantity(4, BANK_16KB))
 
         expect:
         bankedMemory.getEndAddress() == ushort(0xFFFF)
+        bankedMemory.getPhysicalBankCount() == new Quantity(4, BANK_16KB)
+        bankedMemory.getVirtualBankCount() == new Quantity(2, BANK_16KB)
     }
 
     def "should map 32KB of data over 32KB address space (direct)"() {
@@ -34,13 +36,13 @@ class BankedMemorySpec extends Specification {
             new Quantity(1, BANK_16KB)
         )
         bankedMemory
-            .setHiddenBanks(new Quantity(2, BANK_16KB))
-            .allocateHiddenBanks()
+            .setPhysicalBanks(new Quantity(2, BANK_16KB))
+            .allocatePhysicalBanks()
 
         bankedMemory
-            .setVisibleBanks(new Quantity(2, BANK_16KB))
-            .configureVisibleBank(0, 0)
-            .configureVisibleBank(1, 1)
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .mapVirtualToPhysical(0, 0)
+            .mapVirtualToPhysical(1, 1)
 
         def memory = new TestBus(bankedMemory)
 
@@ -82,13 +84,13 @@ class BankedMemorySpec extends Specification {
             new Quantity(1, BANK_16KB)
         )
         bankedMemory
-            .setHiddenBanks(new Quantity(1, BANK_16KB))
-            .allocateHiddenBanks()
+            .setPhysicalBanks(new Quantity(1, BANK_16KB))
+            .allocatePhysicalBanks()
 
         bankedMemory
-            .setVisibleBanks(new Quantity(2, BANK_16KB))
-            .configureVisibleBank(0, 0)
-            .configureVisibleBank(1, 0)
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .mapVirtualToPhysical(0, 0)
+            .mapVirtualToPhysical(1, 0)
 
         def memory = new TestBus(bankedMemory)
 

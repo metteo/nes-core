@@ -7,15 +7,11 @@ import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
-import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 @SuppressWarnings({"initialization.fields.uninitialized", "return"}) // TODO: remove when fully implemented
 public class PpuBus implements MemoryBus {
-
-    @Used
-    private CycleCounter cycleCounter;
 
     // TODO: cart and expansion don't have the pallete indexes and don't hear anything above 0x3F00 (excl.)
     @Used
@@ -41,57 +37,88 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
+    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
+        this.cartridge = cartridge;
+        this.cartridge.onAttach(dataLine);
+    }
+
+    @Override
+    public void detachCartridge() {
+        cartridge.onDetach();
+        cartridge = new MemoryDevice.Empty();
+    }
+
+    @Override
+    public void attachExpansion(MemoryDevice.ReadWrite expansion) {
+        this.expansion = expansion;
+        this.expansion.onAttach(dataLine);
+    }
+
+    @Override
+    public void detachExpansion() {
+        expansion.onDetach();
+        expansion = new MemoryDevice.Empty();
+    }
+
+    @Override
+    public ControlBus.Line access(@Unsigned short address) {
+        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
+
+        busOp = BusOp.ADDRESS_ACCESS;
+        addressLatch = address;
+
+        cartridge.onAccess(addressLatch);
+        expansion.onAccess(addressLatch);
+
+        return this;
+    }
+
+    @Override
+    public DataBus.Read read() {
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+
+        busOp = BusOp.CONTROL_READ;
+
+        return this;
+    }
+
+    @Override
+    public DataBus.Write write() {
+        assert busOp == BusOp.ADDRESS_ACCESS; // compile out
+
+        busOp = BusOp.CONTROL_WRITE;
+
+        return this;
+    }
+
+    @Override // TODO: verify that the bus is reverted to correct state
     public @Unsigned byte peek(@Unsigned short address) {
         return 0; // TODO: implement
     }
 
     @Override
-    public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
-        // TODO: Pattern tables from cartridge
-        // TODO: nametables (internal vram) with mirroring
-        // TODO: external vram
-    }
-
-    @Override
-    public void detachCartridge() {
-
-    }
-
-    @Override
-    public void attachExpansion(MemoryDevice.ReadWrite expansion) {
-
-    }
-
-    @Override
-    public void detachExpansion() {
-
-    }
-
-    @Override
-    public ControlBus.Line access(@Unsigned short address) {
-        cartridge.onAccess(addressLatch);
-        expansion.onAccess(addressLatch);
-
-        return null;
-    }
-
-    @Override
-    public DataBus.Read read() {
-        return null;
-    }
-
-    @Override
-    public DataBus.Write write() {
-        return null;
-    }
-
-    @Override
     public @Unsigned byte data() {
-        return 0;
+        assert busOp == BusOp.CONTROL_READ; // compile out
+
+        busOp = BusOp.DATA_READ;
+
+        cartridge.onRead();
+        expansion.onRead();
+
+        return dataLine.cycle(); // PPU reading the line
     }
 
     @Override
     public void data(@Unsigned byte data) {
+        assert busOp == BusOp.CONTROL_WRITE; // compile out
 
+        busOp = BusOp.DATA_WRITE;
+
+        dataLine.data(data); // PPU driving the line
+
+        cartridge.onWrite();
+        expansion.onWrite();
+
+        dataLine.cycle();
     }
 }

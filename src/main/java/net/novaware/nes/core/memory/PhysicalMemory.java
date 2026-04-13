@@ -7,6 +7,9 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
+/**
+ * TODO: write a Javadoc about size vs end address
+ */
 public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
@@ -70,7 +73,7 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public void onAccess(@Unsigned short address) {
         // TODO: check how validation of address within range will affect performance (always vs assert)
-        position = (sint(address) - sint(startAddress)) & mask;
+        position = (sint(address) - sint(startAddress)) & mask; // TODO: test if mirroring works for non 0 start
 
         buffer.position(position);
     }
