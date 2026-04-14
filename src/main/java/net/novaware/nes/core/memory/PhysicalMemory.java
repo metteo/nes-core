@@ -73,6 +73,8 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public void onAccess(@Unsigned short address) {
         // TODO: check how validation of address within range will affect performance (always vs assert)
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress) : "address out of range";
+
         position = (sint(address) - sint(startAddress)) & mask; // TODO: test if mirroring works for non 0 start
 
         buffer.position(position);

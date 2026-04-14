@@ -25,4 +25,6 @@ public interface MemoryDevice extends AddressBus.Device {
         @Override public void onDetach() {}
         @Override public String toString() { return "EMPTY"; }
     }
+
+    // TODO: maybe single instance of empty?
 }
