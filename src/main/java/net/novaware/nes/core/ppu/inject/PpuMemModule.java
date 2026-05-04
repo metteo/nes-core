@@ -11,6 +11,7 @@ import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.util.Quantity;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PALETTE;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_MIRROR_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_SIZE;
@@ -40,7 +41,7 @@ public interface PpuMemModule {
     @BoardScope
     static PaletteMemory paletteMemory() {
         return new PaletteMemory(
-            "Palette RAM",
+            PALETTE.doc(),
             PALETTE_RAM_START,
             PALETTE_RAM_MIRROR_END,
             PALETTE_RAM_SIZE

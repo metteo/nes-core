@@ -42,7 +42,7 @@ public class CpuRegFile extends RegisterFile {
         @CpuVar(SP) ByteRegister stackPointer,
         @CpuVar(PS) StatusRegister status
     ) {
-        super("CPU_REG");
+        super("CPU.REGS");
 
         dataRegisters = List.of(
             this.accumulator = accumulator,

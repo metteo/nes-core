@@ -1,11 +1,9 @@
 package net.novaware.nes.core.ppu.register;
 
-import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.register.Register;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 
-@BoardScope
 public class PpuStatusRegister extends Register {
 
     private boolean verticalBlank;

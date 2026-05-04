@@ -32,7 +32,8 @@ public enum PpuVarName {
 
     // endregion
 
-    VRAM ("", "videoMemory", "VRAM"),
+    VRAM ("", "videoMemory", "Video RAM"),
+    PALETTE ("", "paletteMemory", "Palette RAM"),
 
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),

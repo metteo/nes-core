@@ -323,11 +323,11 @@ class ControlUnitAddressingSpec extends ControlUnitBaseSpec {
         def cu = newControlUnit()
 
         insRegs.currentInstruction.set(instr.opcode())
-        insRegs.currentOperand.setAsShort(0x2345)
+        insRegs.currentOperand.setAsShort(0x1245)
 
         regs x: x, y: y
         ram (
-            (0x2345 + x + y), 0x13
+            (0x1245 + x + y), 0x13
         )
 
         rec.record()

@@ -38,13 +38,4 @@ public class PpuRegFile extends RegisterFile {
                 ppuScroll, ppuAddr, ppuData
         );
     }
-
-    public ByteRegister[] getCpuRegisters() {
-        return new ByteRegister[]{
-                ppuCtrl, ppuMask, ppuStatus,
-                oamAddr, oamData,
-                ppuScroll, ppuAddr, ppuData
-        };
-    }
-
 }

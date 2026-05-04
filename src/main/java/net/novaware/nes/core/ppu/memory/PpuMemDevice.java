@@ -18,6 +18,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_END;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -52,7 +53,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(VX) ViewPortRegister currentViewPort,
         @PpuVar(T) ViewPortRegister tempViewPort,
         @PpuVar(W) BooleanRegister writeRegister,
-        PpuStatusRegister statusRegister
+        @PpuVar(PS) PpuStatusRegister statusRegister
     ) {
         this.ppuBus = ppuBus;
         this.currentViewPort = currentViewPort;
