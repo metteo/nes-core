@@ -1,17 +1,19 @@
 package net.novaware.nes.core.port.internal;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.inject.PpuVarName;
 import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 
 @BoardScope
 public class CartridgePortImpl implements CartridgePort {
@@ -26,8 +28,8 @@ public class CartridgePortImpl implements CartridgePort {
     @Inject
     public CartridgePortImpl(
         @CpuVar(BUS) MemoryBus cpuBus,
-        @Named("VRAM") BankedMemory ppuVideoMemory,
-        @Named("PPU.BUS") MemoryBus ppuBus
+        @PpuVar(VRAM) BankedMemory ppuVideoMemory,
+        @PpuVar(PpuVarName.BUS) MemoryBus ppuBus // TODO: consider PpuBus & CpuBus here
     ) {
         this.cpuBus = cpuBus;
         this.ppuVideoMemory = ppuVideoMemory;

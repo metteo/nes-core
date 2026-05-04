@@ -4,7 +4,6 @@ import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
-import net.novaware.nes.core.register.ShortRegister;
 
 import java.util.List;
 
@@ -16,10 +15,9 @@ public class PpuRegFile extends RegisterFile {
 
     public CycleCounter cycleCounter = new CycleCounter("PPUCC");
 
-    // TODO: enforce R / W / RW / Wx2 specifics
     private ByteRegister ppuCtrl = new ByteRegister("PPUCTRL"); // 0x2000
     private ByteRegister ppuMask = new ByteRegister("PPUMASK"); // ...
-    private ByteRegister ppuStatus = new ByteRegister("PPUSTATUS"); // TODO: use a dedicated register type
+    private ByteRegister ppuStatus = new ByteRegister("PPUSTATUS");
 
     private ByteRegister oamAddr = new ByteRegister("OAMADDR");
     private ByteRegister oamData = new ByteRegister("OAMDATA");
@@ -28,30 +26,17 @@ public class PpuRegFile extends RegisterFile {
     private ByteRegister ppuAddr = new ByteRegister("PPUADDR");
     private ByteRegister ppuData = new ByteRegister("PPUDATA"); // 0x2007
 
-    // TODO: create special register for those that accepts 2 writes
-    private ShortRegister ppuScrollFull = new ShortRegister("PPUSCROLL_FULL");
-    private ShortRegister ppuAddrFull = new ShortRegister("PPUADDR_FULL");
-
-    // Internal
-    private ByteRegister v = new ByteRegister("V");
-    private ByteRegister t = new ByteRegister("T");
-    private ByteRegister x = new ByteRegister("X");
-    private ByteRegister w = new ByteRegister("W");
-
     //@Inject
     public PpuRegFile() {
-        super("PPU_REG");
+        super("PPU.REGS");
 
         // TODO: inject with all the registers from module instead of creating them here
 
         dataRegisters = List.of(
                 ppuCtrl, ppuMask, ppuStatus,
                 oamAddr, oamData,
-                ppuScroll, ppuAddr, ppuData,
-                v, t, x, w
+                ppuScroll, ppuAddr, ppuData
         );
-
-        addressRegisters = List.of(ppuScrollFull, ppuAddrFull);
     }
 
     public ByteRegister[] getCpuRegisters() {

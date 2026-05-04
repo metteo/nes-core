@@ -3,7 +3,6 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
-import jakarta.inject.Named;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -11,6 +10,8 @@ import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.util.Quantity;
 
+import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_MIRROR_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_SIZE;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_START;
@@ -22,10 +23,10 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
-    @Named("VRAM") // TODO: Switch to @PpuVar?
+    @PpuVar(VRAM)
     static BankedMemory provideVideoMemory() {
         BankedMemory videoMemory = new BankedMemory(
-            "VRAM",
+            VRAM.doc(),
             VRAM_START,
             new Quantity(1, BANK_1KB)
         )
@@ -48,6 +49,6 @@ public interface PpuMemModule {
 
     @Binds
     @BoardScope
-    @Named("PPU.BUS") // TODO: Switch to @PpuVar?
+    @PpuVar(BUS)
     MemoryBus bindPpuBus(PpuBus ppuBus);
 }

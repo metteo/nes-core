@@ -42,11 +42,6 @@ public class Board {
 
     // TODO: include here RAM,
 
-    /*
-    @Owned
-    @Named(CPU_RAM)
-    private final PhysicalMemory cpuMemory;
-    */
     @Inject
     /* package */ Board(
         final Cpu cpu,

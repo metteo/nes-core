@@ -75,7 +75,7 @@ public interface CpuMemModule {
     @CpuVar(PPU)
     static MemoryDevice.ReadWrite providePpuRegs(PpuRegFile ppuRegFile) {
         return new ByteRegisterMemory(
-            "PPU_REGS",
+            "PPU.REGS",
             PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
             ppuRegFile.getCpuRegisters()
         );
