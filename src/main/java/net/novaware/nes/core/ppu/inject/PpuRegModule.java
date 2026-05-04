@@ -3,7 +3,6 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.BoardScope;
-import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;
@@ -38,12 +37,6 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
  */
 @Module
 public interface PpuRegModule {
-
-    @Provides
-    @BoardScope
-    static PpuRegFile providePpuRegFile() { // TODO: use @Inject instead
-        return new PpuRegFile();
-    }
 
     @Provides
     @BoardScope
