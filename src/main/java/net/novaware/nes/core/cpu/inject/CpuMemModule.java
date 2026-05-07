@@ -16,7 +16,7 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.memory.RecordingDevice;
-import net.novaware.nes.core.ppu.register.PpuRegFile;
+import net.novaware.nes.core.ppu.memory.PpuMemDevice;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
@@ -46,8 +46,6 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_START;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_END;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_MIRROR_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.RAM_START;
@@ -70,23 +68,17 @@ public interface CpuMemModule {
         return new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE);
     }
 
-    @Provides
+    @Binds
     @BoardScope
     @CpuVar(PPU)
-    static MemoryDevice.ReadWrite providePpuRegs(PpuRegFile ppuRegFile) {
-        return new ByteRegisterMemory(
-            "PPU_REGS",
-            PPU_REGISTERS_START, PPU_REGISTERS_MIRROR_END,
-            ppuRegFile.getCpuRegisters()
-        );
-    }
+    MemoryDevice.ReadWrite bindPpuMemDevice(PpuMemDevice ppuMemDevice);
 
     @Provides
     @BoardScope
     @CpuVar(ACR)
     static MemoryDevice.WriteOnly provideApuRegs(ApuRegFile apuRegFile) {
         return new ByteRegisterMemory(
-            "APU_REGS",
+            "APU.REGS",
             APU_REGISTERS_START, APU_REGISTERS_END,
             apuRegFile.getCpuRegisters()
         );

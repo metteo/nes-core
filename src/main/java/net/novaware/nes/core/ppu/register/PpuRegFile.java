@@ -1,6 +1,9 @@
 package net.novaware.nes.core.ppu.register;
 
+import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.RegisterFile;
@@ -8,58 +11,115 @@ import net.novaware.nes.core.register.ShortRegister;
 
 import java.util.List;
 
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
+
 /**
- * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org
+ * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org</a>
  */
 @BoardScope
 public class PpuRegFile extends RegisterFile {
 
-    public CycleCounter cycleCounter = new CycleCounter("PPUCC");
+    // TODO: switch to private + getters when PPU impl is more advanced
+    public final CycleCounter cycleCounter;
+    public final PpuStatusRegister status;
+    public final BooleanRegister hBlank;
+    public final ViewPortRegister currentViewPort;
+    public final ViewPortRegister tempViewPort;
+    public final BooleanRegister secondWrite;
 
-    // TODO: enforce R / W / RW / Wx2 specifics
-    private ByteRegister ppuCtrl = new ByteRegister("PPUCTRL"); // 0x2000
-    private ByteRegister ppuMask = new ByteRegister("PPUMASK"); // ...
-    private ByteRegister ppuStatus = new ByteRegister("PPUSTATUS"); // TODO: use a dedicated register type
+    public final BooleanRegister vBlankInterruptEnabled;
+    public final BooleanRegister masterSlaveSelect;
+    public final BooleanRegister spriteSize;
+    public final ShortRegister backgroundPatternTable;
+    public final ShortRegister spritePatternTable;
+    public final ByteRegister vramAddressIncrement;
 
-    private ByteRegister oamAddr = new ByteRegister("OAMADDR");
-    private ByteRegister oamData = new ByteRegister("OAMDATA");
+    public final BooleanRegister emphasizeRed;
+    public final BooleanRegister emphasizeGreen;
+    public final BooleanRegister emphasizeBlue;
+    public final BooleanRegister renderSprite;
+    public final BooleanRegister renderBackground;
+    public final BooleanRegister maskSprite;
+    public final BooleanRegister maskBackground;
+    public final BooleanRegister greyscale;
 
-    private ByteRegister ppuScroll = new ByteRegister("PPUSCROLL");
-    private ByteRegister ppuAddr = new ByteRegister("PPUADDR");
-    private ByteRegister ppuData = new ByteRegister("PPUDATA"); // 0x2007
+    private final ByteRegister oamAddress;
 
-    // TODO: create special register for those that accepts 2 writes
-    private ShortRegister ppuScrollFull = new ShortRegister("PPUSCROLL_FULL");
-    private ShortRegister ppuAddrFull = new ShortRegister("PPUADDR_FULL");
+    @Inject
+    public PpuRegFile(
+        @PpuVar(CC) CycleCounter cycleCounter,
+        @PpuVar(PS) PpuStatusRegister status,
+        @PpuVar(HB) BooleanRegister hBlank,
+        @PpuVar(VX) ViewPortRegister currentViewPort,
+        @PpuVar(T)  ViewPortRegister tempViewPort,
+        @PpuVar(W)  BooleanRegister secondWrite,
 
-    // Internal
-    private ByteRegister v = new ByteRegister("V");
-    private ByteRegister t = new ByteRegister("T");
-    private ByteRegister x = new ByteRegister("X");
-    private ByteRegister w = new ByteRegister("W");
+        @PpuVar(CV) BooleanRegister vBlankInterruptEnabled,
+        @PpuVar(CP) BooleanRegister masterSlaveSelect,
+        @PpuVar(CH) BooleanRegister spriteSize,
+        @PpuVar(CB) ShortRegister backgroundPatternTable,
+        @PpuVar(CS) ShortRegister spritePatternTable,
+        @PpuVar(CI) ByteRegister vramAddressIncrement,
 
-    //@Inject
-    public PpuRegFile() {
-        super("PPU_REG");
+        @PpuVar(ER) BooleanRegister emphasizeRed,
+        @PpuVar(EG) BooleanRegister emphasizeGreen,
+        @PpuVar(EB) BooleanRegister emphasizeBlue,
+        @PpuVar(RS) BooleanRegister renderSprite,
+        @PpuVar(RB) BooleanRegister renderBackground,
+        @PpuVar(MS) BooleanRegister maskSprite,
+        @PpuVar(MB) BooleanRegister maskBackground,
+        @PpuVar(GS) BooleanRegister greyscale,
 
-        // TODO: inject with all the registers from module instead of creating them here
+        @PpuVar(OAM) ByteRegister oamAddress
+    ) {
+        super("PPU.REGS");
 
-        dataRegisters = List.of(
-                ppuCtrl, ppuMask, ppuStatus,
-                oamAddr, oamData,
-                ppuScroll, ppuAddr, ppuData,
-                v, t, x, w
+        this.cycleCounter = cycleCounter;
+        this.status = status;
+        this.hBlank = hBlank;
+        this.currentViewPort = currentViewPort;
+        this.tempViewPort = tempViewPort;
+        this.secondWrite = secondWrite;
+
+        this.vBlankInterruptEnabled = vBlankInterruptEnabled;
+        this.masterSlaveSelect = masterSlaveSelect;
+        this.spriteSize = spriteSize;
+
+        addressRegisters = List.of(
+            this.backgroundPatternTable = backgroundPatternTable,
+            this.spritePatternTable = spritePatternTable
         );
-
-        addressRegisters = List.of(ppuScrollFull, ppuAddrFull);
+        dataRegisters = List.of(
+            this.vramAddressIncrement = vramAddressIncrement,
+            this.oamAddress = oamAddress
+        );
+        this.emphasizeRed = emphasizeRed;
+        this.emphasizeGreen = emphasizeGreen;
+        this.emphasizeBlue = emphasizeBlue;
+        this.renderSprite = renderSprite;
+        this.renderBackground = renderBackground;
+        this.maskSprite = maskSprite;
+        this.maskBackground = maskBackground;
+        this.greyscale = greyscale;
     }
-
-    public ByteRegister[] getCpuRegisters() {
-        return new ByteRegister[]{
-                ppuCtrl, ppuMask, ppuStatus,
-                oamAddr, oamData,
-                ppuScroll, ppuAddr, ppuData
-        };
-    }
-
 }

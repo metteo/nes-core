@@ -77,7 +77,7 @@ public class RecordingDevice implements MemoryDevice.ReadWrite {
     }
 
     public List<Op> activity() {
-        return activity;
+        return List.copyOf(activity);
     }
 
     @Override

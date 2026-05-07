@@ -11,5 +11,5 @@ import dagger.Module;
     CpuSignalModule.class
 })
 public interface CpuModule {
-    // NOTE: do not add provide methods here.
+    // NOTE: do not add provide / bind methods here.
 }

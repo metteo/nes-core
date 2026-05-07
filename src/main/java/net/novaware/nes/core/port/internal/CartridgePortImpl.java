@@ -4,26 +4,36 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.CartridgePort;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.inject.PpuVarName;
 import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 
 @BoardScope
 public class CartridgePortImpl implements CartridgePort {
 
     private MemoryBus cpuBus;
-    // ppu bus too
+
+    private BankedMemory ppuVideoMemory;
+    private MemoryBus ppuBus;
 
     private @Nullable Cartridge cartridge; // TODO: replace with null object
 
     @Inject
     public CartridgePortImpl(
-        @CpuVar(BUS) MemoryBus cpuBus
+        @CpuVar(BUS) MemoryBus cpuBus,
+        @PpuVar(VRAM) BankedMemory ppuVideoMemory,
+        @PpuVar(PpuVarName.BUS) MemoryBus ppuBus // TODO: consider PpuBus & CpuBus here
     ) {
         this.cpuBus = cpuBus;
+        this.ppuVideoMemory = ppuVideoMemory;
+        this.ppuBus = ppuBus;
     }
 
     @Override
@@ -43,7 +53,7 @@ public class CartridgePortImpl implements CartridgePort {
 
 
         cpuBus.attachCartridge(cartridge.getCpuBusDevice());
-        //TODO: ppuBus.attach(cartridge.getVideo());
+        ppuBus.attachCartridge(cartridge.getPpuBusDevice(ppuVideoMemory));
     }
 
 

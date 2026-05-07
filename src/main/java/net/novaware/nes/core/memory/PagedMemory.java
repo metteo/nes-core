@@ -10,8 +10,8 @@ import java.util.List;
 import static net.novaware.nes.core.memory.DataBus.Line;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
-import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
  * Redirects calls to page specific device within index
@@ -19,6 +19,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
+    private final int lastPage;
     private final MemoryDevice.ReadWrite fallback;
 
     private final List<MemoryDevice> devices = new ArrayList<>();
@@ -33,11 +34,12 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private Line dataLine = new OpenLine();
 
-    public PagedMemory(String name, MemoryDevice.ReadWrite fallback) {
+    public PagedMemory(String name, int size, MemoryDevice.ReadWrite fallback) {
         this.name = name;
+        this.lastPage = (0xFF00 & (size - 1)) >> 8;
         this.fallback = fallback;
 
-        final int length = 0xFF + 1;
+        final int length = lastPage + 1;
 
         readPages = new MemoryDevice.ReadOnly[length];
         writePages = new MemoryDevice.WriteOnly[length];
@@ -60,14 +62,14 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     @Override
     public @Unsigned short getEndAddress() {
-        return USHORT_MAX_VALUE;
+        return ushort((lastPage << 8) | 0xFF);
     }
 
-    @SuppressWarnings("not.interned")
+    @SuppressWarnings("not.interned") // comparing refs on purpose
     public void attach(MemoryDevice memoryDevice) {
         devices.add(memoryDevice);
 
-        for (int page = 0; page <= 0xFF; page++) {
+        for (int page = 0; page <= lastPage; page++) {
             int pageStart = (page << 8);
             int pageEnd = pageStart | 0xFF;
 
@@ -92,6 +94,21 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
                     writePages[page] = writeDevice;
                 }
+            }
+        }
+    }
+
+    @SuppressWarnings("not.interned") // comparing refs on purpose
+    public void detach(MemoryDevice memoryDevice) {
+        devices.remove(memoryDevice);
+
+        for (int page = 0; page <= lastPage; page++) {
+            if (readPages[page] == memoryDevice) {
+                readPages[page] = fallback;
+            }
+
+            if (writePages[page] == memoryDevice) {
+                writePages[page] = fallback;
             }
         }
     }
@@ -145,5 +162,10 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
     @Override
     public String toString() {
         return name + " (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
+    }
+
+    // @VisibleForTesting
+    /* package */ int getAllocatedPageCount() {
+        return readPages.length + writePages.length;
     }
 }

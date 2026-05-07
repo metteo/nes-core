@@ -7,4 +7,5 @@ import dagger.Module;
     PpuMemModule.class
 })
 public interface PpuModule {
+    // NOTE: do not add provide / bind methods here.
 }

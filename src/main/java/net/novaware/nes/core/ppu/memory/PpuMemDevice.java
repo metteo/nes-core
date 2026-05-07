@@ -1,6 +1,397 @@
 package net.novaware.nes.core.ppu.memory;
 
-public class PpuMemDevice {
+import jakarta.inject.Inject;
+import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.cpu.memory.CpuBusBridge;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
+import net.novaware.nes.core.memory.DataBus;
+import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.memory.OpenLine;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.register.PpuStatusRegister;
+import net.novaware.nes.core.ppu.register.ViewPortRegister;
+import net.novaware.nes.core.register.BooleanRegister;
+import net.novaware.nes.core.register.ByteRegister;
+import net.novaware.nes.core.register.ShortRegister;
+import net.novaware.nes.core.util.Nameable;
+import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_BUS_ADDRESS_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_BUS_DATA_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_CONTROL_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_MASK_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_OAM_ADDRESS_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_OAM_DATA_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_END;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_SCROLL_REGISTER;
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_STATUS_REGISTER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
+import static net.novaware.nes.core.ppu.register.ViewPortRegister.COARSE_MASK;
+import static net.novaware.nes.core.ppu.register.ViewPortRegister.FINE_MASK;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+import static net.novaware.nes.core.util.UTypes.ushort;
+
+@BoardScope
+public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBridge {
+
+    private final MemoryBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
+    private final ObjAttrMemory oam;
+
+    private final ViewPortRegister currentViewPort;
+    private final ViewPortRegister tempViewPort;
+    private final BooleanRegister writeRegister;
+
+    private final PpuStatusRegister statusRegister;
+
+    private final ByteRegister vramAddressIncrement;
+    private final ShortRegister backgroundPatternTable;
+    private final ShortRegister spritePatternTable;
+    private final BooleanRegister vBlankInterruptEnabled;
+    private final BooleanRegister masterSlaveSelect;
+    private final BooleanRegister spriteSize;
+
+    private final BooleanRegister emphasizeRed;
+    private final BooleanRegister emphasizeGreen;
+    private final BooleanRegister emphasizeBlue;
+    private final BooleanRegister renderSprite; // TODO: there is a delay after changing (2-3 dots)
+    private final BooleanRegister renderBackground;
+    private final BooleanRegister maskSprite;
+    private final BooleanRegister maskBackground;
+    private final BooleanRegister greyscale;
+
+    private final ByteRegister oamAddressLatch;
 
     // TODO: direct < 0x3EFF traffic to PpuBus, >0x3F00 to Palette RAM
+
+    private final Handler emptyHandler = new EmptyHandler();
+    private Handler[] readHandlers = new Handler[8];
+    private Handler[] writeHandlers = new Handler[8];
+
+    private Handler readHandlerLatch;
+    private Handler writeHandlerLatch;
+
+    private DataBus.Line dataLine = new OpenLine();
+
+    private @Unsigned short addressLatch;
+
+    @Inject
+    public PpuMemDevice(
+        @PpuVar(BUS) MemoryBus ppuBus,
+        ObjAttrMemory oam,
+
+        @PpuVar(VX) ViewPortRegister currentViewPort,
+        @PpuVar(T) ViewPortRegister tempViewPort,
+        @PpuVar(W) BooleanRegister writeRegister,
+
+        @PpuVar(PS) PpuStatusRegister statusRegister,
+
+        @PpuVar(CI) ByteRegister vramAddressIncrement,
+        @PpuVar(CB) ShortRegister backgroundPatternTable,
+        @PpuVar(CS) ShortRegister spritePatternTable,
+        @PpuVar(CV) BooleanRegister vBlankInterruptEnabled,
+        @PpuVar(CP) BooleanRegister masterSlaveSelect,
+        @PpuVar(CH) BooleanRegister spriteSize,
+
+        @PpuVar(ER) BooleanRegister emphasizeRed,
+        @PpuVar(EG) BooleanRegister emphasizeGreen,
+        @PpuVar(EB) BooleanRegister emphasizeBlue,
+        @PpuVar(RS) BooleanRegister renderSprite,
+        @PpuVar(RB) BooleanRegister renderBackground,
+        @PpuVar(MS) BooleanRegister maskSprite,
+        @PpuVar(MB) BooleanRegister maskBackground,
+        @PpuVar(GS) BooleanRegister greyscale,
+
+        @PpuVar(OAM) ByteRegister oamAddress
+    ) {
+        this.ppuBus = ppuBus;
+        this.oam = oam;
+
+        this.currentViewPort = currentViewPort;
+        this.tempViewPort = tempViewPort;
+        this.writeRegister = writeRegister;
+
+        this.statusRegister = statusRegister;
+
+        this.vramAddressIncrement = vramAddressIncrement;
+        this.backgroundPatternTable = backgroundPatternTable;
+        this.spritePatternTable = spritePatternTable;
+        this.vBlankInterruptEnabled = vBlankInterruptEnabled;
+        this.masterSlaveSelect = masterSlaveSelect;
+        this.spriteSize = spriteSize;
+
+        this.emphasizeRed = emphasizeRed;
+        this.emphasizeGreen = emphasizeGreen;
+        this.emphasizeBlue = emphasizeBlue;
+        this.renderSprite = renderSprite;
+        this.renderBackground = renderBackground;
+        this.maskSprite = maskSprite;
+        this.maskBackground = maskBackground;
+        this.greyscale = greyscale;
+        this.oamAddressLatch = oamAddress;
+
+        for (int i = 0; i < readHandlers.length; i++) {
+            readHandlers[i] = emptyHandler;
+            writeHandlers[i] = emptyHandler;
+        }
+
+        readHandlerLatch = emptyHandler;
+        writeHandlerLatch = emptyHandler;
+
+        readHandlers [idx(PPU_STATUS_REGISTER)]      = new StatusHandler();
+        readHandlers [idx(PPU_OAM_DATA_REGISTER)]    = new OamDataHandler();
+        readHandlers [idx(PPU_BUS_DATA_REGISTER)]    = new DataBusHandler();
+
+        writeHandlers[idx(PPU_CONTROL_REGISTER)]     = new ControlHandler();
+        writeHandlers[idx(PPU_MASK_REGISTER)]        = new MaskHandler();
+        writeHandlers[idx(PPU_OAM_ADDRESS_REGISTER)] = new OamAddressHandler();
+        writeHandlers[idx(PPU_OAM_DATA_REGISTER)]    = new OamDataHandler();
+        writeHandlers[idx(PPU_SCROLL_REGISTER)]      = new ScrollHandler();
+        writeHandlers[idx(PPU_BUS_ADDRESS_REGISTER)] = new AddressBusHandler();
+        writeHandlers[idx(PPU_BUS_DATA_REGISTER)]    = new DataBusHandler();
+    }
+
+    private static int idx(@Unsigned short address) {
+        return sint(address) - sint(PPU_REGISTERS_START);
+    }
+
+    @Override
+    public String getName() {
+        return "CPU<->PPU";
+    }
+
+    @Override
+    public @Unsigned short getStartAddress() {
+        return CpuMemMap.PPU_REGISTERS_START;
+    }
+
+    @Override
+    public @Unsigned short getEndAddress() {
+        return PPU_REGISTERS_MIRROR_END;
+    }
+
+    @Override
+    public void onAttach(DataBus.Line dataLine) {
+        this.dataLine = dataLine;
+    }
+
+    @Override
+    public void onAccess(@Unsigned short address) {
+        final int addrInt = sint(address);
+
+        addressLatch = ushort(addrInt & sint(PPU_REGISTERS_END));
+
+        readHandlerLatch = readHandlers[addrInt & 0x7];
+        writeHandlerLatch = writeHandlers[addrInt & 0x7];
+    }
+
+    @Override
+    public void onRead() {
+        readHandlerLatch.onRead();
+    }
+
+    @Override
+    public void onWrite() {
+        writeHandlerLatch.onWrite();
+    }
+
+    @Override
+    public void onDetach() {
+        dataLine = new OpenLine();
+    }
+
+    public interface Handler {
+
+        default void onRead() {}
+
+        default void onWrite() {}
+    }
+
+    class EmptyHandler implements Handler {}
+
+    class ControlHandler implements Handler {
+
+        @Override
+        public void onWrite() {
+            // TODO: prevent writes until the first pre-render scanline
+            int data = sint(dataLine.data());
+
+            // 0xvphb_sinn
+            int nn = data & 0b11;
+            int i  = ((data & 0x4) >> 2) == 0 ? 1 : 32;
+            int s  = ((data & 0x8) >> 3) * 0x1000;
+
+            int     b = ((data & 0x10) >> 4) * 0x1000;
+            boolean h = (data & 0x20) != 0;
+            boolean p = (data & 0x40) != 0;
+            boolean v = (data & 0x80) != 0;
+
+            tempViewPort.setNametable(nn);
+            vramAddressIncrement.setAsByte(i);
+            spritePatternTable.setAsShort(s);
+            backgroundPatternTable.setAsShort(b);
+            spriteSize.set(h);
+            masterSlaveSelect.set(p); // TODO: if false read ext pins (0) as backdrop, if true use ext backdrop generator
+            vBlankInterruptEnabled.set(v); // TODO: may trigger NMI
+        }
+    }
+
+    class MaskHandler implements Handler {
+        // TODO: prevent writes until the first pre-render scanline
+
+        @Override
+        public void onWrite() {
+            int data = sint(dataLine.data());
+
+            boolean eb = (data & 0x80) != 0;
+            boolean e6 = (data & 0x40) != 0;
+            boolean e5 = (data & 0x20) != 0;
+            boolean rs = (data & 0x10) != 0;
+
+            boolean rb = (data & 0x08) != 0;
+            boolean ms = (data & 0x04) == 0;
+            boolean mb = (data & 0x02) == 0;
+            boolean gs = (data & 0x01) != 0;
+
+            final boolean ntsc = true; // TODO: inject platform and check if pal / dendy
+
+            emphasizeBlue.set(eb);
+            emphasizeGreen.set(ntsc ? e6 : e5);
+            emphasizeRed.set(ntsc ? e5 : e6);
+            renderSprite.set(rs);
+            renderBackground.set(rb);
+            maskSprite.set(ms);
+            maskBackground.set(mb);
+            greyscale.set(gs);
+        }
+    }
+
+    class StatusHandler implements Handler {
+
+        @Override
+        public void onRead() {
+            int vb = statusRegister.isVerticalBlank() ? 0x80 : 0;
+            int s0h = statusRegister.isSpriteZeroHit() ? 0x40 : 0;
+            int so = statusRegister.isSpriteOverflow() ? 0x20 : 0;
+
+            // TODO: 5 bits openbus or 4 bits of 2C05 PPU ID
+            @Unsigned byte status = ubyte(vb | s0h | so);
+            dataLine.data(status);
+
+            writeRegister.set(false);
+            statusRegister.setVerticalBlank(false);
+        }
+    }
+
+    class OamAddressHandler implements Handler {
+
+        @Override
+        public void onWrite() {
+            oamAddressLatch.set(dataLine.data());
+        }
+    }
+
+    class OamDataHandler implements Handler {
+
+        @Override
+        public void onRead() {
+            @Unsigned byte oamAddr = oamAddressLatch.get();
+            @Unsigned byte oamData = oam.read(oamAddr);
+
+            dataLine.data(oamData);
+        }
+
+        @Override
+        public void onWrite() {
+            @Unsigned byte oamAddr = oamAddressLatch.get();
+            @Unsigned byte oamData = dataLine.data();
+
+            oam.write(oamAddr, oamData);
+
+            oamAddressLatch.setAsByte(sint(oamAddr) + 1);
+        }
+    }
+
+    class ScrollHandler implements Handler {
+
+        @Override
+        public void onWrite() {
+            int data = sint(dataLine.data());
+
+            int fine = data & FINE_MASK;
+            int coarse = (data >> 3) & COARSE_MASK;
+
+            final boolean firstWrite = !writeRegister.get();
+            if (firstWrite) {
+                tempViewPort.setCoarseX(coarse);
+                currentViewPort.setFineX(fine);
+
+                writeRegister.set(true);
+            } else {
+                tempViewPort.setCoarseY(coarse);
+                tempViewPort.setFineY(fine);
+
+                writeRegister.set(false);
+            }
+        }
+    }
+
+    class AddressBusHandler implements Handler {
+
+        @Override
+        public void onWrite() {
+            @Unsigned byte data = dataLine.data();
+
+            final boolean firstWrite = !writeRegister.get();
+            if (firstWrite) {
+                tempViewPort.high(data);
+                writeRegister.set(true);
+            } else {
+                tempViewPort.low(data);
+                writeRegister.set(false);
+
+                currentViewPort.set(tempViewPort.get());
+            }
+        }
+    }
+
+    class DataBusHandler implements Handler {
+
+        @Override
+        public void onRead() {
+            // TODO: data is not available immediately. it takes one ppu cycle to fetch it for cpu
+            @Unsigned byte data = ppuBus.access(currentViewPort.get()).read().data();
+            dataLine.data(data);
+        }
+
+        @Override
+        public void onWrite() {
+            @Unsigned byte data = dataLine.data();
+            // FIXME: verify if the data is written immediately or if ppu needs a cycle to write it?
+            // may depend on memory area (internal ppu or cart)
+            ppuBus.access(currentViewPort.get()).write().data(data);
+        }
+    }
 }

@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.memory
 
-
 import net.novaware.nes.core.util.RegsAndRamBaseSpec
 
 import static net.novaware.nes.core.util.UTypes.ubyte

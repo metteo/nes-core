@@ -22,7 +22,7 @@ public class CpuMemFile extends RegisterFile {
         @CpuVar(CpuVarName.MA) ShortRegister memoryAddress,
         @CpuVar(CpuVarName.MD) ByteRegister memoryData
     ) {
-        super("CPU_MEM");
+        super("CPU.MEMS");
 
         dataRegisters = List.of(
             this.memoryData = memoryData

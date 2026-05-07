@@ -33,7 +33,7 @@ public class CpuInsFile extends RegisterFile {
         @CpuVar(CpuVarName.DI) InstructionRegister decodedInstruction,
         @CpuVar(CpuVarName.DO) DelegatingRegister decodedOperand
     ) {
-        super("CPU_INS");
+        super("CPU.INS");
 
         dataRegisters = List.of(
             this.currentInstruction = currentInstruction

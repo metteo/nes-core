@@ -16,24 +16,33 @@ class BankedMemorySpec extends Specification {
         def bankedMemory = new BankedMemory(
             "NN",
             ushort(0x8000),
-            ushort(0xFFFF),
-            new Quantity(2, BANK_16KB),
-            new Quantity(4, BANK_16KB)
+            new Quantity(1, BANK_16KB)
         )
+        bankedMemory
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .setPhysicalBanks(new Quantity(4, BANK_16KB))
+
+        expect:
+        bankedMemory.getEndAddress() == ushort(0xFFFF)
+        bankedMemory.getPhysicalBankCount() == new Quantity(4, BANK_16KB)
+        bankedMemory.getVirtualBankCount() == new Quantity(2, BANK_16KB)
     }
 
     def "should map 32KB of data over 32KB address space (direct)"() {
         given:
         def bankedMemory = new BankedMemory(
-                "NN",
-                ushort(0x8000),
-                ushort(0xFFFF),
-                new Quantity(2, BANK_16KB),
-                new Quantity(2, BANK_16KB)
+            "NN",
+            ushort(0x8000),
+            new Quantity(1, BANK_16KB)
         )
+        bankedMemory
+            .setPhysicalBanks(new Quantity(2, BANK_16KB))
+            .allocatePhysicalBanks()
 
-        bankedMemory.configure(0, 0)
-        bankedMemory.configure(1, 1)
+        bankedMemory
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .mapVirtualToPhysical(0, 0)
+            .mapVirtualToPhysical(1, 1)
 
         def memory = new TestBus(bankedMemory)
 
@@ -70,15 +79,18 @@ class BankedMemorySpec extends Specification {
     def "should mirror 16KB of data over 32KB address space (mirroring)"() {
         given:
         def bankedMemory = new BankedMemory(
-                "NN",
-                ushort(0x8000),
-                ushort(0xFFFF),
-                new Quantity(2, BANK_16KB),
-                new Quantity(1, BANK_16KB)
+            "NN",
+            ushort(0x8000),
+            new Quantity(1, BANK_16KB)
         )
+        bankedMemory
+            .setPhysicalBanks(new Quantity(1, BANK_16KB))
+            .allocatePhysicalBanks()
 
-        bankedMemory.configure(0, 0)
-        bankedMemory.configure(1, 0)
+        bankedMemory
+            .setVirtualBanks(new Quantity(2, BANK_16KB))
+            .mapVirtualToPhysical(0, 0)
+            .mapVirtualToPhysical(1, 0)
 
         def memory = new TestBus(bankedMemory)
 
@@ -90,6 +102,9 @@ class BankedMemorySpec extends Specification {
         memory.access(ushort(0xBFFF)).write().data(ubyte(0x55))
 
         then:
+        bankedMemory.getStartAddress() == ushort(0x8000)
+        bankedMemory.getEndAddress() == ushort(0xFFFF)
+
         memory.access(ushort(0x8000)).read().data() == ubyte(0x11)
         memory.access(ushort(0x9000)).read().data() == ubyte(0x22)
         memory.access(ushort(0xA000)).read().data() == ubyte(0x33)

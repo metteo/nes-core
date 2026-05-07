@@ -26,6 +26,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.RNG;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.CARTRIDGE_END;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.CARTRIDGE_SIZE;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.CARTRIDGE_START;
+import static net.novaware.nes.core.easy.memory.EasyMemMap.MEMORY_SIZE;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.RES_VECTOR;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -127,7 +128,7 @@ public class EasyBoard {
 
         PhysicalMemory rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, buffer);
 
-        PagedMemory cartridge = new PagedMemory("CART", new MemoryDevice.Empty());
+        PagedMemory cartridge = new PagedMemory("CART", MEMORY_SIZE, new MemoryDevice.Empty());
         cartridge.attach(rom);
 
         bus.attachCartridge(cartridge);

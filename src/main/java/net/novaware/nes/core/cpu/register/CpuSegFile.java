@@ -36,7 +36,7 @@ public class CpuSegFile extends RegisterFile {
         @CpuVar(CS) SegmentRegister codeSegment,
         @CpuVar(DS) SegmentRegister dataSegment
     ) {
-        super("CPU_SEG");
+        super("CPU.SEGS");
 
         this.zeroPage = zeroPage;
         this.stackSegment = stackSegment;

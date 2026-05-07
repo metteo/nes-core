@@ -3,6 +3,7 @@ package net.novaware.nes.core.easy
 import net.novaware.nes.core.easy.inject.EasyMemModule
 import net.novaware.nes.core.easy.memory.EasyBus
 import net.novaware.nes.core.memory.MemoryDevice
+import net.novaware.nes.core.memory.PagedMemory
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.register.CycleCounter
 import net.novaware.nes.core.register.SegmentRegister
@@ -18,6 +19,8 @@ class EasyBusSpec extends Specification {
     MemoryDevice.ReadWrite ram = EasyMemModule.provideMemory()
     MemoryDevice.ReadWrite stack = EasyMemModule.provideStack()
     MemoryDevice.ReadWrite vram = EasyMemModule.provideVideoMemory()
+
+    PagedMemory cartridgeRoot = new PagedMemory("CARTRIDGE", MEMORY_SIZE, new MemoryDevice.Empty())
     MemoryDevice.ReadWrite cartridge = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
     def codeSegment = new SegmentRegister("CS")
 
@@ -25,7 +28,8 @@ class EasyBusSpec extends Specification {
 
     def "should write to correct memory segments"() {
         given:
-        bus.attachCartridge(cartridge)
+        cartridgeRoot.attach(cartridge)
+        bus.attachCartridge(cartridgeRoot)
 
         def devices = [
             "ram":   ram,

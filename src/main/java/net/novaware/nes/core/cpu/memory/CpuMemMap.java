@@ -45,6 +45,16 @@ public interface CpuMemMap extends MemoryMap {
     // region PPU
 
     @Unsigned short PPU_REGISTERS_START = ushort(0x2000);
+
+    @Unsigned short PPU_CONTROL_REGISTER     = ushort(0x2000);
+    @Unsigned short PPU_MASK_REGISTER        = ushort(0x2001);
+    @Unsigned short PPU_STATUS_REGISTER      = ushort(0x2002);
+    @Unsigned short PPU_OAM_ADDRESS_REGISTER = ushort(0x2003);
+    @Unsigned short PPU_OAM_DATA_REGISTER    = ushort(0x2004);
+    @Unsigned short PPU_SCROLL_REGISTER      = ushort(0x2005);
+    @Unsigned short PPU_BUS_ADDRESS_REGISTER = ushort(0x2006);
+    @Unsigned short PPU_BUS_DATA_REGISTER    = ushort(0x2007);
+
     @Unsigned short PPU_REGISTERS_END = ushort(0x2007);
     int PPU_REGISTERS_SIZE = sint(PPU_REGISTERS_END) - sint(PPU_REGISTERS_START) + 1;
 
