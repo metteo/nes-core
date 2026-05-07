@@ -25,6 +25,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
@@ -176,5 +177,12 @@ public interface PpuRegModule {
     @PpuVar(GS)
     static BooleanRegister provideGreyscale() {
         return new BooleanRegister(GS.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(OAM)
+    static ByteRegister provideObjAttrMemoryAddress() {
+        return new ByteRegister(OAM.doc());
     }
 }

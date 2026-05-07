@@ -12,6 +12,8 @@ public class DataLine implements DataBus.Line {
     /*
      * Open bus can be limited to part of a byte. The controller ports ($4016, $4017) affect only bits 4-0.
      * Bits 7-5 repeat the corresponding bits from the previous read, usually 010 from the high byte $40.
+     *
+     * Part of Address Bus is shared with Data Bus so some leftover charge from address bits may be readable as data bits
      */
     private boolean openBus = true;
     // TODO: maybe track bus conflict (if 2+ devices write to the data line)

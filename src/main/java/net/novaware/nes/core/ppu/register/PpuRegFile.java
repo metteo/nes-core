@@ -25,6 +25,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
@@ -62,6 +63,8 @@ public class PpuRegFile extends RegisterFile {
     public final BooleanRegister maskBackground;
     public final BooleanRegister greyscale;
 
+    private final ByteRegister oamAddress;
+
     @Inject
     public PpuRegFile(
         @PpuVar(CC) CycleCounter cycleCounter,
@@ -85,7 +88,9 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(RB) BooleanRegister renderBackground,
         @PpuVar(MS) BooleanRegister maskSprite,
         @PpuVar(MB) BooleanRegister maskBackground,
-        @PpuVar(GS) BooleanRegister greyscale
+        @PpuVar(GS) BooleanRegister greyscale,
+
+        @PpuVar(OAM) ByteRegister oamAddress
     ) {
         super("PPU.REGS");
 
@@ -99,12 +104,14 @@ public class PpuRegFile extends RegisterFile {
         this.vBlankInterruptEnabled = vBlankInterruptEnabled;
         this.masterSlaveSelect = masterSlaveSelect;
         this.spriteSize = spriteSize;
+
         addressRegisters = List.of(
             this.backgroundPatternTable = backgroundPatternTable,
             this.spritePatternTable = spritePatternTable
         );
         dataRegisters = List.of(
-            this.vramAddressIncrement = vramAddressIncrement
+            this.vramAddressIncrement = vramAddressIncrement,
+            this.oamAddress = oamAddress
         );
         this.emphasizeRed = emphasizeRed;
         this.emphasizeGreen = emphasizeGreen;

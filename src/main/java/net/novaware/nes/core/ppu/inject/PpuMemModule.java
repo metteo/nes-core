@@ -6,11 +6,13 @@ import dagger.Provides;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.util.Quantity;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PALETTE;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_MIRROR_END;
@@ -46,6 +48,12 @@ public interface PpuMemModule {
             PALETTE_RAM_MIRROR_END,
             PALETTE_RAM_SIZE
         );
+    }
+
+    @Provides
+    @BoardScope
+    static ObjAttrMemory provideObjAttrMemory() {
+        return new ObjAttrMemory(OAM.doc());
     }
 
     @Binds

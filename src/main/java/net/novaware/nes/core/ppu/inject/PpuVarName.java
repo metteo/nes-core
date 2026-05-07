@@ -37,6 +37,7 @@ public enum PpuVarName {
 
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
+    OAM ("", "oam", "Object Attribute Memory"),
 
     ;
     private final String doc;
