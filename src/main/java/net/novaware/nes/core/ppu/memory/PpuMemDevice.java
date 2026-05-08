@@ -58,6 +58,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBridge {
 
     private final MemoryBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
+    private final PaletteMemory palette;
     private final ObjAttrMemory oam;
 
     private final ViewPortRegister currentViewPort;
@@ -84,8 +85,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
     private final ByteRegister oamAddressLatch;
 
-    // TODO: direct < 0x3EFF traffic to PpuBus, >0x3F00 to Palette RAM
-
     private final Handler emptyHandler = new EmptyHandler();
     private Handler[] readHandlers = new Handler[8];
     private Handler[] writeHandlers = new Handler[8];
@@ -100,6 +99,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     @Inject
     public PpuMemDevice(
         @PpuVar(BUS) MemoryBus ppuBus,
+        PaletteMemory palette,
         ObjAttrMemory oam,
 
         @PpuVar(VX) ViewPortRegister currentViewPort,
@@ -127,6 +127,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(OAM) ByteRegister oamAddress
     ) {
         this.ppuBus = ppuBus;
+        this.palette = palette;
         this.oam = oam;
 
         this.currentViewPort = currentViewPort;
@@ -174,7 +175,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     private static int idx(@Unsigned short address) {
-        return sint(address) - sint(PPU_REGISTERS_START);
+        return (sint(address) - sint(PPU_REGISTERS_START)) & 0x7;
     }
 
     @Override
@@ -195,6 +196,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     @Override
     public void onAttach(DataBus.Line dataLine) {
         this.dataLine = dataLine;
+
+        palette.onAttach(dataLine);
     }
 
     @Override
@@ -202,9 +205,10 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         final int addrInt = sint(address);
 
         addressLatch = ushort(addrInt & sint(PPU_REGISTERS_END));
+        int index = idx(address);
 
-        readHandlerLatch = readHandlers[addrInt & 0x7];
-        writeHandlerLatch = writeHandlers[addrInt & 0x7];
+        readHandlerLatch = readHandlers[index];
+        writeHandlerLatch = writeHandlers[index];
     }
 
     @Override
@@ -220,6 +224,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     @Override
     public void onDetach() {
         dataLine = new OpenLine();
+
+        palette.onDetach();
     }
 
     public interface Handler {
@@ -379,19 +385,37 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
     class DataBusHandler implements Handler {
 
+        // TODO: direct < 0x3EFF traffic to PpuBus, >0x3F00 to Palette RAM
+
         @Override
         public void onRead() {
-            // TODO: data is not available immediately. it takes one ppu cycle to fetch it for cpu
-            @Unsigned byte data = ppuBus.access(currentViewPort.get()).read().data();
-            dataLine.data(data);
+            @Unsigned short ppuAddress = currentViewPort.get();
+
+            if (sint(ppuAddress) < sint(PpuMemMap.PALETTE_RAM_START)) {
+                // TODO: data is not available immediately. it takes one ppu cycle to fetch it for cpu
+                @Unsigned byte data = ppuBus.access(ppuAddress).read().data();
+                dataLine.data(data);
+
+            } else {
+                palette.onAccess(ppuAddress);
+                palette.onRead();
+            }
         }
 
         @Override
         public void onWrite() {
-            @Unsigned byte data = dataLine.data();
-            // FIXME: verify if the data is written immediately or if ppu needs a cycle to write it?
-            // may depend on memory area (internal ppu or cart)
-            ppuBus.access(currentViewPort.get()).write().data(data);
+            @Unsigned short ppuAddress = currentViewPort.get();
+
+            if (sint(ppuAddress) < sint(PpuMemMap.PALETTE_RAM_START)) {
+                @Unsigned byte data = dataLine.data();
+                // FIXME: verify if the data is written immediately or if ppu needs a cycle to write it?
+                // may depend on memory area (internal ppu or cart)
+                ppuBus.access(ppuAddress).write().data(data);
+
+            } else {
+                palette.onAccess(ppuAddress);
+                palette.onWrite();
+            }
         }
     }
 }

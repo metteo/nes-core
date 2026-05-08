@@ -1,6 +1,5 @@
 package net.novaware.nes.core.ppu.memory
 
-
 import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
@@ -16,6 +15,7 @@ import static net.novaware.nes.core.util.UTypes.ushort
 class PpuMemDeviceSpec extends Specification {
 
     def oam = PpuMemModule.provideObjAttrMemory()
+    def palette = PpuMemModule.providePaletteMemory()
 
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
     def temporaryViewPort = PpuRegModule.provideTempViewPort()
@@ -52,6 +52,7 @@ class PpuMemDeviceSpec extends Specification {
     private PpuMemDevice newPpuMemDev(MemoryBus ppuBus) {
         new PpuMemDevice(
             ppuBus,
+            palette,
             oam,
             currentViewPort,
             temporaryViewPort,
@@ -83,12 +84,20 @@ class PpuMemDeviceSpec extends Specification {
         new TestBus(ppuMemDevice)
     }
 
-    // TODO: test mirroring
+    def newPpuBus() {
+        PhysicalMemory ppuMem = new PhysicalMemory(
+                "PPU",
+                PpuMemMap.MEMORY_START,
+                PpuMemMap.MEMORY_END,
+                PpuMemMap.MEMORY_SIZE
+        )
+
+        new TestBus(ppuMem)
+    }
 
     def "should redirect reads to PPU bus"() {
         given:
-        PhysicalMemory ppuMem = new PhysicalMemory("PPU", PpuMemMap.MEMORY_START, PpuMemMap.MEMORY_END, PpuMemMap.MEMORY_SIZE)
-        MemoryBus ppuBus = new TestBus(ppuMem)
+        def ppuBus = newPpuBus()
         ppuBus.write(0x2000, 0x34)
 
         def ppuMemDevice = newPpuMemDev(ppuBus)
@@ -98,13 +107,84 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x20))
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
 
-        def ppuData = cpuBus.access(ushort(0x2007)).read().data() // immediate read returns previous value. needs ppu cycle to get actual data
+        // immediate read returns previous value. needs ppu cycle to get actual data
+        def ppuData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
 
         then:
         ppuData == ubyte(0x34)
+
+        where:
+        mirror << [0, 8 , 0x1FF8, 0x1FF0]
     }
 
-    // TODO: test PPU bus writes
+    def "should redirect writes to PPU bus"() {
+        given:
+        def ppuBus = newPpuBus()
+
+        def ppuMemDevice = newPpuMemDev(ppuBus)
+        def cpuBus = new TestBus(ppuMemDevice)
+
+        def value = ubyte(0x34)
+
+        when:
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x20))
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
+
+        cpuBus.access(ushort(0x2007 + mirror)).write().data(value)
+
+        then:
+        ppuBus.read(0x2000) == value
+
+        where:
+        mirror << [0, 8 , 0x1FF8, 0x1FF0]
+    }
+
+    def "should redirect reads to Palette memory"() {
+        given:
+        def ppuBus = newPpuBus()
+
+        def ppuMemDevice = newPpuMemDev(ppuBus)
+        def cpuBus = new TestBus(ppuMemDevice)
+
+        def value = ubyte(0x08)
+
+        palette.setColor(PaletteMemory.Section.BACKGROUND, 0, 0, value)
+
+        when:
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x3F))
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
+
+        // TODO: immediate read returns previous value. needs ppu cycle to get actual data?
+        def ppuData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
+
+        then:
+        ppuData == value
+
+        where:
+        mirror << [0, 8 , 0x1FF8, 0x1FF0]
+    }
+
+    def "should redirect writes to Palette memory"() {
+        given:
+        def ppuBus = newPpuBus()
+
+        def ppuMemDevice = newPpuMemDev(ppuBus)
+        def cpuBus = new TestBus(ppuMemDevice)
+
+        def value = ubyte(0x08)
+
+        when:
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x3F))
+        cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
+
+        cpuBus.access(ushort(0x2007 + mirror)).write().data(value)
+
+        then:
+        palette.getColor(PaletteMemory.Section.BACKGROUND, 0, 0) == value
+
+        where:
+        mirror << [0, 8 , 0x1FF8, 0x1FF0]
+    }
 
     def "should return PPU status and clear vBlank/secondWrite flags"() {
         given:
@@ -127,6 +207,7 @@ class PpuMemDeviceSpec extends Specification {
         vb    | s0h   | so    || bits
         true  | false | true  || 0b1010_0000
         false | true  | false || 0b0100_0000
+        // TODO: consider 3 isolated cases
     }
 
     def "should update PPU control"() {
@@ -149,6 +230,7 @@ class PpuMemDeviceSpec extends Specification {
         bits        || nn   | i  | s      | b      | h     | p     | v
         0b1010_1010 || 0b10 |  1 | 0x1000 | 0x0000 | true  | false | true
         0b0101_0101 || 0b01 | 32 | 0x0000 | 0x1000 | false | true  | false
+        // TODO: consider 7 isolated cases
     }
 
     def "should update PPU mask"() {
@@ -174,6 +256,7 @@ class PpuMemDeviceSpec extends Specification {
         0b0000_0110 || false | false | false | false | false | false | false | false
         0b1010_1010 || true  | false | true  | false | true  | true  | false | false
         0b0101_0101 || false | true  | false | true  | false | false | true  | true
+        // TODO: consider 8 isolated cases
     }
 
     def "should update OAM Address"() {
@@ -190,15 +273,17 @@ class PpuMemDeviceSpec extends Specification {
     def "should read from OAM"() {
         given:
         def cpuBus = newCpuBus()
-        oam.write(ubyte(0x12), ubyte(0x34))
+        def value = ubyte(0x34)
+
+        oam.write(ubyte(0x12), value)
 
         when:
         cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(ubyte(0x12))
-        def data = cpuBus.access(PPU_OAM_DATA_REGISTER).read().data()
+        def read = cpuBus.access(PPU_OAM_DATA_REGISTER).read().data()
 
         then:
         oamAddress.getAsInt() == 0x12 // no increment
-        data == ubyte(0x34)
+        read == value
     }
 
     def "should write to OAM"() {
