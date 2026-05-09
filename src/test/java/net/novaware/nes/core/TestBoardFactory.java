@@ -26,6 +26,7 @@ import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.ppu.inject.PpuModule;
+import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.DelegatingRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
@@ -83,6 +84,8 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
     public abstract Cpu newCpu();
 
     public abstract Ppu newPpu();
+
+    public abstract PpuRegFile newPpuRegisters();
 
     public abstract RecordingDevice newRecordingDevice();
 

@@ -10,6 +10,7 @@ public enum PpuVarName {
     VX ("", "currentViewport", "Current Viewport"),
     T  ("", "tempViewport", "Temporary Viewport"),
     W  ("", "secondWrite", "Second Write"),
+    DR ("DATA.R", "dataRead", "Data Read Buffer"),
 
     CV ("CTRL.V", "", "Vertical Blank Interrupt Enabled"),
     CP ("CTRL.P", "", "Master / Slave Select"),
@@ -25,10 +26,12 @@ public enum PpuVarName {
     RS ("MASK.s", "", "Render Sprite"),
     RB ("MASK.b", "", "Render Background"),
 
-    MS ("MASK.M", "", "Mask Sprite"),
+    MS ("MASK.M", "", "Mask Sprite"), // TODO: consider Clip instead of Mask
     MB ("MASK.m", "", "Mask Background"),
 
     GS ("MASK.G", "", "Greyscale Mode"),
+
+    OF ("", "oddFrame", "Odd Frame"),
 
     // endregion
 
@@ -37,7 +40,7 @@ public enum PpuVarName {
 
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
-    OAM ("", "oam", "Object Attribute Memory"),
+    OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
 
     ;
     private final String doc;

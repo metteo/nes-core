@@ -82,7 +82,7 @@ public enum CpuVarName {
      * @return documentation specific name (fall back to enum name)
      */
     public String doc() {
-        return doc.isEmpty() ? name() : doc;
+        return "CPU." + (doc.isEmpty() ? name() : doc);
     }
 
     /**

@@ -18,6 +18,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
@@ -26,6 +27,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
@@ -79,6 +81,13 @@ public interface PpuRegModule {
     @PpuVar(W)
     static BooleanRegister provideSecondWrite() {
         return new BooleanRegister(W.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(DR)
+    static ByteRegister provideDataReadBuffer() {
+        return new ByteRegister(DR.doc());
     }
 
     @Provides
@@ -184,5 +193,12 @@ public interface PpuRegModule {
     @PpuVar(OAM)
     static ByteRegister provideObjAttrMemoryAddress() {
         return new ByteRegister(OAM.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(OF)
+    static BooleanRegister provideOddFrame() {
+        return new BooleanRegister(OF.doc());
     }
 }

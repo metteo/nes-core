@@ -12,6 +12,7 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
 
     protected List<AddressRegister> addressRegisters = List.of();
     protected List<DataRegister> dataRegisters = List.of();
+    protected List<BooleanRegister> booleanRegisters = List.of();
     // TODO: add segment registers
     // TODO: add other registers (boolean, status, EFlags etc)
 
@@ -29,6 +30,10 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
 
     public List<DataRegister> getDataRegisters() {
         return dataRegisters;
+    }
+
+    public List<BooleanRegister> getBooleanRegisters() {
+        return booleanRegisters;
     }
 
 }

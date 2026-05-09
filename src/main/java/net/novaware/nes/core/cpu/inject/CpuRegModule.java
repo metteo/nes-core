@@ -49,7 +49,7 @@ public interface CpuRegModule {
     @BoardScope
     @CpuVar(MA)
     static ShortRegister provideMemoryAddress() {
-        return new ShortRegister("MAR"); // TODO: use CpuVarName enum.name() instead
+        return new ShortRegister("MAR"); // TODO: use CpuVarName enum.name() instead for all regs
     }
 
     @Provides

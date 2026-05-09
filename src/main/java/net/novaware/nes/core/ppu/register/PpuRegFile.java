@@ -18,6 +18,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
@@ -26,12 +27,15 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
+import static net.novaware.nes.core.util.UTypes.USHORT_0;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_registers">PPU Registers on nesdev.org</a>
@@ -41,11 +45,14 @@ public class PpuRegFile extends RegisterFile {
 
     // TODO: switch to private + getters when PPU impl is more advanced
     public final CycleCounter cycleCounter;
+
     public final PpuStatusRegister status;
     public final BooleanRegister hBlank;
+
     public final ViewPortRegister currentViewPort;
     public final ViewPortRegister tempViewPort;
     public final BooleanRegister secondWrite;
+    public final ByteRegister dataReadBuffer;
 
     public final BooleanRegister vBlankInterruptEnabled;
     public final BooleanRegister masterSlaveSelect;
@@ -63,7 +70,9 @@ public class PpuRegFile extends RegisterFile {
     public final BooleanRegister maskBackground;
     public final BooleanRegister greyscale;
 
-    private final ByteRegister oamAddress;
+    public final ByteRegister oamAddress;
+
+    public final BooleanRegister oddFrame;
 
     @Inject
     public PpuRegFile(
@@ -73,6 +82,7 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(VX) ViewPortRegister currentViewPort,
         @PpuVar(T)  ViewPortRegister tempViewPort,
         @PpuVar(W)  BooleanRegister secondWrite,
+        @PpuVar(DR) ByteRegister dataReadBuffer,
 
         @PpuVar(CV) BooleanRegister vBlankInterruptEnabled,
         @PpuVar(CP) BooleanRegister masterSlaveSelect,
@@ -90,36 +100,65 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress
+        @PpuVar(OAM) ByteRegister oamAddress,
+
+        @PpuVar(OF) BooleanRegister oddFrame
     ) {
         super("PPU.REGS");
 
         this.cycleCounter = cycleCounter;
         this.status = status;
-        this.hBlank = hBlank;
+
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
-        this.secondWrite = secondWrite;
-
-        this.vBlankInterruptEnabled = vBlankInterruptEnabled;
-        this.masterSlaveSelect = masterSlaveSelect;
-        this.spriteSize = spriteSize;
 
         addressRegisters = List.of(
             this.backgroundPatternTable = backgroundPatternTable,
             this.spritePatternTable = spritePatternTable
         );
         dataRegisters = List.of(
+            this.dataReadBuffer = dataReadBuffer,
             this.vramAddressIncrement = vramAddressIncrement,
             this.oamAddress = oamAddress
         );
-        this.emphasizeRed = emphasizeRed;
-        this.emphasizeGreen = emphasizeGreen;
-        this.emphasizeBlue = emphasizeBlue;
-        this.renderSprite = renderSprite;
-        this.renderBackground = renderBackground;
-        this.maskSprite = maskSprite;
-        this.maskBackground = maskBackground;
-        this.greyscale = greyscale;
+        booleanRegisters = List.of(
+            this.secondWrite = secondWrite,
+            this.hBlank = hBlank,
+
+            this.vBlankInterruptEnabled = vBlankInterruptEnabled,
+            this.masterSlaveSelect = masterSlaveSelect,
+            this.spriteSize = spriteSize,
+
+            this.emphasizeRed = emphasizeRed,
+            this.emphasizeGreen = emphasizeGreen,
+            this.emphasizeBlue = emphasizeBlue,
+            this.renderSprite = renderSprite,
+            this.renderBackground = renderBackground,
+            this.maskSprite = maskSprite,
+            this.maskBackground = maskBackground,
+            this.greyscale = greyscale,
+
+            this.oddFrame = oddFrame
+        );
+    }
+
+    public void resetControl() {
+        vBlankInterruptEnabled.set(false);
+        masterSlaveSelect.set(false);
+        spriteSize.set(false);
+        backgroundPatternTable.set(USHORT_0);
+        spritePatternTable.set(USHORT_0);
+        vramAddressIncrement.set(ubyte(1));
+    }
+
+    public void resetMask() {
+        emphasizeRed.set(false);
+        emphasizeGreen.set(false);
+        emphasizeBlue.set(false);
+        renderSprite.set(false);
+        renderBackground.set(false);
+        maskSprite.set(false);
+        maskBackground.set(false);
+        greyscale.set(false);
     }
 }

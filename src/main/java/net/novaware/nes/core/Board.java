@@ -1,6 +1,7 @@
 package net.novaware.nes.core;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.apu.Apu;
 import net.novaware.nes.core.clock.ClockGenerator;
 import net.novaware.nes.core.clock.ClockGenerator.Handle;
 import net.novaware.nes.core.config.VideoStandard;
@@ -9,6 +10,7 @@ import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
+import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 
@@ -29,6 +31,12 @@ public class Board {
     private final Cpu cpu;
 
     @Owned
+    private final Ppu ppu;
+
+    @Owned
+    private final Apu apu;
+
+    @Owned
     private final CartridgePort cartridgePort;
 
     @Owned
@@ -45,11 +53,16 @@ public class Board {
     @Inject
     /* package */ Board(
         final Cpu cpu,
+        final Ppu ppu,
+        final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
         final ClockGenerator clock
     ) {
         this.cpu = cpu;
+        this.ppu = ppu;
+        this.apu = apu;
+
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
         this.clock = clock;
@@ -62,8 +75,13 @@ public class Board {
 
     private void start() {
         cpu.reset(Signal.LOW);
+        ppu.reset(Signal.LOW);
+
         cpu.advance();
+        ppu.cycle();
+
         cpu.reset(Signal.HIGH);
+        ppu.reset(Signal.HIGH);
 
         Handle cpuHandle = clock.schedule(() -> {
             try {
@@ -87,6 +105,8 @@ public class Board {
 
     private void initialize() {
         cpu.initialize();
+        ppu.initialize();
+        apu.initialize();
     }
 
     public CartridgePort getCartridgePort() {

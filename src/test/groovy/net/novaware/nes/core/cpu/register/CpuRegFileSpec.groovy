@@ -1,6 +1,5 @@
 package net.novaware.nes.core.cpu.register
 
-
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -38,6 +37,6 @@ class CpuRegFileSpec extends Specification {
 
     def "special registers are initialized correctly"() {
         expect:
-        registers.status().getName() == "P"
+        registers.status().getName() == "CPU.P"
     }
 }

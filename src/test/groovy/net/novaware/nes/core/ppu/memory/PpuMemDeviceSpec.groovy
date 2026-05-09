@@ -20,6 +20,7 @@ class PpuMemDeviceSpec extends Specification {
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
     def temporaryViewPort = PpuRegModule.provideTempViewPort()
     def writeRegister = PpuRegModule.provideSecondWrite()
+    def dataReadBuffer = PpuRegModule.provideDataReadBuffer()
     def statusRegister = PpuRegModule.provideStatus()
     def vramAddressIncrement = PpuRegModule.provideVRAMAddressIncrement()
     def backgroundPatternTable = PpuRegModule.provideBackgroundPatternTable()
@@ -57,6 +58,7 @@ class PpuMemDeviceSpec extends Specification {
             currentViewPort,
             temporaryViewPort,
             writeRegister,
+            dataReadBuffer,
             statusRegister,
             vramAddressIncrement,
             backgroundPatternTable,
