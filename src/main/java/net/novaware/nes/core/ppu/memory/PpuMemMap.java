@@ -12,7 +12,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 public class PpuMemMap implements MemoryMap {
 
     // TODO: segment registers: Video Segment, configured by mappers for debug view
-    //       e.g. where is nametable, where is pallete etc.
+    //       e.g. where is nametable, where are attributes etc.
 
     // region Cartridge (CPU / DMA and PPU)
 
@@ -32,7 +32,7 @@ public class PpuMemMap implements MemoryMap {
     public static final @Unsigned short VRAM_END = ushort(0x2FFF);
     public static final int VRAM_SIZE = sint(VRAM_END) - sint(VRAM_START) + 1;
 
-    // TODO: maybe add subsections of vram (name / attribute tables 0-3)
+    // TODO: maybe add subsections of vram (name / attribute tables 0-3) and segment regs
 
     public static final @Unsigned short UNUSED_START = ushort(0x3000);
     public static final @Unsigned short UNUSED_END = ushort(0x3EFF);

@@ -30,9 +30,18 @@ public class ViewPortRegister extends Register {
 
     private final Variant variant;
 
+
+
+
+
     // FIXME: temporary, use the ints below
     private @Unsigned byte hi;
     private @Unsigned byte lo;
+
+
+
+
+
 
     // V / T: yyy NN YYYYY XXXXX
     // X: xxx

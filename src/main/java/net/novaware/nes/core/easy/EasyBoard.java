@@ -90,7 +90,7 @@ public class EasyBoard {
 
         future = executor.scheduleAtFixedRate(() -> {
             try {
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 8; i++) {
                     rng.setData(ubyte(random.nextInt(256)));
                     cpu.advance();
                 }
@@ -102,7 +102,7 @@ public class EasyBoard {
                 e.printStackTrace();
                 pause();
             }
-        }, 0, 15, MILLISECONDS);
+        }, 0, 1, MILLISECONDS);
     }
 
     private void stop() {

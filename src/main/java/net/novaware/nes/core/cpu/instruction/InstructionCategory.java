@@ -12,6 +12,9 @@ public enum InstructionCategory {
 
     FLAG_CONTROL,
 
+    /**
+     * https://www.nesdev.org/wiki/CPU_unofficial_opcodes#Games_using_unofficial_opcodes
+     */
     ILLEGAL,
 
     INTERRUPTS,

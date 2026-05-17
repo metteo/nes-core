@@ -41,7 +41,7 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
-    static PaletteMemory paletteMemory() {
+    static PaletteMemory providePaletteMemory() {
         return new PaletteMemory(
             PALETTE.doc(),
             PALETTE_RAM_START,

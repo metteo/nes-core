@@ -9,7 +9,7 @@ import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PagedMemory;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
@@ -32,7 +32,7 @@ public class EasyBus implements MemoryBus {
 
     @Owned
     private final PagedMemory internal = new PagedMemory("INTERNAL", MEMORY_SIZE, new MemoryDevice.Empty());
-    private final CycleCounter cycleCounter;
+    private final IntegerCounter cycleCounter;
 
     private final SegmentRegister codeSegment;
 
@@ -47,7 +47,7 @@ public class EasyBus implements MemoryBus {
 
     @Inject
     public EasyBus(
-        @CpuVar(CC)  CycleCounter cycleCounter,
+        @CpuVar(CC)  IntegerCounter cycleCounter,
         @CpuVar(RAM) MemoryDevice.ReadWrite ram,
         @CpuVar(SS)  MemoryDevice.ReadWrite stack,
         @CpuVar(PPU) MemoryDevice.ReadWrite vram,

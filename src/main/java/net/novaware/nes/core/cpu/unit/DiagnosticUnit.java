@@ -7,9 +7,11 @@ import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.inject.PpuVarName;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
@@ -21,6 +23,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
 
 /**
@@ -38,8 +41,12 @@ public class DiagnosticUnit implements Unit, Runnable {
     private final InstructionRegister decodedInstruction;
     private final DelegatingRegister decodedOperand;
     private final CpuRegFile registers;
-    private final CycleCounter cycleCounter;
+    private final IntegerCounter cycleCounter;
+    private final IntegerCounter instructionCycle;
     private final MemoryBus cpuBus;
+
+    private final IntegerCounter scanLineCounter;
+    private final IntegerCounter dotCounter;
 
     @Inject
     public DiagnosticUnit(
@@ -52,8 +59,12 @@ public class DiagnosticUnit implements Unit, Runnable {
 
         CpuRegFile registers,
 
-        @CpuVar(CC) CycleCounter cycleCounter,
-        @CpuVar(BUS)MemoryBus cpuBus
+        @CpuVar(CC) IntegerCounter cycleCounter,
+        @CpuVar(IC) IntegerCounter instructionCycle,
+        @CpuVar(BUS)MemoryBus cpuBus,
+
+        @PpuVar(PpuVarName.SC) IntegerCounter scanLineCounter,
+        @PpuVar(PpuVarName.DC) IntegerCounter dotCounter
     ) {
         this.prefetchAddress = prefetchAddress;
         this.currentInstruction = currentInstruction;
@@ -62,7 +73,10 @@ public class DiagnosticUnit implements Unit, Runnable {
         this.decodedOperand = decodedOperand;
         this.registers = registers;
         this.cycleCounter = cycleCounter;
+        this.instructionCycle = instructionCycle;
         this.cpuBus = cpuBus;
+        this.scanLineCounter = scanLineCounter;
+        this.dotCounter = dotCounter;
     }
 
     public void run() {
@@ -153,10 +167,12 @@ public class DiagnosticUnit implements Unit, Runnable {
         log.append("P:").append(Hex.s(registers.status().get().get())).append(" ");
         log.append("SP:").append(Hex.s(registers.sp().get())).append(" ");
 
-        log.append("PPU:").append("   ,   ").append(" ");
+        String ppu = String.format("%3d,%3d", scanLineCounter.getValue(), dotCounter.getValue());
+        log.append("PPU:").append(ppu).append(" "); // "   ,   "
 
         // we are counting the cycles as they happen, so at the end of instruction decode some were already added
-        log.append("CYC:").append(cycleCounter.getValue() - cycleCounter.getSubValue());
+        final int prefetchCycles = 1;
+        log.append("CYC:").append(cycleCounter.getValue() - instructionCycle.getValue() - prefetchCycles);
 
         System.out.println(log);
     }

@@ -2,7 +2,7 @@ package net.novaware.nes.core.ppu.memory
 
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.memory.RecordingDevice
-import net.novaware.nes.core.register.CycleCounter
+import net.novaware.nes.core.register.IntegerCounter
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
@@ -24,7 +24,7 @@ class PpuBusSpec extends Specification {
                 MEMORY_SIZE - PALETTE_RAM_MIRROR_SIZE
         )
 
-        def rec = new RecordingDevice(new CycleCounter("PPU")) // ppu bus doesn't count cycles
+        def rec = new RecordingDevice(new IntegerCounter("PPU.CC")) // ppu bus doesn't count cycles
 
         // put some data not using the test subject
         def cartBus = new TestBus(cartridge)

@@ -3,7 +3,7 @@ package net.novaware.nes.core.memory;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -53,27 +53,25 @@ public class RecordingDevice implements MemoryDevice.ReadWrite {
     private @Unsigned short addressLatch;
     private @Unsigned byte dataLatch;
 
-    private final CycleCounter cycleCounter;
+    private final IntegerCounter cycleCounter;
+    private int recordedCycle;
+
     private List<Op> activity = new ArrayList<>();
 
     @Inject
     public RecordingDevice(
-        @CpuVar(CC) CycleCounter cycleCounter
+        @CpuVar(CC) IntegerCounter cycleCounter
     ) {
         this.cycleCounter = cycleCounter;
     }
 
     public void record() {
         activity.clear();
-        cycleCounter.mark();
+        recordedCycle = cycleCounter.getValue();
     }
 
     public long cycles() {
-        return cycleCounter.diff();
-    }
-
-    public CycleCounter cycleCounter() {
-        return cycleCounter;
+        return cycleCounter.getValue() - recordedCycle;
     }
 
     public List<Op> activity() {

@@ -39,7 +39,7 @@ class PaletteMemorySpec extends Specification {
 
     def "should decode correct color address"() {
         given:
-        def palette = PpuMemModule.paletteMemory()
+        def palette = PpuMemModule.providePaletteMemory()
 
         expect:
         palette.getColorPosition(ushort(address)) == position

@@ -2,6 +2,7 @@ package net.novaware.nes.core.dma;
 
 import dagger.Lazy;
 import jakarta.inject.Inject;
+import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.signal.Signal;
@@ -14,7 +15,7 @@ import net.novaware.nes.core.util.uml.Used;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
 
-public class Dma { // TODO: remember about DMC DMA which is a different controller?
+public class Dma implements ClockReceiver { // TODO: remember about DMC DMA which is a different controller?
 
     enum State {
         /**
@@ -46,6 +47,7 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
     @Owned
     private final ByteRegister oamDma;
 
+    // TODO: replace direct reference with a signal sender?
     @Used
     private final Lazy<Cpu> cpu; // top level chip so lazy injected to prevent stack overflow during construction
 
@@ -74,5 +76,10 @@ public class Dma { // TODO: remember about DMC DMA which is a different controll
         // write cycle  /
 
         cpu.get().rdy(Signal.HIGH);
+    }
+
+    @Override
+    public int cycle() {
+        return 0;
     }
 }

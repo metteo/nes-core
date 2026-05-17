@@ -2,7 +2,7 @@ package net.novaware.nes.core.apu.register;
 
 import net.novaware.nes.core.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.RegisterFile;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 @BoardScope
 public class ApuRegFile extends RegisterFile {
 
-    public CycleCounter cycleCounter = new CycleCounter("APUCC");
+    public IntegerCounter cycleCounter = new IntegerCounter("APUCC");
 
     // FIXME: these registers are asymmetrical, writes are accepted, reads cause open bus
 

@@ -4,6 +4,7 @@ import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.signal.internal.EdgeDetector
 import net.novaware.nes.core.cpu.signal.internal.LevelDetector
 import net.novaware.nes.core.cpu.unit.*
+import net.novaware.nes.core.register.IntegerCounter
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.signal.Signal.HIGH
@@ -31,6 +32,9 @@ class CpuSpec extends Specification {
     LevelDetector rdy = Mock()
     EdgeDetector so = Mock()
 
+    IntegerCounter cc = new IntegerCounter("CPU.CC")
+    IntegerCounter ic = new IntegerCounter("CPU.IC")
+
     Cpu instance = new Cpu(
         registers,
         controlUnit,
@@ -44,6 +48,8 @@ class CpuSpec extends Specification {
         prefetch,
         stackEngine,
         diagnostics,
+        cc,
+        ic,
         irq, nmi, s0h, res, rdy, so
     )
 

@@ -8,17 +8,24 @@ import static org.hamcrest.Matchers.closeTo
 
 class VideoStandardSpec extends Specification {
 
-    def "should calculate refresh rate correctly"() { // TODO: convert to data table
-        given:
-        def delta = 0.001d
+    def "should calculate frequencies / cycles / refresh rate"() {
         expect:
-        assertThat(NTSC.getRefreshRate(),      closeTo(60.098d, delta))
-        assertThat(NTSC_DUAL.getRefreshRate(), closeTo(60.098d, delta))
-        assertThat(PAL.getRefreshRate(),       closeTo(50.007d, delta))
-        assertThat(PAL_DUAL.getRefreshRate(),  closeTo(50.007d, delta))
-        assertThat(DENDY.getRefreshRate(),     closeTo(50.007d, delta))
-        assertThat(PAL_M.getRefreshRate(),     closeTo(60.032d, delta))
-    }
+        standard.getPpuCyclesPerFrame() == ppuCyc
+        assertThat(standard.getMasterClock(),       closeTo(masterClk, 0.01d))
+        assertThat(standard.getPpuFrequency(),      closeTo(ppuFreq,   0.01d))
+        assertThat(standard.getRefreshRate(),       closeTo(refresh,   0.001d))
+        assertThat(standard.getCpuFrequency(),      closeTo(cpuFreq,   0.1d))
+        assertThat(standard.getCpuCyclesPerFrame(), closeTo(cpuCyc,    0.1d))
+        assertThat(standard.getMasterCycles(),      closeTo(masterCyc, 0.1d))
 
-    // TODO: verify cpu / ppu frequencies
+        where:
+        standard  | ppuCyc  | ppuFreq       | refresh | cpuCyc    | cpuFreq      | masterCyc | masterClk
+        NTSC      |  89_342 | 5_369_318.18d | 60.098d | 29_780.6d | 1_789_772.7d | 357_368d  | 21_477_272.73d
+        NTSC_DUAL |  89_342 | 5_369_318.18d | 60.098d | 29_780.6d | 1_789_772.7d | 357_368d  | 21_477_272.73d
+        RGB       |  89_342 | 5_369_318.18d | 60.098d | 29_780.6d | 1_789_772.7d | 357_368d  | 21_477_272.73d
+        PAL       | 106_392 | 5_320_342.5d  | 50.007d | 33_247.5d | 1_662_607.0d | 531_960d  | 26_601_712.5d
+        PAL_DUAL  | 106_392 | 5_320_342.5d  | 50.007d | 33_247.5d | 1_662_607.0d | 531_960d  | 26_601_712.5d
+        DENDY     | 106_392 | 5_320_342.5d  | 50.007d | 35_464.0d | 1_773_447.5d | 531_960d  | 26_601_712.5d
+        PAL_M     |  89_342 | 5_363_416.5d  | 60.032d | 29_780.6d | 1_787_805.5d | 357_368d  | 21_453_666.0d
+    }
 }

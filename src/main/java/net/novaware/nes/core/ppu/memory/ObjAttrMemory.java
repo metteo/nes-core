@@ -8,6 +8,8 @@ import java.util.List;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
+// TODO: support both Primary and Secondary use case (eval and rendering)
+// TODO: make Secondary OAM sprite limit configurable (more than 8) and also allow ghost sprites over the limit
 public class ObjAttrMemory implements Nameable { // TODO: implement in a performant way for PPU. CPU / DMA can pay for conversion
 
     public static final int ENTRY_COUNT = 64;

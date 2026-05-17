@@ -2,6 +2,7 @@ package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.signal.Interruptible;
@@ -22,11 +23,14 @@ import net.novaware.nes.core.cpu.unit.PowerMgmt;
 import net.novaware.nes.core.cpu.unit.PrefetchUnit;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.uml.Owned;
+import net.novaware.nes.core.util.uml.Used;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RDY;
@@ -43,10 +47,9 @@ import static net.novaware.nes.core.cpu.signal.Signal.LOW;
  */
 @BoardScope
 @SuppressWarnings("unused") // @Owned unit fields are annotated only
-public class Cpu implements Interruptible, Synchronizable, Overflowable {
+public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockReceiver { // TODO: These interfaces should be signal Senders / pins
 
-    // TODO: No need for multiple listeners or thread safety, this is board only, and hidden behind a port otherwise
-    private final List<SyncListener> syncListeners = new CopyOnWriteArrayList<>();
+    private SyncListener syncListener = signal -> {};
 
     @Owned private final CpuRegFile registers;
     @Owned private final ControlUnit controlUnit;
@@ -69,7 +72,10 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
     @Owned private final LevelDetector rdy;
     @Owned private final EdgeDetector so;
 
-    private final List<Unit> units;
+    @Used  private final List<Unit> units;
+
+    @Owned private final IntegerCounter cycleCounter;
+    @Owned private final IntegerCounter instructionCycle;
 
     @Inject
     public Cpu(
@@ -87,6 +93,8 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         StackEngine stackEngine,
         DiagnosticUnit diagnostics,
 
+        @CpuVar(CC)  IntegerCounter cycleCounter,
+        @CpuVar(IC)  IntegerCounter instructionCycle,
         @CpuVar(IRQ) LevelDetector irq,
         @CpuVar(NMI) EdgeDetector nmi,
         @CpuVar(S0H) LevelDetector s0h,
@@ -112,6 +120,9 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
             this.diagnostics = diagnostics
         );
 
+        this.cycleCounter = cycleCounter;
+        this.instructionCycle = instructionCycle;
+
         this.irq = irq;
         this.nmi = nmi;
         this.s0h = s0h;
@@ -131,19 +142,31 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
         units.forEach(Unit::reset);
     }
 
+    @Override
+    public int cycle() {
+        return advance();
+    }
+
     /**
      * Advance single instruction
+     *
+     * @return number of used cycles
      */
     // TODO: use one lone coder test assembly to verify ticks
-    public void advance() { // TODO: consider renaming to step()
-        if (rdy.isActive()) {
-            // TODO: repeat last bus.read operation?
-            return;
-        }
+    public int advance() { // TODO: consider renaming to step()
+        instructionCycle.reset();
 
         if (res.isActive()) {
             reset();
-            return;
+            return instructionCycle.getValue();
+        }
+
+        if (rdy.isActive()) {
+            // TODO: repeat last bus.read operation which consumes 1 cycle!
+            // Will it conflict with DMA?!
+            cycleCounter.increment();
+            instructionCycle.increment();
+            return instructionCycle.getValue();
         }
 
         controlUnit.fetchOperand();
@@ -166,11 +189,11 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
 
         controlUnit.commitAll();
 
-        fireSyncChange(HIGH);
+        syncListener.sync(HIGH);
         controlUnit.fetchOpcode();
-        fireSyncChange(LOW);
+        syncListener.sync(LOW);
 
-        // TODO: allow running for given cycle budget, efficiently stop before (or just after depending on strictness)
+        return instructionCycle.getValue();
     }
 
     /**
@@ -216,21 +239,13 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable {
     }
 
     @Override
-    public void addSyncListener(SyncListener listener) {
-        syncListeners.add(listener);
+    public void setSyncListener(SyncListener listener) {
+        syncListener = listener;
     }
 
     @Override
-    public void removeSyncListener(SyncListener listener) {
-        syncListeners.remove(listener);
-    }
-
-    protected void fireSyncChange(Signal s) {
-        if (syncListeners.isEmpty()) { return; }
-
-        for (SyncListener listener : syncListeners) {
-            listener.onSyncChange(s);
-        }
+    public void clearSyncListener() {
+        syncListener = signal -> {};
     }
 
     /**

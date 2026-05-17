@@ -25,7 +25,7 @@ public interface Synchronizable {
         }
     }
 
-    void addSyncListener(SyncListener listener);
+    void setSyncListener(SyncListener listener);
 
-    void removeSyncListener(SyncListener listener);
+    void clearSyncListener();
 }

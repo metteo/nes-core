@@ -4,7 +4,8 @@ public enum CpuVarName {
 
     // region Basic Registers
     PC ("",  "programCounter",     "Program Counter"),
-    CC ("",  "cycleCounter",       "Cycle Counter"),
+    CC ("",  "cycleCounter",       "Cycle Counter"), // TODO: maybe just "cycle" or "globalCycle"
+    IC ("",  "instructionCycle",   "Instruction Cycle"),
 
     A  ("",  "accumulator",        "Accumulator"),
     X  ("",  "indexX",             "Index X"),
@@ -82,7 +83,7 @@ public enum CpuVarName {
      * @return documentation specific name (fall back to enum name)
      */
     public String doc() {
-        return doc.isEmpty() ? name() : doc;
+        return "CPU." + (doc.isEmpty() ? name() : doc);
     }
 
     /**

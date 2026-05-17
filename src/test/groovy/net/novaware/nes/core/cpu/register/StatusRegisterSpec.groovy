@@ -10,7 +10,7 @@ class StatusRegisterSpec extends Specification {
 
     def "should hold and return name"() {
         expect:
-        reg.getName() == "P"
+        reg.getName() == "CPU.P"
     }
 
     def "should have correct power on state"() {

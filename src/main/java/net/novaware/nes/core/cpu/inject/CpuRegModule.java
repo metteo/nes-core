@@ -8,8 +8,8 @@ import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
 import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
@@ -18,6 +18,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MD;
@@ -34,8 +35,15 @@ public interface CpuRegModule {
     @Provides
     @BoardScope
     @CpuVar(CC)
-    static CycleCounter provideCpuCycleCounter() {
-        return new CycleCounter("CPUCC");
+    static IntegerCounter provideCpuCycleCounter() {
+        return new IntegerCounter(CC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(IC)
+    static IntegerCounter provideInstructionCycle() {
+        return new IntegerCounter(IC.doc());
     }
 
     @Provides
@@ -49,7 +57,7 @@ public interface CpuRegModule {
     @BoardScope
     @CpuVar(MA)
     static ShortRegister provideMemoryAddress() {
-        return new ShortRegister("MAR"); // TODO: use CpuVarName enum.name() instead
+        return new ShortRegister("MAR"); // TODO: use CpuVarName enum.name() instead for all regs
     }
 
     @Provides

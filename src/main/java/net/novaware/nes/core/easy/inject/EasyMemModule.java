@@ -10,7 +10,9 @@ import net.novaware.nes.core.easy.memory.EasyMemMap;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
+import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
@@ -33,6 +35,8 @@ import static net.novaware.nes.core.easy.memory.EasyMemMap.RAM_START;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_END;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_SIZE;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_START;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 
 @Module
 public interface EasyMemModule {
@@ -49,6 +53,20 @@ public interface EasyMemModule {
     @CpuVar(SS)
     static MemoryDevice.ReadWrite provideStack() {
         return new PhysicalMemory("STACK", STACK_SEGMENT_START, STACK_SEGMENT_END, STACK_SEGMENT_SIZE);
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(SC)
+    static IntegerCounter provideScanLineCounter() {
+        return new IntegerCounter(SC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(DC)
+    static IntegerCounter provideDotCounter() {
+        return new IntegerCounter(DC.doc());
     }
 
     @Provides

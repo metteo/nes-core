@@ -6,6 +6,9 @@ import net.novaware.nes.core.apu.inject.ApuModule;
 import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
+import net.novaware.nes.core.config.Platform;
+import net.novaware.nes.core.config.Region;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuMemModule;
 import net.novaware.nes.core.cpu.inject.CpuModule;
@@ -26,6 +29,7 @@ import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.ppu.inject.PpuModule;
+import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.DelegatingRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
@@ -47,6 +51,9 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
     public static TestBoardFactory newTestBoardFactory() {
         return newTestBoardFactory(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(true)
+                .setRegion(Region.USA)
+                .setPlatform(Platform.NES_FAMICOM)
+                .setVideoStandard(VideoStandard.NTSC)
                 .build()
         );
     }
@@ -83,6 +90,8 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
     public abstract Cpu newCpu();
 
     public abstract Ppu newPpu();
+
+    public abstract PpuRegFile newPpuRegisters();
 
     public abstract RecordingDevice newRecordingDevice();
 

@@ -9,7 +9,7 @@ import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.register.BooleanLatch;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.UByteUnaryOperator;
@@ -22,6 +22,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
 
 @BoardScope
@@ -37,7 +38,8 @@ public class ControlUnit implements Unit {
     @Used private final InstructionRegister decodedInstruction;
     @Used private final DelegatingRegister decodedOperand;
 
-    @Used private final CycleCounter cycleCounter;
+    @Used private final IntegerCounter cycleCounter;
+    @Used private final IntegerCounter instructionCycle;
 
     @Used private final AddressGen addressGen;
     @Used private final ArithmeticLogic alu;
@@ -60,7 +62,8 @@ public class ControlUnit implements Unit {
         @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
-        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(CC) IntegerCounter cycleCounter,
+        @CpuVar(IC) IntegerCounter instructionCycle,
 
         AddressGen addressGen,
         ArithmeticLogic alu,
@@ -81,6 +84,7 @@ public class ControlUnit implements Unit {
         this.decodedOperand = decodedOperand;
 
         this.cycleCounter = cycleCounter;
+        this.instructionCycle = instructionCycle;
 
         this.addressGen = addressGen;
         this.alu = alu;
@@ -105,7 +109,9 @@ public class ControlUnit implements Unit {
 
     @Override
     public void reset() {
-        cycleCounter.setValue(0L);
+        cycleCounter.reset();
+        instructionCycle.reset();
+
         interruptDisabled.reset();
         registers.status().reset();
 
