@@ -8,7 +8,7 @@ import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
@@ -18,6 +18,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
@@ -31,6 +32,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -44,8 +46,22 @@ public interface PpuRegModule {
     @Provides
     @BoardScope
     @PpuVar(CC)
-    static CycleCounter provideCycleCounter() {
-        return new CycleCounter(CC.doc());
+    static IntegerCounter provideCycleCounter() {
+        return new IntegerCounter(CC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(SC)
+    static IntegerCounter provideScanLineCounter() {
+        return new IntegerCounter(SC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(DC)
+    static IntegerCounter provideDotCounter() {
+        return new IntegerCounter(DC.doc());
     }
 
     @Provides

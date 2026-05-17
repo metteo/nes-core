@@ -5,7 +5,7 @@ import net.novaware.nes.core.easy.memory.EasyBus
 import net.novaware.nes.core.memory.MemoryDevice
 import net.novaware.nes.core.memory.PagedMemory
 import net.novaware.nes.core.memory.PhysicalMemory
-import net.novaware.nes.core.register.CycleCounter
+import net.novaware.nes.core.register.IntegerCounter
 import net.novaware.nes.core.register.SegmentRegister
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
@@ -15,7 +15,7 @@ import static net.novaware.nes.core.util.UTypes.ubyte
 
 class EasyBusSpec extends Specification {
 
-    CycleCounter cycleCounter = new CycleCounter("CPU")
+    IntegerCounter cc = new IntegerCounter("CPU.CC")
     MemoryDevice.ReadWrite ram = EasyMemModule.provideMemory()
     MemoryDevice.ReadWrite stack = EasyMemModule.provideStack()
     MemoryDevice.ReadWrite vram = EasyMemModule.provideVideoMemory()
@@ -24,7 +24,7 @@ class EasyBusSpec extends Specification {
     MemoryDevice.ReadWrite cartridge = new PhysicalMemory("CART", CARTRIDGE_START, CARTRIDGE_END, CARTRIDGE_SIZE)
     def codeSegment = new SegmentRegister("CS")
 
-    EasyBus bus = new EasyBus(cycleCounter, ram, stack, vram, codeSegment)
+    EasyBus bus = new EasyBus(cc, ram, stack, vram, codeSegment)
 
     def "should write to correct memory segments"() {
         given:

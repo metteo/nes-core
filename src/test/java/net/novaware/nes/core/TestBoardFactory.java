@@ -6,6 +6,9 @@ import net.novaware.nes.core.apu.inject.ApuModule;
 import net.novaware.nes.core.clock.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
+import net.novaware.nes.core.config.Platform;
+import net.novaware.nes.core.config.Region;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuMemModule;
 import net.novaware.nes.core.cpu.inject.CpuModule;
@@ -48,6 +51,9 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
     public static TestBoardFactory newTestBoardFactory() {
         return newTestBoardFactory(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(true)
+                .setRegion(Region.USA)
+                .setPlatform(Platform.NES_FAMICOM)
+                .setVideoStandard(VideoStandard.NTSC)
                 .build()
         );
     }

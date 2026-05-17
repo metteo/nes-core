@@ -10,7 +10,7 @@ import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.ShortRegister;
@@ -25,6 +25,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -39,7 +40,9 @@ public class InstructionDecoder implements Unit {
     @Used private final InstructionRegister decodedInstruction;
     @Used private final DelegatingRegister decodedOperand;
 
-    @Used private final CycleCounter cycleCounter;
+    @Used private final IntegerCounter cycleCounter;
+    @Used private final IntegerCounter instructionCycle;
+
     @Used private final MemoryBus memoryBus;
     @Used private final AddressGen addressGen;
 
@@ -53,7 +56,8 @@ public class InstructionDecoder implements Unit {
         @CpuVar(DI) InstructionRegister decodedInstruction,
         @CpuVar(DO) DelegatingRegister decodedOperand,
 
-        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(CC) IntegerCounter cycleCounter,
+        @CpuVar(IC) IntegerCounter instructionCycle,
         @CpuVar(BUS) MemoryBus memoryBus,
         AddressGen addressGen
     ) {
@@ -65,6 +69,7 @@ public class InstructionDecoder implements Unit {
         this.decodedOperand = decodedOperand;
 
         this.cycleCounter = cycleCounter;
+        this.instructionCycle = instructionCycle;
         this.memoryBus = memoryBus;
         this.addressGen = addressGen;
     }
@@ -117,7 +122,9 @@ public class InstructionDecoder implements Unit {
         int result = address + yVal;
 
         boolean pageChange = (address & 0xFF00) != (result & 0xFF00);
+
         cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
+        instructionCycle.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }
@@ -150,6 +157,7 @@ public class InstructionDecoder implements Unit {
 
         boolean pageChange = (sint(operand) & 0xFF00) != (result & 0xFF00);
         cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
+        instructionCycle.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
 
         decodedOperand.configureMemory(memoryBus, ushort(result));
     }

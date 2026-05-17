@@ -10,7 +10,7 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.MemoryPage;
 import net.novaware.nes.core.memory.PagedMemory;
-import net.novaware.nes.core.register.CycleCounter;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -20,6 +20,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ATM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
@@ -29,7 +30,8 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 public class CpuBus implements MemoryBus {
 
     @Used
-    private final CycleCounter cycleCounter;
+    private final IntegerCounter cycleCounter;
+    private final IntegerCounter instructionCycle;
 
     @Owned
     private final PagedMemory internal = new PagedMemory("INTERNAL", CpuMemMap.MEMORY_SIZE, new MemoryDevice.Empty());
@@ -48,7 +50,8 @@ public class CpuBus implements MemoryBus {
 
     @Inject
     public CpuBus(
-        @CpuVar(CC) CycleCounter cycleCounter,
+        @CpuVar(CC) IntegerCounter cycleCounter,
+        @CpuVar(IC) IntegerCounter instructionCycle,
         @CpuVar(RAM) MemoryDevice.ReadWrite ram,
         @CpuVar(PPU) MemoryDevice.ReadWrite ppu,
         @CpuVar(ACR) MemoryDevice.WriteOnly apuChannelRegs,
@@ -59,6 +62,7 @@ public class CpuBus implements MemoryBus {
         @CpuVar(TMR) MemoryDevice.ReadWrite timer // TODO: timer
     ) {
         this.cycleCounter = cycleCounter;
+        this.instructionCycle = instructionCycle;
 
         MemoryPage page40 = new MemoryPage(ubyte(0x40), new MemoryDevice.Empty());
         page40.attach(apuChannelRegs);
@@ -110,7 +114,9 @@ public class CpuBus implements MemoryBus {
 
         busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;
+
         cycleCounter.increment();
+        instructionCycle.increment();
 
         internal.onAccess(addressLatch);
         cartridge.onAccess(addressLatch);

@@ -3,7 +3,8 @@ package net.novaware.nes.core;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.apu.Apu;
 import net.novaware.nes.core.clock.ClockGenerator;
-import net.novaware.nes.core.clock.ClockGenerator.Handle;
+import net.novaware.nes.core.config.Platform;
+import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.signal.Signal;
@@ -12,16 +13,16 @@ import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
-import net.novaware.nes.core.util.uml.Used;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @BoardScope
 public class Board {
 
     public interface Config {
         boolean getRecordCpuBus();
+        // TODO: review these, only keep them if the behaviour is different between values
+        Region getRegion();
+        Platform getPlatform();
+        VideoStandard getVideoStandard();
     }
 
     // TODO: setup register files for cpu, ppu, apu and any other
@@ -42,11 +43,8 @@ public class Board {
     @Owned
     private final DebugPortImpl debugPort;
 
-    @Used
-    private final ClockGenerator clock;
-
     @Owned
-    private final List<Handle> clockHandles = new ArrayList<>();
+    private final ClockGenerator clockGenerator;
 
     // TODO: include here RAM,
 
@@ -57,7 +55,7 @@ public class Board {
         final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
-        final ClockGenerator clock
+        final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
         this.ppu = ppu;
@@ -65,7 +63,7 @@ public class Board {
 
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
-        this.clock = clock;
+        this.clockGenerator = clockGenerator;
     }
 
     public void powerOn() {
@@ -83,15 +81,7 @@ public class Board {
         cpu.reset(Signal.HIGH);
         ppu.reset(Signal.HIGH);
 
-        Handle cpuHandle = clock.schedule(() -> {
-            try {
-                cpu.advance();
-            } catch (Exception e) {
-                debugPort.onException(e);
-            }
-        }, (int) VideoStandard.NTSC.getCpuFrequency()); // Hz
-
-        clockHandles.add(cpuHandle);
+        clockGenerator.start();
     }
 
     public void powerOff() {
@@ -99,14 +89,15 @@ public class Board {
     }
 
     private void stop() {
-        clockHandles.forEach(handle -> handle.cancel(true));
-        clock.shutdown();
+        clockGenerator.forceStop();
     }
 
     private void initialize() {
         cpu.initialize();
         ppu.initialize();
         apu.initialize();
+
+        clockGenerator.setExceptionHandler(debugPort::onException);
     }
 
     public CartridgePort getCartridgePort() {

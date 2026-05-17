@@ -272,6 +272,8 @@
                         @{argLine}
                         ${jpms.opens}=ALL-UNNAMED
                         ${jpms.opens}.apu=ALL-UNNAMED
+                        ${jpms.opens}.apu.inject=ALL-UNNAMED
+                        ${jpms.opens}.apu.memory=ALL-UNNAMED
                         ${jpms.opens}.apu.register=ALL-UNNAMED
                         ${jpms.opens}.cart=ALL-UNNAMED
                         ${jpms.opens}.cart.internal=ALL-UNNAMED
@@ -285,6 +287,9 @@
                         ${jpms.opens}.cpu.signal=ALL-UNNAMED
                         ${jpms.opens}.cpu.signal.internal=ALL-UNNAMED
                         ${jpms.opens}.cpu.unit=ALL-UNNAMED
+                        ${jpms.opens}.dma=ALL-UNNAMED
+                        ${jpms.opens}.dma.inject=ALL-UNNAMED
+                        ${jpms.opens}.dma.memory=ALL-UNNAMED
                         ${jpms.opens}.easy=ALL-UNNAMED
                         ${jpms.opens}.easy.inject=ALL-UNNAMED
                         ${jpms.opens}.easy.memory=ALL-UNNAMED

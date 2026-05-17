@@ -1,8 +1,10 @@
 package net.novaware.nes.core.it
 
 import net.novaware.nes.core.BoardFactory
-import net.novaware.nes.core.clock.ClockMode
 import net.novaware.nes.core.config.ImmutableCoreConfig
+import net.novaware.nes.core.config.Platform
+import net.novaware.nes.core.config.Region
+import net.novaware.nes.core.config.VideoStandard
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
@@ -14,8 +16,10 @@ class BoardIT extends Specification {
 
         BoardFactory factory = BoardFactory.newBoardFactory(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(false)
-                .build(),
-                ClockMode.LOOP
+                .setRegion(Region.USA)
+                .setPlatform(Platform.NES_FAMICOM)
+                .setVideoStandard(VideoStandard.NTSC)
+                .build()
         )
 
         when:

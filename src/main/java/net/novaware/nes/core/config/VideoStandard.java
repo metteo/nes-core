@@ -1,17 +1,21 @@
 package net.novaware.nes.core.config;
 
+import java.util.List;
+
 /**
  * @see <a href="https://www.nesdev.org/wiki/Cycle_reference_chart">Cycle reference chart on nesdev.org</a>
  */
-public enum VideoStandard {
+public enum VideoStandard { // TODO: include post render scanline (241, NTSC black, PAL backdrop) and border region
 
-    NTSC      (21_477_272L, 12, 4, 262),
-    NTSC_DUAL (21_477_272L, 12, 4, 262),
-    PAL       (26_601_712L, 16, 5, 312),
-    PAL_DUAL  (26_601_712L, 16, 5, 312),
-    DENDY     (26_601_712L, 15, 5, 312), // PAL clock, unique CPU div
-    PAL_M     (21_453_671L, 12, 4, 262), // unique clock, NTSC divs
-    UNKNOWN   (        -1L, -1,-1,  -1);
+    NTSC      (315 * 1_000_000d / 88 * 6, 12, 4, 262, true ),
+    NTSC_DUAL (315 * 1_000_000d / 88 * 6, 12, 4, 262, true ),
+    RGB       (315 * 1_000_000d / 88 * 6, 12, 4, 262, false),
+    PAL       (4_433_618.75 * 6,          16, 5, 312, false),
+    PAL_DUAL  (4_433_618.75 * 6,          16, 5, 312, false),
+    DENDY     (4_433_618.75 * 6,          15, 5, 312, false), // PAL clock, unique CPU div
+    PAL_M     (3_575_611d   * 6,          12, 4, 262, true ), // unique clock, NTSC divs
+
+    UNKNOWN   (-1L, -1, -1, -1, false);
 
     public static final int PHYSICAL_WIDTH = 341; // horizontal, dots per scan line
 
@@ -21,33 +25,68 @@ public enum VideoStandard {
     public static final int V_BLANK_START = ACTIVE_HEIGHT + 1; // scan line
     public static final int H_BLANK_START = ACTIVE_WIDTH + 1; // dot / cycle
 
-    private final long masterClock; // Hz // TODO: maybe use unit checker here
+    private final double masterClock; // Hz // TODO: maybe use unit checker here
     private final int cpuDivisor;
     private final int ppuDivisor;
     private final int physicalHeight; // vertical, scan lines per frame
+    private final boolean oddFrameCycleSkip;
 
-    VideoStandard(long masterClock, int cpuDiv, int ppuDiv, int physicalHeight) {
+    private static final List<VideoStandard> instances = List.of(values());
+
+    VideoStandard(double masterClock, int cpuDiv, int ppuDiv, int physicalHeight, boolean oddFrameCycleSkip) {
         this.masterClock = masterClock;
         this.cpuDivisor = cpuDiv;
         this.ppuDivisor = ppuDiv;
         this.physicalHeight = physicalHeight;
+        this.oddFrameCycleSkip = oddFrameCycleSkip;
     }
 
-    public double getMasterClock() {
-        return (double) masterClock;
+    public double getMasterClock() { // Hz
+        return masterClock;
+    }
+
+    public int getPpuDivisor() {
+        return ppuDivisor;
+    }
+
+    public int getCpuDivisor() {
+        return cpuDivisor;
+    }
+
+    public int getApuDivisor() {
+        return cpuDivisor * 2;
+    }
+
+    public int getDmaDivisor() {
+        return cpuDivisor;
     }
 
     public double getCpuFrequency() {
-        return (double) masterClock / cpuDivisor;
+        return masterClock / cpuDivisor;
     }
 
     public double getPpuFrequency() {
-        return (double) masterClock / ppuDivisor;
+        return masterClock / ppuDivisor;
+    }
+
+    public boolean isOddFrameCycleSkip() {
+        return oddFrameCycleSkip;
     }
 
     public double getRefreshRate() {
-        int dotsPerFrame = physicalHeight * PHYSICAL_WIDTH;
-        return getPpuFrequency() / dotsPerFrame;
+        return getPpuFrequency() / getPpuCyclesPerFrame();
+    }
+
+    public double getMasterCycles() {
+        return masterClock / getRefreshRate();
+    }
+
+    public int getPpuCyclesPerFrame() {
+        return physicalHeight * PHYSICAL_WIDTH;
+    }
+
+    public double getCpuCyclesPerFrame() {
+        return getCpuFrequency() / getRefreshRate();
     }
 
     public int getPhysicalHeight() {
@@ -66,11 +105,49 @@ public enum VideoStandard {
         return ACTIVE_HEIGHT;
     }
 
+    /**
+     * TODO: this is nmi trigger line, 240 is already post render
+     */
     public int getVerticalBlankStart() {
         return V_BLANK_START;
     }
 
     public int getHorizontalBlankStart() {
         return H_BLANK_START;
+    }
+
+    public static List<VideoStandard> instances() {
+        return instances;
+    }
+
+    /**
+     * Utility to print video standards to console
+     */
+    static void main() {
+        instances().stream()
+                .filter(vs -> vs != UNKNOWN)
+                .map(VideoStandard::toText)
+                .forEach(s -> System.out.println(s)); // NOTE: lambda will cause checker "Incompatible receiver type"
+    }
+
+    private static String toText(VideoStandard videoStandard) {
+        return String.format("%-10s: FPS: %.3f Hz, CPU: %s, %s, PPU: %s, %s, Master: %s, %s",
+                videoStandard.name(),
+                videoStandard.getRefreshRate(),
+                toMegaHertz(videoStandard.getCpuFrequency()),
+                toCycles(videoStandard.getCpuCyclesPerFrame()),
+                toMegaHertz(videoStandard.getPpuFrequency()),
+                toCycles(videoStandard.getPpuCyclesPerFrame()),
+                toMegaHertz(videoStandard.getMasterClock()),
+                toCycles(videoStandard.getMasterCycles())
+        );
+    }
+
+    private static String toMegaHertz(double hz) {
+        return String.format("%.3f MHz", hz / 1_000_000d);
+    }
+
+    private static String toCycles(double cycles) {
+        return String.format("%.1f cyc", cycles);
     }
 }

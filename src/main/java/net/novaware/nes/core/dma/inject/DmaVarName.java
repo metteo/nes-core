@@ -2,9 +2,9 @@ package net.novaware.nes.core.dma.inject;
 
 public enum DmaVarName {
 
-    OAM ("", "oamDma", "OAM DMA"),
+    CC ("", "cycleCounter", "Cycle Counter"),
 
-    // endregion
+    OAM ("", "oam", "OAM"),
     ;
     private final String doc;
     private final String var;
@@ -20,7 +20,7 @@ public enum DmaVarName {
      * @return documentation specific name (fall back to enum name)
      */
     public String doc() {
-        return doc.isEmpty() ? name() : doc;
+        return "DMA." + (doc.isEmpty() ? name() : doc);
     }
 
     /**

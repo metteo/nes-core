@@ -50,7 +50,7 @@ class CpuCT extends RegsAndRamBaseSpec {
         cpu.advance()
 
         then:
-        rec.cycleCounter().diff() == 6
+        rec.cycles() == 6
         expectRegs(
             pc: 0xC72D + 1
         )
@@ -60,7 +60,7 @@ class CpuCT extends RegsAndRamBaseSpec {
         cpu.advance()
 
         then:
-        rec.cycleCounter().diff() == 6
+        rec.cycles() == 6
         expectRegs(
             pc: 0x1237 + 1
         )

@@ -16,6 +16,12 @@ public abstract class ImmutableCoreConfig implements CoreConfig {
     public static abstract class Builder {
         public abstract Builder setRecordCpuBus(boolean record);
 
+        public abstract Builder setRegion(Region region);
+
+        public abstract Builder setPlatform(Platform platform);
+
+        public abstract Builder setVideoStandard(VideoStandard videoStandard);
+
         public abstract ImmutableCoreConfig build();
     }
 }

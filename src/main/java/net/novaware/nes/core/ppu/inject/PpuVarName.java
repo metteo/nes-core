@@ -3,7 +3,10 @@ package net.novaware.nes.core.ppu.inject;
 public enum PpuVarName {
 
     // region Basic Registers
-    CC ("",       "cycleCounter",    "Cycle Counter"),
+    CC ("", "cycleCounter",    "Cycle Counter"),
+    SC ("", "scanLineCounter", "Scan Line Counter"),
+    DC ("", "dotCounter",      "Dot Counter"),
+
     PS ("STATUS", "ppuStatus",       "PPU Status"),
     HB ("",       "horizontalBlank", "Horizontal Blank"),
 

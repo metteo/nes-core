@@ -2,6 +2,8 @@ package net.novaware.nes.core.ppu;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.clock.ClockReceiver;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -17,7 +19,7 @@ import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 @BoardScope
-public class Ppu {
+public class Ppu implements ClockReceiver {
 
     private final MemoryBus bus;
 
@@ -77,15 +79,42 @@ public class Ppu {
         regs.dataReadBuffer.set(UBYTE_0);
 
         regs.oddFrame.set(false);
+
+        // TODO: read on what ppu does during these first 21 cycles
+        regs.dotCounter.setValue(7 * 3); // 21 dots = 7 cpu reset cycle times 3 (for NTSC only for now)
+        regs.scanLineCounter.reset();
     }
 
-    public void cycle() {
+    @Override
+    public int cycle() {
         if (rst.isActive()) {
             reset();
-            return;
+            return 0;
         }
 
-        System.out.println("PPU dot");
+        regs.cycleCounter.increment();
+        regs.dotCounter.increment();
+
+        if (regs.dotCounter.getValue() == VideoStandard.NTSC.getPhysicalWidth()) {
+            regs.dotCounter.reset();
+            regs.scanLineCounter.increment();
+        }
+
+        // TODO: check post render scanline vs nmi trigger line
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
+            regs.status.setVerticalBlank(true);
+        }
+
+        // TODO: pre render scan line should be -1 or 261?
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1 && regs.dotCounter.getValue() == 1) {
+            regs.status.setVerticalBlank(false);
+        }
+
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight()) {
+            regs.scanLineCounter.reset();
+        }
+
+        return 1; // TODO: return 0 for skipped cycle?
     }
 
     public void reset(Signal s) {
