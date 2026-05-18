@@ -3,7 +3,7 @@ package net.novaware.nes.core.easy.inject;
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.easy.memory.EasyBus;
 import net.novaware.nes.core.easy.memory.EasyMemMap;

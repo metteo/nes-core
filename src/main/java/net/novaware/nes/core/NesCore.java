@@ -3,9 +3,12 @@ package net.novaware.nes.core;
 import dagger.BindsInstance;
 import dagger.Component;
 import net.novaware.nes.core.apu.inject.ApuModule;
+import net.novaware.nes.core.board.Board;
+import net.novaware.nes.core.board.inject.BoardModule;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.cart.internal.CartridgeImpl;
-import net.novaware.nes.core.clock.ClockModule;
+import net.novaware.nes.core.clock.inject.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.cpu.inject.CpuModule;
 import net.novaware.nes.core.dma.inject.DmaModule;
@@ -24,15 +27,30 @@ import java.net.URI;
     PpuModule.class,
     CpuModule.class,
     ClockModule.class,
-    PortModule.class
+    PortModule.class,
+    BoardModule.class
 })
-public abstract class BoardFactory { // TODO: rename BoardFactory into sth else like NesCore
+public abstract class NesCore {
 
-    public static BoardFactory newBoardFactory(CoreConfig config) {
-        return DaggerBoardFactory.builder()
+    // region NesCore creation
+
+    public static NesCore newNesCore(CoreConfig config) {
+        return DaggerNesCore.builder()
                 .coreConfig(config)
                 .build();
     }
+
+    @Component.Builder
+    public static abstract class Builder {
+
+        @BindsInstance
+        public abstract Builder coreConfig(CoreConfig config);
+
+        public abstract NesCore build();
+    }
+
+    // endregion
+    // region Factory methods
 
     public abstract Board newBoard();
 
@@ -44,12 +62,5 @@ public abstract class BoardFactory { // TODO: rename BoardFactory into sth else 
         return new CartridgeImpl(result.nesFile());
     }
 
-    @Component.Builder
-    public static abstract class Builder {
-
-        @BindsInstance
-        public abstract Builder coreConfig(CoreConfig config);
-
-        public abstract BoardFactory build();
-    }
+    // endregion
 }

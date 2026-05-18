@@ -3,7 +3,7 @@ package net.novaware.nes.core.apu.inject;
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Named;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.register.IntegerCounter;
 

@@ -1,7 +1,7 @@
 package net.novaware.nes.core.ppu.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.memory.CpuBusBridge;
 import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.memory.DataBus;

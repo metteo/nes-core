@@ -1,7 +1,7 @@
 package net.novaware.nes.core.ppu.register;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;

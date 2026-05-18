@@ -1,7 +1,7 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.StatusRegister;
@@ -54,7 +54,11 @@ public class ArithmeticLogic implements Unit {
         this.setOverflow = setOverflow;
     }
 
-    public void addWithCarry(@Unsigned byte data) { // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
+    /**
+     * // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
+     * @see <a href="https://6502.org/tutorials/decimal_mode.html">Decimal Mode</a>
+     */
+    public void addWithCarry(@Unsigned byte data) {
         int prevCarry = registers.status().getCarry() ? 1 : 0;
 
         int a = registers.a().getAsInt();

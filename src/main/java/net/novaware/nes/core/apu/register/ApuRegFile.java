@@ -1,6 +1,6 @@
 package net.novaware.nes.core.apu.register;
 
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.RegisterFile;

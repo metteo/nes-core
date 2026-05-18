@@ -45,6 +45,10 @@ public enum PpuVarName {
     DMA ("", "dma", "Direct Memory Access"),
     OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
 
+    VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
+    S0H ("", "sprite0Hit", "Sprite 0 Hit"),
+    SOV ("", "spriteOverflow", "Sprite Overflow"),
+    RST ("", "reset", "Reset"),
     ;
     private final String doc;
     private final String var;

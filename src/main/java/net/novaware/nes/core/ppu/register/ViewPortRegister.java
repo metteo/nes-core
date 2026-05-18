@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.register;
 
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.register.Register;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;

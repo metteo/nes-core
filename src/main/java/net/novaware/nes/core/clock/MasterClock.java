@@ -2,7 +2,7 @@ package net.novaware.nes.core.clock;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.ppu.inject.PpuVar;
@@ -88,7 +88,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             double ppuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getPpuDivisor();
             ppuToCpuCycleBudget.setValue(ppuToCpuCycleBudget.getValue() + ppuCyclesBudget);
 
-            while (ppuToCpuCycleBudget.getValue() > 1) {
+            while (ppuToCpuCycleBudget.getValue() > 0.9) { // don't delay last cycle due to fraction inequality
                 ppuToCpuCycleBudget.decrement();
                 int ppuCyclesConsumed = ppu.cycle();
                 ppuClockBudget.decrementBy(ppuCyclesConsumed * videoStandard.getPpuDivisor());
@@ -97,7 +97,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             double apuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getApuDivisor();
             apuToCpuCycleBudget.setValue(apuToCpuCycleBudget.getValue() + apuCyclesBudget);
 
-            while (apuToCpuCycleBudget.getValue() > 1) {
+            while (apuToCpuCycleBudget.getValue() > 0.9) { // don't delay last cycle due to fraction inequality
                 apuToCpuCycleBudget.decrement();
                 int apuCyclesConsumed = apu.cycle();
                 apuClockBudget.decrementBy(apuCyclesConsumed * videoStandard.getApuDivisor());
@@ -125,6 +125,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             long targetTime = spinStart + targetSpinDuration;
 
             while (System.nanoTime() < targetTime) {
+                // TODO: use some of the spin time to move video buffer / apu buffer to external threads safely
+                // TODO: also safely poll the inputs for the next frame
                 Thread.onSpinWait();
             }
 

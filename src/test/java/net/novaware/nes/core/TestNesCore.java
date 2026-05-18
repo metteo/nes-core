@@ -3,7 +3,9 @@ package net.novaware.nes.core;
 import dagger.BindsInstance;
 import dagger.Component;
 import net.novaware.nes.core.apu.inject.ApuModule;
-import net.novaware.nes.core.clock.ClockModule;
+import net.novaware.nes.core.board.inject.BoardModule;
+import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.clock.inject.ClockModule;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.ImmutableCoreConfig;
 import net.novaware.nes.core.config.Platform;
@@ -44,12 +46,13 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
     CpuRegModule.class,
     CpuMemModule.class,
     ClockModule.class,
-    PortModule.class
+    PortModule.class,
+    BoardModule.class
 })
-public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory name
+public abstract class TestNesCore { // TODO: consider TestSubjectFactory name
 
-    public static TestBoardFactory newTestBoardFactory() {
-        return newTestBoardFactory(ImmutableCoreConfig.builder()
+    public static TestNesCore newTestNesCore() {
+        return newTestNesCore(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(true)
                 .setRegion(Region.USA)
                 .setPlatform(Platform.NES_FAMICOM)
@@ -58,8 +61,8 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
         );
     }
 
-    public static TestBoardFactory newTestBoardFactory(CoreConfig config) {
-        return DaggerTestBoardFactory.builder()
+    public static TestNesCore newTestNesCore(CoreConfig config) {
+        return DaggerTestNesCore.builder()
                 .coreConfig(config)
                 .build();
     }
@@ -101,6 +104,6 @@ public abstract class TestBoardFactory { // TODO: consider TestSubjectFactory na
         @BindsInstance
         public abstract Builder coreConfig(CoreConfig config);
 
-        public abstract TestBoardFactory build();
+        public abstract TestNesCore build();
     }
 }

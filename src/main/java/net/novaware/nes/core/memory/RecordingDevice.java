@@ -1,7 +1,7 @@
 package net.novaware.nes.core.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.Hex;

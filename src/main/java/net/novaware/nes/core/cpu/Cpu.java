@@ -1,7 +1,7 @@
 package net.novaware.nes.core.cpu;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;

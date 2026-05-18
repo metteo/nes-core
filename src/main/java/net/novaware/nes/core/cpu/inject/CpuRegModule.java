@@ -2,7 +2,7 @@ package net.novaware.nes.core.cpu.inject;
 
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.cpu.register.StatusRegister;

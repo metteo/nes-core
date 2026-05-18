@@ -2,7 +2,7 @@ package net.novaware.nes.core.dma.memory;
 
 import dagger.Lazy;
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.dma.Dma;
 import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.memory.DataBus;

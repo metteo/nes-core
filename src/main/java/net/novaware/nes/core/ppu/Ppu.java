@@ -1,20 +1,27 @@
 package net.novaware.nes.core.ppu;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.Signal;
+import net.novaware.nes.core.cpu.signal.internal.Detector;
 import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.util.uml.Owned;
+import net.novaware.nes.core.util.uml.Used;
 
+import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
@@ -23,21 +30,28 @@ public class Ppu implements ClockReceiver {
 
     private final MemoryBus bus;
 
+    @Used  private final Pin vBlankInterrupt;
+    @Used  private final Pin sprite0Hit;
+    @Owned private final Detector rst;
+
     private final PpuRegFile regs;
     private final PaletteMemory paletteMemory;
     private final ObjAttrMemory objAttrMemory;
 
-    @Owned
-    private final LevelDetector rst = new LevelDetector("RST", LOW); // TODO: inject
-
     @Inject
     public Ppu(
         @PpuVar(BUS) MemoryBus bus,
+        @PpuVar(VBI) Pin vBlankInterrupt,
+        @PpuVar(S0H) Pin sprite0Hit,
+        @PpuVar(RST) LevelDetector rst,
         PpuRegFile regs,
         PaletteMemory paletteMemory,
         ObjAttrMemory objAttrMemory
     ) {
         this.bus = bus;
+        this.vBlankInterrupt = vBlankInterrupt;
+        this.sprite0Hit = sprite0Hit;
+        this.rst = rst;
         this.regs = regs;
         this.paletteMemory = paletteMemory;
         this.objAttrMemory = objAttrMemory;
@@ -103,11 +117,13 @@ public class Ppu implements ClockReceiver {
         // TODO: check post render scanline vs nmi trigger line
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
             regs.status.setVerticalBlank(true);
+            vBlankInterrupt.set(LOW);
         }
 
         // TODO: pre render scan line should be -1 or 261?
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1 && regs.dotCounter.getValue() == 1) {
             regs.status.setVerticalBlank(false);
+            vBlankInterrupt.set(HIGH);
         }
 
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight()) {

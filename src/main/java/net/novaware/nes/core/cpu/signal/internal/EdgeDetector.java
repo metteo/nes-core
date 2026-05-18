@@ -1,10 +1,11 @@
 package net.novaware.nes.core.cpu.signal.internal;
 
 import net.novaware.nes.core.cpu.signal.Signal;
+import net.novaware.nes.core.pin.Pin;
 
 import static net.novaware.nes.core.cpu.signal.Signal.not;
 
-public class EdgeDetector implements Detector {
+public class EdgeDetector implements Detector, Pin {
 
     private final String name;
     private final Signal activeState;

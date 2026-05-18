@@ -3,7 +3,7 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;

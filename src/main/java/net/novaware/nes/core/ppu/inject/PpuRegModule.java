@@ -2,7 +2,7 @@ package net.novaware.nes.core.ppu.inject;
 
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;

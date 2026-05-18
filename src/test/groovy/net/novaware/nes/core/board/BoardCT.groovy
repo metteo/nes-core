@@ -1,6 +1,6 @@
-package net.novaware.nes.core
+package net.novaware.nes.core.board
 
-
+import net.novaware.nes.core.NesCore
 import net.novaware.nes.core.config.ImmutableCoreConfig
 import net.novaware.nes.core.config.Platform
 import net.novaware.nes.core.config.Region
@@ -11,7 +11,7 @@ class BoardCT extends Specification {
 
     def "should construct the Board"() {
         given:
-        BoardFactory factory = BoardFactory.newBoardFactory(ImmutableCoreConfig.builder()
+        NesCore factory = NesCore.newNesCore(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(true)
                 .setRegion(Region.USA)
                 .setPlatform(Platform.NES_FAMICOM)

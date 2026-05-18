@@ -4,7 +4,7 @@ import dagger.Binds;
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.apu.memory.ApuMemDevice;
 import net.novaware.nes.core.apu.register.ApuRegFile;
 import net.novaware.nes.core.config.CoreConfig;

@@ -17,7 +17,7 @@ public class TestApp {
                 .setPlatform(Platform.NES_FAMICOM)
                 .setVideoStandard(VideoStandard.NTSC)
                 .build();
-        BoardFactory factory = BoardFactory.newBoardFactory(config);
+        NesCore factory = NesCore.newNesCore(config);
 
         URI nestest = URI.create("file://" + args[0]);
         Cartridge testRom = factory.newCartridge(nestest);

@@ -3,16 +3,13 @@ package net.novaware.nes.core.ppu.register
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
-import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE
-import static net.novaware.nes.core.util.UTypes.USHORT_0
-import static net.novaware.nes.core.util.UTypes.USHORT_MAX_VALUE
-import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.TestNesCore.newTestNesCore
+import static net.novaware.nes.core.util.UTypes.*
 
 class PpuRegFileSpec extends Specification {
 
     @Subject
-    PpuRegFile registers = newTestBoardFactory().newPpuRegisters()
+    PpuRegFile registers = newTestNesCore().newPpuRegisters()
 
     def "all boolean registers are initialized and reachable"() {
         expect:
