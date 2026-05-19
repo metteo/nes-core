@@ -59,6 +59,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see https://www.nesdev.org/wiki/PPU_pinout
  *
  * TODO: expose PPU pinout on Ppu class and direct calls from CPU through this class into Ppu class
+ * TODO: implement register set delays for ppu usecase, maybe replace the latch class in irq disable case
  */
 @BoardScope
 public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBridge {
@@ -185,7 +186,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     private static int idx(@Unsigned short address) {
-        return (sint(address) - sint(PPU_REGISTERS_START)) & 0x7;
+        return (sint(address) - sint(PPU_REGISTERS_START)) & 0b111;
     }
 
     @Override
@@ -394,8 +395,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     class DataBusHandler implements Handler {
-
-        // TODO: direct < 0x3EFF traffic to PpuBus, >0x3F00 to Palette RAM
 
         @Override
         public void onRead() {

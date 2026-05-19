@@ -67,6 +67,9 @@ public class PpuBus implements MemoryBus {
         busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;
 
+        // PPU AD0..7 are shared between address and data bus
+        // dataLine.data(ubyte(sint(addressLatch) & 0xFF)); // TODO: uncomment and update tests
+
         cartridge.onAccess(addressLatch);
         expansion.onAccess(addressLatch);
 

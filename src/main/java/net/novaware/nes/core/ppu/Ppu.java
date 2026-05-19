@@ -25,6 +25,10 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
+/**
+ * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
+ * TODO: create a separate stub ppu class that can be switched with real one?
+ */
 @BoardScope
 public class Ppu implements ClockReceiver {
 
@@ -99,8 +103,7 @@ public class Ppu implements ClockReceiver {
         regs.scanLineCounter.reset();
     }
 
-    @Override
-    public int cycle() {
+    public int cycle0() {
         if (rst.isActive()) {
             reset();
             return 0;
@@ -115,7 +118,8 @@ public class Ppu implements ClockReceiver {
         }
 
         // TODO: check post render scanline vs nmi trigger line
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart()
+                && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
             regs.status.setVerticalBlank(true);
             vBlankInterrupt.set(LOW);
         }
@@ -133,6 +137,12 @@ public class Ppu implements ClockReceiver {
         return 1; // TODO: return 0 for skipped cycle?
     }
 
+
+    @Override
+    public int cycle() {
+        return cycle0();
+    }
+
     public void reset(Signal s) {
         rst.set(s);
     }
@@ -144,4 +154,10 @@ public class Ppu implements ClockReceiver {
     void rst(Signal s) { // NOTE: alias, maybe move to an interface as default method
         reset(s);
     }
+
+    // region ext pins
+    // TODO: expose EXT pins
+    // endregion
+
+
 }
