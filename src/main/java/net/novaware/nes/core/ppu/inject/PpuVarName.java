@@ -39,11 +39,13 @@ public enum PpuVarName {
     // endregion
 
     VRAM ("", "videoMemory", "Video RAM"),
-    PALETTE ("", "paletteMemory", "Palette RAM"),
-
+    PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
     OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
+
+    DAM ("", "displayA", "Display A Memory"),
+    DBM ("", "displayB", "Display B Memory"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),

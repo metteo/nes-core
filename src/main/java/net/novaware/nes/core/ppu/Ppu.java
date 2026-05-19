@@ -10,6 +10,7 @@ import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
@@ -19,6 +20,8 @@ import net.novaware.nes.core.util.uml.Used;
 import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DBM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
@@ -39,8 +42,12 @@ public class Ppu implements ClockReceiver {
     @Owned private final Detector rst;
 
     private final PpuRegFile regs;
+
     private final PaletteMemory paletteMemory;
     private final ObjAttrMemory objAttrMemory;
+
+    private final DisplayMemory frontBuffer;
+    private final DisplayMemory backBuffer;
 
     @Inject
     public Ppu(
@@ -50,7 +57,9 @@ public class Ppu implements ClockReceiver {
         @PpuVar(RST) LevelDetector rst,
         PpuRegFile regs,
         PaletteMemory paletteMemory,
-        ObjAttrMemory objAttrMemory
+        ObjAttrMemory objAttrMemory,
+        @PpuVar(DAM) DisplayMemory displayA,
+        @PpuVar(DBM) DisplayMemory displayB
     ) {
         this.bus = bus;
         this.vBlankInterrupt = vBlankInterrupt;
@@ -59,6 +68,10 @@ public class Ppu implements ClockReceiver {
         this.regs = regs;
         this.paletteMemory = paletteMemory;
         this.objAttrMemory = objAttrMemory;
+
+        // will be swapped at the end of frame
+        this.frontBuffer = displayA;
+        this.backBuffer = displayB;
     }
 
     public void initialize() {
@@ -112,22 +125,39 @@ public class Ppu implements ClockReceiver {
         regs.cycleCounter.increment();
         regs.dotCounter.increment();
 
+        // TODO: on PAL there is no rendering on 0th scan line
+
         if (regs.dotCounter.getValue() == VideoStandard.NTSC.getPhysicalWidth()) {
             regs.dotCounter.reset();
             regs.scanLineCounter.increment();
         }
 
-        // TODO: check post render scanline vs nmi trigger line
+        if (regs.scanLineCounter.getValue() == 20 && regs.dotCounter.getValue() == 5) {
+            if (regs.renderSprite.get()) {
+                regs.status.setSpriteZeroHit(true);
+                sprite0Hit.set(LOW);
+            }
+        }
+
+        // TODO: check post render scan line vs nmi trigger line
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart()
                 && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
             regs.status.setVerticalBlank(true);
-            vBlankInterrupt.set(LOW);
+            if (regs.vBlankInterruptEnabled.get()) {
+                vBlankInterrupt.set(LOW);
+            }
         }
 
-        // TODO: pre render scan line should be -1 or 261?
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1 && regs.dotCounter.getValue() == 1) {
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1) {
             regs.status.setVerticalBlank(false);
-            vBlankInterrupt.set(HIGH);
+            if (regs.vBlankInterruptEnabled.get()) {
+                vBlankInterrupt.set(HIGH);
+            }
+
+            if (regs.renderSprite.get()) {
+                regs.status.setSpriteZeroHit(false);
+                sprite0Hit.set(HIGH);
+            }
         }
 
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight()) {

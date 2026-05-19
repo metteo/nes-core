@@ -1,8 +1,22 @@
 package net.novaware.nes.core.ppu.memory;
 
+import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-public class DisplayMemory {
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
+
+public class DisplayMemory implements Nameable {
+
+    private final String name;
+
+    private final @Unsigned byte[][] buffer;
+
+    public DisplayMemory(String name, int height, int width) {
+        this.name = name;
+
+        buffer = new @Unsigned byte[height][width];
+    }
 
     // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex etc
     // if 4 bits is not enough or to slow just use secondary array of the same size but other type.
@@ -17,22 +31,29 @@ public class DisplayMemory {
     //  - overscan / bezel (ui side, ppu not involved)
 
     // TODO: allow multiple instances for handoff between threads
-    // TODO: sizing should depend on VideoStandard active dimensions
 
     public int getHeight() {
-        return 0;
+        return buffer.length;
     }
 
     public int getWidth() {
-        return 0;
+        assert buffer.length > 0;
+
+        return buffer[0].length;
     }
 
     public @Unsigned byte getColor(int y, int x) {
-        return 0; // TODO: implement
+        assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
+        assert 0 < buffer.length & x < buffer[0].length;
+
+        return buffer[y][x];
     }
 
     public void setColor(int y, int x, @Unsigned byte color) {
-        // TODO: implement
+        assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
+        assert 0 < buffer.length && x < buffer[0].length;
+
+        buffer[y][x] = ubyte(sint(color) & 0x0F);
     }
 
     public @Unsigned byte getMeta(int y, int x) { // TODO: consider dedicated methods per info like enum with layers
@@ -41,5 +62,15 @@ public class DisplayMemory {
 
     public void setMeta(int y, int x, @Unsigned byte meta) {
         // TODO: implement
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + getWidth() + "x" + getHeight();
     }
 }
