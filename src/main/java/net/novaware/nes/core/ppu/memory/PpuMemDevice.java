@@ -265,7 +265,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             boolean p = (data & 0x40) != 0;
             boolean v = (data & 0x80) != 0;
 
-            tempViewPort.setNametable(nn);
+            tempViewPort.setNameTable(nn);
             vramAddressIncrement.setAsByte(i);
             spritePatternTable.setAsShort(s);
             backgroundPatternTable.setAsShort(b);
@@ -383,13 +383,16 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
             final boolean firstWrite = !secondWrite.get();
             if (firstWrite) {
-                tempViewPort.high(data);
+                int dataInt = sint(data);
+                tempViewPort.high(ubyte(dataInt & 0b0011_1111));
                 secondWrite.set(true);
             } else {
                 tempViewPort.low(data);
                 secondWrite.set(false);
 
-                currentViewPort.set(tempViewPort.get());
+                // TODO: wait 1-1.5 dots
+
+                tempViewPort.transfer(currentViewPort);
             }
         }
     }

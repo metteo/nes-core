@@ -220,7 +220,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(PPU_CONTROL_REGISTER).write().data(ubyte(bits))
 
         then:
-        temporaryViewPort.nametable == nn
+        temporaryViewPort.nameTable == nn
         vramAddressIncrement.getAsInt() == i
         spritePatternTable.getAsInt() == s
         backgroundPatternTable.getAsInt() == b
@@ -318,13 +318,16 @@ class PpuMemDeviceSpec extends Specification {
         temporaryViewPort.getCoarseY() == coarseY
         temporaryViewPort.getFineY() == fineY
 
+        temporaryViewPort.getNameTable() == 0
+        currentViewPort.getNameTable() == 0
+
         where:
         xScroll     | yScroll     || coarseX | fineX | coarseY | fineY
-        0b11111_000 | 0b00000_111 || 0b11111 | 0b000 | 0b00000 | 0b111
-        0b00000_111 | 0b11111_000 || 0b00000 | 0b111 | 0b11111 | 0b000
+        0b00000_000 | 0b00000_000 || 0b00000 | 0b000 | 0b00000 | 0b000
         0b11111_000 | 0b00000_000 || 0b11111 | 0b000 | 0b00000 | 0b000
+        0b00000_111 | 0b00000_000 || 0b00000 | 0b111 | 0b00000 | 0b000
         0b00000_000 | 0b11111_000 || 0b00000 | 0b000 | 0b11111 | 0b000
         0b00000_000 | 0b00000_111 || 0b00000 | 0b000 | 0b00000 | 0b111
-        0b00000_111 | 0b00000_000 || 0b00000 | 0b111 | 0b00000 | 0b000
+        0b11111_111 | 0b11111_111 || 0b11111 | 0b111 | 0b11111 | 0b111
     }
 }
