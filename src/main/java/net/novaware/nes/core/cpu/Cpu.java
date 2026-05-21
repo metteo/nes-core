@@ -9,8 +9,6 @@ import net.novaware.nes.core.cpu.signal.Interruptible;
 import net.novaware.nes.core.cpu.signal.Overflowable;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.cpu.signal.Synchronizable;
-import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
-import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.cpu.unit.AddressGen;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
 import net.novaware.nes.core.cpu.unit.ControlUnit;
@@ -23,6 +21,8 @@ import net.novaware.nes.core.cpu.unit.PowerMgmt;
 import net.novaware.nes.core.cpu.unit.PrefetchUnit;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.cpu.unit.Unit;
+import net.novaware.nes.core.pin.Pin;
+import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
@@ -65,12 +65,16 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
     @Owned private final StackEngine stackEngine;
     @Owned private final DiagnosticUnit diagnostics;
 
-    @Owned private final LevelDetector irq;
-    @Owned private final EdgeDetector nmi;
-    @Owned private final LevelDetector s0h;
-    @Owned private final LevelDetector res;
-    @Owned private final LevelDetector rdy;
-    @Owned private final EdgeDetector so;
+    @Owned private final Pin irq;
+    @Owned private final Pin nmi;
+    @Owned private final Pin s0h;
+    @Owned private final Pin so;
+
+    @Owned private final Pin rdyPin;
+    @Owned private final BooleanRegister rdyReg;
+
+    @Owned private final Pin resPin;
+    @Owned private final BooleanRegister resReg;
 
     @Used  private final List<Unit> units;
 
@@ -95,12 +99,16 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
 
         @CpuVar(CC)  IntegerCounter cycleCounter,
         @CpuVar(IC)  IntegerCounter instructionCycle,
-        @CpuVar(IRQ) LevelDetector irq,
-        @CpuVar(NMI) EdgeDetector nmi,
-        @CpuVar(S0H) LevelDetector s0h,
-        @CpuVar(RES) LevelDetector res,
-        @CpuVar(RDY) LevelDetector rdy,
-        @CpuVar(SOV) EdgeDetector so
+        @CpuVar(IRQ) Pin irq,
+        @CpuVar(NMI) Pin nmi,
+        @CpuVar(S0H) Pin s0h,
+        @CpuVar(SOV) Pin so,
+
+        @CpuVar(RDY) Pin rdyPin,
+        @CpuVar(RDY) BooleanRegister rdyReg,
+
+        @CpuVar(RES) Pin resPin,
+        @CpuVar(RES) BooleanRegister resReg
     ) {
         this.registers = registers;
 
@@ -126,9 +134,13 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
         this.irq = irq;
         this.nmi = nmi;
         this.s0h = s0h;
-        this.res = res;
-        this.rdy = rdy;
         this.so = so;
+
+        this.rdyPin = rdyPin;
+        this.rdyReg = rdyReg;
+
+        this.resPin = resPin;
+        this.resReg = resReg;
     }
 
     public void initialize() {
@@ -156,12 +168,12 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
     public int advance() { // TODO: consider renaming to step()
         instructionCycle.reset();
 
-        if (res.isActive()) {
+        if (resReg.get()) {
             reset();
             return instructionCycle.getValue();
         }
 
-        if (rdy.isActive()) {
+        if (rdyReg.get()) {
             // TODO: repeat last bus.read operation which consumes 1 cycle!
             // Will it conflict with DMA?!
             cycleCounter.increment();
@@ -185,6 +197,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
         // modify
         // write
 
+        // TODO: pending NMI latch set on falling edge of nmi (which is checked every cpu cycle)
         controlUnit.sampleInterrupts(); // TODO: verify that irqDisable delay is honored
 
         controlUnit.commitAll();
@@ -217,7 +230,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
      */
     @Override
     public void reset(Signal s) {
-        res.set(s);
+        resPin.set(s);
     }
 
     /**
@@ -235,7 +248,7 @@ public class Cpu implements Interruptible, Synchronizable, Overflowable, ClockRe
      */
     @Override
     public void ready(Signal s) {
-        rdy.set(s);
+        rdyPin.set(s);
     }
 
     @Override

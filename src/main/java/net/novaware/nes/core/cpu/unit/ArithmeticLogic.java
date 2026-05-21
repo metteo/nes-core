@@ -5,7 +5,6 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.StatusRegister;
-import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
@@ -17,7 +16,6 @@ import java.util.function.IntBinaryOperator;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -36,22 +34,17 @@ public class ArithmeticLogic implements Unit {
     @Used
     private final StatusRegister status;
 
-    @Used
-    private final EdgeDetector setOverflow;
-
     @Inject
     public ArithmeticLogic(
-            CpuRegFile registers,
-            @CpuVar(A) ByteRegister accumulator,
-            @CpuVar(DO) DelegatingRegister operand,
-            @CpuVar(PS) StatusRegister status,
-            @CpuVar(SOV) EdgeDetector setOverflow
+        CpuRegFile registers,
+        @CpuVar(A) ByteRegister accumulator,
+        @CpuVar(DO) DelegatingRegister operand,
+        @CpuVar(PS) StatusRegister status
     ) {
         this.registers = registers;
         this.accumulator = accumulator;
         this.operand2 = operand;
         this.status = status;
-        this.setOverflow = setOverflow;
     }
 
     /**
@@ -78,7 +71,7 @@ public class ArithmeticLogic implements Unit {
         registers.status()
                 .setCarry(result > 0xFF)
                 .setZero(byteResult == 0)
-                .setOverflow(overflow || setOverflow.isActive())
+                .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 
@@ -102,7 +95,7 @@ public class ArithmeticLogic implements Unit {
         registers.status()
                 .setBorrow(result < 0)
                 .setZero(byteResult == 0)
-                .setOverflow(overflow || setOverflow.isActive())
+                .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 

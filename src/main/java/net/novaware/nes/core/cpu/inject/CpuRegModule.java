@@ -7,12 +7,14 @@ import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.BooleanLatch;
+import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.BRK;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
@@ -20,11 +22,17 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ID;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.MD;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RDY;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.S0H;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SP;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.X;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.Y;
@@ -144,4 +152,57 @@ public interface CpuRegModule {
     static ByteRegister provideStackPointer() {
         return new ByteRegister("S");
     }
+
+    // region Pin Registers
+
+    @Provides
+    @BoardScope
+    @CpuVar(BRK)
+    static BooleanRegister provideBrkRegister() {
+        return new BooleanRegister(BRK.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(RES)
+    static BooleanRegister provideResRegister() {
+        return new BooleanRegister(RES.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(NMI)
+    static BooleanRegister provideNmiRegister() {
+        return new BooleanRegister(NMI.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(IRQ)
+    static BooleanRegister provideIrqRegister() {
+        return new BooleanRegister(IRQ.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(S0H)
+    static BooleanRegister provideS0hRegister() {
+        return new BooleanRegister(S0H.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(RDY)
+    static BooleanRegister provideRdyRegister() {
+        return new BooleanRegister(RDY.name());
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(SOV)
+    static BooleanRegister provideSovRegister() {
+        return new BooleanRegister(SOV.name());
+    }
+
+    // endregion
 }

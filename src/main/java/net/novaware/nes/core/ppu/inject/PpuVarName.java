@@ -35,6 +35,7 @@ public enum PpuVarName {
     GS ("MASK.G", "", "Greyscale Mode"),
 
     OF ("", "oddFrame", "Odd Frame"),
+    RL ("", "resetLock", "Reset Lock"),
 
     // endregion
 

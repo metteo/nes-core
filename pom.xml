@@ -304,6 +304,8 @@
                         ${jpms.opens}.mapper=ALL-UNNAMED
                         ${jpms.opens}.memory=ALL-UNNAMED
                         ${jpms.opens}.net=ALL-UNNAMED
+                        ${jpms.opens}.pin=ALL-UNNAMED
+                        ${jpms.opens}.pin.internal=ALL-UNNAMED
                         ${jpms.opens}.port=ALL-UNNAMED
                         ${jpms.opens}.port.internal=ALL-UNNAMED
                         ${jpms.opens}.ppu=ALL-UNNAMED

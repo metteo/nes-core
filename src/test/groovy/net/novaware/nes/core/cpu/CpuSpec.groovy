@@ -1,9 +1,9 @@
 package net.novaware.nes.core.cpu
 
 import net.novaware.nes.core.cpu.register.CpuRegFile
-import net.novaware.nes.core.cpu.signal.internal.EdgeDetector
-import net.novaware.nes.core.cpu.signal.internal.LevelDetector
 import net.novaware.nes.core.cpu.unit.*
+import net.novaware.nes.core.pin.Pin
+import net.novaware.nes.core.register.BooleanRegister
 import net.novaware.nes.core.register.IntegerCounter
 import spock.lang.Specification
 
@@ -25,12 +25,17 @@ class CpuSpec extends Specification {
     PrefetchUnit prefetch = Mock()
     StackEngine stackEngine = Mock()
     DiagnosticUnit diagnostics = Mock()
-    LevelDetector irq = Mock()
-    EdgeDetector nmi = Mock()
-    LevelDetector res = Mock()
-    LevelDetector s0h = Mock()
-    LevelDetector rdy = Mock()
-    EdgeDetector so = Mock()
+    Pin irq = Mock()
+    Pin nmi = Mock()
+    Pin s0h = Mock()
+    Pin sov = Mock()
+
+    Pin rdyPin = Mock()
+    BooleanRegister rdyReg = Mock()
+
+    Pin resPin = Mock()
+    BooleanRegister resReg = Mock()
+
 
     IntegerCounter cc = new IntegerCounter("CPU.CC")
     IntegerCounter ic = new IntegerCounter("CPU.IC")
@@ -50,7 +55,14 @@ class CpuSpec extends Specification {
         diagnostics,
         cc,
         ic,
-        irq, nmi, s0h, res, rdy, so
+        irq,
+        nmi,
+        s0h,
+        sov,
+        rdyPin,
+        rdyReg,
+        resPin,
+        resReg
     )
 
     def "should properly initialize units" () {
@@ -125,7 +137,7 @@ class CpuSpec extends Specification {
         instance.reset(signal)
 
         then:
-        1 * res.set(signal)
+        1 * resPin.set(signal)
 
         where:
         signal << [LOW, HIGH]
@@ -136,7 +148,7 @@ class CpuSpec extends Specification {
         instance.rdy(signal)
 
         then:
-        1 * rdy.set(signal)
+        1 * rdyPin.set(signal)
 
         where:
         signal << [LOW, HIGH]
@@ -147,7 +159,7 @@ class CpuSpec extends Specification {
         instance.so(signal)
 
         then:
-        1 * so.set(signal)
+        1 * sov.set(signal)
 
         where:
         signal << [LOW, HIGH]

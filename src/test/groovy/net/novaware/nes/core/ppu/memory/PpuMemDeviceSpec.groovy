@@ -38,6 +38,7 @@ class PpuMemDeviceSpec extends Specification {
     def maskBackground = PpuRegModule.provideMaskBackground()
     def greyscale = PpuRegModule.provideGreyscale()
     def oamAddress = PpuRegModule.provideObjAttrMemoryAddress()
+    def resetLock = PpuRegModule.provideResetLock()
 
     def "should construct correctly"() {
         given:
@@ -76,7 +77,8 @@ class PpuMemDeviceSpec extends Specification {
             maskBackground,
             greyscale,
 
-            oamAddress
+            oamAddress,
+            resetLock
         )
     }
 
@@ -233,6 +235,7 @@ class PpuMemDeviceSpec extends Specification {
         0b1010_1010 || 0b10 |  1 | 0x1000 | 0x0000 | true  | false | true
         0b0101_0101 || 0b01 | 32 | 0x0000 | 0x1000 | false | true  | false
         // TODO: consider 7 isolated cases
+        // TODO: test writes are ignored when resetLock is active
     }
 
     def "should update PPU mask"() {
@@ -259,6 +262,7 @@ class PpuMemDeviceSpec extends Specification {
         0b1010_1010 || true  | false | true  | false | true  | true  | false | false
         0b0101_0101 || false | true  | false | true  | false | false | true  | true
         // TODO: consider 8 isolated cases
+        // TODO: test writes are ignored when resetLock is active
     }
 
     def "should update OAM Address"() {

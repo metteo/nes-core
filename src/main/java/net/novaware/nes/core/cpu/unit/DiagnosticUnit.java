@@ -31,7 +31,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
  */
 public class DiagnosticUnit implements Unit, Runnable {
 
-    private static final boolean logging = !true; // TODO: parametrize, but keep as compile time constant somehow
+    private static final boolean logging = true; // TODO: parametrize, but keep as compile time constant somehow
 
     @Used
     private final ShortRegister prefetchAddress;

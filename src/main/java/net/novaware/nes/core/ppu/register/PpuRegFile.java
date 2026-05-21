@@ -31,6 +31,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
@@ -77,6 +78,7 @@ public class PpuRegFile extends RegisterFile {
     public final ByteRegister oamAddress;
 
     public final BooleanRegister oddFrame;
+    public final BooleanRegister resetLock;
 
     @Inject
     public PpuRegFile(
@@ -109,7 +111,8 @@ public class PpuRegFile extends RegisterFile {
 
         @PpuVar(OAM) ByteRegister oamAddress,
 
-        @PpuVar(OF) BooleanRegister oddFrame
+        @PpuVar(OF) BooleanRegister oddFrame,
+        @PpuVar(RL) BooleanRegister resetLock
     ) {
         super("PPU.REGS");
 
@@ -120,6 +123,7 @@ public class PpuRegFile extends RegisterFile {
 
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
+        this.resetLock = resetLock;
 
         addressRegisters = List.of(
             this.backgroundPatternTable = backgroundPatternTable,

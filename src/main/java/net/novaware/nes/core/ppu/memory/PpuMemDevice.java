@@ -45,6 +45,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -91,6 +92,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private final BooleanRegister maskBackground;
     private final BooleanRegister greyscale;
 
+    private final BooleanRegister resetLock;
+
     private final ByteRegister oamAddressLatch;
 
     private final Handler emptyHandler = new EmptyHandler();
@@ -134,7 +137,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress
+        @PpuVar(OAM) ByteRegister oamAddress,
+
+        @PpuVar(RL) BooleanRegister resetLock
     ) {
         this.ppuBus = ppuBus;
         this.palette = palette;
@@ -162,6 +167,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         this.maskSprite = maskSprite;
         this.maskBackground = maskBackground;
         this.greyscale = greyscale;
+        this.resetLock = resetLock;
         this.oamAddressLatch = oamAddress;
 
         for (int i = 0; i < readHandlers.length; i++) {
@@ -252,7 +258,10 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
         @Override
         public void onWrite() {
-            // TODO: prevent writes until the first pre-render scanline
+            if (resetLock.get()) {
+                return;
+            }
+
             int data = sint(dataLine.data());
 
             // 0xvphb_sinn
@@ -276,10 +285,13 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     class MaskHandler implements Handler {
-        // TODO: prevent writes until the first pre-render scanline
 
         @Override
         public void onWrite() {
+            if (resetLock.get()) {
+                return;
+            }
+
             int data = sint(dataLine.data());
 
             boolean eb = (data & 0x80) != 0;

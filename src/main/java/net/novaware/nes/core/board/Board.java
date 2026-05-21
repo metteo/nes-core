@@ -1,7 +1,6 @@
 package net.novaware.nes.core.board;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import net.novaware.nes.core.apu.Apu;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockGenerator;
@@ -10,8 +9,6 @@ import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.signal.Signal;
-import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
-import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
@@ -54,9 +51,6 @@ public class Board {
     @Owned
     private final ClockGenerator clockGenerator;
 
-    @Owned
-    private final Pin reset;
-
     // TODO: include here RAM,
 
     @Inject
@@ -66,8 +60,7 @@ public class Board {
         final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
-        final ClockGenerator clockGenerator,
-        final @Named("BRD.RST") LevelDetector reset
+        final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
         this.ppu = ppu;
@@ -76,7 +69,6 @@ public class Board {
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
         this.clockGenerator = clockGenerator;
-        this.reset = reset;
     }
 
     public void powerOn() {
@@ -85,12 +77,14 @@ public class Board {
     }
 
     private void start() {
-        reset.set(Signal.LOW);
+        cpu.res(Signal.LOW); // TODO: refactor into single method?
+        ppu.rst(Signal.LOW);
 
-        cpu.advance();
+        cpu.cycle();
         ppu.cycle();
 
-        reset.set(Signal.HIGH);
+        cpu.res(Signal.HIGH);
+        ppu.rst(Signal.HIGH);
 
         clockGenerator.start();
     }

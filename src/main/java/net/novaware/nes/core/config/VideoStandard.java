@@ -25,6 +25,7 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
     public static final int V_BLANK_START = ACTIVE_HEIGHT + 1; // scan line
     public static final int H_BLANK_START = ACTIVE_WIDTH + 1; // dot / cycle
 
+    // TODO: consider moving these into own enums: Clock, CpuModel, PpuModel etc
     private final double masterClock; // Hz // TODO: maybe use unit checker here
     private final int cpuDivisor;
     private final int ppuDivisor;
