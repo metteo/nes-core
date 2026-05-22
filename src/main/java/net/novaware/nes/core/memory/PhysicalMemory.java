@@ -62,20 +62,34 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
         return endAddress;
     }
 
-    public @Unsigned byte readByte() {
+    private int toPosition(@Unsigned short address) {
+        // TODO: check how validation of address within range will affect performance (always vs assert)
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress) : "address out of range";
+
+        return (sint(address) - sint(startAddress)) & mask;
+    }
+
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress);
+
+        int position = toPosition(address);
+        @Unsigned byte data = buffer.get(position);
+
+        dataLine.data(data);
+    }
+
+    private @Unsigned byte readByte() {
         return buffer.get(position); // get() advances position, we want to keep it
     }
 
-    public void writeByte(@Unsigned byte data) {
+    private void writeByte(@Unsigned byte data) {
         buffer.put(position, data);
     }
 
     @Override
     public void onAccess(@Unsigned short address) {
-        // TODO: check how validation of address within range will affect performance (always vs assert)
-        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress) : "address out of range";
-
-        position = (sint(address) - sint(startAddress)) & mask; // TODO: test if mirroring works for non 0 start
+        position = toPosition(address);
 
         buffer.position(position);
     }

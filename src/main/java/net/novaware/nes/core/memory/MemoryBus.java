@@ -4,7 +4,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 public interface MemoryBus extends AddressBus.Line, ControlBus.Line, DataBus.Line {
 
-    @Unsigned byte peek(@Unsigned short address);
+    void probe(@Unsigned short address, DataBus.Line dataLine);
 
     void attachCartridge(MemoryDevice.ReadWrite cartridge);
     void detachCartridge();

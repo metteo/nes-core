@@ -7,6 +7,7 @@ import spock.lang.Specification
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.FOREGROUND
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
+import static net.novaware.nes.core.util.ProbeUtil.probeDevice
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -87,5 +88,8 @@ class PaletteMemorySpec extends Specification {
 
         paletteBus.access(ushort(0x3F1C)).read().data() == ubyte(0x8)
         palette.getColor(BACKGROUND, 0, 2) == ubyte(0x10)
+
+        probeDevice(palette, 0x3F1C) == 0x8
+        probeDevice(palette, 0x3F02) == 0x10
     }
 }

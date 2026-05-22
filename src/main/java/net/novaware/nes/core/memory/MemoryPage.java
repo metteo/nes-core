@@ -57,6 +57,13 @@ public class MemoryPage implements MemoryDevice.ReadWrite {
         return ushort((page << 8) | 0xFF);
     }
 
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(getStartAddress()) <= sint(address) && sint(address) <= sint(getEndAddress());
+
+        readOffsets[toOffset(address)].probe(address, dataLine);
+    }
+
     @SuppressWarnings("not.interned")
     public void attach(MemoryDevice memoryDevice) {
         devices.add(memoryDevice);
@@ -90,10 +97,14 @@ public class MemoryPage implements MemoryDevice.ReadWrite {
     public void onAccess(@Unsigned short address) {
         addressLatch = address;
 
-        int offset = sint(address) & 0xFF;
+        int offset = toOffset(address);
 
         readOffsetLatch = readOffsets[offset];
         writeOffsetLatch = writeOffsets[offset];
+    }
+
+    private int toOffset(@Unsigned short address) {
+        return sint(address) & 0xFF;
     }
 
     @Override

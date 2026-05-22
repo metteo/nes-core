@@ -1,5 +1,6 @@
 package net.novaware.nes.core.easy;
 
+import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -28,6 +29,8 @@ public class EasyGui extends JFrame {
     private static final int SCALE = 16;
 
     private final MemoryBus bus;
+    DataLine dataLine = new DataLine();
+
     private final Consumer<Byte> keyHandler;
 
     private final byte[] screenCache = new byte[SCREEN_WIDTH * SCREEN_HEIGHT];
@@ -89,7 +92,8 @@ public class EasyGui extends JFrame {
         synchronized (screenCache) {
             for (int i = 0; i < screenCache.length; i++) {
                 @Unsigned short address = ushort(sint(PICTURE_SEGMENT_START) + i);
-                @Unsigned byte data = bus.peek(address);
+                bus.probe(address, dataLine);
+                @Unsigned byte data = dataLine.cycle();
 
                 if (screenCache[i] != data) {
                     screenCache[i] = data;

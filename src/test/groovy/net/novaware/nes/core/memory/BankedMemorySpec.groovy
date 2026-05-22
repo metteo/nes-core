@@ -4,6 +4,7 @@ import net.novaware.nes.core.test.TestBus
 import net.novaware.nes.core.util.Quantity
 import spock.lang.Specification
 
+import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
@@ -74,6 +75,8 @@ class BankedMemorySpec extends Specification {
         memory.access(ushort(0xE000)).read().data() == ubyte(0x88)
         memory.access(ushort(0xF000)).read().data() == ubyte(0x99)
         memory.access(ushort(0xFFFF)).read().data() == ubyte(0xAA)
+
+        probeBus(memory, 0xC000) == 0x66 // sanity check
     }
 
     def "should mirror 16KB of data over 32KB address space (mirroring)"() {

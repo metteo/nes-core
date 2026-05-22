@@ -201,6 +201,7 @@ class PpuMemDeviceSpec extends Specification {
 
         when:
         def statusBits = cpuBus.access(PPU_STATUS_REGISTER).read().data()
+        statusRegister.cycle()
 
         then:
         Bin.s(statusBits) == Bin.s(ubyte(bits))
@@ -211,7 +212,7 @@ class PpuMemDeviceSpec extends Specification {
         vb    | s0h   | so    || bits
         true  | false | true  || 0b1010_0000
         false | true  | false || 0b0100_0000
-        // TODO: consider 3 isolated cases
+        // TODO: consider 3 isolated cases, plus delayed writes
     }
 
     def "should update PPU control"() {

@@ -119,9 +119,21 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     }
 
     @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(getStartAddress()) <= sint(address) && sint(address) <= sint(getEndAddress());
+
+        // TODO: refactor this and onAccess to share fast bank index/address resolution
+        int virtualAddress = sint(address) - sint(startAddress);
+        int bankIndex = virtualAddress / bankSize.toBytes();
+        int bankAddress = virtualAddress % bankSize.toBytes();
+
+        @Unsigned byte data = virtualBanks[bankIndex].get(bankAddress);
+        dataLine.data(data);
+    }
+
+    @Override
     public void onAccess(@Unsigned short address) {
-        int addrVal = sint(address);
-        int virtualAddress = addrVal - sint(startAddress);
+        int virtualAddress = sint(address) - sint(startAddress);
 
         // TODO: slow in hot code, change to shifting / masking
         bankIndex = virtualAddress / bankSize.toBytes();

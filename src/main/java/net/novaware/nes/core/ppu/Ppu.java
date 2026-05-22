@@ -169,6 +169,8 @@ public class Ppu implements ClockReceiver {
             regs.resetLock.set(false); // TODO: should happen on the first pre-render scanline
         }
 
+        regs.status.cycle();
+
         return 1; // TODO: return 0 for skipped cycle?
     }
 

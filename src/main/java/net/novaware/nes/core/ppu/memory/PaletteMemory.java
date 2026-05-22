@@ -96,6 +96,16 @@ public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
     }
 
     @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress);
+
+        int position = getColorPosition(address);
+
+        @Unsigned byte data = palettes.get(position);
+        dataLine.data(data);
+    }
+
+    @Override
     public void onAttach(DataBus.Line dataLine) {
         this.dataLine = dataLine;
     }

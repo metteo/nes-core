@@ -176,7 +176,7 @@ public class DelegatingRegister extends Register {
         }
 
         @Override
-        public @Unsigned byte peek(@Unsigned short address) {
+        public void probe(@Unsigned short address, DataBus.Line dataLine) {
             throw new IllegalStateException("Empty memory bus called");
         }
 
@@ -244,5 +244,5 @@ public class DelegatingRegister extends Register {
         }
     }
 
-    // TODO: implement toString delegating to delegate. Do not trigger memory reads because it will affect cycles
+    // TODO: implement toString delegating to delegate. Use probe instead of read to not affect bus activity
 }

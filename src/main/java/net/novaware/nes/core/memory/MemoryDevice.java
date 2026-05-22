@@ -11,6 +11,8 @@ public interface MemoryDevice extends AddressBus.Device {
 
     @Unsigned short getEndAddress();
 
+    default void probe(@Unsigned short address, DataBus.Line dataLine) {};
+
     interface ReadOnly extends MemoryDevice, ControlBus.ReadOnlyDevice, DataBus.Device {}
     interface WriteOnly extends MemoryDevice, ControlBus.WriteOnlyDevice, DataBus.Device {}
     interface ReadWrite extends ReadOnly, WriteOnly {}

@@ -330,7 +330,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             dataLine.data(status);
 
             secondWrite.set(false);
-            statusRegister.setVerticalBlank(false); // TODO: set Vblank to false with a delay
+            statusRegister.setVerticalBlankDelayed(false, 1);
         }
     }
 

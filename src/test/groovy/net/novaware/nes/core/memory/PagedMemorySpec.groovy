@@ -5,6 +5,7 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
+import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.UTypes.*
 
 class PagedMemorySpec extends Specification {
@@ -60,6 +61,9 @@ class PagedMemorySpec extends Specification {
         expect:
         bus.access(PPU_REGISTERS_START).read().data() == ubyte(0x12)
         bus.access(PPU_REGISTERS_MIRROR_END).read().data() == ubyte(0x34)
+
+        probeBus(bus, PPU_REGISTERS_START) == ubyte(0x12)
+        probeBus(bus, PPU_REGISTERS_MIRROR_END) == ubyte(0x34)
     }
 
     def "should allow attaching ppu devices"() {
@@ -84,6 +88,9 @@ class PagedMemorySpec extends Specification {
         expect:
         bus.access(PATTERN_TABLE_1_START).read().data() == ubyte(0x12)
         bus.access(PATTERN_TABLE_2_END).read().data() == ubyte(0x34)
+
+        probeBus(bus, PATTERN_TABLE_1_START) == ubyte(0x12)
+        probeBus(bus, PATTERN_TABLE_2_END) == ubyte(0x34)
     }
 
     def "should disallow replacing cpu devices"() {

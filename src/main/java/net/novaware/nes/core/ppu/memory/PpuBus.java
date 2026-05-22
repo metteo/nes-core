@@ -94,9 +94,10 @@ public class PpuBus implements MemoryBus {
         return this;
     }
 
-    @Override // TODO: verify that the bus is reverted to correct state
-    public @Unsigned byte peek(@Unsigned short address) {
-        return 0; // TODO: implement
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        cartridge.probe(address, dataLine);
+        expansion.probe(address, dataLine);
     }
 
     @Override

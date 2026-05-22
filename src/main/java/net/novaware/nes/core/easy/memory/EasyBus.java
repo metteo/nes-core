@@ -109,14 +109,9 @@ public class EasyBus implements MemoryBus {
     }
 
     @Override
-    public @Unsigned byte peek(@Unsigned short address) {
-        internal.onAccess(address);
-        cartridge.onAccess(address);
-
-        internal.onRead();
-        cartridge.onRead();
-
-        return dataLine.cycle();
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        internal.probe(address, dataLine);
+        cartridge.probe(address, dataLine);
     }
 
     @Override
