@@ -4,6 +4,10 @@ import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_END
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_SIZE
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_START
+import static net.novaware.nes.core.util.ProbeUtil.probeDevice
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -45,16 +49,30 @@ class PhysicalMemorySpec extends Specification {
         def ram = new PhysicalMemory("?", ushort(0x1000), ushort(0x1FFF), 0x1000)
         def memory = new TestBus(ram)
 
+        def address = ushort(addrInt)
+        def data = ubyte(dataInt)
+
         when:
-        memory.access(ushort(address)).write().data(ubyte(data))
+        memory.access(address).write().data(data)
 
         then:
-        memory.access(ushort(address)).read().data() == ubyte(data)
+        memory.access(address).read().data() == data
+        probeDevice(ram, addrInt) == dataInt
 
         where:
-        address | data
+        addrInt | dataInt
         0x1000  | 0x01
         0x1400  | 0xAB
         0x1FFF  | 0x02
+    }
+
+    def "should throw when size is not a power of two"() {
+        when:
+        new PhysicalMemory("NT0", NAME_TABLE_0_START, NAME_TABLE_0_END,
+                NAME_TABLE_0_SIZE + 1)
+
+        then:
+        def e = thrown(IllegalArgumentException)
+        e.message == "size must be a power of two to allow mirroring with mask"
     }
 }

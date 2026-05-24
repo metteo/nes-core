@@ -35,16 +35,36 @@ public enum PpuVarName {
     GS ("MASK.G", "", "Greyscale Mode"),
 
     OF ("", "oddFrame", "Odd Frame"),
+    RL ("", "resetLock", "Reset Lock"),
 
     // endregion
 
     VRAM ("", "videoMemory", "Video RAM"),
-    PALETTE ("", "paletteMemory", "Palette RAM"),
-
+    PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
     OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
 
+    DAM ("", "displayA", "Display A Memory"),
+    DBM ("", "displayB", "Display B Memory"),
+
+    VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
+    S0H ("", "sprite0Hit", "Sprite 0 Hit"),
+    SOV ("", "spriteOverflow", "Sprite Overflow"),
+    RST ("", "reset", "Reset"),
+
+    PT0 ("", "pattenTable0", "Pattern Table 0 (L)"),
+    PT1 ("", "pattenTable1", "Pattern Table 1 (R)"),
+
+    NT0 ("", "nameTable0", "Name Table 0"),
+    NT1 ("", "nameTable1", "Name Table 1"),
+    NT2 ("", "nameTable2", "Name Table 2"),
+    NT3 ("", "nameTable3", "Name Table 3"),
+
+    AT0 ("", "attributeTable0", "Attribute Table 0"),
+    AT1 ("", "attributeTable1", "Attribute Table 1"),
+    AT2 ("", "attributeTable2", "Attribute Table 2"),
+    AT3 ("", "attributeTable3", "Attribute Table 3"),
     ;
     private final String doc;
     private final String var;

@@ -1,12 +1,13 @@
 package net.novaware.nes.core.ppu.register;
 
+import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.Register;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 
 public class PpuStatusRegister extends Register {
 
-    private boolean verticalBlank;
+    private final BooleanPipeline verticalBlank = new BooleanPipeline(PS.doc() + ".V");
     private boolean spriteZeroHit;
     private boolean spriteOverflow;
 
@@ -15,11 +16,15 @@ public class PpuStatusRegister extends Register {
     }
 
     public boolean isVerticalBlank() {
-        return verticalBlank;
+        return verticalBlank.get();
     }
 
     public void setVerticalBlank(boolean verticalBlank) {
-        this.verticalBlank = verticalBlank;
+        this.verticalBlank.set(verticalBlank);
+    }
+
+    public void setVerticalBlankDelayed(boolean verticalBlank, int delay) {
+        this.verticalBlank.setDelayed(verticalBlank, delay);
     }
 
     public boolean isSpriteZeroHit() {
@@ -38,12 +43,16 @@ public class PpuStatusRegister extends Register {
         this.spriteOverflow = spriteOverflow;
     }
 
+    public void cycle() {
+        verticalBlank.cycle();
+    }
+
     @Override
     public String toString() {
         return getName() + ": " +
-            (verticalBlank   ? "V" : "_") +
-            (spriteZeroHit   ? "S" : "_") +
-            (spriteOverflow  ? "O" : "_") +
+            (verticalBlank.get() ? "V" : "_") +
+            (spriteZeroHit       ? "S" : "_") +
+            (spriteOverflow      ? "O" : "_") +
             "_____";
     }
 }

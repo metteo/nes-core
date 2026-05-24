@@ -65,6 +65,13 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
         return ushort((lastPage << 8) | 0xFF);
     }
 
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(getStartAddress()) <= sint(address) && sint(address) <= sint(getEndAddress());
+
+        readPages[toPage(address)].probe(address, dataLine);
+    }
+
     @SuppressWarnings("not.interned") // comparing refs on purpose
     public void attach(MemoryDevice memoryDevice) {
         devices.add(memoryDevice);
@@ -117,10 +124,14 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
     public void onAccess(@Unsigned short address) {
         addressLatch = address;
 
-        int page = (sint(address) & 0xFF00) >> 8;
+        int page = toPage(address);
 
         readPageLatch = readPages[page];
         writePageLatch = writePages[page];
+    }
+
+    private int toPage(@Unsigned short address) {
+        return (sint(address) & 0xFF00) >> 8;
     }
 
     @Override

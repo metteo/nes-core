@@ -14,4 +14,6 @@ public abstract class Latch implements Nameable, Resettable {
     public String getName() {
         return name;
     }
+
+    // TODO: introduce cycle based delay
 }

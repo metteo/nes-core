@@ -1,11 +1,10 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
-import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
-import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
+import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -14,8 +13,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.BRK;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
-import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
-import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
@@ -35,16 +32,16 @@ public class InterruptLogic implements Unit {
     private final StackEngine stackEngine;
 
     @Used
-    private final LevelDetector brkDetector;
+    private final BooleanRegister brkRegister;
 
     @Used
-    private final LevelDetector irqDetector;
+    private final BooleanRegister irqRegister;
 
     @Used
-    private final EdgeDetector  nmiDetector;
+    private final BooleanRegister nmiRegister;
 
     @Used
-    private final LevelDetector resDetector;
+    private final BooleanRegister resRegister;
 
     @Used
     private final ShortRegister nmiVector;
@@ -61,10 +58,10 @@ public class InterruptLogic implements Unit {
             StackEngine stackEngine,
             AddressGen agu,
             MemoryMgmt mmu,
-            @CpuVar(BRK) LevelDetector brkDetector,
-            @CpuVar(IRQ) LevelDetector irqDetector,
-            @CpuVar(NMI) EdgeDetector  nmiDetector,
-            @CpuVar(RES) LevelDetector resDetector,
+            @CpuVar(BRK) BooleanRegister brkRegister,
+            @CpuVar(IRQ) BooleanRegister irqRegister,
+            @CpuVar(NMI) BooleanRegister nmiRegister,
+            @CpuVar(RES) BooleanRegister resRegister,
             @CpuVar(NMI) ShortRegister nmiVector,
             @CpuVar(IRQ) ShortRegister irqVector,
             @CpuVar(RES) ShortRegister resVector
@@ -73,10 +70,10 @@ public class InterruptLogic implements Unit {
         this.stackEngine = stackEngine;
         this.agu = agu;
         this.mmu = mmu;
-        this.brkDetector = brkDetector;
-        this.irqDetector = irqDetector;
-        this.nmiDetector = nmiDetector;
-        this.resDetector = resDetector;
+        this.brkRegister = brkRegister;
+        this.irqRegister = irqRegister;
+        this.nmiRegister = nmiRegister;
+        this.resRegister = resRegister;
         this.nmiVector = nmiVector;
         this.irqVector = irqVector;
         this.resVector = resVector;
@@ -85,10 +82,10 @@ public class InterruptLogic implements Unit {
     private @Unsigned short fetchVector() {
         @Unsigned short vector = USHORT_0;
 
-        if (brkDetector.isActive()) { vector = irqVector.get(); }
-        if (irqDetector.isActive()) { vector = irqVector.get(); }
-        if (nmiDetector.isActive()) { vector = nmiVector.get(); }
-        if (resDetector.isActive()) { vector = resVector.get(); }
+        if (brkRegister.get()) { vector = irqVector.get(); }
+        if (irqRegister.get()) { vector = irqVector.get(); }
+        if (nmiRegister.get()) { vector = nmiVector.get(); }
+        if (resRegister.get()) { vector = resVector.get(); }
 
         if (vector == USHORT_0) {
             throw new IllegalStateException("Correct vector should be selected at this point!");
@@ -123,7 +120,7 @@ public class InterruptLogic implements Unit {
     }
 
     public void forceBreak() {
-        brkDetector.set(LOW);
+        brkRegister.set(true);
     }
 
     /**
@@ -147,7 +144,7 @@ public class InterruptLogic implements Unit {
 
     private void performInterrupt() {
         stackEngine.push(registers.pc().get());            // 3, 4
-        stackEngine.pushStatus(brkDetector.isActive());    // 5
+        stackEngine.pushStatus(brkRegister.get());         // 5
 
         registers.status().setIrqDisabled(true);
 
@@ -160,20 +157,20 @@ public class InterruptLogic implements Unit {
     }
 
     public void sample() {
-        if (nmiDetector.isActive()) {
+        if (nmiRegister.get()) {
             hardwareInterrupt();
-            // TODO: consider pulling the signal high, to prevent nmi loop
+            nmiRegister.set(false); // serviced the interrupt
             return;
         }
 
-        if (irqDetector.isActive() && !registers.status().isIrqDisabled()) {
-            hardwareInterrupt();
+        if (irqRegister.get() && !registers.status().isIrqDisabled()) {
+            hardwareInterrupt(); // servicing irq sets irq disabled
             return;
         }
 
-        if (brkDetector.isActive()) {
+        if (brkRegister.get()) {
             softwareInterrupt();
-            brkDetector.set(HIGH);
+            brkRegister.set(false); // serviced the break
         }
     }
 }

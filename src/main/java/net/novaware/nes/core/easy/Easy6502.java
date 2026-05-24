@@ -10,7 +10,7 @@ public class Easy6502 {
     /**
      * Launches the board with the classic Snake game.
      */
-    static void main(String[] args) {
+    static void main() {
         EasyComp comp = EasyComp.newEasyComp();
         EasyBoard board = comp.newEasyBoard();
 

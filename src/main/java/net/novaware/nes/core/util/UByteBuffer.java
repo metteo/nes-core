@@ -174,10 +174,14 @@ public class UByteBuffer {
     }
 
     public UByteBuffer fill(@Unsigned byte b) {
+        return fill(() -> b);
+    }
+
+    public UByteBuffer fill(UByteSupplier supplier) {
         clear();
 
         while (buffer.hasRemaining()) {
-            put(b);
+            put(supplier.getAsUByte());
         }
 
         clear();

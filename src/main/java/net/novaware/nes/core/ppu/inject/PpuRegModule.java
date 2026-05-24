@@ -2,7 +2,7 @@ package net.novaware.nes.core.ppu.inject;
 
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;
@@ -31,7 +31,9 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -216,5 +218,22 @@ public interface PpuRegModule {
     @PpuVar(OF)
     static BooleanRegister provideOddFrame() {
         return new BooleanRegister(OF.doc());
+    }
+
+    /**
+     * Prevents changes in PPU CTRL and MASK registers after reset until first pre-render scanline
+     */
+    @Provides
+    @BoardScope
+    @PpuVar(RL)
+    static BooleanRegister provideResetLock() {
+        return new BooleanRegister(RL.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(RST)
+    static BooleanRegister provideRstRegister() {
+        return new BooleanRegister(RST.name());
     }
 }

@@ -3,8 +3,10 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.UByteBuffer;
+import net.novaware.nes.core.util.UByteSupplier;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
@@ -33,9 +35,18 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
         this.name = name;
         this.startAddress = startAddress;
         this.endAddress = endAddress;
-
         this.buffer = buffer;
-        this.mask = buffer.capacity() - 1;
+
+        int size = buffer.capacity();
+        if (sint(endAddress) - sint(startAddress) + 1 == size) {
+            this.mask = 0xFFFF;
+        } else {
+            assertArgument(
+                size > 0 && (size & (size - 1)) == 0,
+                "size must be a power of two to allow mirroring with mask"
+            );
+            this.mask = buffer.capacity() - 1;
+        }
     }
 
     public PhysicalMemory(
@@ -62,20 +73,34 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
         return endAddress;
     }
 
-    public @Unsigned byte readByte() {
+    private int toPosition(@Unsigned short address) {
+        // TODO: check how validation of address within range will affect performance (always vs assert)
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress) : "address out of range";
+
+        return (sint(address) - sint(startAddress)) & mask;
+    }
+
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress);
+
+        int position = toPosition(address);
+        @Unsigned byte data = buffer.get(position);
+
+        dataLine.data(data);
+    }
+
+    private @Unsigned byte readByte() {
         return buffer.get(position); // get() advances position, we want to keep it
     }
 
-    public void writeByte(@Unsigned byte data) {
+    private void writeByte(@Unsigned byte data) {
         buffer.put(position, data);
     }
 
     @Override
     public void onAccess(@Unsigned short address) {
-        // TODO: check how validation of address within range will affect performance (always vs assert)
-        assert sint(startAddress) <= sint(address) && sint(address) <= sint(endAddress) : "address out of range";
-
-        position = (sint(address) - sint(startAddress)) & mask; // TODO: test if mirroring works for non 0 start
+        position = toPosition(address);
 
         buffer.position(position);
     }
@@ -103,5 +128,10 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public String toString() {
         return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
+    }
+
+    public PhysicalMemory fill(UByteSupplier supplier) {
+        buffer.fill(supplier);
+        return this;
     }
 }

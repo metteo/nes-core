@@ -11,6 +11,7 @@ import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.easy.memory.EasyMemMap.*
+import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class EasyBusSpec extends Specification {
@@ -43,6 +44,7 @@ class EasyBusSpec extends Specification {
 
         then:
         bus.access(address).read().data() == ubyte(data)
+        probeBus(bus, address) == ubyte(data)
         new TestBus(devices[device]).access(address).read().data() == ubyte(data)
 
         where:

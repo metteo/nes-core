@@ -1,46 +1,102 @@
 package net.novaware.nes.core.ppu;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.Signal;
-import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.pin.Pin;
+import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
+import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.util.uml.Owned;
+import net.novaware.nes.core.util.uml.Used;
+import org.checkerframework.checker.lock.qual.GuardedBy;
 
+import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.DBM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
+/**
+ * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
+ * TODO: create a separate stub ppu class that can be switched with real one?
+ */
 @BoardScope
 public class Ppu implements ClockReceiver {
 
     private final MemoryBus bus;
 
+    @Used  private final Pin vBlankInterrupt;
+    @Used  private final Pin sprite0Hit;
+    @Owned private final Pin rstPin;
+    @Owned private final BooleanRegister rstReg;
+
     private final PpuRegFile regs;
+
+    private final PatternTable patternMemory0;
+    private final PatternTable patternMemory1;
+
     private final PaletteMemory paletteMemory;
     private final ObjAttrMemory objAttrMemory;
 
-    @Owned
-    private final LevelDetector rst = new LevelDetector("RST", LOW); // TODO: inject
+    // FIXME: ppu should have the buffer directly here but in a separate object
+    // PPU uses a method to write a pixel to back buffer but doesn't know which is it A or B.
+    // when VBlank starts it calls swap method which also triggers the rest of the rendering pipeline for now the front buffer
+    // TODO: also there is a single pixel buffer which delays pixel output to display memory
+
+    private @GuardedBy("this.displayPort") DisplayMemory frontBuffer;
+    private @GuardedBy("this.displayPort") DisplayMemory backBuffer;
+    private final DisplayPortImpl displayPort;
 
     @Inject
     public Ppu(
         @PpuVar(BUS) MemoryBus bus,
+        @PpuVar(VBI) Pin vBlankInterrupt,
+        @PpuVar(S0H) Pin sprite0Hit,
+        @PpuVar(RST) Pin rstPin,
+        @PpuVar(RST) BooleanRegister rstReg,
         PpuRegFile regs,
+        @PpuVar(PT0) PatternTable patternTable0,
+        @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
-        ObjAttrMemory objAttrMemory
+        ObjAttrMemory objAttrMemory,
+        @PpuVar(DAM) DisplayMemory displayA,
+        @PpuVar(DBM) DisplayMemory displayB,
+        DisplayPortImpl displayPort
     ) {
         this.bus = bus;
+        this.vBlankInterrupt = vBlankInterrupt;
+        this.sprite0Hit = sprite0Hit;
+        this.rstPin = rstPin;
+        this.rstReg = rstReg;
         this.regs = regs;
+        this.patternMemory0 = patternTable0;
+        this.patternMemory1 = patternTable1;
         this.paletteMemory = paletteMemory;
         this.objAttrMemory = objAttrMemory;
+
+        // will be swapped at the end of frame
+        this.displayPort = displayPort;
+
+        synchronized (this.displayPort) {
+            this.frontBuffer = displayA;
+            this.backBuffer = displayB;
+        }
     }
 
     public void initialize() {
@@ -61,6 +117,7 @@ public class Ppu implements ClockReceiver {
         regs.dataReadBuffer.set(UBYTE_0);
 
         regs.oddFrame.set(false);
+        regs.resetLock.set(true);
     }
 
     /**
@@ -79,15 +136,15 @@ public class Ppu implements ClockReceiver {
         regs.dataReadBuffer.set(UBYTE_0);
 
         regs.oddFrame.set(false);
+        regs.resetLock.set(true);
 
         // TODO: read on what ppu does during these first 21 cycles
         regs.dotCounter.setValue(7 * 3); // 21 dots = 7 cpu reset cycle times 3 (for NTSC only for now)
         regs.scanLineCounter.reset();
     }
 
-    @Override
-    public int cycle() {
-        if (rst.isActive()) {
+    public int cycle0() {
+        if (rstReg.get()) {
             reset();
             return 0;
         }
@@ -95,37 +152,81 @@ public class Ppu implements ClockReceiver {
         regs.cycleCounter.increment();
         regs.dotCounter.increment();
 
+        // TODO: on PAL there is no rendering on 0th scan line
+
         if (regs.dotCounter.getValue() == VideoStandard.NTSC.getPhysicalWidth()) {
             regs.dotCounter.reset();
             regs.scanLineCounter.increment();
         }
 
-        // TODO: check post render scanline vs nmi trigger line
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1 || regs.dotCounter.getValue() == 2 || regs.dotCounter.getValue() == 3)) {
-            regs.status.setVerticalBlank(true);
+        if (regs.scanLineCounter.getValue() == 20 && regs.dotCounter.getValue() == 5) {
+            if (regs.renderSprite.get()) {
+                regs.status.setSpriteZeroHit(true);
+                sprite0Hit.set(LOW);
+            }
         }
 
-        // TODO: pre render scan line should be -1 or 261?
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1 && regs.dotCounter.getValue() == 1) {
+        // TODO: check post render scan line vs nmi trigger line
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1)) {
+            regs.status.setVerticalBlank(true);
+            if (regs.vBlankInterruptEnabled.get()) {
+                vBlankInterrupt.set(LOW); // TODO: only set to low when vblank irq enabled and within vblank. reading status clears vblank flag so level goes high before end of vblank
+            }
+
+            // FIXME: it doesn't work!
+            synchronized (displayPort) {
+                final DisplayMemory displayBuffer = backBuffer;
+                backBuffer = frontBuffer;
+                frontBuffer = displayBuffer;
+
+                displayPort.setDisplayBuffer(displayBuffer);
+            }
+            displayPort.onFrame(); // TODO: this occupies MasterClock thread so should be just a poke to rendering thread
+        }
+
+        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1) {
             regs.status.setVerticalBlank(false);
+            if (regs.vBlankInterruptEnabled.get()) {
+                vBlankInterrupt.set(HIGH);
+            }
+
+            if (regs.renderSprite.get()) {
+                regs.status.setSpriteZeroHit(false);
+                sprite0Hit.set(HIGH);
+            }
         }
 
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight()) {
             regs.scanLineCounter.reset();
+
+            regs.resetLock.set(false); // TODO: should happen on the first pre-render scanline
         }
+
+        regs.status.cycle();
 
         return 1; // TODO: return 0 for skipped cycle?
     }
 
+    @Override
+    public int cycle() {
+        return cycle0();
+    }
+
     public void reset(Signal s) {
-        rst.set(s);
+        rstPin.set(s);
     }
 
     /**
      * ___
      * RST active-low line
      */
-    void rst(Signal s) { // NOTE: alias, maybe move to an interface as default method
+    public void rst(Signal s) { // NOTE: alias, maybe move to an interface as default method
         reset(s);
     }
+
+    // region ext pins
+    // TODO: expose EXT pins
+    // endregion
+
+
 }

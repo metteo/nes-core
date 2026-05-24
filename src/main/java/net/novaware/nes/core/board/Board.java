@@ -1,7 +1,8 @@
-package net.novaware.nes.core;
+package net.novaware.nes.core.board;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.apu.Apu;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockGenerator;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
@@ -10,10 +11,16 @@ import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
+import net.novaware.nes.core.port.DisplayPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
+import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
 
+// TODO: thread safety! Make this an interface which has 2 implementations:
+//       - business logic, which assumes execution within single thread
+//       - thread separation logic, where call from separate thread get submitted to executor
+//       Port are a boundary between external world and internal thread safe env
 @BoardScope
 public class Board {
 
@@ -23,6 +30,8 @@ public class Board {
         Region getRegion();
         Platform getPlatform();
         VideoStandard getVideoStandard();
+
+        //UByteSupplier getMemoryFiller(); // TODO: prefer enum with 0s, FFs or random
     }
 
     // TODO: setup register files for cpu, ppu, apu and any other
@@ -44,6 +53,9 @@ public class Board {
     private final DebugPortImpl debugPort;
 
     @Owned
+    private final DisplayPort displayPort;
+
+    @Owned
     private final ClockGenerator clockGenerator;
 
     // TODO: include here RAM,
@@ -55,6 +67,7 @@ public class Board {
         final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
+        final DisplayPortImpl displayPort,
         final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
@@ -63,6 +76,7 @@ public class Board {
 
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
+        this.displayPort = displayPort;
         this.clockGenerator = clockGenerator;
     }
 
@@ -72,14 +86,14 @@ public class Board {
     }
 
     private void start() {
-        cpu.reset(Signal.LOW);
-        ppu.reset(Signal.LOW);
+        cpu.res(Signal.LOW); // TODO: refactor into single method?
+        ppu.rst(Signal.LOW);
 
-        cpu.advance();
+        cpu.cycle();
         ppu.cycle();
 
-        cpu.reset(Signal.HIGH);
-        ppu.reset(Signal.HIGH);
+        cpu.res(Signal.HIGH);
+        ppu.rst(Signal.HIGH);
 
         clockGenerator.start();
     }
@@ -106,5 +120,9 @@ public class Board {
 
     public DebugPort getDebugPort() {
         return debugPort;
+    }
+
+    public DisplayPort getDisplayPort() {
+        return displayPort;
     }
 }

@@ -11,6 +11,7 @@ module net.novaware.nes.core {
     requires java.logging;
 
     exports net.novaware.nes.core;
+    exports net.novaware.nes.core.board;
     exports net.novaware.nes.core.config;
     exports net.novaware.nes.core.port;
     exports net.novaware.nes.core.cart;

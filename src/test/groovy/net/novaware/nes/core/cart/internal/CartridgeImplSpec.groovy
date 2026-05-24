@@ -8,6 +8,7 @@ import net.novaware.nes.core.util.Quantity
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_1KB
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE
 import static net.novaware.nes.core.util.UTypes.sint
 
 class CartridgeImplSpec extends Specification {
@@ -19,7 +20,7 @@ class CartridgeImplSpec extends Specification {
         def cartridge = new CartridgeImpl(nesFile)
         def vram = new BankedMemory("VRAM", PpuMemMap.VRAM_START, new Quantity(1, BANK_1KB))
                 .setPhysicalBanks(new Quantity(2, BANK_1KB))
-                .allocatePhysicalBanks();
+                .allocatePhysicalBanks(() -> UBYTE_MAX_VALUE);
 
         def program = new TestBus(cartridge.getCpuBusDevice())
         def video = new TestBus(cartridge.getPpuBusDevice(vram))

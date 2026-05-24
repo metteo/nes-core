@@ -3,12 +3,12 @@ package net.novaware.nes.core.cpu.register
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
+import static net.novaware.nes.core.TestNesCore.newTestNesCore
 
 class CpuRegFileSpec extends Specification {
 
     @Subject
-    CpuRegFile registers = newTestBoardFactory().newCpuRegisters()
+    CpuRegFile registers = newTestNesCore().newCpuRegisters()
 
     def "all data registers are initialized and reachable"() {
         expect:

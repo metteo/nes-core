@@ -1,7 +1,7 @@
 package net.novaware.nes.core.easy;
 
 import dagger.Component;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.easy.inject.EasyCpuModule;
 import net.novaware.nes.core.easy.inject.EasyModule;
 

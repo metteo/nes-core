@@ -6,6 +6,7 @@ import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
+import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.inject.PpuVarName;
@@ -47,6 +48,8 @@ public class DiagnosticUnit implements Unit, Runnable {
 
     private final IntegerCounter scanLineCounter;
     private final IntegerCounter dotCounter;
+
+    private DataLine dataLine = new DataLine();
 
     @Inject
     public DiagnosticUnit(
@@ -94,8 +97,9 @@ public class DiagnosticUnit implements Unit, Runnable {
         InstructionGroup instruction = decodedInstruction.getGroup();
         AddressingMode addressing = decodedInstruction.getAddressing();
 
-        // decodedOperand configured for memory breaks cycle accuracy
-        @Unsigned byte operandData = cpuBus.peek(currentOperand.get());
+        // FIXME: decodedOperand configured for memory may break cycle accuracy, use probe instead
+        cpuBus.probe(currentOperand.get(), dataLine);
+        @Unsigned byte operandData = dataLine.cycle();
 
         String absolutePreview = instruction != InstructionGroup.JUMP_TO_LOCATION
                 && instruction != InstructionGroup.JUMP_TO_SUBROUTINE

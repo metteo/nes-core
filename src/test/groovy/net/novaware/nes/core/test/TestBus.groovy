@@ -29,8 +29,8 @@ class TestBus implements MemoryBus {
     }
 
     @Override
-    byte peek(@Unsigned short address) {
-        return read(address)
+    void probe(@Unsigned short address, DataBus.Line dataLine) {
+        device.probe(address, dataLine)
     }
 
     int read(int address) {

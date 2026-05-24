@@ -1,7 +1,7 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.DataRegister;

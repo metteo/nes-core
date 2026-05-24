@@ -9,6 +9,7 @@ import net.novaware.nes.core.util.Bin
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
+import static net.novaware.nes.core.util.UTypes.UBYTE_0
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -38,6 +39,7 @@ class PpuMemDeviceSpec extends Specification {
     def maskBackground = PpuRegModule.provideMaskBackground()
     def greyscale = PpuRegModule.provideGreyscale()
     def oamAddress = PpuRegModule.provideObjAttrMemoryAddress()
+    def resetLock = PpuRegModule.provideResetLock()
 
     def "should construct correctly"() {
         given:
@@ -76,7 +78,8 @@ class PpuMemDeviceSpec extends Specification {
             maskBackground,
             greyscale,
 
-            oamAddress
+            oamAddress,
+            resetLock
         )
     }
 
@@ -86,7 +89,7 @@ class PpuMemDeviceSpec extends Specification {
         new TestBus(ppuMemDevice)
     }
 
-    def newPpuBus() {
+    TestBus newPpuBus() {
         PhysicalMemory ppuMem = new PhysicalMemory(
                 "PPU",
                 PpuMemMap.MEMORY_START,
@@ -109,10 +112,12 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x20))
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
 
-        // immediate read returns previous value. needs ppu cycle to get actual data
+        // first read returns previous value. second read returns actual data
+        def wrongData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
         def ppuData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
 
         then:
+        wrongData == UBYTE_0 // no prev value
         ppuData == ubyte(0x34)
 
         where:
@@ -199,6 +204,7 @@ class PpuMemDeviceSpec extends Specification {
 
         when:
         def statusBits = cpuBus.access(PPU_STATUS_REGISTER).read().data()
+        statusRegister.cycle()
 
         then:
         Bin.s(statusBits) == Bin.s(ubyte(bits))
@@ -209,7 +215,7 @@ class PpuMemDeviceSpec extends Specification {
         vb    | s0h   | so    || bits
         true  | false | true  || 0b1010_0000
         false | true  | false || 0b0100_0000
-        // TODO: consider 3 isolated cases
+        // TODO: consider 3 isolated cases, plus delayed writes
     }
 
     def "should update PPU control"() {
@@ -220,7 +226,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(PPU_CONTROL_REGISTER).write().data(ubyte(bits))
 
         then:
-        temporaryViewPort.nametable == nn
+        temporaryViewPort.nameTable == nn
         vramAddressIncrement.getAsInt() == i
         spritePatternTable.getAsInt() == s
         backgroundPatternTable.getAsInt() == b
@@ -233,6 +239,7 @@ class PpuMemDeviceSpec extends Specification {
         0b1010_1010 || 0b10 |  1 | 0x1000 | 0x0000 | true  | false | true
         0b0101_0101 || 0b01 | 32 | 0x0000 | 0x1000 | false | true  | false
         // TODO: consider 7 isolated cases
+        // TODO: test writes are ignored when resetLock is active
     }
 
     def "should update PPU mask"() {
@@ -259,6 +266,7 @@ class PpuMemDeviceSpec extends Specification {
         0b1010_1010 || true  | false | true  | false | true  | true  | false | false
         0b0101_0101 || false | true  | false | true  | false | false | true  | true
         // TODO: consider 8 isolated cases
+        // TODO: test writes are ignored when resetLock is active
     }
 
     def "should update OAM Address"() {
@@ -318,13 +326,16 @@ class PpuMemDeviceSpec extends Specification {
         temporaryViewPort.getCoarseY() == coarseY
         temporaryViewPort.getFineY() == fineY
 
+        temporaryViewPort.getNameTable() == 0
+        currentViewPort.getNameTable() == 0
+
         where:
         xScroll     | yScroll     || coarseX | fineX | coarseY | fineY
-        0b11111_000 | 0b00000_111 || 0b11111 | 0b000 | 0b00000 | 0b111
-        0b00000_111 | 0b11111_000 || 0b00000 | 0b111 | 0b11111 | 0b000
+        0b00000_000 | 0b00000_000 || 0b00000 | 0b000 | 0b00000 | 0b000
         0b11111_000 | 0b00000_000 || 0b11111 | 0b000 | 0b00000 | 0b000
+        0b00000_111 | 0b00000_000 || 0b00000 | 0b111 | 0b00000 | 0b000
         0b00000_000 | 0b11111_000 || 0b00000 | 0b000 | 0b11111 | 0b000
         0b00000_000 | 0b00000_111 || 0b00000 | 0b000 | 0b00000 | 0b111
-        0b00000_111 | 0b00000_000 || 0b00000 | 0b111 | 0b00000 | 0b000
+        0b11111_111 | 0b11111_111 || 0b11111 | 0b111 | 0b11111 | 0b111
     }
 }

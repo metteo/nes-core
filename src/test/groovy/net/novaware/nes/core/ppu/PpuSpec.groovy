@@ -18,4 +18,6 @@ class PpuSpec extends Specification {
 
     def "Rst"() {
     }
+
+    // TODO: implement basic mocked dependency tests
 }

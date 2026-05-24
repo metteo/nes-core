@@ -1,6 +1,7 @@
 package net.novaware.nes.core.ppu.memory;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.DataBus;
@@ -10,6 +11,7 @@ import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+@BoardScope
 @SuppressWarnings({"initialization.fields.uninitialized", "return"}) // TODO: remove when fully implemented
 public class PpuBus implements MemoryBus {
 
@@ -67,6 +69,9 @@ public class PpuBus implements MemoryBus {
         busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;
 
+        // PPU AD0..7 are shared between address and data bus
+        // dataLine.data(ubyte(sint(addressLatch) & 0xFF)); // TODO: uncomment and update tests
+
         cartridge.onAccess(addressLatch);
         expansion.onAccess(addressLatch);
 
@@ -91,9 +96,10 @@ public class PpuBus implements MemoryBus {
         return this;
     }
 
-    @Override // TODO: verify that the bus is reverted to correct state
-    public @Unsigned byte peek(@Unsigned short address) {
-        return 0; // TODO: implement
+    @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        cartridge.probe(address, dataLine);
+        expansion.probe(address, dataLine);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.novaware.nes.core.it
 
-import net.novaware.nes.core.BoardFactory
+import net.novaware.nes.core.NesCore
+import net.novaware.nes.core.board.Board
 import net.novaware.nes.core.config.ImmutableCoreConfig
 import net.novaware.nes.core.config.Platform
 import net.novaware.nes.core.config.Region
@@ -14,7 +15,7 @@ class BoardIT extends Specification {
         given:
         def conditions = new PollingConditions(timeout: 1, initialDelay: 0.1, factor: 2.0)
 
-        BoardFactory factory = BoardFactory.newBoardFactory(ImmutableCoreConfig.builder()
+        NesCore factory = NesCore.newNesCore(ImmutableCoreConfig.builder()
                 .setRecordCpuBus(false)
                 .setRegion(Region.USA)
                 .setPlatform(Platform.NES_FAMICOM)
@@ -23,7 +24,7 @@ class BoardIT extends Specification {
         )
 
         when:
-        def board = factory.newBoard()
+        Board board = factory.newBoard()
 
         board.powerOn()
 

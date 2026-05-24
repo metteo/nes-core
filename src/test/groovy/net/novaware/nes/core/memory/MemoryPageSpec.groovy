@@ -4,6 +4,7 @@ import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
+import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -31,6 +32,21 @@ class MemoryPageSpec extends Specification {
 
         1 * fallback.onAccess(ushort(0x40FF))
         1 * fallback.onWrite()
+    }
+
+    def "should allow probing"() {
+        given:
+        MemoryDevice.ReadWrite fallback = Mock()
+        def page = new MemoryPage(ubyte(0x40), fallback)
+        def bus = new TestBus(page)
+
+        when:
+        def read = probeBus(bus, 0x40FF)
+
+        then:
+        read == 0x12
+
+        1 * fallback.probe(ushort(0x40FF), _) >> { address, dataLine -> dataLine.data(ubyte(0x12)) }
     }
 
     def "should allow attaching devices"() {

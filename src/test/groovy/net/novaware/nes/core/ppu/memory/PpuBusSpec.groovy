@@ -12,6 +12,7 @@ import static net.novaware.nes.core.memory.BusOp.DATA_READ
 import static net.novaware.nes.core.memory.BusOp.DATA_WRITE
 import static net.novaware.nes.core.memory.RecordingDevice.*
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
+import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -49,6 +50,8 @@ class PpuBusSpec extends Specification {
         bus.access(ushort(0x3EFF)).read().data() == ubyte(0x34)
         bus.access(ushort(0x0001)).read().data() == ubyte(0x56)
         bus.access(ushort(0x3EFE)).read().data() == ubyte(0x78)
+
+        probeBus(bus, 0x0000) == 0x12 // sanity check
 
         // currentOp works
         maybeWrite == DATA_WRITE

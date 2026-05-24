@@ -1,7 +1,7 @@
 package net.novaware.nes.core.io.register;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.RegisterFile;
 

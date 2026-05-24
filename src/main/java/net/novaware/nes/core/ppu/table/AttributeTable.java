@@ -1,0 +1,89 @@
+package net.novaware.nes.core.ppu.table;
+
+import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.register.SegmentRegister;
+import net.novaware.nes.core.util.Hex;
+import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
+
+/**
+ * @see <a href="https://www.nesdev.org/wiki/PPU_attribute_tables">Attribute Tables on nesdev.org</a>
+ */
+public class AttributeTable extends Table {
+
+    public static final int ROW_COUNT = 8;
+    public static final int COL_COUNT = 8;
+
+    public AttributeTable(String name, SegmentRegister segment, MemoryBus bus) {
+        super(name, segment, bus);
+    }
+
+    public String printAttributeBytes() {
+        int start = segment.getStartAsInt();
+
+        StringBuilder builder = new StringBuilder();
+
+        for (int y = 0; y < ROW_COUNT; y++) {
+            for (int x = 0; x < COL_COUNT; x++) {
+                int address = start + y * COL_COUNT + x;
+
+                @Unsigned byte data = bus.access(ushort(address)).read().data();
+
+                builder.append(Hex.s(data)).append(" ");
+            }
+            builder.append("\n");
+        }
+
+        return builder.toString();
+    }
+
+    public String printAttributeBits(boolean useDigits) {
+        int start = segment.getStartAsInt();
+
+        StringBuilder pattern = new StringBuilder();
+
+        for (int doubleY = 0; doubleY < 2 * ROW_COUNT; doubleY++) {
+            for (int doubleX = 0; doubleX < 2 * COL_COUNT; doubleX++) {
+                // ignore remainder on purpose
+                int y = doubleY / 2;
+                int x = doubleX / 2;
+
+                int address = start + y * COL_COUNT + x;
+
+                @Unsigned byte dataByte = bus.access(ushort(address)).read().data();
+
+                int subY = doubleY - 2 * y; // TODO: is this faster than remainder?
+                int subX = doubleX - 2 * x;
+
+                int data = sint(dataByte);
+
+                /**
+                    int topLeft = data & 0b11;
+                    int topRight = (data >> 2) & 0b11;
+                    int bottomLeft = (data >> 4) & 0b11;
+                    int bottomRight = (data >> 6) & 0b11;
+                */
+                int subVal = (data >> (subY * 4 + subX * 2)) & 0b11;
+
+                char c = switch(subVal) {
+                    case 0b11 -> '█';
+                    case 0b10 -> '▓';
+                    case 0b01 -> '▒';
+                    case 0b00 -> '░';
+                    default   -> '▞';
+                };
+
+                if (useDigits) {
+                    pattern.append(subVal).append(" ");
+                } else {
+                    pattern.append(c);
+                }
+            }
+            pattern.append("\n");
+        }
+
+        return pattern.toString();
+    }
+}

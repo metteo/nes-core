@@ -1,7 +1,7 @@
 package net.novaware.nes.core.port.internal;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cart.Cartridge;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.BankedMemory;

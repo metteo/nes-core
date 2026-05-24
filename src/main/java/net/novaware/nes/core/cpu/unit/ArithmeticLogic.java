@@ -1,11 +1,10 @@
 package net.novaware.nes.core.cpu.unit;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.StatusRegister;
-import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
@@ -17,7 +16,6 @@ import java.util.function.IntBinaryOperator;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.SOV;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -36,25 +34,24 @@ public class ArithmeticLogic implements Unit {
     @Used
     private final StatusRegister status;
 
-    @Used
-    private final EdgeDetector setOverflow;
-
     @Inject
     public ArithmeticLogic(
-            CpuRegFile registers,
-            @CpuVar(A) ByteRegister accumulator,
-            @CpuVar(DO) DelegatingRegister operand,
-            @CpuVar(PS) StatusRegister status,
-            @CpuVar(SOV) EdgeDetector setOverflow
+        CpuRegFile registers,
+        @CpuVar(A) ByteRegister accumulator,
+        @CpuVar(DO) DelegatingRegister operand,
+        @CpuVar(PS) StatusRegister status
     ) {
         this.registers = registers;
         this.accumulator = accumulator;
         this.operand2 = operand;
         this.status = status;
-        this.setOverflow = setOverflow;
     }
 
-    public void addWithCarry(@Unsigned byte data) { // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
+    /**
+     * // TODO: implement decimal mode, but hide it behind EFlags.disableDecimal
+     * @see <a href="https://6502.org/tutorials/decimal_mode.html">Decimal Mode</a>
+     */
+    public void addWithCarry(@Unsigned byte data) {
         int prevCarry = registers.status().getCarry() ? 1 : 0;
 
         int a = registers.a().getAsInt();
@@ -74,7 +71,7 @@ public class ArithmeticLogic implements Unit {
         registers.status()
                 .setCarry(result > 0xFF)
                 .setZero(byteResult == 0)
-                .setOverflow(overflow || setOverflow.isActive())
+                .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 
@@ -98,7 +95,7 @@ public class ArithmeticLogic implements Unit {
         registers.status()
                 .setBorrow(result < 0)
                 .setZero(byteResult == 0)
-                .setOverflow(overflow || setOverflow.isActive())
+                .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 

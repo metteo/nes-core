@@ -5,13 +5,13 @@ import net.novaware.nes.core.cpu.register.Status
 import net.novaware.nes.core.memory.MemoryBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.TestBoardFactory.newTestBoardFactory
+import static net.novaware.nes.core.TestNesCore.newTestNesCore
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
 class StackEngineSpec extends Specification {
 
-    def factory = newTestBoardFactory()
+    def factory = newTestNesCore()
     CpuRegFile regs = factory.newCpuRegisters()
     MemoryBus bus = factory.newCpuBus()
     StackEngine engine = factory.newStackEngine()

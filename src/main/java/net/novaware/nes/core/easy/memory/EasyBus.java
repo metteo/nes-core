@@ -73,7 +73,7 @@ public class EasyBus implements MemoryBus {
         this.cartridge = cartridge;
 
         codeSegment.setStart(cartridge.getStartAddress());
-        codeSegment.setLimit(cartridge.getEndAddress());
+        codeSegment.setEnd(cartridge.getEndAddress());
 
         this.cartridge.onAttach(dataLine);
     }
@@ -83,7 +83,7 @@ public class EasyBus implements MemoryBus {
         cartridge.onDetach();
 
         codeSegment.setStart(USHORT_MAX_VALUE);
-        codeSegment.setLimit(USHORT_MAX_VALUE);
+        codeSegment.setEnd(USHORT_MAX_VALUE);
 
         cartridge = new MemoryDevice.Empty();
     }
@@ -109,14 +109,9 @@ public class EasyBus implements MemoryBus {
     }
 
     @Override
-    public @Unsigned byte peek(@Unsigned short address) {
-        internal.onAccess(address);
-        cartridge.onAccess(address);
-
-        internal.onRead();
-        cartridge.onRead();
-
-        return dataLine.cycle();
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        internal.probe(address, dataLine);
+        cartridge.probe(address, dataLine);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.novaware.nes.core.util
 
-import net.novaware.nes.core.TestBoardFactory
+
+import net.novaware.nes.core.TestNesCore
 import net.novaware.nes.core.cart.Cartridge
 import net.novaware.nes.core.cpu.instruction.Instruction
 import net.novaware.nes.core.cpu.memory.CpuBus
@@ -15,7 +16,7 @@ import static UTypes.ushort
 
 class RegsAndRamBaseSpec extends Specification {
 
-    def factory = TestBoardFactory.newTestBoardFactory()
+    def factory = TestNesCore.newTestNesCore()
 
     CpuRegFile registers = factory.newCpuRegisters()
     CpuInsFile insRegs = factory.newExtRegisters()

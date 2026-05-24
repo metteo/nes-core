@@ -4,6 +4,7 @@ import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
+import net.novaware.nes.core.util.UByteSupplier;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
@@ -67,9 +68,11 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         return new Quantity(physicalBanks.length, bankSize.unit());
     }
 
-    public BankedMemory allocatePhysicalBanks() {
+    public BankedMemory allocatePhysicalBanks(UByteSupplier filler) {
         for (int i = 0; i < this.physicalBanks.length; i++) {
-            this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes());
+            this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes())
+                    .order(LITTLE_ENDIAN)
+                    .fill(filler);
         }
 
         return this;
@@ -119,9 +122,21 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     }
 
     @Override
+    public void probe(@Unsigned short address, DataBus.Line dataLine) {
+        assert sint(getStartAddress()) <= sint(address) && sint(address) <= sint(getEndAddress());
+
+        // TODO: refactor this and onAccess to share fast bank index/address resolution
+        int virtualAddress = sint(address) - sint(startAddress);
+        int bankIndex = virtualAddress / bankSize.toBytes();
+        int bankAddress = virtualAddress % bankSize.toBytes();
+
+        @Unsigned byte data = virtualBanks[bankIndex].get(bankAddress);
+        dataLine.data(data);
+    }
+
+    @Override
     public void onAccess(@Unsigned short address) {
-        int addrVal = sint(address);
-        int virtualAddress = addrVal - sint(startAddress);
+        int virtualAddress = sint(address) - sint(startAddress);
 
         // TODO: slow in hot code, change to shifting / masking
         bankIndex = virtualAddress / bankSize.toBytes();

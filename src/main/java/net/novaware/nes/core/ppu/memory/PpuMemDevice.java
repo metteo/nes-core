@@ -1,7 +1,7 @@
 package net.novaware.nes.core.ppu.memory;
 
 import jakarta.inject.Inject;
-import net.novaware.nes.core.BoardScope;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.memory.CpuBusBridge;
 import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.memory.DataBus;
@@ -45,6 +45,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -59,6 +60,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see https://www.nesdev.org/wiki/PPU_pinout
  *
  * TODO: expose PPU pinout on Ppu class and direct calls from CPU through this class into Ppu class
+ * TODO: implement register set delays for ppu usecase, maybe replace the latch class in irq disable case
  */
 @BoardScope
 public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBridge {
@@ -89,6 +91,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private final BooleanRegister maskSprite;
     private final BooleanRegister maskBackground;
     private final BooleanRegister greyscale;
+
+    private final BooleanRegister resetLock;
 
     private final ByteRegister oamAddressLatch;
 
@@ -133,7 +137,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress
+        @PpuVar(OAM) ByteRegister oamAddress,
+
+        @PpuVar(RL) BooleanRegister resetLock
     ) {
         this.ppuBus = ppuBus;
         this.palette = palette;
@@ -161,6 +167,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         this.maskSprite = maskSprite;
         this.maskBackground = maskBackground;
         this.greyscale = greyscale;
+        this.resetLock = resetLock;
         this.oamAddressLatch = oamAddress;
 
         for (int i = 0; i < readHandlers.length; i++) {
@@ -185,7 +192,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     private static int idx(@Unsigned short address) {
-        return (sint(address) - sint(PPU_REGISTERS_START)) & 0x7;
+        return (sint(address) - sint(PPU_REGISTERS_START)) & 0b111;
     }
 
     @Override
@@ -251,7 +258,10 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
         @Override
         public void onWrite() {
-            // TODO: prevent writes until the first pre-render scanline
+            if (resetLock.get()) {
+                return;
+            }
+
             int data = sint(dataLine.data());
 
             // 0xvphb_sinn
@@ -264,7 +274,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             boolean p = (data & 0x40) != 0;
             boolean v = (data & 0x80) != 0;
 
-            tempViewPort.setNametable(nn);
+            tempViewPort.setNameTable(nn);
             vramAddressIncrement.setAsByte(i);
             spritePatternTable.setAsShort(s);
             backgroundPatternTable.setAsShort(b);
@@ -275,10 +285,13 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     }
 
     class MaskHandler implements Handler {
-        // TODO: prevent writes until the first pre-render scanline
 
         @Override
         public void onWrite() {
+            if (resetLock.get()) {
+                return;
+            }
+
             int data = sint(dataLine.data());
 
             boolean eb = (data & 0x80) != 0;
@@ -317,7 +330,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             dataLine.data(status);
 
             secondWrite.set(false);
-            statusRegister.setVerticalBlank(false); // TODO: set Vblank to false with a delay
+            statusRegister.setVerticalBlankDelayed(false, 1);
         }
     }
 
@@ -382,34 +395,34 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
             final boolean firstWrite = !secondWrite.get();
             if (firstWrite) {
-                tempViewPort.high(data);
+                int dataInt = sint(data);
+                tempViewPort.high(ubyte(dataInt & 0b0011_1111));
                 secondWrite.set(true);
             } else {
                 tempViewPort.low(data);
                 secondWrite.set(false);
 
-                currentViewPort.set(tempViewPort.get());
+                // TODO: wait 1-1.5 dots
+
+                tempViewPort.transfer(currentViewPort);
             }
         }
     }
 
     class DataBusHandler implements Handler {
 
-        // TODO: direct < 0x3EFF traffic to PpuBus, >0x3F00 to Palette RAM
-
         @Override
         public void onRead() {
             @Unsigned short ppuAddress = currentViewPort.get();
 
             if (sint(ppuAddress) < sint(PpuMemMap.PALETTE_RAM_START)) {
-                // TODO: data is not available immediately. it takes one ppu cycle to fetch it for cpu
-                @Unsigned byte data = ppuBus.access(ppuAddress).read().data();
-                dataReadBuffer.set(data);
-
                 @Unsigned byte bufferedData = dataReadBuffer.get();
                 dataLine.data(bufferedData);
 
+                @Unsigned byte data = ppuBus.access(ppuAddress).read().data();
+                dataReadBuffer.set(data);
             } else {
+                // TODO: this is more complex: https://www.nesdev.org/wiki/PPU_registers#Reading_palette_RAM
                 palette.onAccess(ppuAddress);
                 palette.onRead();
             }
@@ -428,6 +441,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
                 palette.onAccess(ppuAddress);
                 palette.onWrite();
             }
+
+            int nextPpuAddress = sint(ppuAddress) + vramAddressIncrement.getAsInt();
+            currentViewPort.set(ushort(nextPpuAddress));
         }
     }
 }
