@@ -1,0 +1,46 @@
+package net.novaware.nes.core.port.internal;
+
+import jakarta.inject.Inject;
+import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.port.DisplayPort;
+import net.novaware.nes.core.ppu.memory.DisplayMemory;
+import org.checkerframework.checker.lock.qual.GuardedBy;
+
+// TODO: display port should expose BufferedImage or multiple with separate layers
+@BoardScope
+@SuppressWarnings("initialization.fields.uninitialized")
+public class DisplayPortImpl implements DisplayPort {
+
+    private Plug plug = frontBuffer -> {};
+
+    // TODO: this is too early for access to DisplayMemory, it still needs processing -> turning into RGB/NTSC
+    private @GuardedBy("this") DisplayMemory displayBuffer;
+
+    @Inject
+    public DisplayPortImpl() {
+
+    }
+
+
+    @Override
+    public void connect(Plug plug) {
+        this.plug = plug;
+    }
+
+    @Override
+    public void disconnect() {
+        plug = frontBuffer -> {};
+    }
+
+    public void onDisplayData(DisplayMemory frontBuffer) {
+        plug.onDisplayData(frontBuffer);
+    }
+
+    public synchronized void setDisplayBuffer(DisplayMemory displayBuffer) {
+        this.displayBuffer = displayBuffer;
+    }
+
+    public void onFrame() {
+        // TODO: trigger task on displaying thread
+    }
+}

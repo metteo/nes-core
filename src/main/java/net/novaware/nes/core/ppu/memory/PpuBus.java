@@ -1,6 +1,7 @@
 package net.novaware.nes.core.ppu.memory;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.DataBus;
@@ -10,6 +11,7 @@ import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+@BoardScope
 @SuppressWarnings({"initialization.fields.uninitialized", "return"}) // TODO: remove when fully implemented
 public class PpuBus implements MemoryBus {
 

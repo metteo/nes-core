@@ -1,6 +1,5 @@
 package net.novaware.nes.core.ppu.memory
 
-
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import spock.lang.Specification
 

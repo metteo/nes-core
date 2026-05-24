@@ -220,9 +220,9 @@ class InterruptLogicSpec extends ControlUnitBaseSpec {
         )
 
         expectRam(
-            0x01FB, 0,
-            0x01FC, 0,
-            0x01FD, 0
+            0x01FB, 0xFF,
+            0x01FC, 0xFF,
+            0x01FD, 0xFF
         )
     }
 }

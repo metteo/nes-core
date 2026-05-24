@@ -4,6 +4,7 @@ import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.Quantity;
 import net.novaware.nes.core.util.UByteBuffer;
+import net.novaware.nes.core.util.UByteSupplier;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
@@ -67,9 +68,11 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         return new Quantity(physicalBanks.length, bankSize.unit());
     }
 
-    public BankedMemory allocatePhysicalBanks() {
+    public BankedMemory allocatePhysicalBanks(UByteSupplier filler) {
         for (int i = 0; i < this.physicalBanks.length; i++) {
-            this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes());
+            this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes())
+                    .order(LITTLE_ENDIAN)
+                    .fill(filler);
         }
 
         return this;

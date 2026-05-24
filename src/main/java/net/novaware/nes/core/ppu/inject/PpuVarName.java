@@ -52,6 +52,19 @@ public enum PpuVarName {
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),
     SOV ("", "spriteOverflow", "Sprite Overflow"),
     RST ("", "reset", "Reset"),
+
+    PT0 ("", "pattenTable0", "Pattern Table 0 (L)"),
+    PT1 ("", "pattenTable1", "Pattern Table 1 (R)"),
+
+    NT0 ("", "nameTable0", "Name Table 0"),
+    NT1 ("", "nameTable1", "Name Table 1"),
+    NT2 ("", "nameTable2", "Name Table 2"),
+    NT3 ("", "nameTable3", "Name Table 3"),
+
+    AT0 ("", "attributeTable0", "Attribute Table 0"),
+    AT1 ("", "attributeTable1", "Attribute Table 1"),
+    AT2 ("", "attributeTable2", "Attribute Table 2"),
+    AT3 ("", "attributeTable3", "Attribute Table 3"),
     ;
     private final String doc;
     private final String var;

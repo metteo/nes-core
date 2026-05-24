@@ -17,6 +17,7 @@ import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.memory.ReservedMemory;
 import net.novaware.nes.core.ppu.memory.PpuMemMap;
 import net.novaware.nes.core.util.Quantity;
+import net.novaware.nes.core.util.UByteSupplier;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
@@ -32,6 +33,7 @@ import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_1KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 // TODO: use nes file to store save ram and nvvram
@@ -55,6 +57,8 @@ public class CartridgeImpl implements Cartridge {
 
         var meta = this.nesFile.meta();
 
+        UByteSupplier filler = () -> UBYTE_MAX_VALUE;  // TODO: maybe it should configurable same as internal V/RAM?
+
         assertArgument(nesFile.meta().mapper() == 0, "only mapper 0 supported for now");
         assertArgument(meta.system() == NesMeta.System.NES, "only NES is supported");
         assertArgument(meta.videoStandard() == NTSC || meta.videoStandard() == NTSC_DUAL, "only NTSC supported");
@@ -76,11 +80,13 @@ public class CartridgeImpl implements Cartridge {
         cpuBusDevice.attach(programData);
 
         // TODO: only if not disabled
-        PhysicalMemory programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
+        PhysicalMemory programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
+                .fill(filler);
         cpuBusDevice.attach(programMemory);
 
         // TODO: only if battery
-        PhysicalMemory programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024);
+        PhysicalMemory programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
+                .fill(filler);
 
         BankedMemory videoData = new BankedMemory("CHR-ROM", ushort(0x0000), new Quantity(1, BANK_8KB))
             .setVirtualBanks(new Quantity(1, BANK_8KB))
@@ -90,8 +96,10 @@ public class CartridgeImpl implements Cartridge {
         videoData.mapVirtualToPhysical(0, 0);
 
         // TODO: banked memory but only if 4 screen
-        PhysicalMemory videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024);
-        PhysicalMemory videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024);
+        PhysicalMemory videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024)
+                .fill(filler);
+        PhysicalMemory videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024)
+                .fill(filler);
 
         ppuBusDevice.attach(videoData);
 

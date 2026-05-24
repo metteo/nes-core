@@ -6,6 +6,7 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -38,7 +39,7 @@ class BankedMemorySpec extends Specification {
         )
         bankedMemory
             .setPhysicalBanks(new Quantity(2, BANK_16KB))
-            .allocatePhysicalBanks()
+            .allocatePhysicalBanks(() -> UBYTE_MAX_VALUE)
 
         bankedMemory
             .setVirtualBanks(new Quantity(2, BANK_16KB))
@@ -88,7 +89,7 @@ class BankedMemorySpec extends Specification {
         )
         bankedMemory
             .setPhysicalBanks(new Quantity(1, BANK_16KB))
-            .allocatePhysicalBanks()
+            .allocatePhysicalBanks(() -> UBYTE_MAX_VALUE)
 
         bankedMemory
             .setVirtualBanks(new Quantity(2, BANK_16KB))

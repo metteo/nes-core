@@ -17,8 +17,18 @@ import net.novaware.nes.core.file.ines.NesFileReader;
 import net.novaware.nes.core.file.ines.NesFileReadingException;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.inject.PpuModule;
+import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.table.AttributeTable;
+import net.novaware.nes.core.ppu.table.NameTable;
+import net.novaware.nes.core.ppu.table.PatternTable;
 
 import java.net.URI;
+
+import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 
 @BoardScope
 @Component(modules = {
@@ -53,6 +63,13 @@ public abstract class NesCore {
     // region Factory methods
 
     public abstract Board newBoard();
+
+    // TODO: do not expose these like that, create a port if needed.
+    public abstract PaletteMemory getPaletteMemory();
+    public abstract @PpuVar(PT0) PatternTable getPatternTable0();
+    public abstract @PpuVar(PT1) PatternTable getPatternTable1();
+    public abstract @PpuVar(NT0) NameTable getNameTable0();
+    public abstract @PpuVar(AT0) AttributeTable getAttributeTable0();
 
     public Cartridge newCartridge(URI file) { // TODO: improve, for now only for nestest
         NesFileReader.Result result = new NesFileReader().read(file, ReaderMode.LENIENT);

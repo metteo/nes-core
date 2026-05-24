@@ -11,28 +11,62 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  */
 public class PpuMemMap implements MemoryMap {
 
-    // TODO: segment registers: Video Segment, configured by mappers for debug view
-    //       e.g. where is nametable, where are attributes etc.
-
     // region Cartridge (CPU / DMA and PPU)
 
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
     public static final @Unsigned short MEMORY_END = ushort(0x3FFF);
     public static final int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
 
-    public static final @Unsigned short PATTERN_TABLE_1_START = ushort(0x0000);
-    public static final @Unsigned short PATTERN_TABLE_1_END = ushort(0x0FFF);
+    // region CHR-[ROM/RAM]
+
+    public static final @Unsigned short PATTERN_TABLE_0_START = ushort(0x0000);
+    public static final @Unsigned short PATTERN_TABLE_0_END = ushort(0x0FFF);
+    public static final int PATTERN_TABLE_0_SIZE = sint(PATTERN_TABLE_0_END) - sint(PATTERN_TABLE_0_START) + 1;
+
+    public static final @Unsigned short PATTERN_TABLE_1_START = ushort(0x1000);
+    public static final @Unsigned short PATTERN_TABLE_1_END = ushort(0x1FFF);
     public static final int PATTERN_TABLE_1_SIZE = sint(PATTERN_TABLE_1_END) - sint(PATTERN_TABLE_1_START) + 1;
 
-    public static final @Unsigned short PATTERN_TABLE_2_START = ushort(0x1000);
-    public static final @Unsigned short PATTERN_TABLE_2_END = ushort(0x1FFF);
-    public static final int PATTERN_TABLE_2_SIZE = sint(PATTERN_TABLE_2_END) - sint(PATTERN_TABLE_2_START) + 1;
+    // endregion
+    // region VRAM
 
     public static final @Unsigned short VRAM_START = ushort(0x2000);
     public static final @Unsigned short VRAM_END = ushort(0x2FFF);
     public static final int VRAM_SIZE = sint(VRAM_END) - sint(VRAM_START) + 1;
 
-    // TODO: maybe add subsections of vram (name / attribute tables 0-3) and segment regs
+    public static final @Unsigned short NAME_TABLE_0_START = VRAM_START;
+    public static final @Unsigned short NAME_TABLE_0_END = ushort(0x23BF);
+    public static final int NAME_TABLE_0_SIZE = sint(NAME_TABLE_0_END) - sint(NAME_TABLE_0_START) + 1;
+
+    public static final @Unsigned short ATTRIBUTE_TABLE_0_START = ushort(0x23C0);
+    public static final @Unsigned short ATTRIBUTE_TABLE_0_END = ushort(0x23FF);
+    public static final int ATTRIBUTE_TABLE_0_SIZE = sint(ATTRIBUTE_TABLE_0_END) - sint(ATTRIBUTE_TABLE_0_START) + 1;
+
+    public static final @Unsigned short NAME_TABLE_1_START = ushort(0x2400);
+    public static final @Unsigned short NAME_TABLE_1_END = ushort(0x27BF);
+    public static final int NAME_TABLE_1_SIZE = sint(NAME_TABLE_1_END) - sint(NAME_TABLE_1_START) + 1;
+
+    public static final @Unsigned short ATTRIBUTE_TABLE_1_START = ushort(0x27C0);
+    public static final @Unsigned short ATTRIBUTE_TABLE_1_END = ushort(0x27FF);
+    public static final int ATTRIBUTE_TABLE_1_SIZE = sint(ATTRIBUTE_TABLE_1_END) - sint(ATTRIBUTE_TABLE_1_START) + 1;
+
+    public static final @Unsigned short NAME_TABLE_2_START = ushort(0x2800);
+    public static final @Unsigned short NAME_TABLE_2_END = ushort(0x2BBF);
+    public static final int NAME_TABLE_2_SIZE = sint(NAME_TABLE_2_END) - sint(NAME_TABLE_2_START) + 1;
+
+    public static final @Unsigned short ATTRIBUTE_TABLE_2_START = ushort(0x2BC0);
+    public static final @Unsigned short ATTRIBUTE_TABLE_2_END = ushort(0x2BFF);
+    public static final int ATTRIBUTE_TABLE_2_SIZE = sint(ATTRIBUTE_TABLE_2_END) - sint(ATTRIBUTE_TABLE_2_START) + 1;
+
+    public static final @Unsigned short NAME_TABLE_3_START = ushort(0x2C00);
+    public static final @Unsigned short NAME_TABLE_3_END = ushort(0x2FBF);
+    public static final int NAME_TABLE_3_SIZE = sint(NAME_TABLE_3_END) - sint(NAME_TABLE_3_START) + 1;
+
+    public static final @Unsigned short ATTRIBUTE_TABLE_3_START = ushort(0x2FC0);
+    public static final @Unsigned short ATTRIBUTE_TABLE_3_END = VRAM_END;
+    public static final int ATTRIBUTE_TABLE_3_SIZE = sint(ATTRIBUTE_TABLE_3_END) - sint(ATTRIBUTE_TABLE_3_START) + 1;
+
+    // endregion
 
     public static final @Unsigned short UNUSED_START = ushort(0x3000);
     public static final @Unsigned short UNUSED_END = ushort(0x3EFF);

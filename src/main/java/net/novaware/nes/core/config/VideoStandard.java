@@ -19,8 +19,8 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
 
     public static final int PHYSICAL_WIDTH = 341; // horizontal, dots per scan line
 
-    public static final int ACTIVE_WIDTH = 256; // horizontal dots  // TODO: maybe use unit checker here
-    public static final int ACTIVE_HEIGHT = 240; // vertical dots
+    public static final int ACTIVE_WIDTH = 256;  // 32 * 8 horizontal dots  // TODO: maybe use unit checker here
+    public static final int ACTIVE_HEIGHT = 240; // 30 * 8 vertical dots
 
     public static final int V_BLANK_START = ACTIVE_HEIGHT + 1; // scan line
     public static final int H_BLANK_START = ACTIVE_WIDTH + 1; // dot / cycle

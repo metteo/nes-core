@@ -416,14 +416,13 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             @Unsigned short ppuAddress = currentViewPort.get();
 
             if (sint(ppuAddress) < sint(PpuMemMap.PALETTE_RAM_START)) {
-                // TODO: data is not available immediately. it takes one ppu cycle to fetch it for cpu
-                @Unsigned byte data = ppuBus.access(ppuAddress).read().data();
-                dataReadBuffer.set(data);
-
                 @Unsigned byte bufferedData = dataReadBuffer.get();
                 dataLine.data(bufferedData);
 
+                @Unsigned byte data = ppuBus.access(ppuAddress).read().data();
+                dataReadBuffer.set(data);
             } else {
+                // TODO: this is more complex: https://www.nesdev.org/wiki/PPU_registers#Reading_palette_RAM
                 palette.onAccess(ppuAddress);
                 palette.onRead();
             }
@@ -442,6 +441,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
                 palette.onAccess(ppuAddress);
                 palette.onWrite();
             }
+
+            int nextPpuAddress = sint(ppuAddress) + vramAddressIncrement.getAsInt();
+            currentViewPort.set(ushort(nextPpuAddress));
         }
     }
 }

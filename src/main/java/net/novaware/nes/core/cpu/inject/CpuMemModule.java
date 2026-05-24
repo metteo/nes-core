@@ -57,6 +57,7 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.TIMER_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.ZERO_PAGE_START;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 
 @Module
 public interface CpuMemModule {
@@ -65,7 +66,9 @@ public interface CpuMemModule {
     @BoardScope
     @CpuVar(RAM)
     static MemoryDevice.ReadWrite provideMemory() {
-        return new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE);
+        PhysicalMemory ram = new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE)
+            .fill(() -> UBYTE_MAX_VALUE); // TODO: use configurable filler
+        return ram;
     }
 
     @Binds
@@ -142,7 +145,7 @@ public interface CpuMemModule {
     static SegmentRegister provideZeroPage() {
         SegmentRegister zeroPage = new SegmentRegister(ZP.name());
         zeroPage.setStart(ZERO_PAGE_START);
-        zeroPage.setLimit(ZERO_PAGE_END);
+        zeroPage.setEnd(ZERO_PAGE_END);
 
         return zeroPage;
     }
@@ -153,7 +156,7 @@ public interface CpuMemModule {
     static SegmentRegister provideStackSegment() {
         SegmentRegister stackSegment = new SegmentRegister(SS.name());
         stackSegment.setStart(STACK_SEGMENT_START);
-        stackSegment.setLimit(STACK_SEGMENT_END);
+        stackSegment.setEnd(STACK_SEGMENT_END);
 
         return stackSegment;
     }
@@ -164,7 +167,7 @@ public interface CpuMemModule {
     static SegmentRegister provideOamSegment() {
         SegmentRegister oamSegment = new SegmentRegister(OS.name());
         oamSegment.setStart(OAM_SEGMENT_START);
-        oamSegment.setLimit(OAM_SEGMENT_END);
+        oamSegment.setEnd(OAM_SEGMENT_END);
 
         return oamSegment;
     }

@@ -73,7 +73,7 @@ public class EasyBus implements MemoryBus {
         this.cartridge = cartridge;
 
         codeSegment.setStart(cartridge.getStartAddress());
-        codeSegment.setLimit(cartridge.getEndAddress());
+        codeSegment.setEnd(cartridge.getEndAddress());
 
         this.cartridge.onAttach(dataLine);
     }
@@ -83,7 +83,7 @@ public class EasyBus implements MemoryBus {
         cartridge.onDetach();
 
         codeSegment.setStart(USHORT_MAX_VALUE);
-        codeSegment.setLimit(USHORT_MAX_VALUE);
+        codeSegment.setEnd(USHORT_MAX_VALUE);
 
         cartridge = new MemoryDevice.Empty();
     }

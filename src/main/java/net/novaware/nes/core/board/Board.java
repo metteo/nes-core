@@ -11,7 +11,9 @@ import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
+import net.novaware.nes.core.port.DisplayPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
+import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
 
@@ -28,6 +30,8 @@ public class Board {
         Region getRegion();
         Platform getPlatform();
         VideoStandard getVideoStandard();
+
+        //UByteSupplier getMemoryFiller(); // TODO: prefer enum with 0s, FFs or random
     }
 
     // TODO: setup register files for cpu, ppu, apu and any other
@@ -49,6 +53,9 @@ public class Board {
     private final DebugPortImpl debugPort;
 
     @Owned
+    private final DisplayPort displayPort;
+
+    @Owned
     private final ClockGenerator clockGenerator;
 
     // TODO: include here RAM,
@@ -60,6 +67,7 @@ public class Board {
         final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
+        final DisplayPortImpl displayPort,
         final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
@@ -68,6 +76,7 @@ public class Board {
 
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
+        this.displayPort = displayPort;
         this.clockGenerator = clockGenerator;
     }
 
@@ -111,5 +120,9 @@ public class Board {
 
     public DebugPort getDebugPort() {
         return debugPort;
+    }
+
+    public DisplayPort getDisplayPort() {
+        return displayPort;
     }
 }

@@ -69,14 +69,14 @@ class PagedMemorySpec extends Specification {
     def "should allow attaching ppu devices"() {
         given:
         def rom = new PhysicalMemory("CHR-ROM",
-                PATTERN_TABLE_1_START,
-                PATTERN_TABLE_2_END,
-                PATTERN_TABLE_1_SIZE + PATTERN_TABLE_2_SIZE
+            PATTERN_TABLE_0_START,
+            PATTERN_TABLE_1_END,
+            PATTERN_TABLE_0_SIZE + PATTERN_TABLE_1_SIZE
         )
 
         def romBus = new TestBus(rom)
-        romBus.access(PATTERN_TABLE_1_START).write().data(ubyte(0x12))
-        romBus.access(PATTERN_TABLE_2_END).write().data(ubyte(0x34))
+        romBus.access(PATTERN_TABLE_0_START).write().data(ubyte(0x12))
+        romBus.access(PATTERN_TABLE_1_END).write().data(ubyte(0x34))
         rom.onDetach()
 
         MemoryDevice.ReadWrite fallback = Mock()
@@ -86,11 +86,11 @@ class PagedMemorySpec extends Specification {
         def bus = new TestBus(paged)
 
         expect:
-        bus.access(PATTERN_TABLE_1_START).read().data() == ubyte(0x12)
-        bus.access(PATTERN_TABLE_2_END).read().data() == ubyte(0x34)
+        bus.access(PATTERN_TABLE_0_START).read().data() == ubyte(0x12)
+        bus.access(PATTERN_TABLE_1_END).read().data() == ubyte(0x34)
 
-        probeBus(bus, PATTERN_TABLE_1_START) == ubyte(0x12)
-        probeBus(bus, PATTERN_TABLE_2_END) == ubyte(0x34)
+        probeBus(bus, PATTERN_TABLE_0_START) == ubyte(0x12)
+        probeBus(bus, PATTERN_TABLE_1_END) == ubyte(0x34)
     }
 
     def "should disallow replacing cpu devices"() {

@@ -7,7 +7,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 public final class SegmentRegister extends Register {
 
     private @Unsigned short start;
-    private @Unsigned short limit;
+    private @Unsigned short end;
 
     // also cover mirrorring case?
 
@@ -17,8 +17,9 @@ public final class SegmentRegister extends Register {
         super(name);
     }
 
-    public void setStart(@Unsigned short start) {
+    public SegmentRegister setStart(@Unsigned short start) {
         this.start = start;
+        return this;
     }
 
     public @Unsigned short getStart() {
@@ -29,7 +30,12 @@ public final class SegmentRegister extends Register {
         return sint(start);
     }
 
-    public void setLimit(@Unsigned short limit) {
-        this.limit = limit;
+    public SegmentRegister setEnd(@Unsigned short end) {
+        this.end = end;
+        return this;
+    }
+
+    public @Unsigned short getEnd() {
+        return end;
     }
 }

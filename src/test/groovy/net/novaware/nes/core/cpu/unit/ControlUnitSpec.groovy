@@ -120,7 +120,7 @@ class ControlUnitSpec extends ControlUnitBaseSpec {
 
             new Op(ADDRESS_ACCESS, 0x0001, 0x00), // required cycle
             new Op(CONTROL_READ,   0x0001, 0x00),
-            new Op(DATA_READ,      0x0001, 0x00),
+            new Op(DATA_READ,      0x0001, 0xFF),
         ]
     }
 

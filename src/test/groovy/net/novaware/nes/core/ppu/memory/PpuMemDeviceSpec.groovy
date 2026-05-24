@@ -9,6 +9,7 @@ import net.novaware.nes.core.util.Bin
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
+import static net.novaware.nes.core.util.UTypes.UBYTE_0
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -88,7 +89,7 @@ class PpuMemDeviceSpec extends Specification {
         new TestBus(ppuMemDevice)
     }
 
-    def newPpuBus() {
+    TestBus newPpuBus() {
         PhysicalMemory ppuMem = new PhysicalMemory(
                 "PPU",
                 PpuMemMap.MEMORY_START,
@@ -111,10 +112,12 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x20))
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x00))
 
-        // immediate read returns previous value. needs ppu cycle to get actual data
+        // first read returns previous value. second read returns actual data
+        def wrongData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
         def ppuData = cpuBus.access(ushort(0x2007 + mirror)).read().data()
 
         then:
+        wrongData == UBYTE_0 // no prev value
         ppuData == ubyte(0x34)
 
         where:

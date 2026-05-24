@@ -17,6 +17,10 @@ import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
+// TODO: create Palette dictionary or sth with actual colors for displaying
+//       (include emphasis in a way it's possible to compare all combinations
+//       of a single color)
+
 public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
@@ -134,7 +138,8 @@ public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
 
     @Override
     public void onWrite() {
-        palettes.put(position, dataLine.data());
+        final @Unsigned byte data = dataLine.data();
+        palettes.put(position, data);
     }
 
     @Override
@@ -147,6 +152,28 @@ public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
     @Override
     public String toString() {
         return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
+    }
+
+    public String printColors() {
+        StringBuilder colors = new StringBuilder();
+
+        Section[] sections = Section.values();
+        for (int s = 0; s < sections.length; s++) {
+            Section section = sections[s];
+            colors.append(section.name()).append("\t");
+
+            for (int p = 0; p < 4; p++) {
+                for (int o = 0; o < 4; o++) {
+                    @Unsigned byte color = getColor(section, p, o);
+
+                    colors.append(Hex.s(color)).append(" ");
+                }
+                colors.append("\t");
+            }
+            colors.append("\n");
+        }
+
+        return colors.toString();
     }
 
     public enum Section {

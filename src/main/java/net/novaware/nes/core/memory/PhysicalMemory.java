@@ -3,8 +3,10 @@ package net.novaware.nes.core.memory;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import net.novaware.nes.core.util.UByteBuffer;
+import net.novaware.nes.core.util.UByteSupplier;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
@@ -33,9 +35,18 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
         this.name = name;
         this.startAddress = startAddress;
         this.endAddress = endAddress;
-
         this.buffer = buffer;
-        this.mask = buffer.capacity() - 1;
+
+        int size = buffer.capacity();
+        if (sint(endAddress) - sint(startAddress) + 1 == size) {
+            this.mask = 0xFFFF;
+        } else {
+            assertArgument(
+                size > 0 && (size & (size - 1)) == 0,
+                "size must be a power of two to allow mirroring with mask"
+            );
+            this.mask = buffer.capacity() - 1;
+        }
     }
 
     public PhysicalMemory(
@@ -117,5 +128,10 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public String toString() {
         return name + " (" + Hex.s(startAddress) + ":" + Hex.s(endAddress) + ")";
+    }
+
+    public PhysicalMemory fill(UByteSupplier supplier) {
+        buffer.fill(supplier);
+        return this;
     }
 }

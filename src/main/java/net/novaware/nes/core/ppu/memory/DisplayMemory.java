@@ -8,6 +8,9 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class DisplayMemory implements Nameable {
 
+    private static final int COLOR_MASK = 0x0F;
+    private static final int META_MASK = 0xF0;
+
     private final String name;
 
     private final @Unsigned byte[][] buffer;
@@ -46,14 +49,14 @@ public class DisplayMemory implements Nameable {
         assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
         assert 0 < buffer.length & x < buffer[0].length;
 
-        return buffer[y][x];
+        return ubyte(sint(buffer[y][x]) & COLOR_MASK);
     }
 
     public void setColor(int y, int x, @Unsigned byte color) {
         assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
         assert 0 < buffer.length && x < buffer[0].length;
 
-        buffer[y][x] = ubyte(sint(color) & 0x0F);
+        buffer[y][x] = ubyte(sint(color) & COLOR_MASK);
     }
 
     public @Unsigned byte getMeta(int y, int x) { // TODO: consider dedicated methods per info like enum with layers
