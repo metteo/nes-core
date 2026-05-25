@@ -74,8 +74,9 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
+    @PpuVar(OAM)
     static ObjAttrMemory provideObjAttrMemory() {
-        return new ObjAttrMemory(OAM.doc()); // TODO: fill in a way all sprites are hidden and off screen on startup? / reset?
+        return new ObjAttrMemory(OAM.doc(), ObjAttrMemory.SECONDARY_ENTRY_COUNT); // TODO: fill in a way all sprites are hidden and off screen on startup? / reset?
     }
 
     @Provides

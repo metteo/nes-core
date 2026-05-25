@@ -285,7 +285,7 @@ class PpuMemDeviceSpec extends Specification {
         def cpuBus = newCpuBus()
         def value = ubyte(0x34)
 
-        oam.write(ubyte(0x12), value)
+        oam.writePrimary(ubyte(0x12), value)
 
         when:
         cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(ubyte(0x12))
@@ -307,8 +307,8 @@ class PpuMemDeviceSpec extends Specification {
 
         then:
         oamAddress.getAsInt() == 0x14 // incremented
-        oam.read(ubyte(0x12)) == ubyte(0x34)
-        oam.read(ubyte(0x13)) == ubyte(0x56)
+        oam.readPrimary(ubyte(0x12)) == ubyte(0x34)
+        oam.readPrimary(ubyte(0x13)) == ubyte(0x56)
     }
 
     def "should update PPU scroll"() {

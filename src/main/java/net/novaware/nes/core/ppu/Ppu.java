@@ -24,6 +24,7 @@ import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DBM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
@@ -74,7 +75,7 @@ public class Ppu implements ClockReceiver {
         @PpuVar(PT0) PatternTable patternTable0,
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
-        ObjAttrMemory objAttrMemory,
+        @PpuVar(OAM) ObjAttrMemory objAttrMemory,
         @PpuVar(DAM) DisplayMemory displayA,
         @PpuVar(DBM) DisplayMemory displayB,
         DisplayPortImpl displayPort

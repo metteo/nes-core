@@ -43,7 +43,7 @@ public enum PpuVarName {
     PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
-    OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
+    OAM ("", "oam", "Object Attribute Memory"),
 
     DAM ("", "displayA", "Display A Memory"),
     DBM ("", "displayB", "Display B Memory"),
