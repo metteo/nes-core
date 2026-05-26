@@ -66,7 +66,16 @@ public class ObjAttrMemory implements Nameable {
     }
 
     public @Unsigned byte readPrimary(@Unsigned byte address) {
-        return primary[sint(address)]; // TODO: maybe zero-out unused bits?
+        int addrInt = sint(address);
+
+        @Unsigned byte data = primary[addrInt];
+
+        if (addrInt % 4 == 2) { // TODO: % is slow, also maybe it should be in PpuMemDevice?
+            int withoutUnused = sint(data) & ~0b11100;
+            return ubyte(withoutUnused);
+        } else {
+            return data;
+        }
     }
 
     public void writePrimary(@Unsigned byte address, @Unsigned byte data) {
