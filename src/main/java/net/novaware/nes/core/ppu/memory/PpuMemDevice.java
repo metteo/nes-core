@@ -108,7 +108,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private @Unsigned short addressLatch;
 
     @Inject
-    public PpuMemDevice(
+    public PpuMemDevice( // TODO: inject the segment register with start / end to allow no cpu usage
         @PpuVar(BUS) MemoryBus ppuBus,
         PaletteMemory palette,
         @PpuVar(OAM) ObjAttrMemory oam,

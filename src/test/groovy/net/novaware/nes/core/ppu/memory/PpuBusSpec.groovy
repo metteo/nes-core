@@ -6,11 +6,8 @@ import net.novaware.nes.core.register.IntegerCounter
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.memory.BusOp.ADDRESS_ACCESS
-import static net.novaware.nes.core.memory.BusOp.CONTROL_WRITE
-import static net.novaware.nes.core.memory.BusOp.DATA_READ
-import static net.novaware.nes.core.memory.BusOp.DATA_WRITE
-import static net.novaware.nes.core.memory.RecordingDevice.*
+import static net.novaware.nes.core.memory.BusOp.*
+import static net.novaware.nes.core.memory.RecordingDevice.Op
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
 import static net.novaware.nes.core.util.ProbeUtil.probeBus
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -25,7 +22,7 @@ class PpuBusSpec extends Specification {
                 MEMORY_SIZE - PALETTE_RAM_MIRROR_SIZE
         )
 
-        def rec = new RecordingDevice(new IntegerCounter("PPU.CC")) // ppu bus doesn't count cycles
+        def rec = new RecordingDevice(MEMORY_START, MEMORY_END, new IntegerCounter("PPU.CC")) // ppu bus doesn't count cycles
 
         // put some data not using the test subject
         def cartBus = new TestBus(cartridge)

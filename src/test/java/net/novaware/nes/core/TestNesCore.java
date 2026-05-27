@@ -27,14 +27,15 @@ import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.dma.inject.DmaModule;
 import net.novaware.nes.core.memory.MemoryBus;
-import net.novaware.nes.core.memory.RecordingDevice;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.ppu.inject.PpuModule;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.IntegerCounter;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 
 @BoardScope
@@ -74,6 +75,9 @@ public abstract class TestNesCore { // TODO: consider TestSubjectFactory name
     @CpuVar(BUS)
     public abstract MemoryBus newCpuBus();
 
+    @CpuVar(CC)
+    public abstract IntegerCounter getCpuCycleCounter();
+
     @CpuVar(DO)
     public abstract DelegatingRegister newDecodedOperand();
 
@@ -95,8 +99,6 @@ public abstract class TestNesCore { // TODO: consider TestSubjectFactory name
     public abstract Ppu newPpu();
 
     public abstract PpuRegFile newPpuRegisters();
-
-    public abstract RecordingDevice newRecordingDevice();
 
     @Component.Builder
     public static abstract class Builder {
