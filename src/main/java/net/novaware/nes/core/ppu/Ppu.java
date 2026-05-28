@@ -12,18 +12,23 @@ import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.table.AttributeTable;
+import net.novaware.nes.core.ppu.table.NameTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DBM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
@@ -32,6 +37,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 /**
  * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
@@ -39,6 +45,8 @@ import static net.novaware.nes.core.util.UTypes.USHORT_0;
  */
 @BoardScope
 public class Ppu implements ClockReceiver {
+
+    private final VideoStandard videoStandard = VideoStandard.NTSC;
 
     private final MemoryBus bus;
 
@@ -48,6 +56,9 @@ public class Ppu implements ClockReceiver {
     @Owned private final BooleanRegister rstReg;
 
     private final PpuRegFile regs;
+
+    private final NameTable nameTable0;
+    private final AttributeTable attributeTable0;
 
     private final PatternTable patternMemory0;
     private final PatternTable patternMemory1;
@@ -72,6 +83,8 @@ public class Ppu implements ClockReceiver {
         @PpuVar(RST) Pin rstPin,
         @PpuVar(RST) BooleanRegister rstReg,
         PpuRegFile regs,
+        @PpuVar(NT0) NameTable nameTable0,
+        @PpuVar(AT0) AttributeTable attributeTable0,
         @PpuVar(PT0) PatternTable patternTable0,
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
@@ -86,6 +99,8 @@ public class Ppu implements ClockReceiver {
         this.rstPin = rstPin;
         this.rstReg = rstReg;
         this.regs = regs;
+        this.nameTable0 = nameTable0;
+        this.attributeTable0 = attributeTable0;
         this.patternMemory0 = patternTable0;
         this.patternMemory1 = patternTable1;
         this.paletteMemory = paletteMemory;
@@ -155,16 +170,23 @@ public class Ppu implements ClockReceiver {
 
         // TODO: on PAL there is no rendering on 0th scan line
 
-        if (regs.dotCounter.getValue() == VideoStandard.NTSC.getPhysicalWidth()) {
+        if (regs.dotCounter.getValue() == videoStandard.getPhysicalWidth()) {
             regs.dotCounter.reset();
             regs.scanLineCounter.increment();
         }
 
+        // fake sprite zero hit
         if (regs.scanLineCounter.getValue() == 20 && regs.dotCounter.getValue() == 5) {
             if (regs.renderSprite.get()) {
                 regs.status.setSpriteZeroHit(true);
                 sprite0Hit.set(LOW);
             }
+        }
+
+        // last dot of last scan line
+        if (regs.scanLineCounter.getValue() == videoStandard.getActiveHeight() - 1 && regs.dotCounter.getValue() == videoStandard.getActiveWidth() - 1) {
+            // TODO: render the frame at once
+            renderFrameAtOncePrototype();
         }
 
         // TODO: check post render scan line vs nmi trigger line
@@ -206,6 +228,48 @@ public class Ppu implements ClockReceiver {
         regs.status.cycle();
 
         return 1; // TODO: return 0 for skipped cycle?
+    }
+
+    private void renderFrameAtOncePrototype() {
+        for(int y = 0; y < videoStandard.getActiveHeight(); y++) {
+            for(int x = 0; x < videoStandard.getActiveWidth(); x++) {
+                if(x % 8 == 0) {
+                    // nt address
+                    bus.access(regs.currentViewPort.get()); // TODO: calculate the address
+                }
+                if (x % 8 == 1) {
+                    // nt data read
+                    @Unsigned byte nt = bus.read().data();
+                }
+                if (x % 8 == 2) {
+                    // at address
+                    bus.access(regs.currentViewPort.get()); // TODO: calculate the address
+                }
+                if (x % 8 == 3) {
+                    // at data read
+                    @Unsigned byte at = bus.read().data();
+                }
+
+                if (x % 8 == 4) {
+                    // pt low address
+                }
+
+                if (x % 8 == 5) {
+                    // pt low data read
+                }
+
+                if (x % 8 == 6) {
+                    // pt hi address
+                }
+
+                if (x % 8 == 7) {
+                    // pt hi data read
+                }
+
+
+                backBuffer.setColor(y, x, ubyte(1));
+            }
+        }
     }
 
     @Override

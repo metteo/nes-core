@@ -24,6 +24,9 @@ public class ViewPortRegister extends Register {
     }
 
     public static final int NAMETABLE_MASK = 0b11;
+    public static final int NAMETABLE_X_MASK = 0b01;
+    public static final int NAMETABLE_Y_MASK = 0b10;
+
     public static final int COARSE_MASK = 0b1_1111;
     public static final int FINE_MASK = 0b111;
 
@@ -92,6 +95,27 @@ public class ViewPortRegister extends Register {
         this.nameTable = nametable & NAMETABLE_MASK;
     }
 
+    public void setNameTableX(int nameTableX) {
+        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (nameTableX & NAMETABLE_X_MASK);
+
+        setNameTable(newNameTable);
+    }
+
+    public int getNameTableX() {
+        return nameTable & NAMETABLE_X_MASK;
+    }
+
+    public void setNameTableY(int nameTableY) {
+        int newNameTable = (nameTableY << 1 & NAMETABLE_Y_MASK) | (nameTable & NAMETABLE_X_MASK);
+
+        setNameTable(newNameTable);
+    }
+
+
+    int getNameTableY() {
+        return nameTable >> 1;
+    }
+
     public int getCoarseY() {
         return coarseY & COARSE_MASK;
     }
@@ -128,17 +152,79 @@ public class ViewPortRegister extends Register {
         this.fineX = fineX & FINE_MASK;
     }
 
-    public void transfer(ViewPortRegister target) {
+    public void incrementY() {
+        int y = ((nameTable & NAMETABLE_Y_MASK) << 7) | (coarseY << 3) | fineY;
+        y = (y + 1) & 0x1_FF;
+
+        int newNameTable = ((y >> 7) & NAMETABLE_Y_MASK) | (nameTable & NAMETABLE_X_MASK);
+        int newCoarseY = (y >> 3) & COARSE_MASK;
+        int newFineY = y & FINE_MASK;
+
+        setNameTable(newNameTable);
+        setCoarseY(newCoarseY);
+        setFineY(newFineY);
+    }
+
+    public void incrementX() {
+        int x = ((nameTable & NAMETABLE_X_MASK) << 4) | (coarseX & 0b1111);
+        x = (x + 1) & 0b11111;
+
+        int newCoarseX = (coarseX & 0b1_0000) | (x & 0b1111);
+        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (x >> 4) & NAMETABLE_X_MASK;
+
+        setCoarseX(newCoarseX);
+        setNameTable(newNameTable);
+    }
+
+    private void assertTransferFromTtoVX(ViewPortRegister target) {
         assertState(
             this.variant == Variant.T && target.variant == Variant.VX,
             "only T -> V transfer is allowed"
         );
+    }
+
+    public void transfer(ViewPortRegister target) {
+        assertTransferFromTtoVX(target);
 
         target.coarseY   = this.coarseY;
         target.coarseX   = this.coarseX;
         target.nameTable = this.nameTable;
         target.fineY     = this.fineY;
         // fineX is not transferred
+    }
+
+    public void transferX(ViewPortRegister target) {
+        assertTransferFromTtoVX(target);
+
+        target.setNameTableX(this.getNameTableX());
+        target.coarseX = this.coarseX;
+        // fineX is not transferred
+    }
+
+    public void transferY(ViewPortRegister target) {
+        assertTransferFromTtoVX(target);
+
+        target.setNameTableY(this.getNameTableY());
+        target.coarseY = this.coarseY;
+        target.fineY = this.fineY;
+    }
+
+    public @Unsigned short getNameTableAddress() {
+        // TODO: consider using vram segment register here
+        return ushort(0x2000 | (sint(get()) & 0xFFF));
+    }
+
+    /**
+     * @see <a href="https://www.nesdev.org/wiki/PPU_scrolling#Tile_and_attribute_fetching">Attribute fetching on nesdev.org</a>
+     */
+    public @Unsigned short getAttrTableAddress() {
+        int base = 0x2000; // TODO: consider using vram segment register here
+        int nt = nameTable << 10;
+        int attr = 0b1111 << 6;
+        int y = (coarseY & 0b11100) << 1;
+        int x = coarseX >> 2;
+        //              10   NN   1111  YYY XXX
+        return ushort(base | nt | attr | y | x );
     }
 
     @Override
