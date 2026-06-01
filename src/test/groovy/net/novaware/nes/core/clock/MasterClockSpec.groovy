@@ -1,5 +1,6 @@
 package net.novaware.nes.core.clock
 
+import net.novaware.nes.core.clock.inject.ClockModule
 import net.novaware.nes.core.config.ImmutableCoreConfig
 import net.novaware.nes.core.config.Platform
 import net.novaware.nes.core.config.Region
@@ -52,8 +53,10 @@ class MasterClockSpec extends Specification {
         }
     }
 
+    def executor = ClockModule.provideClockExecutor()
+
     private MasterClock newMasterClock() {
-        new MasterClock(coreConfig, oddFrame, cpu, ppu, apu, dma)
+        new MasterClock(coreConfig, oddFrame, cpu, ppu, apu, dma, executor)
     }
 
     def "should calculate cycles budget for a frame"() {

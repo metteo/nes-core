@@ -27,6 +27,7 @@ public class ObjAttrMemory implements Nameable {
 
     private final String name;
 
+    // TODO: make it a multiplier: 1x 2x 4x so during ppu cycle 1 or 2 or 4 are evaluated at once?
     public ObjAttrMemory(String name, int secondarySize) {
         this.name = name;
 

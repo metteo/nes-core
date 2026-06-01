@@ -44,9 +44,7 @@ public enum PpuVarName {
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
     OAM ("", "oam", "Object Attribute Memory"),
-
-    DAM ("", "displayA", "Display A Memory"),
-    DBM ("", "displayB", "Display B Memory"),
+    DM  ("", "displayMemory", "DisplayMemory"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),

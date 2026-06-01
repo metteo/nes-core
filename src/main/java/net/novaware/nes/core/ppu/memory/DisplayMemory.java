@@ -13,7 +13,7 @@ public class DisplayMemory implements Nameable {
 
     private final String name;
 
-    private final @Unsigned byte[][] buffer;
+    private final @Unsigned byte[][] buffer; // TODO: allow switching  between back and front buffer?
 
     public DisplayMemory(String name, int height, int width) {
         this.name = name;
@@ -21,7 +21,7 @@ public class DisplayMemory implements Nameable {
         buffer = new @Unsigned byte[height][width];
     }
 
-    // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex etc
+    // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex/transparency? etc
     // if 4 bits is not enough or to slow just use secondary array of the same size but other type.
     // maybe link back to oam for individual sprite / sprite group
 
