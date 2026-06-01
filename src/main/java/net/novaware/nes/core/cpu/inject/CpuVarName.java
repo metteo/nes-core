@@ -43,7 +43,7 @@ public enum CpuVarName {
     // endregion
     // region Memory Devices
 
-    RAM ("", "", "RAM"),
+    RAM ("", "", "Work RAM"),
     PPU ("", "", "Picture Processing Unit"),
     ACR ("", "", "APU Channel Registers"),
     DMA ("", "", "Direct Memory Access"),

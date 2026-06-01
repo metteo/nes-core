@@ -40,11 +40,12 @@ public enum PpuVarName {
     // endregion
 
     VRAM ("", "videoMemory", "Video RAM"),
+    VOUT ("", "videoOut", "Video OUT"),
+
     PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
     OAM ("", "oam", "Object Attribute Memory"),
-    DM  ("", "displayMemory", "DisplayMemory"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),

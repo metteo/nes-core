@@ -6,7 +6,6 @@ import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BankedMemory;
 import net.novaware.nes.core.memory.MemoryBus;
-import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PpuBus;
@@ -16,11 +15,8 @@ import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Quantity;
 
-import static net.novaware.nes.core.config.VideoStandard.ACTIVE_HEIGHT;
-import static net.novaware.nes.core.config.VideoStandard.ACTIVE_WIDTH;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.DM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
@@ -76,14 +72,6 @@ public interface PpuMemModule {
     @PpuVar(OAM)
     static ObjAttrMemory provideObjAttrMemory() {
         return new ObjAttrMemory(OAM.doc(), ObjAttrMemory.SECONDARY_ENTRY_COUNT); // TODO: fill in a way all sprites are hidden and off screen on startup? / reset?
-    }
-
-    @Provides
-    @BoardScope
-    @PpuVar(DM)
-    static DisplayMemory provideDisplayA() {
-        // TODO: fill with regular black on reset?
-        return new DisplayMemory(DM.doc(), ACTIVE_HEIGHT, ACTIVE_WIDTH);
     }
 
     @Binds

@@ -7,12 +7,11 @@ import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.pin.Pin;
-import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.inject.PpuVar;
-import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
+import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.NameTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
@@ -25,7 +24,6 @@ import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.DM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
@@ -64,15 +62,7 @@ public class Ppu implements ClockReceiver {
     private final PaletteMemory paletteMemory;
     private final ObjAttrMemory objAttrMemory;
 
-    // FIXME: ppu should have the buffer directly here but in a separate object
-    // PPU uses a method to write a pixel to back buffer but doesn't know which is it A or B.
-    // when VBlank starts it calls swap method which also triggers the rest of the rendering pipeline for now the front buffer
-    // TODO: also there is a single pixel buffer which delays pixel output to display memory
-
-    // TODO: PPU doesn't hold state of the whole screen. it just outputs dots.
-    //  renderer / virtual display should convert them to rgb/ntsc and assemble into frames
-    private final DisplayMemory displayMemory;
-    private final DisplayPortImpl displayPort;
+    private final VideoOutRegister videoOut;
 
     @Inject
     public Ppu(
@@ -88,8 +78,7 @@ public class Ppu implements ClockReceiver {
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
         @PpuVar(OAM) ObjAttrMemory objAttrMemory,
-        @PpuVar(DM) DisplayMemory displayMemory,
-        DisplayPortImpl displayPort
+        VideoOutRegister videoOut
     ) {
         this.bus = bus;
         this.vBlankInterrupt = vBlankInterrupt;
@@ -104,9 +93,7 @@ public class Ppu implements ClockReceiver {
         this.paletteMemory = paletteMemory;
         this.objAttrMemory = objAttrMemory;
 
-        // will be swapped at the end of frame
-        this.displayPort = displayPort;
-        this.displayMemory = displayMemory;
+        this.videoOut = videoOut;
     }
 
     public void initialize() {
@@ -189,9 +176,6 @@ public class Ppu implements ClockReceiver {
             if (regs.vBlankInterruptEnabled.get()) {
                 vBlankInterrupt.set(LOW); // TODO: only set to low when vblank irq enabled and within vblank. reading status clears vblank flag so level goes high before end of vblank
             }
-
-            displayPort.setDisplayBuffer(displayMemory);
-            displayPort.onFrame(); // TODO: this occupies MasterClock thread so should be just a poke to rendering thread
         }
 
         if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1) {
@@ -253,8 +237,7 @@ public class Ppu implements ClockReceiver {
                     // pt hi data read
                 }
 
-
-                displayMemory.setColor(y, x, ubyte(1));
+                videoOut.set(regs.scanLineCounter.getValue(), regs.dotCounter.getValue(), ubyte(1));
             }
         }
     }
