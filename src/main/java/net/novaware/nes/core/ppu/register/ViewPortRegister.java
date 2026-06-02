@@ -9,6 +9,10 @@ import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
+/**
+ * @see <a href="https://www.nesdev.org/wiki/PPU_scrolling">PPU scrolling on nesdev.org</a>
+ * @see <a href="https://www.nesdev.org/wiki/PPU_rendering#Frame_timing_diagram">Timing diagram on nesdev.org</a>
+ */
 @BoardScope
 public class ViewPortRegister extends Register {
 
@@ -152,6 +156,9 @@ public class ViewPortRegister extends Register {
         this.fineX = fineX & FINE_MASK;
     }
 
+    /**
+     * "Inc. vert(v)" on the timing diagram
+     */
     public void incrementY() {
         int y = ((nameTable & NAMETABLE_Y_MASK) << 7) | (coarseY << 3) | fineY;
         y = (y + 1) & 0x1_FF;
@@ -165,6 +172,9 @@ public class ViewPortRegister extends Register {
         setFineY(newFineY);
     }
 
+    /**
+     * "Inc. hori(v)" on the timing diagram
+     */
     public void incrementX() {
         int x = ((nameTable & NAMETABLE_X_MASK) << 4) | (coarseX & 0b1111);
         x = (x + 1) & 0b11111;
@@ -193,6 +203,9 @@ public class ViewPortRegister extends Register {
         // fineX is not transferred
     }
 
+    /**
+     * "hori(v) = hori(t)" on the timing diagram
+     */
     public void transferX(ViewPortRegister target) {
         assertTransferFromTtoVX(target);
 
@@ -201,6 +214,9 @@ public class ViewPortRegister extends Register {
         // fineX is not transferred
     }
 
+    /**
+     * "vert(v) = vert(t)" on the timing diagram
+     */
     public void transferY(ViewPortRegister target) {
         assertTransferFromTtoVX(target);
 

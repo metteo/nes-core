@@ -27,7 +27,7 @@ public class ObjAttrMemory implements Nameable {
 
     private final String name;
 
-    // TODO: make it a multiplier: 1x 2x 4x so during ppu cycle 1 or 2 or 4 are evaluated at once?
+    // TODO: make it a multiplier: 1x or 2x so during ppu cycle unused nt fetches can be used for sprite fetch
     public ObjAttrMemory(String name, int secondarySize) {
         this.name = name;
 
