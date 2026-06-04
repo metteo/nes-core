@@ -2,9 +2,10 @@ package net.novaware.nes.core.ppu.register;
 
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.register.Register;
-import net.novaware.nes.core.util.Bin;
+import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.ppu.register.ViewPortRegister.Variant.VX;
 import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -188,7 +189,7 @@ public class ViewPortRegister extends Register {
 
     private void assertTransferFromTtoVX(ViewPortRegister target) {
         assertState(
-            this.variant == Variant.T && target.variant == Variant.VX,
+            this.variant == Variant.T && target.variant == VX,
             "only T -> V transfer is allowed"
         );
     }
@@ -245,6 +246,12 @@ public class ViewPortRegister extends Register {
 
     @Override
     public String toString() {
-        return getName() + ": 0b" + Bin.s(get());
+        var fX = variant == VX ? "." + fineX : "";
+
+        return getName() +
+                ": 0x" + Hex.s(get()) +
+                "  NT: " + nameTable +
+                "  Y: " + coarseY + "." + fineY +
+                "  X: " + coarseX + fX;
     }
 }

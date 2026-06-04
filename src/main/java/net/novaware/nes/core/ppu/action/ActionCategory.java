@@ -6,7 +6,8 @@ public enum ActionCategory {
     OAM,
 
     DRAW,
-    REGS,
+    FLAG,
+    VIEW, // port / CAMera / scroll
     MISC,
 
     UNKNOWN,

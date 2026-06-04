@@ -36,7 +36,7 @@ public class ReservedMemory implements MemoryDevice.ReadWrite, Nameable {
     }
 
     private void throwException() {
-        throw new IllegalStateException("Reserved memory range accessed: " + Hex.s(addressLatch));
+        throw new IllegalStateException("Reserved memory range accessed: 0x" + Hex.s(addressLatch));
     }
 
     @Override

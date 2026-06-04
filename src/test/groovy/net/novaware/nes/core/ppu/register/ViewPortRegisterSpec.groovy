@@ -273,4 +273,31 @@ class ViewPortRegisterSpec extends Specification {
         0b11 | 0b000_00 | 0b000_00 || 0b10_11_1111_000_000
         0b11 | 0b111_00 | 0b111_00 || 0b10_11_1111_111_111
     }
+
+    def "should return provide useful VX toString"() {
+        given:
+        v.set(ushort(addr))
+        v.setFineX(fX)
+
+        expect:
+        v.toString() == s
+
+        where:
+        addr   | fX  || s
+        0x2345 | 3   || "PPU.VX: 0x2345  NT: 0  Y: 26.2  X: 5.3"
+        0x3FFF | 7   || "PPU.VX: 0x3FFF  NT: 3  Y: 31.3  X: 31.7" // fY goes out of 14 bit range by 1 bit
+    }
+
+    def "should return provide useful T toString"() {
+        given:
+        t.set(ushort(addr))
+
+        expect:
+        t.toString() == s
+
+        where:
+        addr   || s
+        0x2345 || "PPU.T: 0x2345  NT: 0  Y: 26.2  X: 5"
+        0x3FFF || "PPU.T: 0x3FFF  NT: 3  Y: 31.3  X: 31" // fY goes out of 14 bit range by 1 bit
+    }
 }

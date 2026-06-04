@@ -3,6 +3,11 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.config.CoreConfig;
+import net.novaware.nes.core.config.ImmutableCoreConfig;
+import net.novaware.nes.core.config.Platform;
+import net.novaware.nes.core.config.Region;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.internal.EdgeDetector;
 import net.novaware.nes.core.cpu.signal.internal.LevelDetector;
 import net.novaware.nes.core.pin.Pin;
@@ -49,5 +54,16 @@ public interface PpuDepModule {
     static Pin provideSprite0HitPin(@PpuVar(S0H) BooleanRegister register) {
         LevelDetector detector = new LevelDetector(S0H.name(), LOW);
         return new LatchingPin(S0H.name(), detector, register::set);
+    }
+
+    @Provides
+    @BoardScope
+    static CoreConfig provideCoreConfig() { // TODO: just a stub for standalone mode. Clean up all these builder usages
+        return ImmutableCoreConfig.builder()
+                .setRecordCpuBus(true)
+                .setRegion(Region.USA)
+                .setPlatform(Platform.NES_FAMICOM)
+                .setVideoStandard(VideoStandard.NTSC)
+                .build();
     }
 }

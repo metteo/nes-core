@@ -15,6 +15,7 @@ import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.NameTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
+import net.novaware.nes.core.ppu.unit.ControlUnit;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
@@ -63,6 +64,7 @@ public class Ppu implements ClockReceiver {
     private final ObjAttrMemory objAttrMemory;
 
     private final VideoOutRegister videoOut;
+    private final ControlUnit controlUnit;
 
     @Inject
     public Ppu(
@@ -78,7 +80,8 @@ public class Ppu implements ClockReceiver {
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
         @PpuVar(OAM) ObjAttrMemory objAttrMemory,
-        VideoOutRegister videoOut
+        VideoOutRegister videoOut,
+        ControlUnit controlUnit
     ) {
         this.bus = bus;
         this.vBlankInterrupt = vBlankInterrupt;
@@ -94,6 +97,7 @@ public class Ppu implements ClockReceiver {
         this.objAttrMemory = objAttrMemory;
 
         this.videoOut = videoOut;
+        this.controlUnit = controlUnit;
     }
 
     public void initialize() {
@@ -141,11 +145,6 @@ public class Ppu implements ClockReceiver {
     }
 
     public int cycle0() {
-        if (rstReg.get()) {
-            reset();
-            return 0;
-        }
-
         regs.cycleCounter.increment();
         regs.dotCounter.increment();
 
@@ -196,8 +195,6 @@ public class Ppu implements ClockReceiver {
             regs.resetLock.set(false); // TODO: should happen on the first pre-render scanline
         }
 
-        regs.status.cycle();
-
         return 1; // TODO: return 0 for skipped cycle?
     }
 
@@ -244,7 +241,17 @@ public class Ppu implements ClockReceiver {
 
     @Override
     public int cycle() {
-        return cycle0();
+        if (rstReg.get()) {
+            reset();
+            return 0;
+        }
+
+        int spent = cycle0();
+//        int spent = controlUnit.cycle();
+
+        regs.status.cycle();
+
+        return spent;
     }
 
     public void reset(Signal s) {

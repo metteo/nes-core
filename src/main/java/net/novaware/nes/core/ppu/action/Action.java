@@ -4,7 +4,8 @@ import static net.novaware.nes.core.ppu.action.ActionCategory.BUS;
 import static net.novaware.nes.core.ppu.action.ActionCategory.DRAW;
 import static net.novaware.nes.core.ppu.action.ActionCategory.MISC;
 import static net.novaware.nes.core.ppu.action.ActionCategory.OAM;
-import static net.novaware.nes.core.ppu.action.ActionCategory.REGS;
+import static net.novaware.nes.core.ppu.action.ActionCategory.FLAG;
+import static net.novaware.nes.core.ppu.action.ActionCategory.VIEW;
 
 /**
  * @see gemini: NES Timelines
@@ -27,11 +28,11 @@ public enum Action {
     ACCESS_BG_HI_BITS_ADDRESS  ("BHA", BUS),
     READ_BG_HI_BITS_DATA       ("BHD", BUS),
 
-    UNUSED_NAME_TABLE_ADDRESS  ("NTAU", BUS),
-    UNUSED_NAME_TABLE_DATA     ("NTAU", BUS),
+    UNUSED_NAME_TABLE_ADDRESS  ("NAU", BUS),
+    UNUSED_NAME_TABLE_DATA     ("NDU", BUS),
                                     // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
-    IGNORED_NAME_TABLE_ADDRESS ("NTAI", BUS),
-    IGNORED_NAME_TABLE_DATA    ("NTAI", BUS),
+    IGNORED_NAME_TABLE_ADDRESS ("NAI", BUS),
+    IGNORED_NAME_TABLE_DATA    ("NDI", BUS),
 
     ACCESS_SP_LO_BITS_ADDRESS  ("SLA", BUS),
     READ_SP_LO_BITS_DATA       ("SLD", BUS),
@@ -51,16 +52,21 @@ public enum Action {
     RENDER ("RDR", DRAW),
 
     // endregion
-    // region Regs
+    // region View
 
-    INCREMENT_X     ("INX", REGS),
-    INCREMENT_Y     ("INY", REGS),
+    INCREMENT_X      ("INX", VIEW),
+    INCREMENT_Y      ("INY", VIEW),
 
-    TRANSFER_T_TO_X ("TTX", REGS),
-    TRANSFER_T_TO_Y ("TTY", REGS),
+    TRANSFER_TX_TO_X ("TTX", VIEW), // h
+    TRANSFER_TY_TO_Y ("TTY", VIEW), // v
 
-    SET_VBLANK      ("SEV", REGS),
-    CLR_STATUS      ("CLS", REGS),
+    // endregion
+    // region Flag
+
+    SET_VBLANK      ("SEV", FLAG),
+    SET_HBLANK      ("SEH", FLAG),
+    CLR_HBLANK      ("CLH", FLAG),
+    CLR_STATUS      ("CLS", FLAG),
 
     // endregion
     // region Misc
