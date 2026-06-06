@@ -30,13 +30,11 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.PA;
 /**
  * Current implementation is almost compatible with nestest.nes golden nestest.log
  */
-public class DiagnosticUnit implements Unit, Runnable {
+public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the whole unit as pluggable within Board. Control if it's on with dagger
 
-    private static final boolean logging = !true; // TODO: parametrize, but keep as compile time constant somehow
+    private static final boolean logging = !true;
 
-    @Used
-    private final ShortRegister prefetchAddress;
-
+    @Used private final ShortRegister prefetchAddress;
     @Used private final ByteRegister currentInstruction;
     private final ShortRegister currentOperand;
     private final InstructionRegister decodedInstruction;

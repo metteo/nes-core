@@ -4,4 +4,5 @@ import spock.lang.Specification
 
 class PpuCT extends Specification {
     // TODO: init fake chr-rom with data, name/attr tables and oam, verify ppu renders a frame correctly without cpu
+    // TODO: use PpuCore as an instance source.
 }

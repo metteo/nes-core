@@ -258,6 +258,7 @@ public record NesMeta(
         // TODO: invariants
     }
 
+    // FIXME: layout is for vram, not rom / pattern tables
     public record VideoData(Layout layout, Quantity size) {
         // TODO: invariants
     }

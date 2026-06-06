@@ -5,6 +5,8 @@ import net.novaware.nes.core.util.RegsAndRamBaseSpec
 
 class CpuCT extends RegsAndRamBaseSpec {
 
+    // TODO: switch to CpuCore as instance source to verify cpu runs fine in standalone
+
     def "should start at reset vector"() {
         given:
         ram(

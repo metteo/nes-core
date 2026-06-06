@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.memory
 
-import net.novaware.nes.core.ppu.inject.PpuMemModule
+import net.novaware.nes.core.board.inject.BoardMemModule
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ubyte
@@ -20,7 +20,7 @@ class DisplayMemorySpec extends Specification {
 
     def "should store and load color values"() {
         given:
-        def instance = PpuMemModule.provideDisplayA()
+        def instance = BoardMemModule.provideDisplayMemory()
 
         when:
         instance.setColor(y, x, ubyte(colorIn))

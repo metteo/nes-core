@@ -1,13 +1,10 @@
 package net.novaware.nes.core.cpu.inject;
 
 import dagger.Binds;
-import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
-import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.apu.memory.ApuMemDevice;
-import net.novaware.nes.core.apu.register.ApuRegFile;
-import net.novaware.nes.core.config.CoreConfig;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.dma.memory.DmaMemDevice;
 import net.novaware.nes.core.io.register.IoRegFile;
@@ -15,13 +12,10 @@ import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.memory.RecordingDevice;
-import net.novaware.nes.core.ppu.memory.PpuMemDevice;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
@@ -30,13 +24,10 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RES;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.SS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
@@ -69,22 +60,6 @@ public interface CpuMemModule {
         PhysicalMemory ram = new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE)
             .fill(() -> UBYTE_MAX_VALUE); // TODO: use configurable filler
         return ram;
-    }
-
-    @Binds
-    @BoardScope
-    @CpuVar(PPU)
-    MemoryDevice.ReadWrite bindPpuMemDevice(PpuMemDevice ppuMemDevice);
-
-    @Provides
-    @BoardScope
-    @CpuVar(ACR)
-    static MemoryDevice.WriteOnly provideApuRegs(ApuRegFile apuRegFile) {
-        return new ByteRegisterMemory(
-            "APU.REGS",
-            APU_REGISTERS_START, APU_REGISTERS_END,
-            apuRegFile.getCpuRegisters()
-        );
     }
 
     @Binds
@@ -122,22 +97,10 @@ public interface CpuMemModule {
         return new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE);
     }
 
-    @Provides
+    @Binds
     @BoardScope
     @CpuVar(BUS)
-    static MemoryBus provideMemoryBus(
-        CoreConfig config,
-        Lazy<RecordingDevice> recordingDevice, // TODO: get rid of this. Rec Expansion should be attached in test code
-        Lazy<CpuBus> cpuBus
-    ) {
-        CpuBus theBus = cpuBus.get();
-
-        if (config.getRecordCpuBus()) {
-            theBus.attachExpansion(recordingDevice.get());
-        }
-
-        return theBus;
-    }
+    MemoryBus bindMemoryBus(CpuBus cpuBus);
 
     @Provides
     @BoardScope

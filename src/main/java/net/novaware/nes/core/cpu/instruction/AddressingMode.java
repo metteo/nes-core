@@ -72,9 +72,9 @@ public enum AddressingMode {
      * Format of the operand
      * Uses following for encoding data / address:
      * <ul>
-     *     <li>BYTE - 8 bit unsigned</li>
-     *     <li>SBYTE - 8 bit signed</li>
-     *     <li>WORD - 16 bit unsigned</li>
+     *     <li>BYTE - 8-bit unsigned</li>
+     *     <li>SBYTE - 8-bit signed</li>
+     *     <li>WORD - 16-bit unsigned</li>
      * </ul>
      */
     public String format() {

@@ -12,7 +12,7 @@ class CpuBusSpec extends Specification {
 
     def cycleCounter = new IntegerCounter("CPUCC")
     def instructionCycle = new IntegerCounter("CPUCC")
-    def rec = new RecordingDevice(cycleCounter)
+    def rec = new RecordingDevice(MEMORY_START, MEMORY_END, cycleCounter)
     def ram = new PhysicalMemory("RAM", RAM_START, RAM_MIRROR_END, RAM_SIZE)
     def ppu = new PhysicalMemory("PPU", PPU_REGISTERS_START, PPU_REGISTERS_END, PPU_REGISTERS_MIRROR_SIZE)
     def apuChannelRegs = new PhysicalMemory("ACR", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE)

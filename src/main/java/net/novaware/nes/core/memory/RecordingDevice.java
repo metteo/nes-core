@@ -1,8 +1,5 @@
 package net.novaware.nes.core.memory;
 
-import jakarta.inject.Inject;
-import net.novaware.nes.core.board.inject.BoardScope;
-import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -10,9 +7,6 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_END;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_START;
 import static net.novaware.nes.core.memory.BusOp.ADDRESS_ACCESS;
 import static net.novaware.nes.core.memory.BusOp.CONTROL_READ;
 import static net.novaware.nes.core.memory.BusOp.CONTROL_WRITE;
@@ -22,7 +16,6 @@ import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-@BoardScope
 public class RecordingDevice implements MemoryDevice.ReadWrite {
 
     public record Op (
@@ -53,15 +46,21 @@ public class RecordingDevice implements MemoryDevice.ReadWrite {
     private @Unsigned short addressLatch;
     private @Unsigned byte dataLatch;
 
+    private final @Unsigned short startAddress;
+    private final @Unsigned short endAddress;
     private final IntegerCounter cycleCounter;
+
     private int recordedCycle;
 
     private List<Op> activity = new ArrayList<>();
 
-    @Inject
     public RecordingDevice(
-        @CpuVar(CC) IntegerCounter cycleCounter
+        @Unsigned short startAddress,
+        @Unsigned short endAddress,
+        IntegerCounter cycleCounter
     ) {
+        this.startAddress = startAddress;
+        this.endAddress = endAddress;
         this.cycleCounter = cycleCounter;
     }
 
@@ -80,12 +79,12 @@ public class RecordingDevice implements MemoryDevice.ReadWrite {
 
     @Override
     public @Unsigned short getStartAddress() {
-        return MEMORY_START;
+        return startAddress;
     }
 
     @Override
     public @Unsigned short getEndAddress() {
-        return MEMORY_END;
+        return endAddress;
     }
 
     @Override

@@ -16,6 +16,10 @@ public class BooleanRegister extends Register {
         this.value = value;
     }
 
+    public void toggle() {
+        value = !value;
+    }
+
     @Override
     public String toString() {
         return getName() + ": " + get();

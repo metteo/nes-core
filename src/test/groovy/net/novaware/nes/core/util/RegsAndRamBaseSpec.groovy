@@ -1,6 +1,5 @@
 package net.novaware.nes.core.util
 
-
 import net.novaware.nes.core.TestNesCore
 import net.novaware.nes.core.cart.Cartridge
 import net.novaware.nes.core.cpu.instruction.Instruction
@@ -13,6 +12,8 @@ import spock.lang.Specification
 
 import static UTypes.ubyte
 import static UTypes.ushort
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_END
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.MEMORY_START
 
 class RegsAndRamBaseSpec extends Specification {
 
@@ -25,10 +26,11 @@ class RegsAndRamBaseSpec extends Specification {
 
     Cartridge cart = Cartridge.of(NesFileBuilder.marioBros().build())
 
-    RecordingDevice rec = factory.newRecordingDevice()
+    RecordingDevice rec = new RecordingDevice(MEMORY_START, MEMORY_END, factory.getCpuCycleCounter())
 
     def setup() {
         bus.attachCartridge(cart.getCpuBusDevice())
+        bus.attachExpansion(rec)
     }
 
     def regs(Map args) {

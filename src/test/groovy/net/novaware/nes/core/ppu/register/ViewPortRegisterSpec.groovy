@@ -85,4 +85,219 @@ class ViewPortRegisterSpec extends Specification {
         0b0000_0000 | 0b0000_0000 || 0b111 | 0b000 | 0b00 | 0b00000 | 0b00000
         0b0111_1111 | 0b1111_1111 || 0b111 | 0b111 | 0b11 | 0b11111 | 0b11111
     }
+
+    def "should get/set name table x component separately"() {
+        given:
+        v.setNameTable(inNameTable)
+
+        when:
+        v.setNameTableX(nameTableX)
+
+        then:
+        v.getNameTable() == outNameTable
+        v.getNameTableX() == nameTableX
+
+        where:
+        inNameTable | nameTableX || outNameTable
+        0b00        | 0b0          || 0b00
+        0b00        | 0b1          || 0b01
+        0b01        | 0b0          || 0b00
+        0b01        | 0b1          || 0b01
+    }
+
+    def "should get/set name table y component separately"() {
+        given:
+        v.setNameTable(inNameTable)
+
+        when:
+        v.setNameTableY(inNameTableY)
+
+        then:
+        v.getNameTable() == outNameTable
+        v.getNameTableY() == outNameTableY
+
+        where:
+        inNameTable | inNameTableY || outNameTable | outNameTableY
+        0b00        | 0b0          || 0b00         | 0b0
+        0b00        | 0b1          || 0b10         | 0b1
+        0b10        | 0b0          || 0b00         | 0b0
+        0b10        | 0b1          || 0b10         | 0b1
+    }
+
+    def "should increment x"() {
+        given:
+        v.setNameTable(inNt)
+        v.setFineX(inFineX)
+        v.setCoarseX(inCoarseX)
+
+        when:
+        v.incrementX()
+
+        then:
+        v.getNameTable() == outNt
+        v.getFineX() == outFineX
+        v.getCoarseX() == outCoarseX
+
+        // no wrapping to Y
+        v.getFineY() == 0
+        v.getCoarseY() == 0
+
+        where:
+         inNt | inFineX | inCoarseX || outNt | outFineX | outCoarseX | comment
+         0b00 | 0b000   | 0b0_0000  || 0b00  | 0b000    | 0b0_0001   | "basic"
+         0b00 | 0b000   | 0b0_1110  || 0b00  | 0b000    | 0b0_1111   | "before overflow to nt"
+         0b00 | 0b000   | 0b0_1111  || 0b01  | 0b000    | 0b0_0000   | "overflow to nt 1"
+         0b01 | 0b000   | 0b0_1111  || 0b00  | 0b000    | 0b0_0000   | "overflow to nt 0"
+    }
+
+    def "should increment y"() {
+        given:
+        v.setNameTable(inNt)
+        v.setCoarseY(inCoarseY)
+        v.setFineY(inFineY)
+
+        when:
+        v.incrementY()
+
+        then:
+        v.getNameTable() == outNt
+        v.getCoarseY() == outCoarseY
+        v.getFineY() == outFineY
+
+        v.getFineX() == 0
+        v.getCoarseX() == 0
+
+        where:
+        inNt | inCoarseY | inFineY || outNt | outCoarseY | outFineY | comment
+        0b00 | 0b0_0000  | 0b000   || 0b00  | 0b0_0000   | 0b001    | "basic"
+        0b00 | 0b0_0000  | 0b110   || 0b00  | 0b0_0000   | 0b111    | "before fine overflow"
+        0b00 | 0b0_0000  | 0b111   || 0b00  | 0b0_0001   | 0b000    | "overflow to coarse"
+        0b00 | 0b1_1111  | 0b110   || 0b00  | 0b1_1111   | 0b111    | "before coarse overflow"
+        0b00 | 0b1_1111  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
+        0b10 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
+    }
+
+    def "should transfer X from T to V"() {
+        given:
+        t.setNameTableX(ntX)
+        t.setCoarseX(coarseX)
+        // t.fineX doesn't exist
+
+        when:
+        t.transferX(v)
+
+        then:
+        t.getNameTableX() == ntX
+        t.getCoarseX() == coarseX
+
+        v.getNameTableX() == ntX
+        v.getCoarseX() == coarseX
+
+        v.getFineX() == 0
+        v.getFineY() == 0
+        v.getCoarseY() == 0
+        v.getNameTableY() == 0
+
+        where:
+        ntX | coarseX
+        0b0 | 0b00000
+        0b0 | 0b11111
+        0b1 | 0b00000
+        0b1 | 0b11111
+    }
+
+    def "should transfer Y from T to V"() {
+        given:
+        t.setNameTableY(ntY)
+        t.setCoarseY(coarseY)
+        t.setFineY(fineY)
+
+        when:
+        t.transferY(v)
+
+        then:
+        t.getNameTableY() == ntY
+        t.getCoarseY() == coarseY
+        t.getFineY() == fineY
+
+        v.getNameTableY() == ntY
+        v.getCoarseY() == coarseY
+        v.getFineY() == fineY
+
+        v.getFineX() == 0
+        v.getCoarseX() == 0
+        v.getNameTableX() == 0
+
+        where:
+        ntY | coarseY | fineY
+        0b0 | 0b00000 | 0b000
+        0b0 | 0b00000 | 0b111
+        0b0 | 0b11111 | 0b000
+        0b1 | 0b00000 | 0b000
+        0b1 | 0b11111 | 0b111
+    }
+
+    def "should return name table address"() {
+        given:
+        v.setNameTable(nt)
+        v.setCoarseX(coarseX)
+        v.setCoarseY(coarseY)
+
+        expect:
+        v.getNameTableAddress() == ushort(ntAddr)
+
+        where:
+        nt   | coarseY | coarseX || ntAddr
+        0b00 | 0b00000 | 0b00000 || 0b10_00_00000_00000
+        0b00 | 0b00000 | 0b11111 || 0b10_00_00000_11111
+        0b00 | 0b11111 | 0b00000 || 0b10_00_11111_00000
+        0b11 | 0b00000 | 0b00000 || 0b10_11_00000_00000
+        0b11 | 0b11111 | 0b11111 || 0b10_11_11111_11111 // TODO: seems like attribute table? sus
+    }
+
+    def "should return attr table address"() {
+        given:
+        v.setNameTable(nt)
+        v.setCoarseX(coarseX)
+        v.setCoarseY(coarseY)
+
+
+        expect:
+        v.getAttrTableAddress() == ushort(atAddr)
+
+        where:
+        nt   | coarseY  | coarseX  || atAddr
+        0b00 | 0b000_00 | 0b000_00 || 0b10_00_1111_000_000
+        0b00 | 0b000_00 | 0b111_00 || 0b10_00_1111_000_111
+        0b00 | 0b111_00 | 0b000_00 || 0b10_00_1111_111_000
+        0b11 | 0b000_00 | 0b000_00 || 0b10_11_1111_000_000
+        0b11 | 0b111_00 | 0b111_00 || 0b10_11_1111_111_111
+    }
+
+    def "should return provide useful VX toString"() {
+        given:
+        v.set(ushort(addr))
+        v.setFineX(fX)
+
+        expect:
+        v.toString() == s
+
+        where:
+        addr   | fX  || s
+        0x2345 | 3   || "PPU.VX: 0x2345  NT: 0  Y: 26.2  X: 5.3"
+        0x3FFF | 7   || "PPU.VX: 0x3FFF  NT: 3  Y: 31.3  X: 31.7" // fY goes out of 14 bit range by 1 bit
+    }
+
+    def "should return provide useful T toString"() {
+        given:
+        t.set(ushort(addr))
+
+        expect:
+        t.toString() == s
+
+        where:
+        addr   || s
+        0x2345 || "PPU.T: 0x2345  NT: 0  Y: 26.2  X: 5"
+        0x3FFF || "PPU.T: 0x3FFF  NT: 3  Y: 31.3  X: 31" // fY goes out of 14 bit range by 1 bit
+    }
 }

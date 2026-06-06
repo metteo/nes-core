@@ -35,18 +35,17 @@ public enum PpuVarName {
     GS ("MASK.G", "", "Greyscale Mode"),
 
     OF ("", "oddFrame", "Odd Frame"),
-    RL ("", "resetLock", "Reset Lock"),
+    RL ("", "resetLock", "Reset Lock"), // TODO: rename to init frame / phase / register lock?
 
     // endregion
 
     VRAM ("", "videoMemory", "Video RAM"),
+    VOUT ("", "videoOut", "Video OUT"),
+
     PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
-    OAM ("", "oam", "Object Attribute Memory"), // FIXME: There is Primary (64) and Secondary (32) OAM!
-
-    DAM ("", "displayA", "Display A Memory"),
-    DBM ("", "displayB", "Display B Memory"),
+    OAM ("", "oam", "Object Attribute Memory"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),

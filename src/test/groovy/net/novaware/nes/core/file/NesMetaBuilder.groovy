@@ -1,6 +1,6 @@
-package net.novaware.nes.core.file;
+package net.novaware.nes.core.file
 
-import net.novaware.nes.core.file.NesMeta.Layout;
+import net.novaware.nes.core.file.NesMeta.Layout
 import net.novaware.nes.core.file.NesMeta.VideoStandard
 import net.novaware.nes.core.test.TestDataBuilder
 import net.novaware.nes.core.util.QuantityBuilder
@@ -8,11 +8,8 @@ import net.novaware.nes.core.util.QuantityBuilder
 import static net.novaware.nes.core.file.NesMeta.System.NES
 import static net.novaware.nes.core.file.NesMeta.System.PLAY_CHOICE_10
 import static net.novaware.nes.core.file.ProgramMemoryBuilder.battery8kb
-import static net.novaware.nes.core.file.ProgramMemoryBuilder.none
-import static net.novaware.nes.core.util.QuantityBuilder.banks16kb
-import static net.novaware.nes.core.util.QuantityBuilder.banks512b
-import static net.novaware.nes.core.util.QuantityBuilder.banks8kb
-import static net.novaware.nes.core.util.QuantityBuilder.bytes
+import static net.novaware.nes.core.file.ProgramMemoryBuilder.volatile8kb
+import static net.novaware.nes.core.util.QuantityBuilder.*
 
 class NesMetaBuilder implements TestDataBuilder<NesMeta> {
 
@@ -45,7 +42,7 @@ class NesMetaBuilder implements TestDataBuilder<NesMeta> {
                 .mapper(0)
                 .busConflicts(false)
                 .trainer(banks512b(0))
-                .programMemory(none())
+                .programMemory(volatile8kb(1))
                 .programData(banks16kb(1))
                 .videoMemory(banks8kb(0))
                 .videoData(VideoDataBuilder.vertical(1))

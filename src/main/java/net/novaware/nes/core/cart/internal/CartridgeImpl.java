@@ -63,7 +63,6 @@ public class CartridgeImpl implements Cartridge {
         assertArgument(meta.system() == NesMeta.System.NES, "only NES is supported");
         assertArgument(meta.videoStandard() == NTSC || meta.videoStandard() == NTSC_DUAL, "only NTSC supported");
 
-        ByteBuffer trainer = nesFile.data().trainer(); // TODO: copy into WRAM: 0x7000 to 0x71FF
         ByteBuffer program = nesFile.data().program();
 
         Quantity programDataQuantity = nesFile.meta().programData();
@@ -79,29 +78,38 @@ public class CartridgeImpl implements Cartridge {
         programData.mapVirtualToPhysical(1, programDataQuantity.amount() == 1 ? 0 : 1);
         cpuBusDevice.attach(programData);
 
-        // TODO: only if not disabled
-        PhysicalMemory programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
-                .fill(filler);
-        cpuBusDevice.attach(programMemory);
+        // TODO: all addresses should come from memory map and update segment registers
+        switch (meta.programMemory().kind()) {
+            case VOLATILE -> {
+                ByteBuffer trainer = nesFile.data().trainer(); // TODO: copy into WRAM: 0x7000 to 0x71FF
+                PhysicalMemory programMemory = new PhysicalMemory("WRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
+                        .fill(filler);
+                cpuBusDevice.attach(programMemory);
+            }
+            case PERSISTENT -> {
+                PhysicalMemory programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
+                        .fill(filler);
+                cpuBusDevice.attach(programStorage);
+            }
+            case NONE -> {}
+            case UNKNOWN -> throw new IllegalStateException("program memory kind should be known at this point");
+        }
 
-        // TODO: only if battery
-        PhysicalMemory programStorage = new PhysicalMemory("SRAM", ushort(0x6000), ushort(0x7FFF), 8 * 1024)
-                .fill(filler);
+        if (meta.videoData().size().amount() > 0) {
+            BankedMemory videoData = new BankedMemory("CHR-ROM", ushort(0x0000), new Quantity(1, BANK_8KB))
+                    .setVirtualBanks(new Quantity(1, BANK_8KB))
+                    .setPhysicalBanks(meta.videoData().size());
 
-        BankedMemory videoData = new BankedMemory("CHR-ROM", ushort(0x0000), new Quantity(1, BANK_8KB))
-            .setVirtualBanks(new Quantity(1, BANK_8KB))
-            .setPhysicalBanks(new Quantity(1, BANK_8KB));
-
-        videoData.preloadPhysicalBanks(nesFile.data().video());
-        videoData.mapVirtualToPhysical(0, 0);
+            videoData.preloadPhysicalBanks(nesFile.data().video());
+            videoData.mapVirtualToPhysical(0, 0);
+            ppuBusDevice.attach(videoData);
+        }
 
         // TODO: banked memory but only if 4 screen
         PhysicalMemory videoMemory = new PhysicalMemory("VRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024)
                 .fill(filler);
         PhysicalMemory videoStorage = new PhysicalMemory("NVVRAM", ushort(0x2000), ushort(0x2FFF), 2 * 1024)
                 .fill(filler);
-
-        ppuBusDevice.attach(videoData);
 
         ReservedMemory unusedPpu = new ReservedMemory("Unused PPU", UNUSED_START, UNUSED_END);
         ppuBusDevice.attach(unusedPpu);

@@ -10,6 +10,7 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.UBYTE_0
+import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
@@ -283,17 +284,23 @@ class PpuMemDeviceSpec extends Specification {
     def "should read from OAM"() {
         given:
         def cpuBus = newCpuBus()
-        def value = ubyte(0x34)
+        def addr = ubyte(address)
+        def val = ubyte(value)
 
-        oam.write(ubyte(0x12), value)
+        oam.writePrimary(addr, val)
 
         when:
-        cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(ubyte(0x12))
+        cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(addr)
         def read = cpuBus.access(PPU_OAM_DATA_REGISTER).read().data()
 
         then:
-        oamAddress.getAsInt() == 0x12 // no increment
-        read == value
+        oamAddress.get() == addr // no increment
+        sint(read) == actualVal
+
+        where:
+        address | value || actualVal
+        0x12    | 0x34  || 0x34 & 0xE3 // attributes unused bits as 0s
+        0x13    | 0x35  || 0x35
     }
 
     def "should write to OAM"() {
@@ -307,8 +314,8 @@ class PpuMemDeviceSpec extends Specification {
 
         then:
         oamAddress.getAsInt() == 0x14 // incremented
-        oam.read(ubyte(0x12)) == ubyte(0x34)
-        oam.read(ubyte(0x13)) == ubyte(0x56)
+        oam.readPrimary(ubyte(0x12)) == ubyte(0x34 & 0xE3) // attributes unused bits as 0s
+        oam.readPrimary(ubyte(0x13)) == ubyte(0x56)
     }
 
     def "should update PPU scroll"() {

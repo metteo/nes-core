@@ -13,7 +13,6 @@ import net.novaware.nes.core.register.IntegerCounter;
 import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -33,7 +32,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
     public final VideoStandard videoStandard;
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor;
     private @Nullable Future<?> future = null;
     public Consumer<Exception> exceptionHandler = _ -> {};
 
@@ -65,7 +64,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         @Named("CPU") ClockReceiver cpu,
         @Named("PPU") ClockReceiver ppu,
         @Named("APU") ClockReceiver apu,
-        @Named("DMA") ClockReceiver dma
+        @Named("DMA") ClockReceiver dma,
+        @Named("CLK") ExecutorService clockExecutor
     ) {
         this.videoStandard = coreConfig.getVideoStandard();
 
@@ -75,6 +75,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         this.ppu = ppu;
         this.apu = apu;
         this.dma = dma;
+
+        this.executor = clockExecutor;
     }
 
     public void runFrame() {

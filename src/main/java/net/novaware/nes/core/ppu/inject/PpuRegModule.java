@@ -4,6 +4,7 @@ import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
+import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -36,6 +37,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.VOUT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
 
@@ -235,5 +237,11 @@ public interface PpuRegModule {
     @PpuVar(RST)
     static BooleanRegister provideRstRegister() {
         return new BooleanRegister(RST.name());
+    }
+
+    @Provides
+    @BoardScope
+    static VideoOutRegister provideVideoOutRegister() {
+        return new VideoOutRegister(VOUT.doc());
     }
 }

@@ -57,7 +57,7 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
- * @see https://www.nesdev.org/wiki/PPU_pinout
+ * @see <a href="https://www.nesdev.org/wiki/PPU_pinout">PPU pinout on nesdev.org</a>
  *
  * TODO: expose PPU pinout on Ppu class and direct calls from CPU through this class into Ppu class
  * TODO: implement register set delays for ppu usecase, maybe replace the latch class in irq disable case
@@ -108,10 +108,10 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private @Unsigned short addressLatch;
 
     @Inject
-    public PpuMemDevice(
+    public PpuMemDevice( // TODO: inject the segment register with start / end to allow no cpu usage
         @PpuVar(BUS) MemoryBus ppuBus,
         PaletteMemory palette,
-        ObjAttrMemory oam,
+        @PpuVar(OAM) ObjAttrMemory oam,
 
         @PpuVar(VX) ViewPortRegister currentViewPort,
         @PpuVar(T) ViewPortRegister tempViewPort,
@@ -347,7 +347,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @Override
         public void onRead() {
             @Unsigned byte oamAddr = oamAddressLatch.get();
-            @Unsigned byte oamData = oam.read(oamAddr);
+            @Unsigned byte oamData = oam.readPrimary(oamAddr);
 
             dataLine.data(oamData);
         }
@@ -357,7 +357,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             @Unsigned byte oamAddr = oamAddressLatch.get();
             @Unsigned byte oamData = dataLine.data();
 
-            oam.write(oamAddr, oamData);
+            oam.writePrimary(oamAddr, oamData);
 
             oamAddressLatch.setAsByte(sint(oamAddr) + 1);
         }

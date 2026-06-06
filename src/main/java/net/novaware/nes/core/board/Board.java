@@ -9,6 +9,7 @@ import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.signal.Signal;
+import net.novaware.nes.core.dma.Dma;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.DisplayPort;
@@ -16,6 +17,7 @@ import net.novaware.nes.core.port.internal.DebugPortImpl;
 import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
+import net.novaware.nes.core.video.VideoEncoder;
 
 // TODO: thread safety! Make this an interface which has 2 implementations:
 //       - business logic, which assumes execution within single thread
@@ -41,7 +43,13 @@ public class Board {
     private final Cpu cpu;
 
     @Owned
+    private final Dma dma;
+
+    @Owned
     private final Ppu ppu;
+
+    @Owned
+    private final VideoEncoder videoEncoder;
 
     @Owned
     private final Apu apu;
@@ -63,7 +71,9 @@ public class Board {
     @Inject
     /* package */ Board(
         final Cpu cpu,
+        final Dma dma,
         final Ppu ppu,
+        final VideoEncoder videoEncoder,
         final Apu apu,
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
@@ -71,7 +81,9 @@ public class Board {
         final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
+        this.dma = dma;
         this.ppu = ppu;
+        this.videoEncoder = videoEncoder;
         this.apu = apu;
 
         this.cartridgePort = cartridgePort;

@@ -13,6 +13,7 @@ import java.util.List;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.*;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
+import static net.novaware.nes.core.ppu.unit.PaletteData.COLOR_TRANSPARENT;
 import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -48,10 +49,9 @@ public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
                 .fill(black);
         mask = palettes.capacity() - 1;
 
-        final @Unsigned byte notAColor = ubyte(0x40);
         // Poison mirrored, unreachable slots
         List.of(0x10, 0x14, 0x18, 0x1C)
-                .forEach(i -> palettes.put(i, notAColor));
+                .forEach(i -> palettes.put(i, COLOR_TRANSPARENT));
     }
 
     @Override
