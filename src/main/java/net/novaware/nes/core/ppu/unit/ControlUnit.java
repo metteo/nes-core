@@ -258,7 +258,8 @@ public class ControlUnit {
         return renderingViewActions;
     }
 
-    public int cycle() {
+    public int cycle() { // TODO: PPU power up state lasts 1 full frame until first vBlank
+                         //  only some registers can be used
         cycleCounter.increment();
 
         final int scanLine = scanLineCounter.getValue();

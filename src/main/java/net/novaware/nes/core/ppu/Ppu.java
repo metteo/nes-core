@@ -242,7 +242,7 @@ public class Ppu implements ClockReceiver {
     @Override
     public int cycle() {
         if (rstReg.get()) {
-            reset();
+            reset(); // TODO: reset signal continues for the first frame worth of cycles until very first vbl
             return 0;
         }
 

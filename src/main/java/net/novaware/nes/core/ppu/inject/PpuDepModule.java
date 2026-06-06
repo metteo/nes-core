@@ -59,6 +59,7 @@ public interface PpuDepModule {
     @Provides
     @BoardScope
     static CoreConfig provideCoreConfig() { // TODO: just a stub for standalone mode. Clean up all these builder usages
+        // TODO: or even better: create a library of devices (usa ntsc, jap etc, europe pal)
         return ImmutableCoreConfig.builder()
                 .setRecordCpuBus(true)
                 .setRegion(Region.USA)
