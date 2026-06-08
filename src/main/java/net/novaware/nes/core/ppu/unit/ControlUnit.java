@@ -46,6 +46,8 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
@@ -72,6 +74,7 @@ public class ControlUnit {
     private final Pin vBlankInterrupt;
 
     private final BooleanRegister renderSprite;
+    private final BooleanRegister renderBackground;
     private final Pin sprite0Hit;
 
     private final ScanLine[] scanLines;
@@ -85,6 +88,7 @@ public class ControlUnit {
 
     private final ViewPortRegister currentViewPort;
     private final ViewPortRegister tempViewPort;
+    private final BooleanRegister resetLock;
 
     @Inject
     public ControlUnit(
@@ -100,12 +104,16 @@ public class ControlUnit {
         @PpuVar(VBI) Pin vBlankInterrupt,
 
         @PpuVar(RS) BooleanRegister renderSprite,
+        @PpuVar(RB) BooleanRegister renderBackground,
         @PpuVar(S0H) Pin sprite0Hit,
         @PpuVar(VX) ViewPortRegister currentViewPort,
-        @PpuVar(T)  ViewPortRegister tempViewPort
+        @PpuVar(T)  ViewPortRegister tempViewPort,
+
+        @PpuVar(RL) BooleanRegister resetLock
     ) {
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
+        this.resetLock = resetLock;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -119,6 +127,7 @@ public class ControlUnit {
         this.vBlankInterruptEnabled = vBlankInterruptEnabled;
         this.vBlankInterrupt = vBlankInterrupt;
         this.renderSprite = renderSprite;
+        this.renderBackground = renderBackground;
         this.sprite0Hit = sprite0Hit;
 
         scanLines = initScanLines(vs);
@@ -265,6 +274,8 @@ public class ControlUnit {
         final int scanLine = scanLineCounter.getValue();
         final int dot = dotCounter.getValue();
 
+        final boolean forceBlank = !(renderSprite.get() || renderBackground.get());
+
         Action bus = NO_OPERATION;
         Action view = NO_OPERATION;
         Action oam = NO_OPERATION;
@@ -302,13 +313,27 @@ public class ControlUnit {
                 bus = busActions[dot];
                 view = preRenderViewActions[dot];
                 flag = getPreRenderFlagAction(dot);
-                // TODO: resetLock.set(false);
+                resetLock.set(false); // first pre-render
                 break;
         }
 
         // TODO: create a golden micro action file and compare in tests? for ntsc, pal, etc
         //System.out.println(dot + ": " + bus.getMnemonic() + " " + view.getMnemonic() + " " + oam.getMnemonic() + " " + draw.getMnemonic() + " " + flag.getMnemonic());
 
+        if (!resetLock.get() && !forceBlank) {
+            executeBus(bus);
+            executeView(view);
+            executeOam(oam);
+            executeDraw(draw);
+        }
+
+        executeFlag(flag);
+        nextDot();
+
+        return 1;
+    }
+
+    private void executeBus(Action bus) {
         switch(bus) {
             case ACCESS_NAME_TABLE_ADDRESS -> {}
             case READ_NAME_TABLE_DATA      -> {}
@@ -329,7 +354,37 @@ public class ControlUnit {
             case NO_OPERATION              -> {}
             default -> throw new IllegalStateException("Unexpected bus action: " + bus);
         }
+    }
 
+    private void executeFlag(Action flag) {
+        switch(flag) {
+            case SET_HBLANK -> hBlank.set(true);
+            case CLR_HBLANK -> hBlank.set(false);
+            case SET_VBLANK -> setVBlank(true);
+            case CLR_STATUS -> clearStatus();
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected flag action: " + flag);
+        }
+    }
+
+    private void executeDraw(Action draw) {
+        switch(draw) {
+            case RENDER -> {}
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected draw action: " + draw);
+        }
+    }
+
+    private void executeOam(Action oam) {
+        switch(oam) {
+            case CLR_SECONDARY_OAM -> {}
+            case EVAL_PRIMARY_OAM -> {}
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected oam action: " + oam);
+        }
+    }
+
+    private void executeView(Action view) {
         // FIXME: force blank (rendering off) should not alter VX
         switch(view) {
             case INCREMENT_X -> currentViewPort.incrementX();
@@ -339,32 +394,6 @@ public class ControlUnit {
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected view action: " + view);
         }
-
-        switch(oam) {
-            case CLR_SECONDARY_OAM -> {}
-            case EVAL_PRIMARY_OAM -> {}
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected oam action: " + oam);
-        }
-
-        switch(draw) {
-            case RENDER -> {}
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected draw action: " + draw);
-        }
-
-        switch(flag) {
-            case SET_HBLANK -> hBlank.set(true);
-            case CLR_HBLANK -> hBlank.set(false);
-            case SET_VBLANK -> setVBlank(true);
-            case CLR_STATUS -> clearStatus();
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected flag action: " + flag);
-        }
-
-        nextDot();
-
-        return 1;
     }
 
     private Action getPostRenderBusAction(int dot) {

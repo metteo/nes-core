@@ -72,6 +72,7 @@ public enum Action {
     // region Misc
 
     NO_OPERATION ("NOP", MISC),
+    JUMP_IF_ODD ("JIO", MISC),
 
     // endregion
 

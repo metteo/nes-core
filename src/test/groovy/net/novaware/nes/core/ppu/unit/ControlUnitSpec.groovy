@@ -29,9 +29,11 @@ class ControlUnitSpec extends Specification {
     def vBlankInterruptEnabled = PpuRegModule.provideVBlankInterruptEnabled()
     def vBlankInterrupt = PpuDepModule.provideVBlankInterruptPin(PpuDepModule.provideVBlankInterruptReg())
     def renderSprite = PpuRegModule.provideRenderSprite()
+    def renderBackground = PpuRegModule.provideRenderBackground()
     def sprite0Hit = PpuDepModule.provideSprite0HitPin(PpuDepModule.provideSprite0HitReg())
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
     def tempViewPort = PpuRegModule.provideTempViewPort()
+    def resetLock = PpuRegModule.provideResetLock()
 
     def "should construct an instance"() {
         when:
@@ -196,9 +198,11 @@ class ControlUnitSpec extends Specification {
             vBlankInterruptEnabled,
             vBlankInterrupt,
             renderSprite,
+            renderBackground,
             sprite0Hit,
             currentViewPort,
-            tempViewPort
+            tempViewPort,
+            resetLock
         )
     }
 }
