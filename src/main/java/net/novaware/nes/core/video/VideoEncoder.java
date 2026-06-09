@@ -3,6 +3,8 @@ package net.novaware.nes.core.video;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
+import net.novaware.nes.core.ppu.memory.DisplayMemory;
+import net.novaware.nes.core.ppu.register.VideoOutRegister;
 
 /**
  * Accepts color indexed dots from ppu and assembles a raw RGB frame
@@ -12,13 +14,29 @@ import net.novaware.nes.core.clock.ClockReceiver;
 @BoardScope
 public class VideoEncoder implements ClockReceiver {
 
-    @Inject
-    public VideoEncoder() {
+    private final VideoOutRegister videoOut;
+    private final DisplayMemory displayMemory;
 
+    @Inject
+    public VideoEncoder(
+        VideoOutRegister videoOut,
+        DisplayMemory displayMemory
+    ) {
+        this.videoOut = videoOut;
+        this.displayMemory = displayMemory;
     }
 
     @Override
     public int cycle() {
+        int y = videoOut.getY();
+        int x = videoOut.getX();
+
+        displayMemory.setColor(y, x, videoOut.getColorIndex());
+
+        if (y == 239 && x == 255) {
+            displayMemory.swap();
+        }
+
         return 1;
     }
 

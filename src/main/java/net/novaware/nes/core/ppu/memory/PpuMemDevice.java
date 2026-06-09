@@ -11,6 +11,7 @@ import net.novaware.nes.core.memory.OpenLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
+import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.ShortRegister;
@@ -86,8 +87,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private final BooleanRegister emphasizeRed;
     private final BooleanRegister emphasizeGreen;
     private final BooleanRegister emphasizeBlue;
-    private final BooleanRegister renderSprite; // TODO: there is a delay after changing (2-3 dots)
-    private final BooleanRegister renderBackground;
+    private final BooleanPipeline renderSprite;
+    private final BooleanPipeline renderBackground;
     private final BooleanRegister maskSprite;
     private final BooleanRegister maskBackground;
     private final BooleanRegister greyscale;
@@ -131,8 +132,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(ER) BooleanRegister emphasizeRed,
         @PpuVar(EG) BooleanRegister emphasizeGreen,
         @PpuVar(EB) BooleanRegister emphasizeBlue,
-        @PpuVar(RS) BooleanRegister renderSprite,
-        @PpuVar(RB) BooleanRegister renderBackground,
+        @PpuVar(RS) BooleanPipeline renderSprite,
+        @PpuVar(RB) BooleanPipeline renderBackground,
         @PpuVar(MS) BooleanRegister maskSprite,
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
@@ -309,8 +310,11 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             emphasizeBlue.set(eb);
             emphasizeGreen.set(ntsc ? e6 : e5);
             emphasizeRed.set(ntsc ? e5 : e6);
-            renderSprite.set(rs);
-            renderBackground.set(rb);
+
+            // TODO: calculate exactly based on instruction cycle counter (instead of 3-4)
+            renderSprite.setDelayed(rs, 3);
+            renderBackground.setDelayed(rb, 4);
+
             maskSprite.set(ms);
             maskBackground.set(mb);
             greyscale.set(gs);

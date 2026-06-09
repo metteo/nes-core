@@ -24,6 +24,7 @@ class DisplayMemorySpec extends Specification {
 
         when:
         instance.setColor(y, x, ubyte(colorIn))
+        instance.swap()
 
         then:
         instance.getColor(y, x) == ubyte(colorOut)

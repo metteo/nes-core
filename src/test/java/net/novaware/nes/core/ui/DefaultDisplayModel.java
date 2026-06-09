@@ -1,10 +1,13 @@
 package net.novaware.nes.core.ui;
 
 import net.novaware.nes.core.ppu.memory.DisplayMemory;
+import net.novaware.nes.core.ppu.unit.PaletteData;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
+import java.awt.*;
 
 public class DefaultDisplayModel implements DisplayModel {
 
@@ -12,6 +15,7 @@ public class DefaultDisplayModel implements DisplayModel {
     private ChangeEvent changeEvent = null; // reused
 
     private DisplayMemory pixels; // TODO: do not expose display mem like that?
+    protected PaletteData paletteData = new PaletteData();
 
     private int[] palette = new int[0x40];
 
@@ -23,6 +27,13 @@ public class DefaultDisplayModel implements DisplayModel {
     @Override
     public void removeChangeListener(ChangeListener listener) {
         listeners.remove(ChangeListener.class, listener);
+    }
+
+    @Override
+    public Color getColor(int y, int x) {
+        @Unsigned byte index = pixels.getColor(y, x);
+        int color = paletteData.getColor(index);
+        return new Color(color); // FIXME: lots of objects!
     }
 
     protected void fireStateChanged() {

@@ -250,6 +250,15 @@ class PpuMemDeviceSpec extends Specification {
         when:
         cpuBus.access(PPU_MASK_REGISTER).write().data(ubyte(bits))
 
+        // FIXME: make the delay nicer than this
+        renderSprite.cycle()
+        renderSprite.cycle()
+        renderSprite.cycle()
+        renderBackground.cycle()
+        renderBackground.cycle()
+        renderBackground.cycle()
+        renderBackground.cycle()
+
         then:
         emphasizeRed.get() == er
         emphasizeGreen.get() == eg

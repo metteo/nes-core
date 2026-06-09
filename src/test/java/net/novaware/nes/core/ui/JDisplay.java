@@ -1,9 +1,12 @@
 package net.novaware.nes.core.ui;
 
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.util.Hex;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class JDisplay extends JComponent {
 
@@ -12,10 +15,32 @@ public class JDisplay extends JComponent {
     private double scale;
 
     private final Insets insets = new Insets(0, 0, 0, 0); // reused if no border
+    private VideoStandard videoStandard;
 
+    private int pixelHeight;
+    private int paddingTop;
+
+    private int pixelWidth;
+    private int paddingLeft;
+
+    private boolean drawMask = false;
 
     public JDisplay(DisplayModel model) {
         this.model = model;
+
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int pixelX = (e.getX() - paddingLeft) / pixelWidth;
+                int pixelY = (e.getY() - paddingTop) / pixelHeight;
+                Color c = model.getColor(pixelY, pixelX);
+                String pixelC = Hex.s(c.getRGB());
+                System.out.println("x: " + pixelX + ", y: " + pixelY + ", c: " + pixelC);
+
+                drawMask = !drawMask;
+                repaint();
+            }
+        });
     }
 
     public DisplayModel getModel() {
@@ -32,28 +57,34 @@ public class JDisplay extends JComponent {
 
         Insets insets = getInsets(this.insets);
 
-        VideoStandard vs = VideoStandard.NTSC;
+        videoStandard = VideoStandard.NTSC;
 
         int height = getHeight();
-        int pixelHeight = height / vs.getActiveHeight();
-        int paddingTop = (height - pixelHeight * vs.getActiveHeight()) / 2;
+        pixelHeight = height / videoStandard.getActiveHeight();
+        paddingTop = (height - pixelHeight * videoStandard.getActiveHeight()) / 2;
 
         int width = getWidth();
-        int pixelWidth = pixelHeight * 8 / 7; // TODO: support PAL too
-        int paddingLeft = (width - pixelWidth * vs.getActiveWidth()) / 2;
+        pixelWidth = pixelHeight * 8 / 7; // TODO: support PAL too
+        paddingLeft = (width - pixelWidth * videoStandard.getActiveWidth()) / 2;
 
-        boolean prevBlack = false;
+        for (int y = 0; y < videoStandard.getActiveHeight(); y++) {
+            for (int x = 0; x < videoStandard.getActiveWidth(); x++) {
 
-        for (int y = 0; y < vs.getActiveHeight(); y++) {
-            for (int x = 0; x < vs.getActiveWidth(); x++) {
-                g.setColor(prevBlack ? Color.WHITE : Color.BLACK);
+                g.setColor(model.getColor(y, x));
+
                 int rectX = paddingLeft + (x * pixelWidth);
                 int rectY = paddingTop + (y * pixelHeight);
                 g.fillRect(rectX, rectY, pixelWidth, pixelHeight);
 
-                prevBlack = !prevBlack;
+                if (pixelWidth > 2 && pixelHeight > 2 && drawMask) {
+                    int rectXPlusW = rectX + pixelWidth - 1;
+                    int rectYPlusH = rectY + pixelHeight - 1;
+
+                    g.setColor(Color.BLACK);
+                    g.drawLine(rectX, rectYPlusH, rectXPlusW, rectYPlusH);
+                    g.drawLine(rectXPlusW, rectY, rectXPlusW, rectYPlusH);
+                }
             }
-            prevBlack = !prevBlack;
         }
 
     }

@@ -152,6 +152,8 @@ public class Ppu implements ClockReceiver {
         int spent = controlUnit.cycle();
 
         regs.status.cycle();
+        regs.renderBackground.cycle();
+        regs.renderSprite.cycle();
 
         return spent;
     }

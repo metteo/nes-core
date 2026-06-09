@@ -11,20 +11,26 @@ import org.checkerframework.checker.lock.qual.GuardedBy;
 @SuppressWarnings("initialization.fields.uninitialized")
 public class DisplayPortImpl implements DisplayPort {
 
-    private Plug plug = frontBuffer -> {};
+    private Plug plug = displayMemory -> {};
 
     // TODO: this is too early for access to DisplayMemory, it still needs processing -> turning into RGB/NTSC
-    private @GuardedBy("this") DisplayMemory displayBuffer;
+    private @GuardedBy("this") DisplayMemory displayMemory;
 
     @Inject
-    public DisplayPortImpl() {
-
+    public DisplayPortImpl(
+        DisplayMemory displayMemory
+    ) {
+        this.displayMemory = displayMemory;
     }
 
 
     @Override
     public void connect(Plug plug) {
         this.plug = plug;
+
+        if (displayMemory != null) {
+            plug.onDisplayData(displayMemory);
+        }
     }
 
     @Override
@@ -36,8 +42,8 @@ public class DisplayPortImpl implements DisplayPort {
         plug.onDisplayData(frontBuffer);
     }
 
-    public synchronized void setDisplayBuffer(DisplayMemory displayBuffer) {
-        this.displayBuffer = displayBuffer;
+    public synchronized void setDisplayMemory(DisplayMemory displayMemory) {
+        this.displayMemory = displayMemory;
     }
 
     public void onFrame() {

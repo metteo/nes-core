@@ -9,19 +9,23 @@ public class TestUI {
         SwingUtilities.invokeLater(TestUI::createAndShowGui);
     }
 
-    static void createAndShowGui() {
+    public static void createAndShowGui() {
+        createAndShowGui(new PaletteDisplayModel());
+    }
+
+    public static void createAndShowGui(DisplayModel displayModel) {
         JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
         frame.setLocation(20, 20); //TODO: remember last location and reopen in the same?
         frame.setFocusable(true); //TODO: input focus should be probably on something more specific?
         frame.requestFocusInWindow();
 
-        DisplayModel displayModel = new DefaultDisplayModel();
         JDisplay display = new JDisplay(displayModel);
-        display.setPreferredSize(new Dimension(1280, 800)); // steam deck
+        //display.setPreferredSize(new Dimension(1280, 800)); // steam deck
+        display.setPreferredSize(new Dimension(256 + 2, 240 + 2)); // 1x scale
 
-        JBezel bezel = new JBezel();
-        bezel.setPreferredSize(new Dimension(1280, 800));
+        //JBezel bezel = new JBezel();
+        //bezel.setPreferredSize(new Dimension(1280, 800));
 
         frame.add(display);
         //frame.add(bezel);

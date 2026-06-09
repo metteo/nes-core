@@ -177,11 +177,11 @@ public class ViewPortRegister extends Register {
      * "Inc. hori(v)" on the timing diagram
      */
     public void incrementX() {
-        int x = ((nameTable & NAMETABLE_X_MASK) << 4) | (coarseX & 0b1111);
-        x = (x + 1) & 0b11111;
+        int x = ((nameTable & NAMETABLE_X_MASK) << 5) | (coarseX & COARSE_MASK);
+        x += 1;
 
-        int newCoarseX = (coarseX & 0b1_0000) | (x & 0b1111);
-        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (x >> 4) & NAMETABLE_X_MASK;
+        int newCoarseX = x & COARSE_MASK;
+        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (x >> 5) & NAMETABLE_X_MASK;
 
         setCoarseX(newCoarseX);
         setNameTable(newNameTable);

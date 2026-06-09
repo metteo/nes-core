@@ -54,7 +54,7 @@ public class AttributeTable extends Table {
 
                 @Unsigned byte dataByte = bus.access(ushort(address)).read().data();
 
-                int subY = doubleY - 2 * y; // TODO: is this faster than remainder?
+                int subY = doubleY - 2 * y; // TODO: is this faster than remainder? nope :(
                 int subX = doubleX - 2 * x;
 
                 int data = sint(dataByte);

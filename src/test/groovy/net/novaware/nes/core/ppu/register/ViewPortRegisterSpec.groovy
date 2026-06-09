@@ -145,9 +145,9 @@ class ViewPortRegisterSpec extends Specification {
         where:
          inNt | inFineX | inCoarseX || outNt | outFineX | outCoarseX | comment
          0b00 | 0b000   | 0b0_0000  || 0b00  | 0b000    | 0b0_0001   | "basic"
-         0b00 | 0b000   | 0b0_1110  || 0b00  | 0b000    | 0b0_1111   | "before overflow to nt"
-         0b00 | 0b000   | 0b0_1111  || 0b01  | 0b000    | 0b0_0000   | "overflow to nt 1"
-         0b01 | 0b000   | 0b0_1111  || 0b00  | 0b000    | 0b0_0000   | "overflow to nt 0"
+         0b00 | 0b000   | 0b1_1110  || 0b00  | 0b000    | 0b1_1111   | "before overflow to nt"
+         0b00 | 0b000   | 0b1_1111  || 0b01  | 0b000    | 0b0_0000   | "overflow to nt 1"
+         0b01 | 0b000   | 0b1_1111  || 0b00  | 0b000    | 0b0_0000   | "overflow to nt 0"
     }
 
     def "should increment y"() {
