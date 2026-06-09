@@ -504,8 +504,8 @@ public class ControlUnit {
         int atLoBit = (sint(attrLoBitsShiftReg) & mask) >> shift;
         int atHiBit = (sint(attrHiBitsShiftReg) & mask) >> shift;
 
-        int palette = (bgHiBit << 1) | bgLoBit;
-        int offset = (atHiBit << 1) | atLoBit;
+        int palette = (atHiBit << 1) | atLoBit;
+        int offset = (bgHiBit << 1) | bgLoBit;
 
         @Unsigned byte color = paletteMemory.getColor(BACKGROUND, palette, offset);
 

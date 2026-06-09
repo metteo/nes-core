@@ -28,6 +28,10 @@ public class JDisplay extends JComponent {
     public JDisplay(DisplayModel model) {
         this.model = model;
 
+        registerMouseClicked(model);
+    }
+
+    private void registerMouseClicked(DisplayModel model) {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

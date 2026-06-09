@@ -42,14 +42,14 @@ public class TestApp {
 
         board.powerOn();
 
-        Thread.sleep(4_000);
+//        Thread.sleep(4_000);
 //        board.powerOff();
 
 //        dumpPattern(factory.getPatternTable0());
 //        dumpPattern(factory.getPatternTable1());
 //        System.out.println(factory.getNameTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
-        System.out.println(factory.getPaletteMemory().printColors());
+//        System.out.println(factory.getPaletteMemory().printColors());
 //        System.out.println(factory.getObjAttrMemory().printOam());
 
         //System.exit(0); // TODO: notify swing to shut down instead
