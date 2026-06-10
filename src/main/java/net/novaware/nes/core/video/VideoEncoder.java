@@ -3,6 +3,7 @@ package net.novaware.nes.core.video;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
+import net.novaware.nes.core.port.internal.DisplayPortImpl;
 import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 
@@ -16,14 +17,17 @@ public class VideoEncoder implements ClockReceiver {
 
     private final VideoOutRegister videoOut;
     private final DisplayMemory displayMemory;
+    private final DisplayPortImpl displayPort;
 
     @Inject
     public VideoEncoder(
         VideoOutRegister videoOut,
-        DisplayMemory displayMemory
+        DisplayMemory displayMemory,
+        final DisplayPortImpl displayPort
     ) {
         this.videoOut = videoOut;
         this.displayMemory = displayMemory;
+        this.displayPort = displayPort;
     }
 
     @Override
@@ -35,6 +39,7 @@ public class VideoEncoder implements ClockReceiver {
 
         if (y == 239 && x == 255) {
             displayMemory.swap();
+            displayPort.onFrame();
         }
 
         return 1;

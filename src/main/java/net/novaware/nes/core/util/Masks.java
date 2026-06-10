@@ -9,5 +9,6 @@ public class Masks {
     public static final int BIT_4 = 1 << 4;
     public static final int BIT_3 = 1 << 3;
     public static final int BIT_2 = 1 << 2;
-    public static final int BIT_1 = 1;
+    public static final int BIT_1 = 1 << 1;
+    public static final int BIT_0 = 1;
 }

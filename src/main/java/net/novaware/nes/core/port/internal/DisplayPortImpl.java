@@ -35,18 +35,10 @@ public class DisplayPortImpl implements DisplayPort {
 
     @Override
     public void disconnect() {
-        plug = frontBuffer -> {};
-    }
-
-    public void onDisplayData(DisplayMemory frontBuffer) {
-        plug.onDisplayData(frontBuffer);
-    }
-
-    public synchronized void setDisplayMemory(DisplayMemory displayMemory) {
-        this.displayMemory = displayMemory;
+        plug = displayMemory -> {};
     }
 
     public void onFrame() {
-        // TODO: trigger task on displaying thread
+        plug.onDisplayData(displayMemory);
     }
 }

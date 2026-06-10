@@ -13,6 +13,7 @@ import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
+import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.IntegerCounter;
@@ -444,16 +445,15 @@ public class ControlUnit {
         bgLoBitsShiftReg = ushort((sint(bgLoBitsShiftReg) & 0xFF00) | sint(bgLoBitsBuffer));
         bgHiBitsShiftReg = ushort((sint(bgHiBitsShiftReg) & 0xFF00) | sint(bgHiBitsBuffer));
 
-        // TODO: figure it why like that and move to AttributeTable
-        int attrBitShift = ((currentViewPort.getCoarseY() & 0b10) << 1) |
-                (currentViewPort.getCoarseX() & 0b10);
-
-        int attrBitsLatch = sint(attrTableBuffer) >> attrBitShift;
+        int attrBitsLatch = AttributeTable.getSubAttribute(attrTableBuffer, currentViewPort);
         int attrLoBitLatch = attrBitsLatch & 0b01;
         int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
 
-        attrLoBitsShiftReg = ushort(((sint(attrLoBitsShiftReg) & 0xFF00) | attrLoBitLatch) == 1 ? 0xFF : 0x00);
-        attrHiBitsShiftReg = ushort(((sint(attrHiBitsShiftReg) & 0xFF00) | attrHiBitLatch) == 1 ? 0xFF : 0x00);
+        int attrLoBitsBuffer = attrLoBitLatch == 1 ? 0xFF : 0x00;
+        int attrHiBitsBuffer = attrHiBitLatch == 1 ? 0xFF : 0x00;
+
+        attrLoBitsShiftReg = ushort(((sint(attrLoBitsShiftReg) & 0xFF00) | attrLoBitsBuffer));
+        attrHiBitsShiftReg = ushort(((sint(attrHiBitsShiftReg) & 0xFF00) | attrHiBitsBuffer));
     }
 
     // TODO: move to pattern table?

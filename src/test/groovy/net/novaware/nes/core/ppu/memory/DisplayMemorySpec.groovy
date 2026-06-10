@@ -33,6 +33,6 @@ class DisplayMemorySpec extends Specification {
         y   | x   | colorIn || colorOut
         0   | 0   | 0x0F    || 0x0F
         120 | 128 | 0xCD    || 0x0D
-        239 | 255 | 0xAB    || 0x0B
+        239 | 255 | 0xAB    || 0x2B
     }
 }

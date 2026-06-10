@@ -8,8 +8,8 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class DisplayMemory implements Nameable {
 
-    private static final int COLOR_MASK = 0x0F;
-    private static final int META_MASK = 0xF0;
+    private static final int COLOR_MASK = 0b11_1111;
+    private static final int META_MASK = 0b1100_0000;
 
     private final String name;
 

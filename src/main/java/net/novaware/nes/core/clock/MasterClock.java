@@ -147,7 +147,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public void tick() {
         calculateSecondBudget();
 
-        //long tickStart = System.nanoTime();
+        long tickStart = System.nanoTime();
 
         while (frameBudget.getValue() > 1) {
             calculateFrameBudget();
@@ -155,6 +155,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         }
 
         timeCounter.increment();
+
+        long tickDuration = System.nanoTime() - tickStart;
+        System.out.println("Frame time: " + tickDuration + "ns");
     }
 
     @Override
