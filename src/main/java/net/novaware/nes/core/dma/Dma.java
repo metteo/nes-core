@@ -5,15 +5,19 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 public class Dma implements ClockReceiver { // TODO: remember about DMC DMA which is a different controller?
 
@@ -74,6 +78,15 @@ public class Dma implements ClockReceiver { // TODO: remember about DMC DMA whic
         // read cycle   \
         //               > (256x)
         // write cycle  /
+
+        int startAddress = oamDma.getAsInt() << 8;
+        cpuBus.access(CpuMemMap.PPU_OAM_ADDRESS_REGISTER).write().data(UBYTE_0);
+
+        for(int i = 0; i < 256; i++) {
+            int address = startAddress | i;
+            @Unsigned byte data = cpuBus.access(ushort(address)).read().data();
+            cpuBus.access(CpuMemMap.PPU_OAM_DATA_REGISTER).write().data(data);
+        }
 
         cpu.get().rdy(Signal.HIGH);
     }

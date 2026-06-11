@@ -8,10 +8,17 @@ import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
+import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
+import net.novaware.nes.core.ppu.table.AttributeTable;
+import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.IntegerCounter;
+import net.novaware.nes.core.register.ShortRegister;
+import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.Arrays;
 
@@ -40,18 +47,25 @@ import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
+import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
+import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
  * @see gemini: micro-action log
@@ -71,7 +85,8 @@ public class ControlUnit {
     private final BooleanRegister vBlankInterruptEnabled;
     private final Pin vBlankInterrupt;
 
-    private final BooleanRegister renderSprite;
+    private final BooleanPipeline renderSprite;
+    private final BooleanPipeline renderBackground;
     private final Pin sprite0Hit;
 
     private final ScanLine[] scanLines;
@@ -85,6 +100,12 @@ public class ControlUnit {
 
     private final ViewPortRegister currentViewPort;
     private final ViewPortRegister tempViewPort;
+    private final BooleanRegister resetLock;
+    private final PpuBus bus;
+    private final ShortRegister backgroundPatternTable;
+    private final ShortRegister spritePatternTable;
+    private final VideoOutRegister videoOut;
+    private final PaletteMemory paletteMemory;
 
     @Inject
     public ControlUnit(
@@ -99,13 +120,27 @@ public class ControlUnit {
         @PpuVar(CV) BooleanRegister vBlankInterruptEnabled,
         @PpuVar(VBI) Pin vBlankInterrupt,
 
-        @PpuVar(RS) BooleanRegister renderSprite,
+        @PpuVar(RS) BooleanPipeline renderSprite,
+        @PpuVar(RB) BooleanPipeline renderBackground,
         @PpuVar(S0H) Pin sprite0Hit,
         @PpuVar(VX) ViewPortRegister currentViewPort,
-        @PpuVar(T)  ViewPortRegister tempViewPort
+        @PpuVar(T)  ViewPortRegister tempViewPort,
+
+        @PpuVar(RL) BooleanRegister resetLock,
+        PpuBus bus,
+        @PpuVar(CB) ShortRegister backgroundPatternTable,
+        @PpuVar(CS) ShortRegister spritePatternTable,
+        VideoOutRegister videoOut,
+        PaletteMemory paletteMemory
     ) {
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
+        this.resetLock = resetLock;
+        this.bus = bus;
+        this.backgroundPatternTable = backgroundPatternTable;
+        this.spritePatternTable = spritePatternTable;
+        this.videoOut = videoOut;
+        this.paletteMemory = paletteMemory;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -119,6 +154,7 @@ public class ControlUnit {
         this.vBlankInterruptEnabled = vBlankInterruptEnabled;
         this.vBlankInterrupt = vBlankInterrupt;
         this.renderSprite = renderSprite;
+        this.renderBackground = renderBackground;
         this.sprite0Hit = sprite0Hit;
 
         scanLines = initScanLines(vs);
@@ -157,7 +193,7 @@ public class ControlUnit {
         Arrays.fill(busActions, Action.NO_OPERATION);
 
         // tile 3 of current background
-        busActions[0] = ACCESS_BG_LO_BITS_ADDRESS;
+        // busActions[0] = ACCESS_BG_LO_BITS_ADDRESS; // TODO: replace with one that doesn't shift the registers
 
         for (int x = 1; x <= 256; x+=8) { // current background
             busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
@@ -265,6 +301,8 @@ public class ControlUnit {
         final int scanLine = scanLineCounter.getValue();
         final int dot = dotCounter.getValue();
 
+        final boolean forceBlank = !(renderSprite.get() || renderBackground.get());
+
         Action bus = NO_OPERATION;
         Action view = NO_OPERATION;
         Action oam = NO_OPERATION;
@@ -301,23 +339,96 @@ public class ControlUnit {
             case PRE_RENDER:
                 bus = busActions[dot];
                 view = preRenderViewActions[dot];
+                draw = getPreRenderDrawAction(dot);
                 flag = getPreRenderFlagAction(dot);
-                // TODO: resetLock.set(false);
+                resetLock.set(false); // first pre-render
                 break;
         }
 
         // TODO: create a golden micro action file and compare in tests? for ntsc, pal, etc
         //System.out.println(dot + ": " + bus.getMnemonic() + " " + view.getMnemonic() + " " + oam.getMnemonic() + " " + draw.getMnemonic() + " " + flag.getMnemonic());
 
-        switch(bus) {
-            case ACCESS_NAME_TABLE_ADDRESS -> {}
-            case READ_NAME_TABLE_DATA      -> {}
-            case ACCESS_ATTR_TABLE_ADDRESS -> {}
-            case READ_ATTR_TABLE_DATA      -> {}
-            case ACCESS_BG_LO_BITS_ADDRESS -> {}
-            case READ_BG_LO_BITS_DATA      -> {}
-            case ACCESS_BG_HI_BITS_ADDRESS -> {}
-            case READ_BG_HI_BITS_DATA      -> {}
+        if (!resetLock.get() && !forceBlank) {
+            executeBus(bus);
+            executeView(view);
+            executeOam(oam);
+            executeDraw(draw);
+        }
+
+        executeFlag(flag);
+        nextDot();
+
+        return 1;
+    }
+
+    @Unsigned byte nameTableBuffer; // tile xy
+    @Unsigned byte attrTableBuffer; // palette nums
+    @Unsigned byte bgLoBitsBuffer;
+    @Unsigned byte bgHiBitsBuffer;
+
+    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly?
+    @Unsigned short bgLoBitsShiftReg;
+    @Unsigned short bgHiBitsShiftReg;
+    @Unsigned short attrLoBitsShiftReg;
+    @Unsigned short attrHiBitsShiftReg;
+
+    private void executeBus(Action busAction) {
+        switch(busAction) {
+            case ACCESS_NAME_TABLE_ADDRESS -> {
+                shiftShiftRegisters();
+
+                @Unsigned short nameTableAddr = currentViewPort.getNameTableAddress();
+                bus.access(nameTableAddr);
+            }
+            case READ_NAME_TABLE_DATA      -> {
+                shiftShiftRegisters();
+
+                @Unsigned byte nameTableData = bus.read().data();
+                nameTableBuffer = nameTableData;
+
+                //System.out.println(scanLineCounter.getValue() + ", " + dotCounter.getValue() + ": " + Hex.s(currentViewPort.getNameTableAddress()) + " -> " + Hex.s(nameTableData));
+            }
+            case ACCESS_ATTR_TABLE_ADDRESS -> {
+                shiftShiftRegisters();
+
+                @Unsigned short attrTableAddr = currentViewPort.getAttrTableAddress();
+                bus.access(attrTableAddr);
+            }
+            case READ_ATTR_TABLE_DATA      -> {
+                shiftShiftRegisters();
+
+                @Unsigned byte attrTableData = bus.read().data();
+                attrTableBuffer = attrTableData;
+
+            }
+            case ACCESS_BG_LO_BITS_ADDRESS -> {
+                shiftShiftRegisters(); // FIXME: may not be needed for dot 0 of every scan line (green square)
+
+                int bgLoAddr = getBackgroundPatternAddress(0);
+
+                bus.access(ushort(bgLoAddr));
+            }
+            case READ_BG_LO_BITS_DATA      -> {
+                shiftShiftRegisters();
+
+                @Unsigned byte bgLoData = bus.read().data();
+                bgLoBitsBuffer = bgLoData;
+            }
+            case ACCESS_BG_HI_BITS_ADDRESS -> {
+                shiftShiftRegisters();
+
+                int bgHiAddr = getBackgroundPatternAddress(1);
+
+                bus.access(ushort(bgHiAddr));
+            }
+            case READ_BG_HI_BITS_DATA      -> {
+                shiftShiftRegisters();
+
+                @Unsigned byte bgHiData = bus.read().data();
+                bgHiBitsBuffer = bgHiData;
+
+                fillShiftRegisters(); // TODO: consider making this a separate action
+            }
             case UNUSED_NAME_TABLE_ADDRESS -> {}
             case UNUSED_NAME_TABLE_DATA    -> {}
             case IGNORED_NAME_TABLE_ADDRESS -> {}
@@ -327,9 +438,104 @@ public class ControlUnit {
             case ACCESS_SP_HI_BITS_ADDRESS -> {}
             case READ_SP_HI_BITS_DATA      -> {}
             case NO_OPERATION              -> {}
-            default -> throw new IllegalStateException("Unexpected bus action: " + bus);
+            default -> throw new IllegalStateException("Unexpected bus action: " + busAction);
         }
+    }
 
+    private void fillShiftRegisters() {
+        bgLoBitsShiftReg = ushort((sint(bgLoBitsShiftReg) & 0xFF00) | sint(bgLoBitsBuffer));
+        bgHiBitsShiftReg = ushort((sint(bgHiBitsShiftReg) & 0xFF00) | sint(bgHiBitsBuffer));
+
+        int attrBitsLatch = AttributeTable.getSubAttribute(attrTableBuffer, currentViewPort);
+        int attrLoBitLatch = attrBitsLatch & 0b01;
+        int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
+
+        int attrLoBitsBuffer = attrLoBitLatch == 1 ? 0xFF : 0x00;
+        int attrHiBitsBuffer = attrHiBitLatch == 1 ? 0xFF : 0x00;
+
+        attrLoBitsShiftReg = ushort(((sint(attrLoBitsShiftReg) & 0xFF00) | attrLoBitsBuffer));
+        attrHiBitsShiftReg = ushort(((sint(attrHiBitsShiftReg) & 0xFF00) | attrHiBitsBuffer));
+    }
+
+    // TODO: move to pattern table?
+    private int getBackgroundPatternAddress(int plane) {
+        int half = backgroundPatternTable.getAsInt();
+        int tile = sint(nameTableBuffer) << 4;
+        int planeShifted = plane << 3;
+        int tileRow = currentViewPort.getFineY();
+
+        int bgAddr = half | tile | planeShifted | tileRow;
+        return bgAddr;
+    }
+
+    private void executeFlag(Action flag) {
+        switch(flag) {
+            case SET_HBLANK -> hBlank.set(true);
+            case CLR_HBLANK -> hBlank.set(false);
+            case SET_VBLANK -> setVBlank(true);
+            case CLR_STATUS -> clearStatus();
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected flag action: " + flag);
+        }
+    }
+
+    private void executeDraw(Action draw) {
+        switch(draw) {
+            case RENDER -> {
+                // TODO: mux pattern bits with attr bits using fine x
+                selectBgAndAttrBits();
+
+                // TODO: push the dot to priority mux
+                // TODO: push previous dot to EXT
+                // TODO: read dot from EXT and MUX it with previous+2 dot
+                // TODO: push previous+3 dot to videoOutRegister
+            }
+            case CLEAR -> {
+                // TODO: on pal border region is always black
+                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 0, 0);
+                videoOut.set(-1, -1, backdrop);
+            }
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected draw action: " + draw);
+        }
+    }
+
+    private void selectBgAndAttrBits() {
+        int fineX = currentViewPort.getFineX();
+        int shift = 0xF - fineX;
+        int mask = 0b1 << shift;
+
+        int bgLoBit = (sint(bgLoBitsShiftReg) & mask) >> shift;
+        int bgHiBit = (sint(bgHiBitsShiftReg) & mask) >> shift;
+        int atLoBit = (sint(attrLoBitsShiftReg) & mask) >> shift;
+        int atHiBit = (sint(attrHiBitsShiftReg) & mask) >> shift;
+
+        int palette = (atHiBit << 1) | atLoBit;
+        int offset = (bgHiBit << 1) | bgLoBit;
+
+        @Unsigned byte color = paletteMemory.getColor(BACKGROUND, palette, offset);
+
+        // TODO: too early to output, do priority, ext in / out muxing
+        videoOut.set(scanLineCounter.getValue(), dotCounter.getValue() - 1, color);
+    }
+
+    private void shiftShiftRegisters() {
+        bgLoBitsShiftReg = ushort(sint(bgLoBitsShiftReg) << 1);
+        bgHiBitsShiftReg = ushort(sint(bgHiBitsShiftReg) << 1);
+        attrLoBitsShiftReg = ushort(sint(attrLoBitsShiftReg) << 1);
+        attrHiBitsShiftReg = ushort(sint(attrHiBitsShiftReg) << 1);
+    }
+
+    private void executeOam(Action oam) {
+        switch(oam) {
+            case CLR_SECONDARY_OAM -> {}
+            case EVAL_PRIMARY_OAM -> {}
+            case NO_OPERATION -> {}
+            default -> throw new IllegalStateException("Unexpected oam action: " + oam);
+        }
+    }
+
+    private void executeView(Action view) {
         // FIXME: force blank (rendering off) should not alter VX
         switch(view) {
             case INCREMENT_X -> currentViewPort.incrementX();
@@ -339,32 +545,6 @@ public class ControlUnit {
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected view action: " + view);
         }
-
-        switch(oam) {
-            case CLR_SECONDARY_OAM -> {}
-            case EVAL_PRIMARY_OAM -> {}
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected oam action: " + oam);
-        }
-
-        switch(draw) {
-            case RENDER -> {}
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected draw action: " + draw);
-        }
-
-        switch(flag) {
-            case SET_HBLANK -> hBlank.set(true);
-            case CLR_HBLANK -> hBlank.set(false);
-            case SET_VBLANK -> setVBlank(true);
-            case CLR_STATUS -> clearStatus();
-            case NO_OPERATION -> {}
-            default -> throw new IllegalStateException("Unexpected flag action: " + flag);
-        }
-
-        nextDot();
-
-        return 1;
     }
 
     private Action getPostRenderBusAction(int dot) {
@@ -400,6 +580,10 @@ public class ControlUnit {
 
     private Action getPreRenderFlagAction(int dot) {
         return dot == 1 ? Action.CLR_STATUS : Action.NO_OPERATION;
+    }
+
+    private Action getPreRenderDrawAction(int dot) {
+        return dot == 1 ? Action.CLEAR : NO_OPERATION;
     }
 
     private void clearStatus() {

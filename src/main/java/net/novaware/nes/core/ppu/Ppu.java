@@ -19,10 +19,7 @@ import net.novaware.nes.core.ppu.unit.ControlUnit;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
-import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
-import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
@@ -34,7 +31,6 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
-import static net.novaware.nes.core.util.UTypes.ubyte;
 
 /**
  * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
@@ -101,8 +97,6 @@ public class Ppu implements ClockReceiver {
     }
 
     public void initialize() {
-        regs.cycleCounter.reset();
-
         regs.resetControl();
         regs.resetMask();
 
@@ -119,14 +113,14 @@ public class Ppu implements ClockReceiver {
 
         regs.oddFrame.set(false);
         regs.resetLock.set(true);
+
+        regs.cycleCounter.reset();
     }
 
     /**
      * Perform the reset of the PPU
      */
-    /* package */ void reset() {
-        regs.cycleCounter.reset();
-
+    /* package */ int reset() {
         regs.resetControl();
         regs.resetMask();
 
@@ -139,117 +133,27 @@ public class Ppu implements ClockReceiver {
         regs.oddFrame.set(false);
         regs.resetLock.set(true);
 
-        // TODO: read on what ppu does during these first 21 cycles
-        regs.dotCounter.setValue(7 * 3); // 21 dots = 7 cpu reset cycle times 3 (for NTSC only for now)
+        // TODO: read on what ppu does during these first 21 cycles (nothing, warmup?)
+        final int cycles = 7 * 3; // 21 dots = 7 cpu reset cycle times 3 (for NTSC only for now)
+
+        regs.cycleCounter.setValue(cycles);
+        regs.dotCounter.setValue(cycles);
         regs.scanLineCounter.reset();
-    }
 
-    public int cycle0() {
-        regs.cycleCounter.increment();
-        regs.dotCounter.increment();
-
-        // TODO: on PAL there is no rendering on 0th scan line
-
-        if (regs.dotCounter.getValue() == videoStandard.getPhysicalWidth()) {
-            regs.dotCounter.reset();
-            regs.scanLineCounter.increment();
-        }
-
-        // fake sprite zero hit
-        if (regs.scanLineCounter.getValue() == 20 && regs.dotCounter.getValue() == 5) {
-            if (regs.renderSprite.get()) {
-                regs.status.setSpriteZeroHit(true);
-                sprite0Hit.set(LOW);
-            }
-        }
-
-        // last dot of last scan line
-        if (regs.scanLineCounter.getValue() == videoStandard.getActiveHeight() - 1 && regs.dotCounter.getValue() == videoStandard.getActiveWidth() - 1) {
-            // TODO: render the frame at once
-            renderFrameAtOncePrototype();
-        }
-
-        // TODO: check post render scan line vs nmi trigger line
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getVerticalBlankStart() && (regs.dotCounter.getValue() == 1)) {
-            regs.status.setVerticalBlank(true);
-            if (regs.vBlankInterruptEnabled.get()) {
-                vBlankInterrupt.set(LOW); // TODO: only set to low when vblank irq enabled and within vblank. reading status clears vblank flag so level goes high before end of vblank
-            }
-        }
-
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight() - 1) {
-            regs.status.setVerticalBlank(false);
-            if (regs.vBlankInterruptEnabled.get()) {
-                vBlankInterrupt.set(HIGH);
-            }
-
-            if (regs.renderSprite.get()) {
-                regs.status.setSpriteZeroHit(false);
-                sprite0Hit.set(HIGH);
-            }
-        }
-
-        if (regs.scanLineCounter.getValue() == VideoStandard.NTSC.getPhysicalHeight()) {
-            regs.scanLineCounter.reset();
-
-            regs.resetLock.set(false); // TODO: should happen on the first pre-render scanline
-        }
-
-        return 1; // TODO: return 0 for skipped cycle?
-    }
-
-    private void renderFrameAtOncePrototype() {
-        for(int y = 0; y < videoStandard.getActiveHeight(); y++) {
-            for(int x = 0; x < videoStandard.getActiveWidth(); x++) {
-                if(x % 8 == 0) {
-                    // nt address
-                    bus.access(regs.currentViewPort.get()); // TODO: calculate the address
-                }
-                if (x % 8 == 1) {
-                    // nt data read
-                    @Unsigned byte nt = bus.read().data();
-                }
-                if (x % 8 == 2) {
-                    // at address
-                    bus.access(regs.currentViewPort.get()); // TODO: calculate the address
-                }
-                if (x % 8 == 3) {
-                    // at data read
-                    @Unsigned byte at = bus.read().data();
-                }
-
-                if (x % 8 == 4) {
-                    // pt low address
-                }
-
-                if (x % 8 == 5) {
-                    // pt low data read
-                }
-
-                if (x % 8 == 6) {
-                    // pt hi address
-                }
-
-                if (x % 8 == 7) {
-                    // pt hi data read
-                }
-
-                videoOut.set(regs.scanLineCounter.getValue(), regs.dotCounter.getValue(), ubyte(1));
-            }
-        }
+        return cycles;
     }
 
     @Override
     public int cycle() {
         if (rstReg.get()) {
-            reset(); // TODO: reset signal continues for the first frame worth of cycles until very first vbl
-            return 0;
+            return reset(); // TODO: reset signal continues for the first frame worth of cycles until very first vbl
         }
 
-        int spent = cycle0();
-//        int spent = controlUnit.cycle();
+        int spent = controlUnit.cycle();
 
         regs.status.cycle();
+        regs.renderBackground.cycle();
+        regs.renderSprite.cycle();
 
         return spent;
     }

@@ -7,6 +7,8 @@ import static net.novaware.nes.core.util.UTypes.sint;
 public class InstructionRegistry {
 
     // Static lookup map for fast retrieval by opcode (essential for performance)
+    // TODO: may be optimized further by skipping the enum pointer chasing
+    // instead have arrays for group, addressing and size
     private static final Instruction[] OPCODE_MAP = new Instruction[256];
 
     static {

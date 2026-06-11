@@ -58,7 +58,7 @@ public interface CpuMemModule {
     @CpuVar(RAM)
     static MemoryDevice.ReadWrite provideMemory() {
         PhysicalMemory ram = new PhysicalMemory(RAM.name(), RAM_START, RAM_MIRROR_END, RAM_SIZE)
-            .fill(() -> UBYTE_MAX_VALUE); // TODO: use configurable filler
+            .fill(() -> UBYTE_MAX_VALUE); // TODO: use configurable filler, nestest.nes expects 0x00s
         return ram;
     }
 

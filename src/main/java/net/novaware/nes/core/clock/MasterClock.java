@@ -30,6 +30,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public ClockReceiver apu;
     public ClockReceiver dma;
 
+    public ClockReceiver videoEncoder;
+
     public final VideoStandard videoStandard;
 
     private final ExecutorService executor;
@@ -65,7 +67,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         @Named("PPU") ClockReceiver ppu,
         @Named("APU") ClockReceiver apu,
         @Named("DMA") ClockReceiver dma,
-        @Named("CLK") ExecutorService clockExecutor
+        @Named("CLK") ExecutorService clockExecutor,
+        @Named("VE") ClockReceiver videoEncoder
     ) {
         this.videoStandard = coreConfig.getVideoStandard();
 
@@ -77,6 +80,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         this.dma = dma;
 
         this.executor = clockExecutor;
+        this.videoEncoder = videoEncoder;
     }
 
     public void runFrame() {
@@ -94,6 +98,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
                 ppuToCpuCycleBudget.decrement();
                 int ppuCyclesConsumed = ppu.cycle();
                 ppuClockBudget.decrementBy(ppuCyclesConsumed * videoStandard.getPpuDivisor());
+
+                int videoEncoderCyclesConsumed = videoEncoder.cycle();
+                assert videoEncoderCyclesConsumed == ppuCyclesConsumed : "video encoder cycles problem!";
             }
 
             double apuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getApuDivisor();
@@ -140,7 +147,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public void tick() {
         calculateSecondBudget();
 
-        //long tickStart = System.nanoTime();
+        long tickStart = System.nanoTime();
 
         while (frameBudget.getValue() > 1) {
             calculateFrameBudget();
@@ -148,6 +155,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         }
 
         timeCounter.increment();
+
+        long tickDuration = System.nanoTime() - tickStart;
+        System.out.println("Frame time: " + tickDuration + "ns");
     }
 
     @Override

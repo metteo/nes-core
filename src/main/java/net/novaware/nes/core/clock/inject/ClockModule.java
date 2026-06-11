@@ -12,6 +12,7 @@ import net.novaware.nes.core.clock.MasterClock;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.dma.Dma;
 import net.novaware.nes.core.ppu.Ppu;
+import net.novaware.nes.core.video.VideoEncoder;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,4 +50,9 @@ public interface ClockModule {
     @BoardScope
     @Named("DMA")
     ClockReceiver bindDma(Dma dma);
+
+    @Binds
+    @BoardScope
+    @Named("VE")
+    ClockReceiver bindVideoEncoder(VideoEncoder ve);
 }

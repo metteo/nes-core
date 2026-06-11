@@ -101,6 +101,7 @@ public class Board {
         cpu.res(Signal.LOW); // TODO: refactor into single method?
         ppu.rst(Signal.LOW);
 
+        // FIXME: reset consumes cycles which master clock doesn't see
         cpu.cycle();
         ppu.cycle();
 

@@ -7,6 +7,7 @@ import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister.Variant;
+import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
@@ -176,15 +177,15 @@ public interface PpuRegModule {
     @Provides
     @BoardScope
     @PpuVar(RS)
-    static BooleanRegister provideRenderSprite() {
-        return new BooleanRegister(RS.doc());
+    static BooleanPipeline provideRenderSprite() {
+        return new BooleanPipeline(RS.doc());
     }
 
     @Provides
     @BoardScope
     @PpuVar(RB)
-    static BooleanRegister provideRenderBackground() {
-        return new BooleanRegister(RB.doc());
+    static BooleanPipeline provideRenderBackground() {
+        return new BooleanPipeline(RB.doc());
     }
 
     @Provides

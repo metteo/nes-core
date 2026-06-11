@@ -9,6 +9,7 @@ public interface DisplayPort extends OutputPort {
     void disconnect();
 
     interface Plug {
-        void onDisplayData(DisplayMemory frontBuffer);
+        void onDisplayData(DisplayMemory displayMemory);
+        // TODO: sync line to notify new frame is ready
     }
 }

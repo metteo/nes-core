@@ -57,7 +57,7 @@ public class DmaMemDevice implements MemoryDevice.WriteOnly, Nameable {
     public void writeByte(@Unsigned byte data) {
         oamDma.set(data);
 
-        dma.get().triggerDma();
+        dma.get().triggerDma(); // TODO: this should happen when master clock calls dma.cycle()
     }
 
     @Override

@@ -32,4 +32,8 @@ public class Hex {
     public static String s(@Unsigned short input) {
         return hexFormat.toHexDigits(input);
     }
+
+    public static String s(int input) {
+        return hexFormat.toHexDigits(input);
+    }
 }

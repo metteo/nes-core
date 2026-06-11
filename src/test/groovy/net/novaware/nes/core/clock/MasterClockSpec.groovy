@@ -53,10 +53,17 @@ class MasterClockSpec extends Specification {
         }
     }
 
+    def videoEncoder = new ClockReceiver() {
+        @Override
+        int cycle() {
+            return 1
+        }
+    }
+
     def executor = ClockModule.provideClockExecutor()
 
     private MasterClock newMasterClock() {
-        new MasterClock(coreConfig, oddFrame, cpu, ppu, apu, dma, executor)
+        new MasterClock(coreConfig, oddFrame, cpu, ppu, apu, dma, executor, videoEncoder)
     }
 
     def "should calculate cycles budget for a frame"() {

@@ -3,6 +3,7 @@ package net.novaware.nes.core.ppu.register;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
@@ -69,8 +70,8 @@ public class PpuRegFile extends RegisterFile {
     public final BooleanRegister emphasizeRed;
     public final BooleanRegister emphasizeGreen;
     public final BooleanRegister emphasizeBlue;
-    public final BooleanRegister renderSprite;
-    public final BooleanRegister renderBackground;
+    public final BooleanPipeline renderSprite;
+    public final BooleanPipeline renderBackground;
     public final BooleanRegister maskSprite;
     public final BooleanRegister maskBackground;
     public final BooleanRegister greyscale;
@@ -103,8 +104,8 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(ER) BooleanRegister emphasizeRed,
         @PpuVar(EG) BooleanRegister emphasizeGreen,
         @PpuVar(EB) BooleanRegister emphasizeBlue,
-        @PpuVar(RS) BooleanRegister renderSprite,
-        @PpuVar(RB) BooleanRegister renderBackground,
+        @PpuVar(RS) BooleanPipeline renderSprite,
+        @PpuVar(RB) BooleanPipeline renderBackground,
         @PpuVar(MS) BooleanRegister maskSprite,
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
@@ -145,14 +146,16 @@ public class PpuRegFile extends RegisterFile {
             this.emphasizeRed = emphasizeRed,
             this.emphasizeGreen = emphasizeGreen,
             this.emphasizeBlue = emphasizeBlue,
-            this.renderSprite = renderSprite,
-            this.renderBackground = renderBackground,
+
             this.maskSprite = maskSprite,
             this.maskBackground = maskBackground,
             this.greyscale = greyscale,
 
             this.oddFrame = oddFrame
         );
+
+        this.renderSprite = renderSprite;
+        this.renderBackground = renderBackground;
     }
 
     public void resetControl() {

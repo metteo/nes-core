@@ -6,10 +6,12 @@ import net.novaware.nes.core.config.ImmutableCoreConfig;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
-import net.novaware.nes.core.port.DisplayPort;
 import net.novaware.nes.core.ppu.table.PatternTable;
+import net.novaware.nes.core.ui.DefaultDisplayModel;
+import net.novaware.nes.core.ui.TestUI;
 import net.novaware.nes.core.util.Hex;
 
+import javax.swing.*;
 import java.net.URI;
 
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -24,7 +26,7 @@ public class TestApp {
                 .build();
         NesCore factory = NesCore.newNesCore(config);
 
-        URI nestest = URI.create("file://" + args[0]);
+        URI nestest = URI.create("file://" + args[0].replace(" ", "%20"));
         Cartridge testRom = factory.newCartridge(nestest);
 
         var board = factory.newBoard();
@@ -34,22 +36,26 @@ public class TestApp {
             board.powerOff();
         });
 
-        final DisplayPort displayPort = board.getDisplayPort();
-        displayPort.connect(displayMemory -> {
-
-        });
+        final DefaultDisplayModel displayModel = new DefaultDisplayModel();
+        board.getDisplayPort().connect(displayModel::setPixels);
+        SwingUtilities.invokeLater(()-> TestUI.createAndShowGui(displayModel));
 
         board.powerOn();
 
-        Thread.sleep(4_000);
-        board.powerOff();
+//        board.powerOff();
 
-        dumpPattern(factory.getPatternTable0());
-        dumpPattern(factory.getPatternTable1());
-        System.out.println(factory.getNameTable0().printBackground());
-        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
-        System.out.println(factory.getPaletteMemory().printColors());
-        System.out.println(factory.getObjAttrMemory().printOam());
+//        while (true) {
+//        Thread.sleep(2_000);
+
+//        dumpPattern(factory.getPatternTable0());
+//        dumpPattern(factory.getPatternTable1());
+//        System.out.println(factory.getNameTable0().printBackground());
+//        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
+//        System.out.println(factory.getPaletteMemory().printColors());
+//        System.out.println(factory.getObjAttrMemory().printOam());
+//        }
+
+        //System.exit(0); // TODO: notify swing to shut down instead
     }
 
     // TODO: move to PatternTable

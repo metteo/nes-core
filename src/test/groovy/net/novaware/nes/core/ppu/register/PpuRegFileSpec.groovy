@@ -13,7 +13,7 @@ class PpuRegFileSpec extends Specification {
 
     def "all boolean registers are initialized and reachable"() {
         expect:
-        registers.booleanRegisters.size() == 14
+        registers.booleanRegisters.size() == 12
 
         registers.secondWrite.getName() == "PPU.W"
         registers.hBlank.getName() == "PPU.HB"

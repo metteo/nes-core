@@ -3,22 +3,26 @@ package net.novaware.nes.core.ppu.memory;
 import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.Arrays;
+
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class DisplayMemory implements Nameable {
 
-    private static final int COLOR_MASK = 0x0F;
-    private static final int META_MASK = 0xF0;
+    private static final int COLOR_MASK = 0b11_1111;
+    private static final int META_MASK = 0b1100_0000;
 
     private final String name;
 
-    private final @Unsigned byte[][] buffer; // TODO: allow switching  between back and front buffer?
+    private @Unsigned byte[][] frontBuffer;
+    private @Unsigned byte[][] backBuffer;
 
     public DisplayMemory(String name, int height, int width) {
         this.name = name;
 
-        buffer = new @Unsigned byte[height][width];
+        frontBuffer = new @Unsigned byte[height][width];
+        backBuffer = new @Unsigned byte[height][width];
     }
 
     // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex/transparency? etc
@@ -36,27 +40,33 @@ public class DisplayMemory implements Nameable {
     // TODO: allow multiple instances for handoff between threads
 
     public int getHeight() {
-        return buffer.length;
+        return frontBuffer.length;
     }
 
     public int getWidth() {
-        assert buffer.length > 0;
+        assert frontBuffer.length > 0;
 
-        return buffer[0].length;
+        return frontBuffer[0].length;
     }
 
-    public @Unsigned byte getColor(int y, int x) {
-        assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
-        assert 0 < buffer.length & x < buffer[0].length;
+    public @Unsigned byte getColor(int y, int x) { // TODO: probably should be synced
+        assert y < frontBuffer.length; // TODO: consider hard assertions, but verify performance penalty
+        assert 0 < frontBuffer.length & x < frontBuffer[0].length;
 
-        return ubyte(sint(buffer[y][x]) & COLOR_MASK);
+        return ubyte(sint(frontBuffer[y][x]) & COLOR_MASK);
     }
 
     public void setColor(int y, int x, @Unsigned byte color) {
-        assert y < buffer.length; // TODO: consider hard assertions, but verify performance penalty
-        assert 0 < buffer.length && x < buffer[0].length;
+        assert y < backBuffer.length; // TODO: consider hard assertions, but verify performance penalty
+        assert 0 < backBuffer.length && x < backBuffer[0].length;
 
-        buffer[y][x] = ubyte(sint(color) & COLOR_MASK);
+        backBuffer[y][x] = ubyte(sint(color) & COLOR_MASK);
+    }
+
+    public void setColor(@Unsigned byte color) {
+        for(int y = 0; y < backBuffer.length; ++y) {
+            Arrays.fill(backBuffer[y], ubyte(sint(color) & COLOR_MASK));
+        }
     }
 
     public @Unsigned byte getMeta(int y, int x) { // TODO: consider dedicated methods per info like enum with layers
@@ -75,5 +85,11 @@ public class DisplayMemory implements Nameable {
     @Override
     public String toString() {
         return name + ": " + getWidth() + "x" + getHeight();
+    }
+
+    public synchronized void swap() {
+        @Unsigned byte[][] swapped = frontBuffer;
+        frontBuffer = backBuffer;
+        backBuffer = swapped;
     }
 }
