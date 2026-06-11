@@ -50,6 +50,7 @@ public enum Action {
     // region Draw
 
     RENDER ("RDR", DRAW),
+    CLEAR ("CLR", DRAW),
 
     // endregion
     // region View

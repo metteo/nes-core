@@ -17,8 +17,6 @@ public class DefaultDisplayModel implements DisplayModel {
     private DisplayMemory pixels; // TODO: do not expose display mem like that?
     protected PaletteData paletteData = new PaletteData();
 
-    private int[] palette = new int[0x40];
-
     @Override
     public void addChangeListener(ChangeListener listener) {
         listeners.add(ChangeListener.class, listener);
@@ -30,7 +28,7 @@ public class DefaultDisplayModel implements DisplayModel {
     }
 
     @Override
-    public Color getColor(int y, int x) {
+    public Color getColor(int y, int x) { // TODO: model should know what is the y, x ranges?
         @Unsigned byte index = pixels.getColor(y, x);
         int color = paletteData.getColor(index);
         return new Color(color); // FIXME: lots of objects!

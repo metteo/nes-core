@@ -21,8 +21,8 @@ public class TestUI {
         frame.requestFocusInWindow();
 
         JDisplay display = new JDisplay(displayModel);
-        //display.setPreferredSize(new Dimension(1280, 800)); // steam deck
-        display.setPreferredSize(new Dimension(256 + 2, 240 + 2)); // 1x scale
+        display.setPreferredSize(new Dimension(1280, 800)); // steam deck
+        //display.setPreferredSize(new Dimension(256 + 2, 240 + 2)); // 1x scale
 
         //JBezel bezel = new JBezel();
         //bezel.setPreferredSize(new Dimension(1280, 800));

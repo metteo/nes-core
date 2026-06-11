@@ -6,9 +6,9 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
-public enum BorderRegion {
-    NTSC (VideoStandard.NTSC, 16, 11, 0, 2),
-    PAL  (VideoStandard.PAL,   2,  2, 1, 0),
+public enum Overscan {
+    NTSC (VideoStandard.NTSC, 16, 11, 8, 8),
+    PAL  (VideoStandard.PAL,   2,  2, 2, 2),
 
     // TODO: add other video standards
 
@@ -21,10 +21,10 @@ public enum BorderRegion {
     private final int top;
     private final int bottom;
 
-    private static Map<VideoStandard, BorderRegion> byVideoStandardIndex = Stream.of(values())
-            .collect(toMap(BorderRegion::getVideoStandard, Function.identity()));
+    private static Map<VideoStandard, Overscan> byVideoStandardIndex = Stream.of(values())
+            .collect(toMap(Overscan::getVideoStandard, Function.identity()));
 
-    BorderRegion(VideoStandard videoStandard, int left, int right, int top, int bottom) {
+    Overscan(VideoStandard videoStandard, int left, int right, int top, int bottom) {
         this.videoStandard = videoStandard;
         this.left = left;
         this.right = right;
@@ -32,7 +32,7 @@ public enum BorderRegion {
         this.bottom = bottom;
     }
 
-    public static BorderRegion of(VideoStandard vs) {
+    public static Overscan of(VideoStandard vs) {
         return byVideoStandardIndex.getOrDefault(vs, UNKNOWN);
     }
 

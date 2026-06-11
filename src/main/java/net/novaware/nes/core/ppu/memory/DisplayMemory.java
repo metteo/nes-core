@@ -3,6 +3,8 @@ package net.novaware.nes.core.ppu.memory;
 import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.Arrays;
+
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -59,6 +61,12 @@ public class DisplayMemory implements Nameable {
         assert 0 < backBuffer.length && x < backBuffer[0].length;
 
         backBuffer[y][x] = ubyte(sint(color) & COLOR_MASK);
+    }
+
+    public void setColor(@Unsigned byte color) {
+        for(int y = 0; y < backBuffer.length; ++y) {
+            Arrays.fill(backBuffer[y], ubyte(sint(color) & COLOR_MASK));
+        }
     }
 
     public @Unsigned byte getMeta(int y, int x) { // TODO: consider dedicated methods per info like enum with layers

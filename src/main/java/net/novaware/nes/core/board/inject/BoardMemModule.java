@@ -4,14 +4,15 @@ import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.apu.register.ApuRegFile;
+import net.novaware.nes.core.config.BorderRegion;
+import net.novaware.nes.core.config.CoreConfig;
+import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.ppu.memory.DisplayMemory;
 import net.novaware.nes.core.ppu.memory.PpuMemDevice;
 
-import static net.novaware.nes.core.config.VideoStandard.ACTIVE_HEIGHT;
-import static net.novaware.nes.core.config.VideoStandard.ACTIVE_WIDTH;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
@@ -38,9 +39,15 @@ public interface BoardMemModule {
 
     @Provides
     @BoardScope
-    static DisplayMemory provideDisplayMemory() {
-        // TODO: fill with regular black on reset?
-        return new DisplayMemory("DISPLAY", ACTIVE_HEIGHT, ACTIVE_WIDTH);
+    static DisplayMemory provideDisplayMemory(CoreConfig config) {
+        VideoStandard vs = config.getVideoStandard();
+        BorderRegion br = BorderRegion.of(vs);
+
+        // TODO: fill with 0xFF on reset?
+        return new DisplayMemory("DISPLAY",
+            br.getTop() + vs.getActiveHeight() + br.getBottom(),
+            br.getLeft() + vs.getActiveWidth() + br.getRight()
+        );
     }
 
     // TODO: add the rest of memory mapped devices

@@ -1,5 +1,6 @@
 package net.novaware.nes.core.ui;
 
+import net.novaware.nes.core.config.BorderRegion;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.util.Hex;
 
@@ -18,6 +19,10 @@ public class JDisplay extends JComponent implements ChangeListener {
 
     private final Insets insets = new Insets(0, 0, 0, 0); // reused if no border
     private VideoStandard videoStandard;
+    private BorderRegion borderRegion;
+
+    private final int screenHeight;
+    private final int screenWidth;
 
     private int pixelHeight;
     private int paddingTop;
@@ -25,13 +30,20 @@ public class JDisplay extends JComponent implements ChangeListener {
     private int pixelWidth;
     private int paddingLeft;
 
-    private boolean drawMask = false;
+    private boolean drawMask = true;
 
     public JDisplay(DisplayModel model) {
         this.model = model;
         this.model.addChangeListener(this);
 
         registerMouseClicked(model);
+
+        videoStandard = VideoStandard.NTSC;
+        borderRegion = BorderRegion.of(videoStandard);
+
+        // TODO: adjust to the model instead
+        screenHeight = borderRegion.getTop() + videoStandard.getActiveHeight() + borderRegion.getBottom();
+        screenWidth = borderRegion.getLeft() + videoStandard.getActiveWidth() + borderRegion.getRight();
     }
 
     private void registerMouseClicked(DisplayModel model) {
@@ -40,7 +52,7 @@ public class JDisplay extends JComponent implements ChangeListener {
             public void mouseClicked(MouseEvent e) {
                 int pixelX = (e.getX() - paddingLeft) / pixelWidth;
                 int pixelY = (e.getY() - paddingTop) / pixelHeight;
-                Color c = model.getColor(pixelY, pixelX);
+                Color c = model.getColor(pixelY, pixelX); // FIXME: throws exception because out of model bounds
                 String pixelC = Hex.s(c.getRGB());
                 System.out.println("x: " + pixelX + ", y: " + pixelY + ", c: " + pixelC);
 
@@ -60,32 +72,37 @@ public class JDisplay extends JComponent implements ChangeListener {
 
         Insets insets = getInsets(this.insets);
 
-        videoStandard = VideoStandard.NTSC;
+        // TODO: account for overscan
 
         int height = getHeight();
-        pixelHeight = height / videoStandard.getActiveHeight();
-        paddingTop = (height - pixelHeight * videoStandard.getActiveHeight()) / 2;
+        pixelHeight = height / screenHeight;
+        paddingTop = (height - pixelHeight * screenHeight) / 2;
 
         int width = getWidth();
         pixelWidth = pixelHeight * 8 / 7; // TODO: support PAL too
-        paddingLeft = (width - pixelWidth * videoStandard.getActiveWidth()) / 2;
+        paddingLeft = (width - pixelWidth * screenWidth) / 2;
 
-        for (int y = 0; y < videoStandard.getActiveHeight(); y++) {
-            for (int x = 0; x < videoStandard.getActiveWidth(); x++) {
-
-                g.setColor(model.getColor(y, x));
+        for (int y = 0; y < screenHeight; y++) {
+            for (int x = 0; x < screenWidth; x++) {
+                Color pixelColor = model.getColor(y, x);
+                g.setColor(pixelColor);
 
                 int rectX = paddingLeft + (x * pixelWidth);
                 int rectY = paddingTop + (y * pixelHeight);
                 g.fillRect(rectX, rectY, pixelWidth, pixelHeight);
 
-                if (pixelWidth > 2 && pixelHeight > 2 && drawMask) {
+                if (pixelWidth > 1 && pixelHeight > 1 && drawMask) {
                     int rectXPlusW = rectX + pixelWidth - 1;
                     int rectYPlusH = rectY + pixelHeight - 1;
 
-                    g.setColor(Color.BLACK);
+//                    vertical lines don't look that good
+//                    g.setColor(pixelColor.brighter());
+//                    g.drawLine(rectXPlusW, rectY, rectXPlusW, rectYPlusH);
+
+                    g.setColor(pixelColor.darker());
                     g.drawLine(rectX, rectYPlusH, rectXPlusW, rectYPlusH);
-                    g.drawLine(rectXPlusW, rectY, rectXPlusW, rectYPlusH);
+
+
                 }
             }
         }

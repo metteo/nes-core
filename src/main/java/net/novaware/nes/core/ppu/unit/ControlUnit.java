@@ -339,6 +339,7 @@ public class ControlUnit {
             case PRE_RENDER:
                 bus = busActions[dot];
                 view = preRenderViewActions[dot];
+                draw = getPreRenderDrawAction(dot);
                 flag = getPreRenderFlagAction(dot);
                 resetLock.set(false); // first pre-render
                 break;
@@ -365,7 +366,7 @@ public class ControlUnit {
     @Unsigned byte bgLoBitsBuffer;
     @Unsigned byte bgHiBitsBuffer;
 
-    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly
+    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly?
     @Unsigned short bgLoBitsShiftReg;
     @Unsigned short bgHiBitsShiftReg;
     @Unsigned short attrLoBitsShiftReg;
@@ -489,6 +490,11 @@ public class ControlUnit {
                 // TODO: read dot from EXT and MUX it with previous+2 dot
                 // TODO: push previous+3 dot to videoOutRegister
             }
+            case CLEAR -> {
+                // TODO: on pal border region is always black
+                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 0, 0);
+                videoOut.set(-1, -1, backdrop);
+            }
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected draw action: " + draw);
         }
@@ -574,6 +580,10 @@ public class ControlUnit {
 
     private Action getPreRenderFlagAction(int dot) {
         return dot == 1 ? Action.CLR_STATUS : Action.NO_OPERATION;
+    }
+
+    private Action getPreRenderDrawAction(int dot) {
+        return dot == 1 ? Action.CLEAR : NO_OPERATION;
     }
 
     private void clearStatus() {
