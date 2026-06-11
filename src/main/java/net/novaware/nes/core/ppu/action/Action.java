@@ -20,8 +20,6 @@ public enum Action {
     ACCESS_ATTR_TABLE_ADDRESS  ("ATA", BUS),
     READ_ATTR_TABLE_DATA       ("ATD", BUS),
 
-    // TODO: dot 0 skipped on even frames
-    // TODO: dot 0 of every scanline except see above
     ACCESS_BG_LO_BITS_ADDRESS  ("BLA", BUS),
     READ_BG_LO_BITS_DATA       ("BLD", BUS),
 
@@ -33,6 +31,8 @@ public enum Action {
                                     // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
     IGNORED_NAME_TABLE_ADDRESS ("NAI", BUS),
     IGNORED_NAME_TABLE_DATA    ("NDI", BUS),
+
+    UNUSED_BG_LO_BITS_ADDRESS  ("BLU", BUS),
 
     ACCESS_SP_LO_BITS_ADDRESS  ("SLA", BUS),
     READ_SP_LO_BITS_DATA       ("SLD", BUS),
@@ -50,7 +50,7 @@ public enum Action {
     // region Draw
 
     RENDER ("RDR", DRAW),
-    CLEAR ("CLR", DRAW),
+    CLEAR  ("CLR", DRAW),
 
     // endregion
     // region View
@@ -73,7 +73,7 @@ public enum Action {
     // region Misc
 
     NO_OPERATION ("NOP", MISC),
-    JUMP_IF_ODD ("JIO", MISC),
+    JUMP_IF_ODD  ("JIO", MISC),
 
     // endregion
 

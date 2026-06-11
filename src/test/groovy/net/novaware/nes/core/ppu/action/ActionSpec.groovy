@@ -6,6 +6,6 @@ class ActionSpec extends Specification {
 
     def "should have correct number of actions"() {
         expect:
-        Action.values().length == 31
+        Action.values().length == 32
     }
 }

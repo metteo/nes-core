@@ -45,6 +45,7 @@ import static net.novaware.nes.core.ppu.action.Action.READ_SP_LO_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.SET_HBLANK;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
+import static net.novaware.nes.core.ppu.action.Action.UNUSED_BG_LO_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
@@ -193,7 +194,7 @@ public class ControlUnit {
         Arrays.fill(busActions, Action.NO_OPERATION);
 
         // tile 3 of current background
-        // busActions[0] = ACCESS_BG_LO_BITS_ADDRESS; // TODO: replace with one that doesn't shift the registers
+        busActions[0] = UNUSED_BG_LO_BITS_ADDRESS;
 
         for (int x = 1; x <= 256; x+=8) { // current background
             busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
@@ -303,26 +304,26 @@ public class ControlUnit {
 
         final boolean forceBlank = !(renderSprite.get() || renderBackground.get());
 
+        Action draw = NO_OPERATION;
         Action bus = NO_OPERATION;
         Action view = NO_OPERATION;
         Action oam = NO_OPERATION;
-        Action draw = NO_OPERATION;
         Action flag = NO_OPERATION;
 
         switch(scanLines[scanLine]) {
             case RENDER_START:
+                draw = drawActions[dot];
                 bus = busActions[dot];
                 view = renderingViewActions[dot];
                 oam = oamActions[dot];
-                draw = drawActions[dot];
                 flag = getRenderStartFlagAction(dot);
                 break;
             case RENDERING:
             case RENDER_END:
+                draw = drawActions[dot];
                 bus = busActions[dot];
                 view = renderingViewActions[dot];
                 oam = oamActions[dot];
-                draw = drawActions[dot];
                 flag = getRenderingFlagAction(dot);
                 break;
             case POST_RENDER:
@@ -337,9 +338,9 @@ public class ControlUnit {
                 // NOOP for all
                 break;
             case PRE_RENDER:
+                draw = getPreRenderDrawAction(dot);
                 bus = busActions[dot];
                 view = preRenderViewActions[dot];
-                draw = getPreRenderDrawAction(dot);
                 flag = getPreRenderFlagAction(dot);
                 resetLock.set(false); // first pre-render
                 break;
@@ -349,10 +350,10 @@ public class ControlUnit {
         //System.out.println(dot + ": " + bus.getMnemonic() + " " + view.getMnemonic() + " " + oam.getMnemonic() + " " + draw.getMnemonic() + " " + flag.getMnemonic());
 
         if (!resetLock.get() && !forceBlank) {
+            executeDraw(draw);
             executeBus(bus);
             executeView(view);
             executeOam(oam);
-            executeDraw(draw);
         }
 
         executeFlag(flag);
@@ -433,10 +434,13 @@ public class ControlUnit {
             case UNUSED_NAME_TABLE_DATA    -> {}
             case IGNORED_NAME_TABLE_ADDRESS -> {}
             case IGNORED_NAME_TABLE_DATA   -> {}
+            case UNUSED_BG_LO_BITS_ADDRESS -> {}
+
             case ACCESS_SP_LO_BITS_ADDRESS -> {}
             case READ_SP_LO_BITS_DATA      -> {}
             case ACCESS_SP_HI_BITS_ADDRESS -> {}
             case READ_SP_HI_BITS_DATA      -> {}
+
             case NO_OPERATION              -> {}
             default -> throw new IllegalStateException("Unexpected bus action: " + busAction);
         }
@@ -492,7 +496,7 @@ public class ControlUnit {
             }
             case CLEAR -> {
                 // TODO: on pal border region is always black
-                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 0, 0);
+                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 1, 1); // TODO: for debugging 0, 0);
                 videoOut.set(-1, -1, backdrop);
             }
             case NO_OPERATION -> {}
@@ -548,7 +552,7 @@ public class ControlUnit {
     }
 
     private Action getPostRenderBusAction(int dot) {
-        return dot == 0 ? ACCESS_BG_LO_BITS_ADDRESS : NO_OPERATION;
+        return dot == 0 ? UNUSED_BG_LO_BITS_ADDRESS : NO_OPERATION;
     }
 
     private Action getPostRenderFlagAction(int dot) {

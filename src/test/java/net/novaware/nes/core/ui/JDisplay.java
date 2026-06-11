@@ -50,10 +50,11 @@ public class JDisplay extends JComponent implements ChangeListener {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int pixelX = (e.getX() - paddingLeft) / pixelWidth;
-                int pixelY = (e.getY() - paddingTop) / pixelHeight;
+                int pixelX = (e.getX() - paddingLeft) / pixelWidth - borderRegion.getLeft();
+                int pixelY = (e.getY() - paddingTop) / pixelHeight - borderRegion.getTop();
                 Color c = model.getColor(pixelY, pixelX); // FIXME: throws exception because out of model bounds
                 String pixelC = Hex.s(c.getRGB());
+
                 System.out.println("x: " + pixelX + ", y: " + pixelY + ", c: " + pixelC);
 
                 drawMask = !drawMask;
