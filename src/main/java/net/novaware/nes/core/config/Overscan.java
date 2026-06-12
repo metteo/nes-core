@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.toMap;
 
 public enum Overscan {
-    NTSC (VideoStandard.NTSC, 16, 11, 8, 8),
+    NTSC (VideoStandard.NTSC, 16, 11, 8, 8), // TODO: consider border region
     PAL  (VideoStandard.PAL,   2,  2, 2, 2),
 
     // TODO: add other video standards

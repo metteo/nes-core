@@ -84,17 +84,23 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         this.videoEncoder = videoEncoder;
     }
 
+    long cpuTime;
+    long ppuTime;
+
     public void runFrame() {
         frameCounter.increment();
         frameBudget.decrement();
 
         while (ppuClockBudget.getValue() >= videoStandard.getPpuDivisor()) { // TODO: calculate it correctly (double with epsilon)
+            //long cpuStart = System.nanoTime(); // FIXME: nanoTime in the every instruction is verrrry slow!
             int cpuCyclesConsumed = cpu.cycle();
             cpuClockBudget.decrementBy(cpuCyclesConsumed * videoStandard.getCpuDivisor());
+            //cpuTime += System.nanoTime() - cpuStart;
 
             double ppuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getPpuDivisor();
             ppuToCpuCycleBudget.setValue(ppuToCpuCycleBudget.getValue() + ppuCyclesBudget);
 
+            //long ppuStart = System.nanoTime();
             while (ppuToCpuCycleBudget.getValue() > 0.9) { // don't delay last cycle due to fraction inequality
                 ppuToCpuCycleBudget.decrement();
                 int ppuCyclesConsumed = ppu.cycle();
@@ -103,6 +109,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
                 int videoEncoderCyclesConsumed = videoEncoder.cycle();
                 assert videoEncoderCyclesConsumed == ppuCyclesConsumed : "video encoder cycles problem!";
             }
+            //ppuTime += System.nanoTime() - ppuStart;
 
             double apuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getApuDivisor();
             apuToCpuCycleBudget.setValue(apuToCpuCycleBudget.getValue() + apuCyclesBudget);
@@ -161,7 +168,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         timeCounter.increment();
 
         long tickDuration = System.nanoTime() - tickStart;
-        System.out.println((int) videoStandard.getRefreshRate() + " Frames time: " + tickDuration + "ns, Spin time: " + frameSpinTime + "ns");
+        System.out.println((int) videoStandard.getRefreshRate() + " Frames time: " + tickDuration + "ns, CPU time: " + cpuTime + "ns, PPU time: " + ppuTime + "ns, Spin time: " + frameSpinTime + "ns");
     }
 
     @Override
@@ -243,6 +250,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         frameDuration = 1_000L /* ms */ * 1_000_000L /* ns */ / (long) frameBudget.getValue();
         frameSpinTime = 0L;
+
+        cpuTime = 0L;
+        ppuTime = 0L;
     }
 
     void calculateFrameBudget() {

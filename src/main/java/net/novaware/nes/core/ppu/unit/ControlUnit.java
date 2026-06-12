@@ -17,6 +17,7 @@ import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.register.ShortShifter;
@@ -110,6 +111,15 @@ public class ControlUnit {
     private final ShortRegister spritePatternTable;
     private final VideoOutRegister videoOut;
     private final PaletteMemory paletteMemory;
+
+    public ByteRegister nameTableBuffer = new ByteRegister("NT.BUF"); // tile xy
+
+    public ShortRegister attributesBuffer = new ShortRegister("AT.BUF");
+    public ShortRegister backgroundBuffer = new ShortRegister("BG.BUF");
+
+    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly, or just -1?
+    public ShortShifter background = new ShortShifter("BG.SFT");
+    public ShortShifter attributes = new ShortShifter("AT.SFT");
 
     @Inject
     public ControlUnit(
@@ -365,15 +375,6 @@ public class ControlUnit {
         return 1;
     }
 
-    @Unsigned byte nameTableBuffer; // tile xy
-
-    ShortRegister attributesBuffer = new ShortRegister("AT.BUF");
-    ShortRegister backgroundBuffer = new ShortRegister("BG.BUF");
-
-    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly, or just -1?
-    ShortShifter background = new ShortShifter("BG.SFT");
-    ShortShifter attributes = new ShortShifter("AT.SFT");
-
     private void executeBus(Action busAction) {
         switch(busAction) {
             case ACCESS_NAME_TABLE_ADDRESS -> {
@@ -386,7 +387,7 @@ public class ControlUnit {
                 shiftShiftRegisters();
 
                 @Unsigned byte nameTableData = bus.read().data();
-                nameTableBuffer = nameTableData;
+                nameTableBuffer.set(nameTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
                 shiftShiftRegisters();
@@ -464,7 +465,7 @@ public class ControlUnit {
     // TODO: move to pattern table?
     private int getBackgroundPatternAddress(int plane) {
         int half = backgroundPatternTable.getAsInt();
-        int tile = sint(nameTableBuffer) << 4;
+        int tile = nameTableBuffer.getAsInt() << 4;
         int planeShifted = plane << 3;
         int tileRow = currentViewPort.getFineY();
 
