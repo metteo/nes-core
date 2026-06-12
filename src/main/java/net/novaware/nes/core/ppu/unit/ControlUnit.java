@@ -19,6 +19,7 @@ import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
+import net.novaware.nes.core.register.ShortShifter;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.Arrays;
@@ -67,6 +68,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
@@ -364,15 +366,13 @@ public class ControlUnit {
     }
 
     @Unsigned byte nameTableBuffer; // tile xy
-    @Unsigned byte attrTableBuffer; // palette nums
-    @Unsigned byte bgLoBitsBuffer;
-    @Unsigned byte bgHiBitsBuffer;
 
-    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly?
-    @Unsigned short bgLoBitsShiftReg;
-    @Unsigned short bgHiBitsShiftReg;
-    @Unsigned short attrLoBitsShiftReg;
-    @Unsigned short attrHiBitsShiftReg;
+    ShortRegister attributesBuffer = new ShortRegister("AT.BUF");
+    ShortRegister backgroundBuffer = new ShortRegister("BG.BUF");
+
+    // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly, or just -1?
+    ShortShifter background = new ShortShifter("BG.SFT");
+    ShortShifter attributes = new ShortShifter("AT.SFT");
 
     private void executeBus(Action busAction) {
         switch(busAction) {
@@ -387,8 +387,6 @@ public class ControlUnit {
 
                 @Unsigned byte nameTableData = bus.read().data();
                 nameTableBuffer = nameTableData;
-
-                //System.out.println(scanLineCounter.getValue() + ", " + dotCounter.getValue() + ": " + Hex.s(currentViewPort.getNameTableAddress()) + " -> " + Hex.s(nameTableData));
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
                 shiftShiftRegisters();
@@ -400,11 +398,10 @@ public class ControlUnit {
                 shiftShiftRegisters();
 
                 @Unsigned byte attrTableData = bus.read().data();
-                attrTableBuffer = attrTableData;
-
+                extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
-                shiftShiftRegisters(); // FIXME: may not be needed for dot 0 of every scan line (green square)
+                shiftShiftRegisters();
 
                 int bgLoAddr = getBackgroundPatternAddress(0);
 
@@ -414,7 +411,7 @@ public class ControlUnit {
                 shiftShiftRegisters();
 
                 @Unsigned byte bgLoData = bus.read().data();
-                bgLoBitsBuffer = bgLoData;
+                backgroundBuffer.low(bgLoData);
             }
             case ACCESS_BG_HI_BITS_ADDRESS -> {
                 shiftShiftRegisters();
@@ -427,9 +424,9 @@ public class ControlUnit {
                 shiftShiftRegisters();
 
                 @Unsigned byte bgHiData = bus.read().data();
-                bgHiBitsBuffer = bgHiData;
+                backgroundBuffer.high(bgHiData);
 
-                fillShiftRegisters(); // TODO: consider making this a separate action
+                loadShifters(); // TODO: consider making this a separate action
             }
             case UNUSED_NAME_TABLE_ADDRESS -> {}
             case UNUSED_NAME_TABLE_DATA    -> {}
@@ -447,19 +444,21 @@ public class ControlUnit {
         }
     }
 
-    private void fillShiftRegisters() {
-        bgLoBitsShiftReg = ushort((sint(bgLoBitsShiftReg) & 0xFF00) | sint(bgLoBitsBuffer));
-        bgHiBitsShiftReg = ushort((sint(bgHiBitsShiftReg) & 0xFF00) | sint(bgHiBitsBuffer));
-
-        int attrBitsLatch = AttributeTable.getSubAttribute(attrTableBuffer, currentViewPort);
+    private void extractCurrentAttribute(@Unsigned byte attrTableData) {
+        int attrBitsLatch = sint(AttributeTable.getSubAttribute(attrTableData, currentViewPort));
         int attrLoBitLatch = attrBitsLatch & 0b01;
         int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
 
-        int attrLoBitsBuffer = attrLoBitLatch == 1 ? 0xFF : 0x00;
-        int attrHiBitsBuffer = attrHiBitLatch == 1 ? 0xFF : 0x00;
+        attributesBuffer.low(ubyte(attrLoBitLatch * 0xFF));
+        attributesBuffer.high(ubyte(attrHiBitLatch * 0xFF));
+    }
 
-        attrLoBitsShiftReg = ushort(((sint(attrLoBitsShiftReg) & 0xFF00) | attrLoBitsBuffer));
-        attrHiBitsShiftReg = ushort(((sint(attrHiBitsShiftReg) & 0xFF00) | attrHiBitsBuffer));
+    private void loadShifters() {
+        background.loadPlaneHigh(backgroundBuffer.high());
+        background.loadPlaneLow(backgroundBuffer.low());
+
+        attributes.loadPlaneLow(attributesBuffer.low());
+        attributes.loadPlaneHigh(attributesBuffer.high());
     }
 
     // TODO: move to pattern table?
@@ -497,7 +496,7 @@ public class ControlUnit {
             }
             case CLEAR -> {
                 // TODO: on pal border region is always black
-                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 1, 1); // TODO: for debugging 0, 0);
+                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 1, 1); // TODO: for debugging, should be 0, 0);
                 videoOut.set(-1, -1, backdrop);
             }
             case NO_OPERATION -> {}
@@ -506,18 +505,11 @@ public class ControlUnit {
     }
 
     private void selectBgAndAttrBits() {
-        int fineX = currentViewPort.getFineX();
-        int shift = 0xF - fineX;
-        int mask = 0b1 << shift;
-
-        int bgLoBit = (sint(bgLoBitsShiftReg) & mask) >> shift;
-        int bgHiBit = (sint(bgHiBitsShiftReg) & mask) >> shift;
-        int atLoBit = (sint(attrLoBitsShiftReg) & mask) >> shift;
-        int atHiBit = (sint(attrHiBitsShiftReg) & mask) >> shift;
-                                                // Bits
-        Section section = BACKGROUND;           // 4
-        int palette = (atHiBit << 1) | atLoBit; // 3-2
-        int offset  = (bgHiBit << 1) | bgLoBit; // 1-0
+        final int fineX = currentViewPort.getFineX();
+                                                       // Bits
+        Section section = BACKGROUND;                  // 4
+        int palette = sint(attributes.getBits(fineX)); // 3-2
+        int offset  = sint(background.getBits(fineX)); // 1-0
 
         @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
 
@@ -526,10 +518,8 @@ public class ControlUnit {
     }
 
     private void shiftShiftRegisters() {
-        bgLoBitsShiftReg = ushort(sint(bgLoBitsShiftReg) << 1);
-        bgHiBitsShiftReg = ushort(sint(bgHiBitsShiftReg) << 1);
-        attrLoBitsShiftReg = ushort(sint(attrLoBitsShiftReg) << 1);
-        attrHiBitsShiftReg = ushort(sint(attrHiBitsShiftReg) << 1);
+        background.shiftPlanes();
+        attributes.shiftPlanes();
     }
 
     private void executeOam(Action oam) {

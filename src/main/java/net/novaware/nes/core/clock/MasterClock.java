@@ -161,7 +161,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         timeCounter.increment();
 
         long tickDuration = System.nanoTime() - tickStart;
-        System.out.println("Frame time: " + tickDuration + "ns, Spin time: " + frameSpinTime + "ns");
+        System.out.println((int) videoStandard.getRefreshRate() + " Frames time: " + tickDuration + "ns, Spin time: " + frameSpinTime + "ns");
     }
 
     @Override

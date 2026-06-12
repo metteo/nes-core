@@ -22,11 +22,11 @@ public class ShortShifter extends Register {
         super(name);
     }
 
-    void loadPlaneLow(@Unsigned byte lowByte) {
+    public void loadPlaneLow(@Unsigned byte lowByte) {
         planeLo = loadPlane(planeLo, lowByte);
     }
 
-    void loadPlaneHigh(@Unsigned byte lowByte) {
+    public void loadPlaneHigh(@Unsigned byte lowByte) {
         planeHi = loadPlane(planeHi, lowByte);
     }
 
