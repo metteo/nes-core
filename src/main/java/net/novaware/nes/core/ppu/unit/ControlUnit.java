@@ -9,6 +9,7 @@ import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
@@ -513,11 +514,12 @@ public class ControlUnit {
         int bgHiBit = (sint(bgHiBitsShiftReg) & mask) >> shift;
         int atLoBit = (sint(attrLoBitsShiftReg) & mask) >> shift;
         int atHiBit = (sint(attrHiBitsShiftReg) & mask) >> shift;
+                                                // Bits
+        Section section = BACKGROUND;           // 4
+        int palette = (atHiBit << 1) | atLoBit; // 3-2
+        int offset  = (bgHiBit << 1) | bgLoBit; // 1-0
 
-        int palette = (atHiBit << 1) | atLoBit;
-        int offset = (bgHiBit << 1) | bgLoBit;
-
-        @Unsigned byte color = paletteMemory.getColor(BACKGROUND, palette, offset);
+        @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
 
         // TODO: too early to output, do priority, ext in / out muxing
         videoOut.set(scanLineCounter.getValue(), dotCounter.getValue() - 1, color);

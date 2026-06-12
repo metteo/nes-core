@@ -13,6 +13,7 @@ public class UTypes {
     /**
      * Convert unsigned short to signed int (regular int)
      */
+    // TODO: replace signed shift >> with unsigned >>> everywhere if not troublesome with (@Unsigned int) / uint()
     public static int sint(@Unsigned short s) {
         return s & 0xFFFF;
     }
@@ -20,13 +21,14 @@ public class UTypes {
     /**
      * Convert unsigned byte to signed int (regular int)
      */
+    // TODO: replace signed shift >> with unsigned >>> everywhere if not troublesome with (@Unsigned int) / uint()
     public static int sint(@Unsigned byte b) {
         return b & 0xFF;
     }
 
     @SuppressWarnings("signedness")
     public static @Unsigned short ushort(int i) {
-        return (short) i;
+        return (@Unsigned short) i; // TODO: check if suppress is needed with @U added in the cast
     }
 
     public static @Unsigned short ushort(@Unsigned byte b) {

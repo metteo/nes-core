@@ -33,8 +33,11 @@ import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 /**
- * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
- * TODO: create a separate stub ppu class that can be switched with real one?
+ * Picture Processing Unit
+ *
+ * 2C02 / 2C07 (NTSC / PAL)
+ *
+ * @see <a href="https://www.nesdev.org/wiki/PPU">PPU on nesdev.org</a>
  */
 @BoardScope
 public class Ppu implements ClockReceiver {

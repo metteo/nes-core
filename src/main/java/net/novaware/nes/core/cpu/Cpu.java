@@ -41,6 +41,10 @@ import static net.novaware.nes.core.cpu.signal.Signal.HIGH;
 import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 
 /**
+ * Central Processing Unit <br>
+ * <br>
+ * MOS 6502 within 2A03 / 2A07 (NTSC / PAL) <br>
+ * <br>
  * https://web.archive.org/web/20221112231348if_/http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
  * TODO: test cpu https://github.com/SingleStepTests/65x02
  * TODO: https://github.com/christopherpow/nes-test-roms

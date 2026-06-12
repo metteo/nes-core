@@ -1,10 +1,12 @@
 package net.novaware.nes.core.ppu.action;
 
+import java.util.stream.Stream;
+
 import static net.novaware.nes.core.ppu.action.ActionCategory.BUS;
 import static net.novaware.nes.core.ppu.action.ActionCategory.DRAW;
+import static net.novaware.nes.core.ppu.action.ActionCategory.FLAG;
 import static net.novaware.nes.core.ppu.action.ActionCategory.MISC;
 import static net.novaware.nes.core.ppu.action.ActionCategory.OAM;
-import static net.novaware.nes.core.ppu.action.ActionCategory.FLAG;
 import static net.novaware.nes.core.ppu.action.ActionCategory.VIEW;
 
 /**
@@ -64,10 +66,10 @@ public enum Action {
     // endregion
     // region Flag
 
-    SET_VBLANK      ("SEV", FLAG),
-    SET_HBLANK      ("SEH", FLAG),
-    CLR_HBLANK      ("CLH", FLAG),
-    CLR_STATUS      ("CLS", FLAG),
+    SET_VBLANK ("SEV", FLAG),
+    SET_HBLANK ("SEH", FLAG),
+    CLR_HBLANK ("CLH", FLAG),
+    CLR_STATUS ("CLS", FLAG),
 
     // endregion
     // region Misc
@@ -89,4 +91,8 @@ public enum Action {
 
     public String getMnemonic() { return mnemonic; }
     public ActionCategory getCategory() { return category; }
+
+    public static Stream<Action> stream() {
+        return Stream.of(values());
+    }
 }
