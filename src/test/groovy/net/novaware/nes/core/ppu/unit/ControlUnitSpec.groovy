@@ -22,7 +22,7 @@ class ControlUnitSpec extends Specification {
 
     def config = ntsc()
     def cycleCounter = PpuRegModule.provideCycleCounter()
-    def scanLineCounter = PpuRegModule.provideScanLineCounter()
+    def scanLineCounter = PpuRegModule.provideLineCounter()
     def dotCounter = PpuRegModule.provideDotCounter()
     def oddFrame = PpuRegModule.provideOddFrame()
 

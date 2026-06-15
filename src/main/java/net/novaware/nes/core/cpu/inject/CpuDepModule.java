@@ -20,7 +20,7 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 
 /**
  * CPU Required Dependencies module. Should be provided by the board config.
@@ -41,9 +41,9 @@ public interface CpuDepModule {
     // FIXME: CPU should not have hard dependency on scanline / dot counters
     @Provides
     @BoardScope
-    @PpuVar(SC)
-    static IntegerCounter provideScanLineCounter() {
-        return new IntegerCounter(SC.doc());
+    @PpuVar(LC)
+    static IntegerCounter provideLineCounter() {
+        return new IntegerCounter(LC.doc());
     }
 
     @Provides

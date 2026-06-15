@@ -44,7 +44,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
     private final IntegerCounter instructionCycle;
     private final MemoryBus cpuBus;
 
-    private final IntegerCounter scanLineCounter;
+    private final IntegerCounter lineCounter;
     private final IntegerCounter dotCounter;
 
     private DataLine dataLine = new DataLine();
@@ -64,7 +64,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
         @CpuVar(IC) IntegerCounter instructionCycle,
         @CpuVar(BUS)MemoryBus cpuBus,
 
-        @PpuVar(PpuVarName.SC) IntegerCounter scanLineCounter,
+        @PpuVar(PpuVarName.LC) IntegerCounter lineCounter,
         @PpuVar(PpuVarName.DC) IntegerCounter dotCounter
     ) {
         this.prefetchAddress = prefetchAddress;
@@ -76,7 +76,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
         this.cycleCounter = cycleCounter;
         this.instructionCycle = instructionCycle;
         this.cpuBus = cpuBus;
-        this.scanLineCounter = scanLineCounter;
+        this.lineCounter = lineCounter;
         this.dotCounter = dotCounter;
     }
 
@@ -169,7 +169,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
         log.append("P:").append(Hex.s(registers.status().get().get())).append(" ");
         log.append("SP:").append(Hex.s(registers.sp().get())).append(" ");
 
-        String ppu = String.format("%3d,%3d", scanLineCounter.getValue(), dotCounter.getValue());
+        String ppu = String.format("%3d,%3d", lineCounter.getValue(), dotCounter.getValue());
         log.append("PPU:").append(ppu).append(" "); // "   ,   "
 
         // we are counting the cycles as they happen, so at the end of instruction decode some were already added

@@ -4,6 +4,9 @@ import java.util.List;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/Cycle_reference_chart">Cycle reference chart on nesdev.org</a>
+ * TODO: separate tv system from color
+ * https://en.wikipedia.org/wiki/CCIR_System_B
+ * https://en.wikipedia.org/wiki/CCIR_System_M
  */
 public enum VideoStandard { // TODO: include post render scanline (241, NTSC black, PAL backdrop) and border region
 

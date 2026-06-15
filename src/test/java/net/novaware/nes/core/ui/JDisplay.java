@@ -92,6 +92,7 @@ public class JDisplay extends JComponent implements ChangeListener {
                 int rectY = paddingTop + (y * pixelHeight);
                 g.fillRect(rectX, rectY, pixelWidth, pixelHeight);
 
+                // https://en.wikipedia.org/wiki/Moir%C3%A9_pattern
                 if (pixelWidth > 1 && pixelHeight > 1 && drawMask) {
                     int rectXPlusW = rectX + pixelWidth - 1;
                     int rectYPlusH = rectY + pixelHeight - 1;

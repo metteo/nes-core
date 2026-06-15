@@ -34,7 +34,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -49,7 +49,7 @@ public class PpuRegFile extends RegisterFile {
 
     // TODO: switch to private + getters when PPU impl is more advanced
     public final IntegerCounter cycleCounter;
-    public final IntegerCounter scanLineCounter;
+    public final IntegerCounter lineCounter;
     public final IntegerCounter dotCounter;
 
     public final PpuStatusRegister status;
@@ -84,7 +84,7 @@ public class PpuRegFile extends RegisterFile {
     @Inject
     public PpuRegFile(
         @PpuVar(CC) IntegerCounter cycleCounter,
-        @PpuVar(SC) IntegerCounter scanLineCounter,
+        @PpuVar(LC) IntegerCounter lineCounter,
         @PpuVar(DC) IntegerCounter dotCounter,
 
         @PpuVar(PS) PpuStatusRegister status,
@@ -118,7 +118,7 @@ public class PpuRegFile extends RegisterFile {
         super("PPU.REGS");
 
         this.cycleCounter = cycleCounter;
-        this.scanLineCounter = scanLineCounter;
+        this.lineCounter = lineCounter;
         this.dotCounter = dotCounter;
         this.status = status;
 

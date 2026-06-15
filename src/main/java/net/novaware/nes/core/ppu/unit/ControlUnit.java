@@ -63,7 +63,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -81,7 +81,7 @@ public class ControlUnit {
     private final VideoStandard videoStandard;
 
     private final IntegerCounter cycleCounter;
-    private final IntegerCounter scanLineCounter;
+    private final IntegerCounter lineCounter;
     private final IntegerCounter dotCounter;
     private final BooleanRegister oddFrame;
 
@@ -125,7 +125,7 @@ public class ControlUnit {
     public ControlUnit(
         CoreConfig config,
         @PpuVar(CC) IntegerCounter cycleCounter,
-        @PpuVar(SC) IntegerCounter scanLineCounter,
+        @PpuVar(LC) IntegerCounter lineCounter,
         @PpuVar(DC) IntegerCounter dotCounter,
         @PpuVar(OF) BooleanRegister oddFrame,
 
@@ -160,7 +160,7 @@ public class ControlUnit {
 
         this.videoStandard = vs;
         this.cycleCounter = cycleCounter;
-        this.scanLineCounter = scanLineCounter;
+        this.lineCounter = lineCounter;
         this.dotCounter = dotCounter;
         this.oddFrame = oddFrame;
         this.status = status;
@@ -312,7 +312,7 @@ public class ControlUnit {
                          //  only some registers can be used
         cycleCounter.increment();
 
-        final int scanLine = scanLineCounter.getValue();
+        final int scanLine = lineCounter.getValue();
         final int dot = dotCounter.getValue();
 
         final boolean forceBlank = !(renderSprite.get() || renderBackground.get());
@@ -515,7 +515,7 @@ public class ControlUnit {
         @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
 
         // TODO: too early to output, do priority, ext in / out muxing
-        videoOut.set(scanLineCounter.getValue(), dotCounter.getValue() - 1, color);
+        videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, color);
     }
 
     private void shiftShiftRegisters() {
@@ -598,11 +598,11 @@ public class ControlUnit {
 
         if (dotCounter.getValue() == videoStandard.getPhysicalWidth()) {
             dotCounter.reset();
-            scanLineCounter.increment();
+            lineCounter.increment();
         }
 
-        if (scanLineCounter.getValue() == videoStandard.getPhysicalHeight()) {
-            scanLineCounter.reset();
+        if (lineCounter.getValue() == videoStandard.getPhysicalHeight()) {
+            lineCounter.reset();
 
             // TODO: skip last dot of prerender, not first dot of RENDER_START
             boolean skipZeroZeroDotOnEvenFrame = videoStandard.isOddFrameCycleSkip() && oddFrame.get();

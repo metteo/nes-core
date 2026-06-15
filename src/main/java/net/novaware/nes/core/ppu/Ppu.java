@@ -141,7 +141,7 @@ public class Ppu implements ClockReceiver {
 
         regs.cycleCounter.setValue(cycles);
         regs.dotCounter.setValue(cycles);
-        regs.scanLineCounter.reset();
+        regs.lineCounter.reset();
 
         return cycles;
     }

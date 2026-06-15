@@ -25,8 +25,10 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
@@ -36,7 +38,6 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VOUT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -57,9 +58,16 @@ public interface PpuRegModule {
 
     @Provides
     @BoardScope
-    @PpuVar(SC)
-    static IntegerCounter provideScanLineCounter() {
-        return new IntegerCounter(SC.doc());
+    @PpuVar(FC)
+    static IntegerCounter provideFrameCounter() { // TODO: consider long or uint
+        return new IntegerCounter(FC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(LC)
+    static IntegerCounter provideLineCounter() {
+        return new IntegerCounter(LC.doc());
     }
 
     @Provides

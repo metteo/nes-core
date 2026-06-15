@@ -36,7 +36,7 @@ import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_END;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_SIZE;
 import static net.novaware.nes.core.easy.memory.EasyMemMap.STACK_SEGMENT_START;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 
 @Module
@@ -60,9 +60,9 @@ public interface EasyMemModule {
 
     @Provides
     @BoardScope
-    @PpuVar(SC)
-    static IntegerCounter provideScanLineCounter() {
-        return new IntegerCounter(SC.doc());
+    @PpuVar(LC)
+    static IntegerCounter provideLineCounter() {
+        return new IntegerCounter(LC.doc());
     }
 
     @Provides
