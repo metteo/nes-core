@@ -11,7 +11,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.FC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 
 @BoardScope
-public class ActionGrid {
+public class ActionGrid { // TODO: consider ActionRegistry name
 
     private final IntegerCounter frameCounter;
     private final IntegerCounter lineCounter;

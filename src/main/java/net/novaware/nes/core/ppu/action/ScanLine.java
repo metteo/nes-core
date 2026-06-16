@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.action;
 
-public enum ScanLine {
+public enum ScanLine { // TODO: maybe LineType as a name
     //            // NTSC
     RENDER_START, //     0
     RENDERING,    //   1 - 238
