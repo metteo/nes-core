@@ -1,4 +1,4 @@
-package net.novaware.nes.core.ppu.action
+package net.novaware.nes.core.ppu.unit
 
 import net.novaware.nes.core.config.VideoStandard
 import net.novaware.nes.core.ppu.inject.PpuRegModule
@@ -7,7 +7,7 @@ import spock.lang.Specification
 import static net.novaware.nes.core.config.VideoStandard.NTSC
 import static net.novaware.nes.core.config.VideoStandard.PAL
 
-class ActionGridSpec extends Specification {
+class TimingUnitSpec extends Specification {
 
     def frameCounter = PpuRegModule.provideFrameCounter()
     def frameToggle = PpuRegModule.provideFrameToggle()
@@ -17,8 +17,8 @@ class ActionGridSpec extends Specification {
     def renderSprite = PpuRegModule.provideRenderSprite()
     def renderBackground = PpuRegModule.provideRenderBackground()
 
-    ActionGrid newActionGrid(VideoStandard vs) {
-        def ag = new ActionGrid(vs, frameCounter, frameToggle, lineCounter, dotCounter, renderSprite, renderBackground)
+    TimingUnit newActionGrid(VideoStandard vs) {
+        def ag = new TimingUnit(vs, frameCounter, frameToggle, lineCounter, dotCounter, renderSprite, renderBackground)
         ag.initialize()
         ag
     }

@@ -1,4 +1,4 @@
-package net.novaware.nes.core.ppu.action;
+package net.novaware.nes.core.ppu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
@@ -19,7 +19,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 
 @BoardScope
-public class ActionGrid implements Initializable { // TODO: consider ActionRegistry name
+public class TimingUnit implements Initializable { // TODO: consider ActionRegistry name
 
     @Owned
     private final IntegerCounter frameCounter;
@@ -48,7 +48,7 @@ public class ActionGrid implements Initializable { // TODO: consider ActionRegis
     // private final ScanLine[] scanLines;
 
     @Inject
-    public ActionGrid(
+    public TimingUnit(
         VideoStandard videoStandard,
         @PpuVar(FC) IntegerCounter frameCounter,
         @PpuVar(FT) BooleanRegister frameToggle,
