@@ -67,6 +67,7 @@ public class ActionGrid implements Initializable { // TODO: consider ActionRegis
         this.renderBackground = renderBackground;
 
         skipDot = videoStandard.isSkipDot();
+
         lineLimit = videoStandard.getPhysicalHeight();
         dotLimit = videoStandard.getPhysicalWidth();
 
@@ -74,36 +75,34 @@ public class ActionGrid implements Initializable { // TODO: consider ActionRegis
     }
 
     public void initialize() {
-        dotSkip = getDotSkip();
+        updateDotSkip();
     }
 
-    private int getDotSkip() {
-        boolean lastLine = lineCounter.getValue() == lineLimit - 1;
-        boolean renderOn = renderSprite.get() || renderBackground.get();
-        boolean specialFrame = frameToggle.get();
+    private void updateDotSkip() {
+        // NOTE: still possible to optimize by switching to int and bitwise | &
+        boolean shouldSkip =
+            skipDot && // fast track for PAL
+            frameToggle.get() && // fast track for non skip frames
+            lineCounter.getValue() == lineLimit - 1 && // fast track for non skip lines
+            (renderSprite.get() || renderBackground.get()); // slow track, per dot check
 
-        return skipDot && renderOn && specialFrame && lastLine ? 1 : 0;
+        dotSkip = shouldSkip ? 1 : 0;
     }
 
     public void increment() {
         dotCounter.increment();
 
-        boolean nextLine = dotCounter.getValue() >= dotLimit - dotSkip;
+        boolean nextLine = dotCounter.getValue() == dotLimit - dotSkip;
 
-        if(nextLine) {
-            // TODO: consider mathematically overflowing to lineCounter instead of branching
-            lineCounter.increment();
-            dotCounter.reset();
-        }
+        lineCounter.maybeIncrement(nextLine);
+        dotCounter.maybeReset(nextLine);
 
-        dotSkip = getDotSkip();
+        updateDotSkip();
 
-        boolean nextFrame = lineCounter.getValue() >= lineLimit;
+        boolean nextFrame = lineCounter.getValue() == lineLimit;
 
-        if(nextFrame) {
-            frameCounter.increment();
-            frameToggle.toggle();
-            lineCounter.reset();
-        }
+        frameCounter.maybeIncrement(nextFrame);
+        frameToggle.maybeToggle(nextFrame);
+        lineCounter.maybeReset(nextFrame);
     }
 }

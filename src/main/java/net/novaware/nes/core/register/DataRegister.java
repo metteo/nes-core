@@ -2,6 +2,7 @@ package net.novaware.nes.core.register;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+// TODO: consider removing Data / Address Register abstract classes to improve devirtualization
 public abstract class DataRegister extends Register {
 
     protected DataRegister(String name) {

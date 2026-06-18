@@ -106,6 +106,6 @@ class ActionGridSpec extends Specification {
         }
 
         then:
-        output == "60,25,301"
+        output == "60,25,301" // that is the 0.0988 fraction of the frame
     }
 }
