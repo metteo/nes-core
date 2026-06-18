@@ -21,6 +21,7 @@ import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.register.ShortShifter;
+import net.novaware.nes.core.util.Initializable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.Arrays;
@@ -34,7 +35,6 @@ import static net.novaware.nes.core.ppu.action.Action.ACCESS_NAME_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_HI_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_LO_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.CLR_HBLANK;
-import static net.novaware.nes.core.ppu.action.Action.IGNORED_NAME_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.IGNORED_NAME_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_X;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_Y;
@@ -46,10 +46,9 @@ import static net.novaware.nes.core.ppu.action.Action.READ_NAME_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_HI_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_LO_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.SET_HBLANK;
+import static net.novaware.nes.core.ppu.action.Action.SHIFT;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
-import static net.novaware.nes.core.ppu.action.Action.UNUSED_BG_LO_BITS_ADDRESS;
-import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
@@ -76,7 +75,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see gemini: micro-action log
  */
 @BoardScope
-public class ControlUnit {
+public class ControlUnit implements Initializable {
 
     private final VideoStandard videoStandard;
 
@@ -97,12 +96,14 @@ public class ControlUnit {
     private final ScanLine[] scanLines;
 
     // TODO: consider microcode generated using rules below that stays inside a file
+    private final Action[] shiftActions;
     private final Action[] busActions;
     private final Action[] oamActions;
     private final Action[] drawActions;
     private final Action[] renderingViewActions;
     private final Action[] preRenderViewActions;
 
+    private final TimingUnit timingUnit;
     private final ViewPortRegister currentViewPort;
     private final ViewPortRegister tempViewPort;
     private final BooleanRegister resetLock;
@@ -124,6 +125,7 @@ public class ControlUnit {
     @Inject
     public ControlUnit(
         CoreConfig config,
+        TimingUnit timingUnit,
         @PpuVar(CC) IntegerCounter cycleCounter,
         @PpuVar(LC) IntegerCounter lineCounter,
         @PpuVar(DC) IntegerCounter dotCounter,
@@ -147,6 +149,7 @@ public class ControlUnit {
         VideoOutRegister videoOut,
         PaletteMemory paletteMemory
     ) {
+        this.timingUnit = timingUnit;
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
         this.resetLock = resetLock;
@@ -172,11 +175,17 @@ public class ControlUnit {
         this.sprite0Hit = sprite0Hit;
 
         scanLines = initScanLines(vs);
+        shiftActions = initShiftActions(vs);
         busActions = initBusActions(vs);
         oamActions = initOamActions(vs);
         drawActions = initDrawActions(vs);
         renderingViewActions = initViewActions(vs, false);
         preRenderViewActions = initViewActions(vs, true);
+    }
+
+    @Override
+    public void initialize() {
+        timingUnit.initialize();
     }
 
     private static ScanLine[] initScanLines(VideoStandard videoStandard) {
@@ -202,12 +211,27 @@ public class ControlUnit {
         return scanLines;
     }
 
+    private static Action[] initShiftActions(VideoStandard videoStandard) {
+        Action[] shiftActions = new Action[videoStandard.getPhysicalWidth()];
+        Arrays.fill(shiftActions, Action.NO_OPERATION);
+
+        for (int x = 1; x <= 256; x++) { // current background
+            shiftActions[x] = SHIFT;
+        }
+
+        for (int x = 321; x <= 336; x++) { // next background (tiles 1 & 2)
+            shiftActions[x] = SHIFT;
+        }
+
+        return shiftActions;
+    }
+
     private static Action[] initBusActions(VideoStandard videoStandard) {
         Action[] busActions = new Action[videoStandard.getPhysicalWidth()];
         Arrays.fill(busActions, Action.NO_OPERATION);
 
         // tile 3 of current background
-        busActions[0] = UNUSED_BG_LO_BITS_ADDRESS;
+        busActions[0] = ACCESS_BG_LO_BITS_ADDRESS;
 
         for (int x = 1; x <= 256; x+=8) { // current background
             busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
@@ -224,9 +248,9 @@ public class ControlUnit {
 
         for (int x = 257; x <= 320; x+=8) { // next sprite (8 / 16 tiles)
             // TODO: unused and ignored should be replaced with SP when extended SOAM
-            busActions[x    ] = UNUSED_NAME_TABLE_ADDRESS;
+            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
             busActions[x + 1] = UNUSED_NAME_TABLE_DATA;
-            busActions[x + 2] = IGNORED_NAME_TABLE_ADDRESS;
+            busActions[x + 2] = ACCESS_NAME_TABLE_ADDRESS;
             busActions[x + 3] = IGNORED_NAME_TABLE_DATA;
 
             busActions[x + 4] = ACCESS_SP_LO_BITS_ADDRESS;
@@ -249,9 +273,9 @@ public class ControlUnit {
         }
 
         { // unused / ignored next background (tile 3)
-            busActions[337] = UNUSED_NAME_TABLE_ADDRESS;
+            busActions[337] = ACCESS_NAME_TABLE_ADDRESS;
             busActions[338] = UNUSED_NAME_TABLE_DATA;
-            busActions[339] = IGNORED_NAME_TABLE_ADDRESS;
+            busActions[339] = ACCESS_NAME_TABLE_ADDRESS;
             busActions[340] = IGNORED_NAME_TABLE_DATA;
         }
 
@@ -318,6 +342,7 @@ public class ControlUnit {
         final boolean forceBlank = !(renderSprite.get() || renderBackground.get());
 
         Action draw = NO_OPERATION;
+        Action shift = NO_OPERATION;
         Action bus = NO_OPERATION;
         Action view = NO_OPERATION;
         Action oam = NO_OPERATION;
@@ -326,6 +351,7 @@ public class ControlUnit {
         switch(scanLines[scanLine]) {
             case RENDER_START:
                 draw = drawActions[dot];
+                shift = shiftActions[dot];
                 bus = busActions[dot];
                 view = renderingViewActions[dot];
                 oam = oamActions[dot];
@@ -334,6 +360,7 @@ public class ControlUnit {
             case RENDERING:
             case RENDER_END:
                 draw = drawActions[dot];
+                shift = shiftActions[dot];
                 bus = busActions[dot];
                 view = renderingViewActions[dot];
                 oam = oamActions[dot];
@@ -352,6 +379,7 @@ public class ControlUnit {
                 break;
             case PRE_RENDER:
                 draw = getPreRenderDrawAction(dot);
+                shift = shiftActions[dot];
                 bus = busActions[dot];
                 view = preRenderViewActions[dot];
                 flag = getPreRenderFlagAction(dot);
@@ -364,86 +392,85 @@ public class ControlUnit {
 
         if (!resetLock.get() && !forceBlank) {
             executeDraw(draw);
+            executeShift(shift);
+//            executeShift(dot);
             executeBus(bus);
             executeView(view);
             executeOam(oam);
         }
 
         executeFlag(flag);
-        nextDot();
+        timingUnit.increment();
 
         return 1;
+    }
+
+    private void executeShift(Action shiftAction) {
+        switch(shiftAction) {
+            case SHIFT -> shiftShiftRegisters();
+            case NO_OPERATION -> {}
+        }
+    }
+
+    private void executeShift(int dot) { // NOTE: temp experiment to see how branching is slower
+        if (1 <= dot && dot <=256 || 321 <= dot && dot <= 336) {
+            shiftShiftRegisters();
+        }
     }
 
     private void executeBus(Action busAction) {
         switch(busAction) {
             case ACCESS_NAME_TABLE_ADDRESS -> {
-                shiftShiftRegisters();
-
                 @Unsigned short nameTableAddr = currentViewPort.getNameTableAddress();
                 bus.access(nameTableAddr);
             }
             case READ_NAME_TABLE_DATA      -> {
-                shiftShiftRegisters();
-
                 @Unsigned byte nameTableData = bus.read().data();
                 nameTableBuffer.set(nameTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
-                shiftShiftRegisters();
-
                 @Unsigned short attrTableAddr = currentViewPort.getAttrTableAddress();
                 bus.access(attrTableAddr);
             }
             case READ_ATTR_TABLE_DATA      -> {
-                shiftShiftRegisters();
-
                 @Unsigned byte attrTableData = bus.read().data();
                 extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
-                shiftShiftRegisters();
-
                 int bgLoAddr = getBackgroundPatternAddress(0);
-
                 bus.access(ushort(bgLoAddr));
             }
             case READ_BG_LO_BITS_DATA      -> {
-                shiftShiftRegisters();
-
                 @Unsigned byte bgLoData = bus.read().data();
                 backgroundBuffer.low(bgLoData);
             }
             case ACCESS_BG_HI_BITS_ADDRESS -> {
-                shiftShiftRegisters();
-
                 int bgHiAddr = getBackgroundPatternAddress(1);
-
                 bus.access(ushort(bgHiAddr));
             }
             case READ_BG_HI_BITS_DATA      -> {
-                shiftShiftRegisters();
-
                 @Unsigned byte bgHiData = bus.read().data();
                 backgroundBuffer.high(bgHiData);
-
-                loadShifters(); // TODO: consider making this a separate action
             }
-            case UNUSED_NAME_TABLE_ADDRESS -> {}
-            case UNUSED_NAME_TABLE_DATA    -> {}
-            case IGNORED_NAME_TABLE_ADDRESS -> {}
-            case IGNORED_NAME_TABLE_DATA   -> {}
-            case UNUSED_BG_LO_BITS_ADDRESS -> {}
+
+            case UNUSED_NAME_TABLE_DATA    -> unusedNameTable(bus.read().data());
+            case IGNORED_NAME_TABLE_DATA   -> ignoredNameTable(bus.read().data());
 
             case ACCESS_SP_LO_BITS_ADDRESS -> {}
             case READ_SP_LO_BITS_DATA      -> {}
             case ACCESS_SP_HI_BITS_ADDRESS -> {}
             case READ_SP_HI_BITS_DATA      -> {}
-
             case NO_OPERATION              -> {}
             default -> throw new IllegalStateException("Unexpected bus action: " + busAction);
         }
     }
+
+    private void ignoredNameTable(@Unsigned byte data) {
+        nameTableBuffer.set(data);
+    }
+
+    @SuppressWarnings("unused") // data parameter on purpose
+    private void unusedNameTable(@Unsigned byte data) {}
 
     private void extractCurrentAttribute(@Unsigned byte attrTableData) {
         int attrBitsLatch = sint(AttributeTable.getSubAttribute(attrTableData, currentViewPort));
@@ -535,7 +562,10 @@ public class ControlUnit {
     private void executeView(Action view) {
         // FIXME: force blank (rendering off) should not alter VX
         switch(view) {
-            case INCREMENT_X -> currentViewPort.incrementX();
+            case INCREMENT_X -> {
+                loadShifters();
+                currentViewPort.incrementX();
+            }
             case INCREMENT_Y -> currentViewPort.incrementY();
             case TRANSFER_TX_TO_X -> tempViewPort.transferX(currentViewPort);
             case TRANSFER_TY_TO_Y -> tempViewPort.transferY(currentViewPort);
@@ -545,7 +575,7 @@ public class ControlUnit {
     }
 
     private Action getPostRenderBusAction(int dot) {
-        return dot == 0 ? UNUSED_BG_LO_BITS_ADDRESS : NO_OPERATION;
+        return dot == 0 ? ACCESS_BG_LO_BITS_ADDRESS : NO_OPERATION;
     }
 
     private Action getPostRenderFlagAction(int dot) {
@@ -591,25 +621,6 @@ public class ControlUnit {
             sprite0Hit.set(HIGH);
         }
         status.setSpriteOverflow(false);
-    }
-
-    /* package */ void nextDot() {
-        dotCounter.increment();
-
-        if (dotCounter.getValue() == videoStandard.getPhysicalWidth()) {
-            dotCounter.reset();
-            lineCounter.increment();
-        }
-
-        if (lineCounter.getValue() == videoStandard.getPhysicalHeight()) {
-            lineCounter.reset();
-
-            // TODO: skip last dot of prerender, not first dot of RENDER_START
-            boolean skipZeroZeroDotOnEvenFrame = videoStandard.isSkipDot() && frameToggle.get();
-            dotCounter.maybeIncrement(skipZeroZeroDotOnEvenFrame);
-
-            frameToggle.toggle();
-        }
     }
 
     String printActions() {

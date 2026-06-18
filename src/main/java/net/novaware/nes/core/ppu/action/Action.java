@@ -28,13 +28,8 @@ public enum Action {
     ACCESS_BG_HI_BITS_ADDRESS  ("BHA", BUS),
     READ_BG_HI_BITS_DATA       ("BHD", BUS),
 
-    UNUSED_NAME_TABLE_ADDRESS  ("NAU", BUS),
-    UNUSED_NAME_TABLE_DATA     ("NDU", BUS),
-                                    // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
-    IGNORED_NAME_TABLE_ADDRESS ("NAI", BUS),
+    UNUSED_NAME_TABLE_DATA     ("NDU", BUS), // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
     IGNORED_NAME_TABLE_DATA    ("NDI", BUS),
-
-    UNUSED_BG_LO_BITS_ADDRESS  ("BLU", BUS),
 
     ACCESS_SP_LO_BITS_ADDRESS  ("SLA", BUS),
     READ_SP_LO_BITS_DATA       ("SLD", BUS),
@@ -74,8 +69,9 @@ public enum Action {
     // endregion
     // region Misc
 
+    SHIFT ("ASL", MISC),
+
     NO_OPERATION ("NOP", MISC),
-    JUMP_IF_ODD  ("JIO", MISC),
 
     // endregion
 

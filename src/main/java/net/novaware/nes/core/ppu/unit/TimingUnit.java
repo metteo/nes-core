@@ -2,6 +2,7 @@ package net.novaware.nes.core.ppu.unit;
 
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.register.BooleanPipeline;
@@ -49,7 +50,7 @@ public class TimingUnit implements Initializable { // TODO: consider ActionRegis
 
     @Inject
     public TimingUnit(
-        VideoStandard videoStandard,
+        CoreConfig coreConfig,
         @PpuVar(FC) IntegerCounter frameCounter,
         @PpuVar(FT) BooleanRegister frameToggle,
         @PpuVar(LC) IntegerCounter lineCounter,
@@ -65,6 +66,8 @@ public class TimingUnit implements Initializable { // TODO: consider ActionRegis
 
         this.renderSprite = renderSprite;
         this.renderBackground = renderBackground;
+
+        final VideoStandard videoStandard = coreConfig.getVideoStandard();
 
         skipDot = videoStandard.isSkipDot();
 

@@ -1,9 +1,11 @@
 package net.novaware.nes.core.ppu.unit
 
+
 import net.novaware.nes.core.config.VideoStandard
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import spock.lang.Specification
 
+import static net.novaware.nes.core.config.CoreConfigBuilder.coreConfig
 import static net.novaware.nes.core.config.VideoStandard.NTSC
 import static net.novaware.nes.core.config.VideoStandard.PAL
 
@@ -18,7 +20,8 @@ class TimingUnitSpec extends Specification {
     def renderBackground = PpuRegModule.provideRenderBackground()
 
     TimingUnit newActionGrid(VideoStandard vs) {
-        def ag = new TimingUnit(vs, frameCounter, frameToggle, lineCounter, dotCounter, renderSprite, renderBackground)
+        def config = coreConfig().videoStandard(vs).build()
+        def ag = new TimingUnit(config, frameCounter, frameToggle, lineCounter, dotCounter, renderSprite, renderBackground)
         ag.initialize()
         ag
     }

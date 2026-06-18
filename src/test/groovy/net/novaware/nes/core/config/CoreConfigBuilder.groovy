@@ -18,6 +18,10 @@ class CoreConfigBuilder implements TestDataBuilder<CoreConfig> {
         new CoreConfigBuilder()
     }
 
+    static CoreConfigBuilder coreConfig() {
+        new CoreConfigBuilder()
+    }
+
     @Override
     CoreConfig build() {
         ImmutableCoreConfig.builder()
