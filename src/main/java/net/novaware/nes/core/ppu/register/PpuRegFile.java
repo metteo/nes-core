@@ -24,17 +24,17 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -78,7 +78,7 @@ public class PpuRegFile extends RegisterFile {
 
     public final ByteRegister oamAddress;
 
-    public final BooleanRegister oddFrame;
+    public final BooleanRegister frameToggle;
     public final BooleanRegister resetLock;
 
     @Inject
@@ -112,7 +112,7 @@ public class PpuRegFile extends RegisterFile {
 
         @PpuVar(OAM) ByteRegister oamAddress,
 
-        @PpuVar(OF) BooleanRegister oddFrame,
+        @PpuVar(FT) BooleanRegister frameToggle,
         @PpuVar(RL) BooleanRegister resetLock
     ) {
         super("PPU.REGS");
@@ -151,7 +151,7 @@ public class PpuRegFile extends RegisterFile {
             this.maskBackground = maskBackground,
             this.greyscale = greyscale,
 
-            this.oddFrame = oddFrame
+            this.frameToggle = frameToggle
         );
 
         this.renderSprite = renderSprite;

@@ -51,7 +51,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     // TODO: track cpu odd/even or read/write cycle state
     public IntegerCounter cpuClockBudget = new IntegerCounter("CPU.CB"); // per frame
 
-    public final BooleanRegister oddFrame; // TODO: maybe MasterClock should own this instead of ppu?
+    public final BooleanRegister frameToggle; // TODO: maybe MasterClock should own this instead of ppu?
     public DoubleCounter ppuClockBudget = new DoubleCounter("PPU.CB"); // per frame (even / odd)
     public DoubleCounter ppuToCpuCycleBudget = new DoubleCounter("PPU.TODO");
 
@@ -63,7 +63,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     @Inject
     public MasterClock(
         CoreConfig coreConfig, // TODO: maybe use Cart.Config or separate Clock.Config
-        @PpuVar(PpuVarName.OF) BooleanRegister oddFrame,
+        @PpuVar(PpuVarName.FT) BooleanRegister frameToggle,
         @Named("CPU") ClockReceiver cpu,
         @Named("PPU") ClockReceiver ppu,
         @Named("APU") ClockReceiver apu,
@@ -73,7 +73,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     ) {
         this.videoStandard = coreConfig.getVideoStandard();
 
-        this.oddFrame = oddFrame;
+        this.frameToggle = frameToggle;
 
         this.cpu = cpu;
         this.ppu = ppu;
@@ -259,7 +259,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         double masterCycles = videoStandard.getMasterCycles();
         int ppuCycles = (int) (ppuClockBudget.getValue()
             + masterCycles
-            - ((videoStandard.isOddFrameCycleSkip() && oddFrame.get()) ? videoStandard.getPpuDivisor() : 0)
+            - ((videoStandard.isSkipDot() && frameToggle.get()) ? videoStandard.getPpuDivisor() : 0)
         );
 
         ppuClockBudget.setValue(ppuCycles);

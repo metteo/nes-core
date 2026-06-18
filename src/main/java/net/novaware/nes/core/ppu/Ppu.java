@@ -114,7 +114,7 @@ public class Ppu implements ClockReceiver {
         regs.currentViewPort.set(USHORT_0);
         regs.dataReadBuffer.set(UBYTE_0);
 
-        regs.oddFrame.set(false);
+        regs.frameToggle.set(false);
         regs.resetLock.set(true);
 
         regs.cycleCounter.reset();
@@ -133,7 +133,7 @@ public class Ppu implements ClockReceiver {
         regs.currentViewPort.set(USHORT_0);
         regs.dataReadBuffer.set(UBYTE_0);
 
-        regs.oddFrame.set(false);
+        regs.frameToggle.set(false);
         regs.resetLock.set(true);
 
         // TODO: read on what ppu does during these first 21 cycles (nothing, warmup?)

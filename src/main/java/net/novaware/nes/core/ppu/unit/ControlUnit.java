@@ -56,14 +56,14 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -83,7 +83,7 @@ public class ControlUnit {
     private final IntegerCounter cycleCounter;
     private final IntegerCounter lineCounter;
     private final IntegerCounter dotCounter;
-    private final BooleanRegister oddFrame;
+    private final BooleanRegister frameToggle;
 
     private final PpuStatusRegister status;
     private final BooleanRegister hBlank;
@@ -127,7 +127,7 @@ public class ControlUnit {
         @PpuVar(CC) IntegerCounter cycleCounter,
         @PpuVar(LC) IntegerCounter lineCounter,
         @PpuVar(DC) IntegerCounter dotCounter,
-        @PpuVar(OF) BooleanRegister oddFrame,
+        @PpuVar(FT) BooleanRegister frameToggle,
 
         @PpuVar(PS) PpuStatusRegister status,
         @PpuVar(HB) BooleanRegister hBlank,
@@ -162,7 +162,7 @@ public class ControlUnit {
         this.cycleCounter = cycleCounter;
         this.lineCounter = lineCounter;
         this.dotCounter = dotCounter;
-        this.oddFrame = oddFrame;
+        this.frameToggle = frameToggle;
         this.status = status;
         this.hBlank = hBlank;
         this.vBlankInterruptEnabled = vBlankInterruptEnabled;
@@ -605,10 +605,10 @@ public class ControlUnit {
             lineCounter.reset();
 
             // TODO: skip last dot of prerender, not first dot of RENDER_START
-            boolean skipZeroZeroDotOnEvenFrame = videoStandard.isOddFrameCycleSkip() && oddFrame.get();
+            boolean skipZeroZeroDotOnEvenFrame = videoStandard.isSkipDot() && frameToggle.get();
             dotCounter.maybeIncrement(skipZeroZeroDotOnEvenFrame);
 
-            oddFrame.toggle();
+            frameToggle.toggle();
         }
     }
 

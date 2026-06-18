@@ -31,7 +31,7 @@ class PpuRegFileSpec extends Specification {
         registers.maskBackground.getName() == "PPU.MASK.m"
         registers.greyscale.getName() == "PPU.MASK.G"
 
-        registers.oddFrame.getName() == "PPU.OF"
+        registers.frameToggle.getName() == "PPU.FT"
     }
 
     def "all data registers are initialized and reachable"() {

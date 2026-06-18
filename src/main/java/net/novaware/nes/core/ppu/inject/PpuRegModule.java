@@ -26,13 +26,13 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.FC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
@@ -226,9 +226,9 @@ public interface PpuRegModule {
 
     @Provides
     @BoardScope
-    @PpuVar(OF)
-    static BooleanRegister provideOddFrame() {
-        return new BooleanRegister(OF.doc());
+    @PpuVar(FT)
+    static BooleanRegister provideFrameToggle() {
+        return new BooleanRegister(FT.doc());
     }
 
     /**

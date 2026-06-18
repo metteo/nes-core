@@ -6,6 +6,7 @@ public enum PpuVarName {
     CC ("", "cycleCounter", "Cycle Counter"),
 
     FC ("", "frameCounter", "Frame Counter"),
+    FT ("", "frameToggle", "Frame Toggle"),
     LC ("", "lineCounter",  "Line Counter"),
     DC ("", "dotCounter",   "Dot Counter"),
 
@@ -36,7 +37,6 @@ public enum PpuVarName {
 
     GS ("MASK.G", "", "Greyscale Mode"),
 
-    OF ("", "oddFrame", "Odd Frame"),
     RL ("", "resetLock", "Reset Lock"), // TODO: rename to init frame / phase / register lock?
 
     // endregion

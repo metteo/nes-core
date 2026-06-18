@@ -24,7 +24,7 @@ class ControlUnitSpec extends Specification {
     def cycleCounter = PpuRegModule.provideCycleCounter()
     def scanLineCounter = PpuRegModule.provideLineCounter()
     def dotCounter = PpuRegModule.provideDotCounter()
-    def oddFrame = PpuRegModule.provideOddFrame()
+    def frameToggle = PpuRegModule.provideFrameToggle()
 
     def status = PpuRegModule.provideStatus()
     def hBlank = PpuRegModule.provideHorizontalBlank()
@@ -159,7 +159,7 @@ class ControlUnitSpec extends Specification {
     def "should cycle through dots and scanlines"() {
         given:
         def cu = newCu(vs)
-        oddFrame.set(inOdd)
+        frameToggle.set(inOdd)
         scanLineCounter.setValue(inSl)
         dotCounter.setValue(inDot)
 
@@ -167,7 +167,7 @@ class ControlUnitSpec extends Specification {
         cu.nextDot()
 
         then:
-        oddFrame.get() == outOdd
+        frameToggle.get() == outOdd
         scanLineCounter.getValue() == outSl
         dotCounter.getValue() == outDot
 
@@ -176,6 +176,7 @@ class ControlUnitSpec extends Specification {
         NTSC | true  |    0 |     0 || true   |     0 |      1
         NTSC | true  |    0 |   340 || true   |     1 |      0
         NTSC | true  |  261 |   340 || false  |     0 |      1 // skip 0,0 on even frames // TODO: wrong!
+
         NTSC | false |    0 |     0 || false  |     0 |      1
         NTSC | false |    0 |   340 || false  |     1 |      0
         NTSC | false |  261 |   340 || true   |     0 |      0
@@ -183,6 +184,7 @@ class ControlUnitSpec extends Specification {
         PAL  | true  |    0 |     0 || true   |     0 |      1
         PAL  | true  |    0 |   340 || true   |     1 |      0
         PAL  | true  |  311 |   340 || false  |     0 |      0 // no skip on even frames
+
         PAL  | false |    0 |     0 || false  |     0 |      1
         PAL  | false |    0 |   340 || false  |     1 |      0
         PAL  | false |  311 |   340 || true   |     0 |      0
@@ -199,7 +201,7 @@ class ControlUnitSpec extends Specification {
             cycleCounter,
             scanLineCounter,
             dotCounter,
-            oddFrame,
+            frameToggle,
             status,
             hBlank,
             vBlankInterruptEnabled,

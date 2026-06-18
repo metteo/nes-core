@@ -33,16 +33,16 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
     private final int cpuDivisor;
     private final int ppuDivisor;
     private final int physicalHeight; // vertical, scan lines per frame
-    private final boolean oddFrameCycleSkip;
+    private final boolean skipDot;
 
     private static final List<VideoStandard> instances = List.of(values());
 
-    VideoStandard(double masterClock, int cpuDiv, int ppuDiv, int physicalHeight, boolean oddFrameCycleSkip) {
+    VideoStandard(double masterClock, int cpuDiv, int ppuDiv, int physicalHeight, boolean skipDot) {
         this.masterClock = masterClock;
         this.cpuDivisor = cpuDiv;
         this.ppuDivisor = ppuDiv;
         this.physicalHeight = physicalHeight;
-        this.oddFrameCycleSkip = oddFrameCycleSkip;
+        this.skipDot = skipDot;
     }
 
     public double getMasterClock() { // Hz
@@ -73,8 +73,11 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
         return masterClock / ppuDivisor;
     }
 
-    public boolean isOddFrameCycleSkip() {
-        return oddFrameCycleSkip;
+    /**
+     * Should PPU skip last dot of every other frame
+     */
+    public boolean isSkipDot() {
+        return skipDot;
     }
 
     public double getRefreshRate() {
