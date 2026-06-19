@@ -87,24 +87,24 @@ public class ObjAttrMemory implements Nameable {
     // endregion
     // region Secondary OAM
 
-    static class ObjAttrEntry implements Cloneable { // NOTE: mutable on purpose
-        @Unsigned byte y;       // byte 0
+    public static class ObjAttrEntry implements Cloneable { // NOTE: mutable on purpose
+        public @Unsigned byte y;       // byte 0
 
-        @Unsigned byte tile;    // byte 1
+        public @Unsigned byte tile;    // byte 1
 
-        //                      // byte 2 v
-        boolean flipH;          //  bit 7
-        boolean flipV;          //  bit 6
+        //                             // byte 2 v
+        public boolean flipV;          //  bit 7
+        public boolean flipH;          //  bit 6
 
-        boolean hidden;         //  bit 5 - behind background ("priority" in the docs)
+        public boolean hidden;         //  bit 5 - behind background ("priority" in the docs)
 
-        @Unsigned byte unused;  //  bit 2-4
+        public @Unsigned byte unused;  //  bit 2-4
 
-        @Unsigned byte palette; //  bit 0-1
+        public @Unsigned byte palette; //  bit 0-1
 
-        @Unsigned byte x;       // byte 3
+        public @Unsigned byte x;       // byte 3
 
-        int primaryIndex = -1;
+        public int primaryIndex = -1;
     }
 
     public static final int SECONDARY_ENTRY_COUNT = 8;

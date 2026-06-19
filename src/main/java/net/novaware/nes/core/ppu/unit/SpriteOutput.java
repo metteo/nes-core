@@ -3,15 +3,45 @@ package net.novaware.nes.core.ppu.unit;
 import net.novaware.nes.core.register.ByteShifter;
 import net.novaware.nes.core.register.IntegerCounter;
 import org.checkerframework.checker.signedness.qual.Unsigned;
-import org.jspecify.annotations.Nullable;
 
 public class SpriteOutput {
 
-    private @Nullable ByteShifter shifter;
+    enum State {
+        WAITING,
+        DRAWING,
+        IDLE
+    }
 
-    private @Unsigned byte palette;
+    public ByteShifter shifter = new ByteShifter("SPOU?");
 
-    private boolean hidden;
+    public @Unsigned byte palette;
 
-    private @Nullable IntegerCounter countDown; // [0, x] waiting, [-7, 0] rendering
+    public boolean hidden;
+
+    public IntegerCounter countDown = new IntegerCounter("SPOU?cd"); // [0, x] waiting
+
+    public IntegerCounter xCounter = new IntegerCounter("SPOU?x");
+
+    public State state = State.IDLE;
+
+    public void maybeShiftPlanes() {
+        switch(state) {
+            case WAITING -> {
+                if (countDown.isPositive()) {
+                    countDown.decrement();
+                } else {
+                    state = State.DRAWING;
+                }
+            }
+            case DRAWING -> {
+                if(xCounter.isPositive()) {
+                    xCounter.decrement();
+                    shifter.shiftPlanes();
+                } else {
+                    state = State.IDLE;
+                }
+            }
+            case IDLE -> {}
+        }
+    }
 }

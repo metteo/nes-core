@@ -9,6 +9,7 @@ import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
+import net.novaware.nes.core.ppu.memory.ObjAttrMemory.ObjAttrEntry;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
@@ -69,6 +70,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
+import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.FOREGROUND;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -125,6 +127,8 @@ public class ControlUnit implements Initializable {
     // TODO: have an array or sth that holds dot coords (x,y) so final video output is timed correctly, or just -1?
     public ShortShifter background = new ShortShifter("BG.SFT");
     public ShortShifter attributes = new ShortShifter("AT.SFT");
+
+    public SpriteOutput[] spriteOutputUnits;
 
     @Inject
     public ControlUnit(
@@ -187,6 +191,12 @@ public class ControlUnit implements Initializable {
         drawActions = initDrawActions(vs);
         renderingViewActions = initViewActions(vs, false);
         preRenderViewActions = initViewActions(vs, true);
+
+        spriteOutputUnits = new SpriteOutput[objAttrMemory.getSecondarySize()];
+
+        for(int i = 0; i < spriteOutputUnits.length; i++) {
+            spriteOutputUnits[i] = new SpriteOutput();
+        }
     }
 
     @Override
@@ -424,6 +434,8 @@ public class ControlUnit implements Initializable {
         }
     }
 
+    private int secOamIndex = 0;
+
     private void executeBus(Action busAction) {
         switch(busAction) {
             case ACCESS_NAME_TABLE_ADDRESS -> {
@@ -462,10 +474,51 @@ public class ControlUnit implements Initializable {
             case UNUSED_NAME_TABLE_DATA    -> unusedNameTable(bus.read().data());
             case IGNORED_NAME_TABLE_DATA   -> ignoredNameTable(bus.read().data());
 
-            case ACCESS_SP_LO_BITS_ADDRESS -> {}
-            case READ_SP_LO_BITS_DATA      -> {}
-            case ACCESS_SP_HI_BITS_ADDRESS -> {}
-            case READ_SP_HI_BITS_DATA      -> {}
+            case ACCESS_SP_LO_BITS_ADDRESS -> {
+
+                ObjAttrEntry sprite = objAttrMemory.getSecondary(secOamIndex);
+                SpriteOutput output = spriteOutputUnits[secOamIndex];
+
+                // TODO: loading oam attrs & x is not instant, happens in garbage cycles
+                output.hidden = sprite.hidden;
+                output.palette = sprite.palette;
+                output.countDown.setValue(sint(sprite.x));
+                output.xCounter.setValue(7);
+                // TODO: possibly to early, bg shifting already starts on the previous line
+                output.state = SpriteOutput.State.WAITING;
+
+                int spLoAddr = getSpritePatternAddress(sint(sprite.y), sint(sprite.tile), 0);
+
+                bus.access(ushort(spLoAddr));
+            }
+            case READ_SP_LO_BITS_DATA      -> {
+                ObjAttrEntry sprite = objAttrMemory.getSecondary(secOamIndex);
+                @Unsigned byte spLoData = bus.read().data();
+
+                if (sprite.flipH) {
+                    spLoData = ubyte(Integer.reverse(sint(spLoData))>>24);
+                }
+
+                spriteOutputUnits[secOamIndex].shifter.loadPlaneLow(spLoData);
+            }
+            case ACCESS_SP_HI_BITS_ADDRESS -> {
+                ObjAttrEntry sprite = objAttrMemory.getSecondary(secOamIndex);
+
+                int spHiAddr = getSpritePatternAddress(sint(sprite.y), sint(sprite.tile), 1);
+                bus.access(ushort(spHiAddr));
+            }
+            case READ_SP_HI_BITS_DATA      -> {
+                ObjAttrEntry sprite = objAttrMemory.getSecondary(secOamIndex);
+                @Unsigned byte spHiData = bus.read().data();
+
+                if (sprite.flipH) {
+                    spHiData = ubyte(Integer.reverse(sint(spHiData))>>24);
+                }
+
+                spriteOutputUnits[secOamIndex].shifter.loadPlaneHigh(spHiData);
+
+                secOamIndex++;
+            }
             case NO_OPERATION              -> {}
             default -> throw new IllegalStateException("Unexpected bus action: " + busAction);
         }
@@ -506,6 +559,17 @@ public class ControlUnit implements Initializable {
         return bgAddr;
     }
 
+    private int getSpritePatternAddress(int y, int tile, int plane) { // TODO: for 8x8 sprites only for now
+        int half = spritePatternTable.getAsInt();
+        int tileShifted = tile << 4;
+        int planeShifted = plane << 3;
+        int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+
+        int spAddr = half | tileShifted | planeShifted | tileRow;
+
+        return spAddr;
+    }
+
     private void executeFlag(Action flag) {
         switch(flag) {
             case SET_HBLANK -> hBlank.set(true);
@@ -520,8 +584,15 @@ public class ControlUnit implements Initializable {
     private void executeDraw(Action draw) {
         switch(draw) {
             case RENDER -> {
+
                 // TODO: mux pattern bits with attr bits using fine x
                 selectBgAndAttrBits();
+
+                // NOTE: shifting of sprites happens only during rendering
+                for(int i = 0; i < spriteOutputUnits.length; i++) {
+                    SpriteOutput spriteOutputUnit = spriteOutputUnits[i];
+                    spriteOutputUnit.maybeShiftPlanes();
+                }
 
                 // TODO: push the dot to priority mux
                 // TODO: push previous dot to EXT
@@ -540,10 +611,61 @@ public class ControlUnit implements Initializable {
 
     private void selectBgAndAttrBits() {
         final int fineX = currentViewPort.getFineX();
-                                                       // Bits
-        Section section = BACKGROUND;                  // 4
-        int palette = sint(attributes.getBits(fineX)); // 3-2
-        int offset  = sint(background.getBits(fineX)); // 1-0
+
+        // Backdrop
+        Section section = BACKGROUND;
+        int palette = 0;
+        int offset = 0;
+                                                         // Bits
+        Section sectionBg = BACKGROUND;                  // 4
+        int paletteBg = sint(attributes.getBits(fineX)); // 3-2
+        int offsetBg  = sint(background.getBits(fineX)); // 1-0
+
+        // SPRITES PRIORITY MUX
+
+        Section sectionSp = FOREGROUND;
+        int paletteSp = 0;
+        int offsetSp = 0;
+        boolean hiddenSp = false;
+
+        for(int i = 0; i < spriteOutputUnits.length; i++) {
+            SpriteOutput spriteOutput = spriteOutputUnits[i];
+
+            if (spriteOutput.state == SpriteOutput.State.DRAWING) {
+                int paletteSp2 = sint(spriteOutput.palette);
+                int offsetSp2 = sint(spriteOutput.shifter.getBits(0));
+
+                if (offsetSp == 0 && offsetSp2 != 0) {
+                    paletteSp = paletteSp2;
+                    offsetSp = offsetSp2;
+                    hiddenSp = spriteOutput.hidden;
+                }
+            }
+        }
+
+        if (offsetBg == 0) {
+            if (offsetSp != 0) {
+                section = sectionSp;
+                palette = paletteSp;
+                offset = offsetSp;
+            } // else backdrop (default)
+        } else {
+            if (offsetSp == 0) {
+                section = sectionBg;
+                palette = paletteBg;
+                offset = offsetBg;
+            } else {
+                if (hiddenSp) {
+                    section = sectionBg;
+                    palette = paletteBg;
+                    offset = offsetBg;
+                } else {
+                    section = sectionSp;
+                    palette = paletteSp;
+                    offset = offsetSp;
+                }
+            }
+        }
 
         @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
 
@@ -568,8 +690,19 @@ public class ControlUnit implements Initializable {
             case EVAL_PRIMARY_OAM -> { // FIXME: just get first 8 sprites
                 int dot = dotCounter.getValue();
                 if (dot == 65) {
-                    for(int i = 0; i < objAttrMemory.getSecondarySize(); i++) {
-                        objAttrMemory.copyToSecondary(i, i);
+                    int secOamI = 0;
+                    for(int i = 0; i < 0xFF; i+=4) {
+                        int y = sint(objAttrMemory.readPrimary(ubyte(i)));
+                        int futureY = lineCounter.getValue() + 1;
+                        if (y < futureY && futureY <= y+8) {
+                            objAttrMemory.copyToSecondary(i / 4, secOamI);
+                            secOamI++;
+
+                            if (secOamI >= objAttrMemory.getSecondarySize()) {
+                                // TODO: set sprite overflow?
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -586,7 +719,10 @@ public class ControlUnit implements Initializable {
                 currentViewPort.incrementX();
             }
             case INCREMENT_Y -> currentViewPort.incrementY();
-            case TRANSFER_TX_TO_X -> tempViewPort.transferX(currentViewPort);
+            case TRANSFER_TX_TO_X -> {
+                tempViewPort.transferX(currentViewPort);
+                secOamIndex = 0;
+            }
             case TRANSFER_TY_TO_Y -> tempViewPort.transferY(currentViewPort);
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected view action: " + view);
