@@ -42,6 +42,7 @@ class ControlUnitSpec extends Specification {
     def spritePatternTable = PpuRegModule.provideSpritePatternTable()
     def videoOut = PpuRegModule.provideVideoOutRegister()
     def paletteMemory = PpuMemModule.providePaletteMemory()
+    def objAttrMemory = PpuMemModule.provideObjAttrMemory()
 
     def "should construct an instance"() {
         when:
@@ -186,7 +187,8 @@ class ControlUnitSpec extends Specification {
             backgroundPatternTable,
             spritePatternTable,
             videoOut,
-            paletteMemory
+            paletteMemory,
+            objAttrMemory
         )
     }
 }

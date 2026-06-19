@@ -8,6 +8,7 @@ import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
@@ -58,6 +59,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
@@ -67,6 +69,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -112,6 +115,7 @@ public class ControlUnit implements Initializable {
     private final ShortRegister spritePatternTable;
     private final VideoOutRegister videoOut;
     private final PaletteMemory paletteMemory;
+    private final ObjAttrMemory objAttrMemory;
 
     public ByteRegister nameTableBuffer = new ByteRegister("NT.BUF"); // tile xy
 
@@ -147,7 +151,8 @@ public class ControlUnit implements Initializable {
         @PpuVar(CB) ShortRegister backgroundPatternTable,
         @PpuVar(CS) ShortRegister spritePatternTable,
         VideoOutRegister videoOut,
-        PaletteMemory paletteMemory
+        PaletteMemory paletteMemory,
+        @PpuVar(OAM) ObjAttrMemory objAttrMemory
     ) {
         this.timingUnit = timingUnit;
         this.currentViewPort = currentViewPort;
@@ -158,6 +163,7 @@ public class ControlUnit implements Initializable {
         this.spritePatternTable = spritePatternTable;
         this.videoOut = videoOut;
         this.paletteMemory = paletteMemory;
+        this.objAttrMemory = objAttrMemory;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -552,8 +558,21 @@ public class ControlUnit implements Initializable {
 
     private void executeOam(Action oam) {
         switch(oam) {
-            case CLR_SECONDARY_OAM -> {}
-            case EVAL_PRIMARY_OAM -> {}
+            case CLR_SECONDARY_OAM -> {
+                // TODO: should be alternating between pri oam reads and sec oam write with 0xFF
+                // TODO: use OAMADDR register as a base for reading primary oam
+                int dot = dotCounter.getValue();
+                int secOamAddr = dot / 2;
+                objAttrMemory.writeSecondary(ubyte(secOamAddr), UBYTE_MAX_VALUE);
+            }
+            case EVAL_PRIMARY_OAM -> { // FIXME: just get first 8 sprites
+                int dot = dotCounter.getValue();
+                if (dot == 65) {
+                    for(int i = 0; i < objAttrMemory.getSecondarySize(); i++) {
+                        objAttrMemory.copyToSecondary(i, i);
+                    }
+                }
+            }
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected oam action: " + oam);
         }

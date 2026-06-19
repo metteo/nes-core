@@ -98,4 +98,52 @@ class ObjAttrMemorySpec extends Specification {
         0b0000_0011 || false | false | false | 0b000  | 0b11
         0b1111_1111 || true  | true  | true  | 0b111  | 0b11
     }
+
+    def "should write using PPU Secondary OAM addressing (full bytes)"() {
+        given:
+        def oam = PpuMemModule.provideObjAttrMemory()
+
+        when:
+        oam.writeSecondary(ubyte(address), ubyte(data))
+
+        then:
+        def entry = oam.getSecondary(index)
+
+        entry[byteField] == ubyte(data)
+
+        where:
+        address | data || index | byteField | comment
+        0x00    | 0xAB || 0     | "y"       | "1st byte"
+        0x01    | 0xCD || 0     | "tile"    | "2nd byte"
+        0x03    | 0xEF || 0     | "x"       | "4th byte"
+        0x1F    | 0xFF || 7     | "x"       | "last byte"
+    }
+
+    def "should write using PPU Secondary OAM addressing (byte 2)"() {
+        given:
+        def oam = PpuMemModule.provideObjAttrMemory()
+
+        when:
+        oam.writeSecondary(ubyte(address), ubyte(data))
+
+        then:
+        def entry = oam.getSecondary(index)
+
+        entry.flipV == flipV
+        entry.flipH == flipH
+        entry.hidden == hidden
+        entry.unused == ubyte(unused)
+        entry.palette == ubyte(pal)
+
+        where:
+        address | data         || index | flipV | flipH | hidden | unused | pal  | comment
+        0x02    | 0b000_000_00 || 0     | false | false | false  | 0b000  | 0b00 | "none, first"
+        0x06    | 0b100_000_00 || 1     | true  | false | false  | 0b000  | 0b00 | "flipV, second"
+        0x06    | 0b010_000_00 || 1     | false | true  | false  | 0b000  | 0b00 | "flipH, second"
+        0x06    | 0b001_000_00 || 1     | false | false | true   | 0b000  | 0b00 | "hidden, second"
+        0x06    | 0b000_111_00 || 1     | false | false | false  | 0b111  | 0b00 | "unused, second"
+        0x06    | 0b000_000_11 || 1     | false | false | false  | 0b000  | 0b11 | "palette, second"
+        0x1E    | 0b111_111_11 || 7     | true  | true  | true   | 0b111  | 0b11 | "all bits, last"
+
+    }
 }
