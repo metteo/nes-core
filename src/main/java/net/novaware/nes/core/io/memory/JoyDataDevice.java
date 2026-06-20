@@ -12,6 +12,9 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.Masks.BIT_7;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
+/**
+ * @see <a href="https://www.nesdev.org/wiki/Standard_controller">Standard Controller on nesdev.org</a>
+ */
 public class JoyDataDevice implements MemoryDevice.ReadOnly, Nameable {
 
     private final String name;

@@ -8,12 +8,26 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntBinaryOperator;
+
+import static java.awt.event.KeyEvent.VK_DOWN;
+import static java.awt.event.KeyEvent.VK_ENTER;
+import static java.awt.event.KeyEvent.VK_LEFT;
+import static java.awt.event.KeyEvent.VK_RIGHT;
+import static java.awt.event.KeyEvent.VK_SHIFT;
+import static java.awt.event.KeyEvent.VK_UP;
+import static java.awt.event.KeyEvent.VK_X;
+import static java.awt.event.KeyEvent.VK_Z;
 
 public class JDisplay extends JComponent implements ChangeListener {
 
     private DisplayModel model;
+    private AtomicInteger keyState;
 
     private double scale;
 
@@ -32,11 +46,15 @@ public class JDisplay extends JComponent implements ChangeListener {
 
     private boolean drawMask = true;
 
-    public JDisplay(DisplayModel model) {
+    public JDisplay(DisplayModel model, AtomicInteger keyState) {
         this.model = model;
+        this.keyState = keyState;
         this.model.addChangeListener(this);
 
+        setFocusable(true);
+
         registerMouseClicked(model);
+        registerKeyListener();
 
         videoStandard = VideoStandard.NTSC;
         borderRegion = BorderRegion.of(videoStandard);
@@ -50,6 +68,8 @@ public class JDisplay extends JComponent implements ChangeListener {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                requestFocusInWindow();
+
                 int pixelX = (e.getX() - paddingLeft) / pixelWidth - borderRegion.getLeft();
                 int pixelY = (e.getY() - paddingTop) / pixelHeight - borderRegion.getTop();
                 Color c = model.getColor(pixelY, pixelX); // FIXME: throws exception because out of model bounds
@@ -61,6 +81,44 @@ public class JDisplay extends JComponent implements ChangeListener {
                 repaint();
             }
         });
+    }
+
+    private void registerKeyListener() {
+        this.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                updateBit(e.getKeyCode(), true);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                updateBit(e.getKeyCode(), false);
+            }
+        });
+    }
+
+    private void updateBit(int keyCode, boolean high) {
+        int shift = switch(keyCode) {
+            case VK_Z     -> 7; // A, first to go when shifting left
+            case VK_X     -> 6; // B
+            case VK_SHIFT -> 5; // Select
+            case VK_ENTER -> 4; // Start
+            case VK_UP    -> 3;
+            case VK_DOWN  -> 2;
+            case VK_LEFT  -> 1;
+            case VK_RIGHT -> 0;
+            default       -> -1;
+        };
+
+        if (shift < 0) { return; }
+
+        int maskIn = 1 << shift;
+
+        IntBinaryOperator accumulator = high
+                ? ((current, mask) -> current | mask)
+                : ((current, mask) -> current & ~mask);
+
+        keyState.accumulateAndGet(maskIn, accumulator);
     }
 
     public DisplayModel getModel() {

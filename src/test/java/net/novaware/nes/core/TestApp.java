@@ -13,6 +13,7 @@ import net.novaware.nes.core.util.Hex;
 
 import javax.swing.*;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -36,9 +37,12 @@ public class TestApp {
             board.powerOff();
         });
 
+        final AtomicInteger keyState = new AtomicInteger();
         final DefaultDisplayModel displayModel = new DefaultDisplayModel();
         board.getDisplayPort().connect(displayModel::setPixels);
-        SwingUtilities.invokeLater(()-> TestUI.createAndShowGui(displayModel));
+        SwingUtilities.invokeLater(()-> TestUI.createAndShowGui(displayModel, keyState));
+
+        board.getJoypad1Port().connect(() -> ubyte(keyState.get()));
 
         board.powerOn();
 

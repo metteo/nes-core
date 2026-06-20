@@ -4,6 +4,7 @@ import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.OpenLine;
 import net.novaware.nes.core.register.BooleanRegister;
+import net.novaware.nes.core.util.BooleanConsumer;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.Nameable;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -18,18 +19,22 @@ public class JoyStrobeDevice implements MemoryDevice.WriteOnly, Nameable {
     private final String name;
 
     private final @Unsigned short address;
+
     private final BooleanRegister strobeRegister;
+    private final BooleanConsumer strobeConsumer;
 
     private DataBus.Line dataLine = new OpenLine();
 
     public JoyStrobeDevice(
             String name,
             @Unsigned short address,
-            BooleanRegister strobeRegister // TODO: should be an InputDevice that reloads the joy regs
+            BooleanRegister strobeRegister,
+            BooleanConsumer strobeConsumer
     ) {
         this.name = name;
         this.address = address;
         this.strobeRegister = strobeRegister;
+        this.strobeConsumer = strobeConsumer;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class JoyStrobeDevice implements MemoryDevice.WriteOnly, Nameable {
 
         boolean strobe = (sint(data) & BIT_0) == 1;
 
-        strobeRegister.set(strobe);
+        strobeConsumer.accept(strobe);
     }
 
     @Override

@@ -10,9 +10,10 @@ import static net.novaware.nes.core.util.UTypes.sint
 class JoyStrobeDeviceSpec extends Specification {
 
     def strobeRegister = new BooleanRegister("JOY1.STROBE")
+    def strobeConsumer = new BooleanRegister("consumer for test")
 
     def newJoyStrobeDevice() {
-        new JoyStrobeDevice("JOY1.STROBE", IO_REGISTERS_START, strobeRegister)
+        new JoyStrobeDevice("JOY1.STROBE", IO_REGISTERS_START, strobeRegister, strobeConsumer::set)
     }
 
     def "should construct instance"() {
@@ -36,6 +37,7 @@ class JoyStrobeDeviceSpec extends Specification {
         strobeBus.write(sint(IO_REGISTERS_START), 0b1)
 
         then:
-        strobeRegister.get()
+        !strobeRegister.get() // consumer sets the value in register
+        strobeConsumer.get() // test consumer
     }
 }

@@ -8,6 +8,7 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.io.memory.JoyDataDevice;
 import net.novaware.nes.core.io.memory.JoyStrobeDevice;
 import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.port.internal.JoypadPortImpl;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
 
@@ -47,8 +48,11 @@ public interface IoMemModule {
     @Provides
     @BoardScope
     @Named("JOY_STROBE")
-    static JoyStrobeDevice provideJoyStrobe(@Named("JOY_STROBE") BooleanRegister strobeRegister) {
-        return new JoyStrobeDevice("JOY_STROBE", IO_REGISTERS_START, strobeRegister);
+    static JoyStrobeDevice provideJoyStrobe(
+            @Named("JOY_STROBE") BooleanRegister strobeRegister,
+            JoypadPortImpl joypad1Port
+    ) {
+        return new JoyStrobeDevice("JOY_STROBE", IO_REGISTERS_START, strobeRegister, joypad1Port::onStrobeChange);
     }
 
 
