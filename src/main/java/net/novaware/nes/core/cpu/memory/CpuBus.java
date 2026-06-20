@@ -15,6 +15,8 @@ import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.util.stream.Stream;
+
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.APU;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ATM;
@@ -57,7 +59,7 @@ public class CpuBus implements MemoryBus {
         @CpuVar(ACR) MemoryDevice.WriteOnly apuChannelRegs,
         @CpuVar(DMA) MemoryDevice.WriteOnly oamDma,
         @CpuVar(APU) MemoryDevice.ReadWrite apuStatus,
-        @CpuVar(JOY) MemoryDevice.ReadWrite joy, // TODO: joy
+        @CpuVar(JOY) MemoryDevice[]         joy,
         @CpuVar(ATM) MemoryDevice.ReadWrite apuTest, // TODO: apu test
         @CpuVar(TMR) MemoryDevice.ReadWrite timer // TODO: timer
     ) {
@@ -68,7 +70,7 @@ public class CpuBus implements MemoryBus {
         page40.attach(apuChannelRegs);
         page40.attach(oamDma);
         page40.attach(apuStatus);
-        page40.attach(joy);
+        Stream.of(joy).forEach(page40::attach);
         page40.attach(apuTest);
         page40.attach(timer);
 

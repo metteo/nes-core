@@ -2,6 +2,9 @@ package net.novaware.nes.core.io.inject;
 
 import dagger.Module;
 
-@Module
+@Module(includes = {
+    IoRegModule.class,
+    IoMemModule.class
+})
 public interface IoModule {
 }

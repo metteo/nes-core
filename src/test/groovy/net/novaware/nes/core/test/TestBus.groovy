@@ -15,37 +15,50 @@ import static net.novaware.nes.core.util.UTypes.*
 @Log
 class TestBus implements MemoryBus {
 
-    MemoryDevice.ReadWrite device
+    MemoryDevice.ReadOnly readOnly
+    MemoryDevice.WriteOnly writeOnly
 
     int addressLatch;
     DataLine dataLine = new DataLine()
 
-    TestBus(MemoryDevice.ReadWrite device) {
-        this.device = device
+    TestBus(MemoryDevice.ReadOnly readOnly, MemoryDevice.WriteOnly writeOnly) {
+        this.readOnly = readOnly
+        this.writeOnly = writeOnly
 
         // Useful when same device gets attached for init and then attached again for testing
-        log.info("Attaching device: " + device + " to TestBus")
-        device.onAttach(dataLine)
+        log.info("Attaching device: R_" + readOnly + " W_" + writeOnly + " to TestBus")
+
+        if (readOnly != null) {
+            readOnly.onAttach(dataLine)
+        } else if (writeOnly != null) {
+            writeOnly.onAttach(dataLine)
+        } else {
+            throw new IllegalArgumentException("Both R and W devices are null")
+        }
+    }
+
+    TestBus(MemoryDevice.ReadWrite readWrite) {
+        this(readWrite, readWrite)
     }
 
     @Override
     void probe(@Unsigned short address, DataBus.Line dataLine) {
-        device.probe(address, dataLine)
+        readOnly.probe(address, dataLine)
     }
 
     int read(int address) {
-        device.onAccess(ushort(address))
-        device.onRead()
+        readOnly.onAccess(ushort(address))
+        readOnly.onRead()
 
         def read = dataLine.cycle()
         return sint(read)
     }
 
     void write(int address, int data) {
-        device.onAccess(ushort(address))
+        writeOnly.onAccess(ushort(address))
 
         dataLine.data(ubyte(data))
-        device.onWrite()
+        writeOnly.onWrite()
         dataLine.cycle()
     }
 

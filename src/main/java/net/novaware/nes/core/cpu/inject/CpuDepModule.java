@@ -11,6 +11,7 @@ import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_SIZE;
@@ -65,5 +66,12 @@ public interface CpuDepModule {
     @CpuVar(ACR)
     static MemoryDevice.WriteOnly provideApuRegs() {
         return new PhysicalMemory("APU.REGS", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE);
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(JOY)
+    static MemoryDevice[] provideJoyDevices() {
+        return new MemoryDevice[] {};
     }
 }

@@ -26,6 +26,7 @@ import net.novaware.nes.core.cpu.unit.LoadStore;
 import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.dma.inject.DmaModule;
+import net.novaware.nes.core.io.inject.IoModule;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.Ppu;
@@ -42,6 +43,7 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 @Component(modules = {
     DmaModule.class,
     ApuModule.class, // TODO: do we want it here? RecordingBus doesn't need it
+    IoModule.class,
     PpuModule.class,  // TODO: do we want it here? RecordingBus doesn't need it
     CpuModule.class,
     CpuRegModule.class,

@@ -15,6 +15,7 @@ import net.novaware.nes.core.dma.inject.DmaModule;
 import net.novaware.nes.core.file.ReaderMode;
 import net.novaware.nes.core.file.ines.NesFileReader;
 import net.novaware.nes.core.file.ines.NesFileReadingException;
+import net.novaware.nes.core.io.inject.IoModule;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.inject.PpuModule;
 import net.novaware.nes.core.ppu.inject.PpuVar;
@@ -36,6 +37,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 @Component(modules = {
     DmaModule.class,
     ApuModule.class,
+    IoModule.class,
     PpuModule.class,
     CpuModule.class,
     ClockModule.class,
