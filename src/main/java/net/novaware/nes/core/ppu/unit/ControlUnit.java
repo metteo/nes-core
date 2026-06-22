@@ -628,7 +628,7 @@ public class ControlUnit implements Initializable {
         int offsetSp = 0;
         boolean hiddenSp = false;
 
-        for(int i = 0; i < spriteOutputUnits.length; i++) {
+        for(int i = 0; i < spriteOutputUnits.length; i++) { // TODO: go backwards and the last non transparent pixel wins?
             SpriteOutput spriteOutput = spriteOutputUnits[i];
 
             if (spriteOutput.state == SpriteOutput.State.DRAWING) {
@@ -691,11 +691,12 @@ public class ControlUnit implements Initializable {
                 int dot = dotCounter.getValue();
                 if (dot == 65) {
                     int secOamI = 0;
-                    for(int i = 0; i < 0xFF; i+=4) {
+                    // TODO: create "VIEW" action that resets oamaddr and sec oam addr? or not
+                    for(int i = 0; i < 0xFF; i+=4) { // TODO: use OAMADDR instead of i
                         int y = sint(objAttrMemory.readPrimary(ubyte(i)));
                         int futureY = lineCounter.getValue() + 1;
                         if (y < futureY && futureY <= y+8) {
-                            objAttrMemory.copyToSecondary(i / 4, secOamI);
+                            objAttrMemory.copyToSecondary(i / 4, secOamI); // TODO: use SEC OAM addr to iterate over the bytes
                             secOamI++;
 
                             if (secOamI >= objAttrMemory.getSecondarySize()) {

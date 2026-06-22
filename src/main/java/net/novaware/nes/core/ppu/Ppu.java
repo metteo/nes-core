@@ -107,7 +107,8 @@ public class Ppu implements ClockReceiver {
         regs.status.setSpriteZeroHit(false); // 0
         regs.status.setSpriteOverflow(true); // often set
 
-        regs.oamAddress.set(UBYTE_0);
+        regs.priOamAddress.set(UBYTE_0);
+        regs.secOamAddress.set(UBYTE_0);
         regs.secondWrite.set(false);
 
         regs.tempViewPort.set(USHORT_0);

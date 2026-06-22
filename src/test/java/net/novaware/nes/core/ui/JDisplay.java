@@ -2,6 +2,7 @@ package net.novaware.nes.core.ui;
 
 import net.novaware.nes.core.config.BorderRegion;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.util.Bin;
 import net.novaware.nes.core.util.Hex;
 
 import javax.swing.*;
@@ -23,6 +24,7 @@ import static java.awt.event.KeyEvent.VK_SHIFT;
 import static java.awt.event.KeyEvent.VK_UP;
 import static java.awt.event.KeyEvent.VK_X;
 import static java.awt.event.KeyEvent.VK_Z;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class JDisplay extends JComponent implements ChangeListener {
 
@@ -88,11 +90,15 @@ public class JDisplay extends JComponent implements ChangeListener {
             @Override
             public void keyPressed(KeyEvent e) {
                 updateBit(e.getKeyCode(), true);
+
+                repaint();
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 updateBit(e.getKeyCode(), false);
+
+                repaint();
             }
         });
     }
@@ -128,6 +134,8 @@ public class JDisplay extends JComponent implements ChangeListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        g.drawString(Bin.s(ubyte(keyState.get())), 0, 10);
 
         Insets insets = getInsets(this.insets);
 

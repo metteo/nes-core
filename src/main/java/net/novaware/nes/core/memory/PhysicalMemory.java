@@ -7,6 +7,7 @@ import net.novaware.nes.core.util.UByteSupplier;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.Nums.powOfTwo;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 /**
@@ -42,10 +43,10 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
             this.mask = 0xFFFF;
         } else {
             assertArgument(
-                size > 0 && (size & (size - 1)) == 0,
+                size > 0 && powOfTwo(size),
                 "size must be a power of two to allow mirroring with mask"
             );
-            this.mask = buffer.capacity() - 1;
+            this.mask = size - 1;
         }
     }
 

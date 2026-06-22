@@ -30,11 +30,12 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -76,7 +77,8 @@ public class PpuRegFile extends RegisterFile {
     public final BooleanRegister maskBackground;
     public final BooleanRegister greyscale;
 
-    public final ByteRegister oamAddress;
+    public final ObjAttrRegister priOamAddress;
+    public final ObjAttrRegister secOamAddress;
 
     public final BooleanRegister frameToggle;
     public final BooleanRegister resetLock;
@@ -110,7 +112,8 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress,
+        @PpuVar(POA) ObjAttrRegister priOamAddress,
+        @PpuVar(SOA) ObjAttrRegister secOamAddress,
 
         @PpuVar(FT) BooleanRegister frameToggle,
         @PpuVar(RL) BooleanRegister resetLock
@@ -132,8 +135,7 @@ public class PpuRegFile extends RegisterFile {
         );
         dataRegisters = List.of(
             this.dataReadBuffer = dataReadBuffer,
-            this.vramAddressIncrement = vramAddressIncrement,
-            this.oamAddress = oamAddress
+            this.vramAddressIncrement = vramAddressIncrement
         );
         booleanRegisters = List.of(
             this.secondWrite = secondWrite,
@@ -153,6 +155,9 @@ public class PpuRegFile extends RegisterFile {
 
             this.frameToggle = frameToggle
         );
+
+        this.priOamAddress = priOamAddress;
+        this.secOamAddress = secOamAddress;
 
         this.renderSprite = renderSprite;
         this.renderBackground = renderBackground;

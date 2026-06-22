@@ -3,6 +3,7 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
@@ -32,12 +33,13 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VOUT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -219,9 +221,16 @@ public interface PpuRegModule {
 
     @Provides
     @BoardScope
-    @PpuVar(OAM)
-    static ByteRegister provideObjAttrMemoryAddress() {
-        return new ByteRegister(OAM.doc());
+    @PpuVar(POA)
+    static ObjAttrRegister providePrimaryObjAttrAddress() {
+        return new ObjAttrRegister(POA.doc(), 0x100); // TODO: find a nice place for this constant, PpuOamMap?
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(SOA)
+    static ObjAttrRegister provideSecondaryObjAttrAddress() {
+        return new ObjAttrRegister(SOA.doc(), 0x10); // TODO: should be configurable in sync with sec oam size
     }
 
     @Provides

@@ -47,7 +47,10 @@ public enum PpuVarName {
     PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
+
     OAM ("", "oam", "Object Attribute Memory"),
+    POA ("OAM.PRI", "priOamAddr", "Primary OAM Address"),
+    SOA ("OAM.SEC", "secOamAddr", "Secondary OAM Address"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),
