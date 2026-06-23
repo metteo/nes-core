@@ -23,11 +23,12 @@ import net.novaware.nes.core.util.uml.Used;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
@@ -60,7 +61,8 @@ public class Ppu implements ClockReceiver {
     private final PatternTable patternMemory1;
 
     private final PaletteMemory paletteMemory;
-    private final ObjAttrMemory objAttrMemory;
+    private final ObjAttrMemory priObjAttrMemory;
+    private final ObjAttrMemory secObjAttrMemory;
 
     private final VideoOutRegister videoOut;
     private final ControlUnit controlUnit;
@@ -78,7 +80,8 @@ public class Ppu implements ClockReceiver {
         @PpuVar(PT0) PatternTable patternTable0,
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
-        @PpuVar(OAM) ObjAttrMemory objAttrMemory,
+        @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
+        @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
         VideoOutRegister videoOut,
         ControlUnit controlUnit
     ) {
@@ -93,7 +96,9 @@ public class Ppu implements ClockReceiver {
         this.patternMemory0 = patternTable0;
         this.patternMemory1 = patternTable1;
         this.paletteMemory = paletteMemory;
-        this.objAttrMemory = objAttrMemory;
+
+        this.priObjAttrMemory = priObjAttrMemory;
+        this.secObjAttrMemory = secObjAttrMemory;
 
         this.videoOut = videoOut;
         this.controlUnit = controlUnit;

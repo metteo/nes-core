@@ -5,7 +5,8 @@ import dagger.Module;
 @Module(includes = {
     PpuRegModule.class,
     PpuPinModule.class,
-    PpuMemModule.class
+    PpuMemModule.class,
+    PpuTabModule.class
 })
 public interface PpuModule {
     // NOTE: do not add provide / bind methods here.

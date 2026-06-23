@@ -15,7 +15,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see <a href="https://www.nesdev.org/wiki/PPU_rendering#Frame_timing_diagram">Timing diagram on nesdev.org</a>
  */
 @BoardScope
-public class ViewPortRegister extends Register {
+public class ViewPortRegister extends Register { // TODO: consider renaming to CameraRegister
 
     public enum Variant { // TODO: consider CURRENT / TEMPORARY values instead
         /**
@@ -226,7 +226,7 @@ public class ViewPortRegister extends Register {
         target.fineY = this.fineY;
     }
 
-    public @Unsigned short getNameTableAddress() {
+    public @Unsigned short getNameTableAddress() { // TODO: move to NameTables
         // TODO: consider using vram segment register here
         return ushort(0x2000 | (sint(get()) & 0xFFF));
     }
@@ -234,7 +234,7 @@ public class ViewPortRegister extends Register {
     /**
      * @see <a href="https://www.nesdev.org/wiki/PPU_scrolling#Tile_and_attribute_fetching">Attribute fetching on nesdev.org</a>
      */
-    public @Unsigned short getAttrTableAddress() {
+    public @Unsigned short getAttrTableAddress() { // TODO: move to AttributeTables
         int base = 0x2000; // TODO: consider using vram segment register here
         int nt = nameTable << 10;
         int attr = 0b1111 << 6;

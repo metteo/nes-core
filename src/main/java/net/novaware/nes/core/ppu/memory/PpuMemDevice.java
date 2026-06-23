@@ -44,7 +44,6 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
@@ -72,7 +71,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     private final MemoryBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
     private final PaletteMemory palette;
 
-    private final ObjAttrMemory oam;
+    private final ObjAttrMemory priObjAttrMemory;
+    private final ObjAttrMemory secObjAttrMemory;
     private final ObjAttrRegister priOamAddress;
     private final ObjAttrRegister secOamAddress;
 
@@ -117,7 +117,8 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(BUS) MemoryBus ppuBus,
         PaletteMemory palette,
 
-        @PpuVar(OAM) ObjAttrMemory oam,
+         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
+         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
         @PpuVar(POA) ObjAttrRegister priOamAddress,
         @PpuVar(SOA) ObjAttrRegister secOamAddress,
 
@@ -149,7 +150,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     ) {
         this.ppuBus = ppuBus;
         this.palette = palette;
-        this.oam = oam;
+
+        this.priObjAttrMemory = priObjAttrMemory;
+        this.secObjAttrMemory = secObjAttrMemory;
         this.priOamAddress = priOamAddress;
         this.secOamAddress = secOamAddress;
 
@@ -357,7 +360,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @Override
         public void onRead() {
             @Unsigned byte oamAddr = priOamAddress.get();
-            @Unsigned byte oamData = oam.readPrimary(oamAddr);
+            @Unsigned byte oamData = priObjAttrMemory.read(oamAddr);
 
             dataLine.data(oamData);
         }
@@ -367,7 +370,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             @Unsigned byte oamAddr = priOamAddress.get();
             @Unsigned byte oamData = dataLine.data();
 
-            oam.writePrimary(oamAddr, oamData);
+            priObjAttrMemory.write(oamAddr, oamData);
 
             priOamAddress.setAsByte(sint(oamAddr) + 1);
         }

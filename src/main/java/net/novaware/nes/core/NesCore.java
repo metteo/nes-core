@@ -29,7 +29,7 @@ import java.net.URI;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 
@@ -74,7 +74,7 @@ public abstract class NesCore {
     public abstract @PpuVar(PT1) PatternTable getPatternTable1();
     public abstract @PpuVar(NT0) NameTable getNameTable0();
     public abstract @PpuVar(AT0) AttributeTable getAttributeTable0();
-    public abstract @PpuVar(OAM) ObjAttrMemory getObjAttrMemory();
+    public abstract @PpuVar(POA) ObjAttrMemory getPriObjAttrMemory();
 
     public Cartridge newCartridge(URI file) { // TODO: improve, for now only for nestest
         NesFileReader.Result result = new NesFileReader().read(file, ReaderMode.LENIENT);

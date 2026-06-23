@@ -10,7 +10,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_pattern_tables">PPU pattern tables on nesdev.org</a>
  */
-public class PatternTable extends Table {
+public class PatternTable extends MemBusTable {
 
     public PatternTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);

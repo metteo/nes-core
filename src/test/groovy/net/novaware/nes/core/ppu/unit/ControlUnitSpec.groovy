@@ -6,6 +6,7 @@ import net.novaware.nes.core.ppu.action.ScanLine
 import net.novaware.nes.core.ppu.inject.PpuDepModule
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.inject.PpuRegModule
+import net.novaware.nes.core.ppu.inject.PpuTabModule
 import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
@@ -42,7 +43,11 @@ class ControlUnitSpec extends Specification {
     def spritePatternTable = PpuRegModule.provideSpritePatternTable()
     def videoOut = PpuRegModule.provideVideoOutRegister()
     def paletteMemory = PpuMemModule.providePaletteMemory()
-    def objAttrMemory = PpuMemModule.provideObjAttrMemory()
+    def priObjAttrMemory = PpuMemModule.providePrimaryObjAttrMemory()
+    def secObjAttrMemory = PpuMemModule.provideSecondaryObjAttrMemory()
+
+    def priObjAttrTable = PpuTabModule.providePriObjAttrTable(PpuRegModule.providePrimaryObjAttrAddress(), priObjAttrMemory)
+    def secObjAttrTable = PpuTabModule.provideSecObjAttrTable(PpuRegModule.provideSecondaryObjAttrAddress(), secObjAttrMemory)
 
     def "should construct an instance"() {
         when:
@@ -188,7 +193,10 @@ class ControlUnitSpec extends Specification {
             spritePatternTable,
             videoOut,
             paletteMemory,
-            objAttrMemory
+            priObjAttrMemory,
+            secObjAttrMemory,
+            priObjAttrTable,
+            secObjAttrTable
         )
     }
 }

@@ -48,9 +48,9 @@ public enum PpuVarName {
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
 
-    OAM ("", "oam", "Object Attribute Memory"),
-    POA ("OAM.PRI", "priOamAddr", "Primary OAM Address"),
-    SOA ("OAM.SEC", "secOamAddr", "Secondary OAM Address"),
+    //OAM ("", "oam", "Object Attribute Memory"),
+    POA ("OAM.PRI", "priObjAttr", "Primary OAM"),
+    SOA ("OAM.SEC", "secObjAttr", "Secondary OAM"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),

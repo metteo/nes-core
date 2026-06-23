@@ -16,7 +16,8 @@ import static net.novaware.nes.core.util.UTypes.ushort
 
 class PpuMemDeviceSpec extends Specification {
 
-    def oam = PpuMemModule.provideObjAttrMemory()
+    def priOam = PpuMemModule.providePrimaryObjAttrMemory()
+    def secOam = PpuMemModule.provideSecondaryObjAttrMemory()
     def palette = PpuMemModule.providePaletteMemory()
 
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
@@ -58,7 +59,8 @@ class PpuMemDeviceSpec extends Specification {
         new PpuMemDevice(
             ppuBus,
             palette,
-            oam,
+            priOam,
+            secOam,
             priOamAddress,
             secOamAddress,
             currentViewPort,
@@ -298,7 +300,7 @@ class PpuMemDeviceSpec extends Specification {
         def addr = ubyte(address)
         def val = ubyte(value)
 
-        oam.writePrimary(addr, val)
+        priOam.write(addr, val)
 
         when:
         cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(addr)
@@ -325,8 +327,8 @@ class PpuMemDeviceSpec extends Specification {
 
         then:
         priOamAddress.getAsInt() == 0x14 // incremented
-        oam.readPrimary(ubyte(0x12)) == ubyte(0x34 & 0xE3) // attributes unused bits as 0s
-        oam.readPrimary(ubyte(0x13)) == ubyte(0x56)
+        priOam.read(ubyte(0x12)) == ubyte(0x34 & 0xE3) // attributes unused bits as 0s
+        priOam.read(ubyte(0x13)) == ubyte(0x56)
     }
 
     def "should update PPU scroll"() {

@@ -230,7 +230,7 @@ public interface PpuRegModule {
     @BoardScope
     @PpuVar(SOA)
     static ObjAttrRegister provideSecondaryObjAttrAddress() {
-        return new ObjAttrRegister(SOA.doc(), 0x10); // TODO: should be configurable in sync with sec oam size
+        return new ObjAttrRegister(SOA.doc(), 0x20); // TODO: should be configurable in sync with sec oam size
     }
 
     @Provides
