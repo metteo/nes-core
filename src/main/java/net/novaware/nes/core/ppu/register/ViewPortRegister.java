@@ -161,14 +161,22 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
      * "Inc. vert(v)" on the timing diagram
      */
     public void incrementY() {
-        int y = ((nameTable & NAMETABLE_Y_MASK) << 7) | (coarseY << 3) | fineY;
-        y = (y + 1) & 0x1_FF;
+        int oldNameTable = getNameTableY();
 
-        int newNameTable = ((y >> 7) & NAMETABLE_Y_MASK) | (nameTable & NAMETABLE_X_MASK);
-        int newCoarseY = (y >> 3) & COARSE_MASK;
+        int y = (coarseY << 3) | fineY;
+        y = (y + 1) & 0xFF;
+
+        int tempCoarseY = (y >> 3) & COARSE_MASK;
         int newFineY = y & FINE_MASK;
 
-        setNameTable(newNameTable);
+        boolean afterLast = tempCoarseY == 30;
+        boolean beforeFirst = tempCoarseY == 31; // "negative" row
+
+        int newCoarseY = afterLast || beforeFirst ? 0 : tempCoarseY;
+
+        int newNameTable = (oldNameTable + (afterLast ? 1 : 0)) & 0b1;
+
+        setNameTableY(newNameTable);
         setCoarseY(newCoarseY);
         setFineY(newFineY);
     }

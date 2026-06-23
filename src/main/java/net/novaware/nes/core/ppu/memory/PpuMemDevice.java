@@ -372,7 +372,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
             priObjAttrMemory.write(oamAddr, oamData);
 
-            priOamAddress.setAsByte(sint(oamAddr) + 1);
+            priOamAddress.increment(1);
         }
     }
 

@@ -35,6 +35,7 @@ class ControlUnitSpec extends Specification {
     def renderSprite = PpuRegModule.provideRenderSprite()
     def renderBackground = PpuRegModule.provideRenderBackground()
     def sprite0Hit = PpuDepModule.provideSprite0HitPin(PpuDepModule.provideSprite0HitReg())
+    def spriteSize = PpuRegModule.provideSpriteSize()
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
     def tempViewPort = PpuRegModule.provideTempViewPort()
     def resetLock = PpuRegModule.provideResetLock()
@@ -46,12 +47,17 @@ class ControlUnitSpec extends Specification {
     def priObjAttrMemory = PpuMemModule.providePrimaryObjAttrMemory()
     def secObjAttrMemory = PpuMemModule.provideSecondaryObjAttrMemory()
 
-    def priObjAttrTable = PpuTabModule.providePriObjAttrTable(PpuRegModule.providePrimaryObjAttrAddress(), priObjAttrMemory)
-    def secObjAttrTable = PpuTabModule.provideSecObjAttrTable(PpuRegModule.provideSecondaryObjAttrAddress(), secObjAttrMemory)
+    def priObjAttrReg = PpuRegModule.providePrimaryObjAttrAddress()
+    def secObjAttrReg = PpuRegModule.provideSecondaryObjAttrAddress()
+
+    def priObjAttrTable = PpuTabModule.providePriObjAttrTable(priObjAttrReg, priObjAttrMemory)
+    def secObjAttrTable = PpuTabModule.provideSecObjAttrTable(secObjAttrReg, secObjAttrMemory)
 
     def "should construct an instance"() {
         when:
         def instance = newCu()
+
+        println instance.printActions()
 
         then:
         instance != null
@@ -114,10 +120,11 @@ class ControlUnitSpec extends Specification {
         def counts = countActions(cu.oamActions)
 
         then:
-        counts.get(Action.CLR_SECONDARY_OAM) == 64
+        counts.get(Action.READ_PRIMARY_OAM)  == 32
+        counts.get(Action.CLR_SECONDARY_OAM) == 32
         counts.get(Action.EVAL_PRIMARY_OAM)  == 192
         counts.get(Action.NO_OPERATION)      == 85
-        counts.size() == 3
+        counts.size() == 4
 
     }
 
@@ -185,6 +192,7 @@ class ControlUnitSpec extends Specification {
             renderSprite,
             renderBackground,
             sprite0Hit,
+            spriteSize,
             currentViewPort,
             tempViewPort,
             resetLock,
@@ -195,6 +203,8 @@ class ControlUnitSpec extends Specification {
             paletteMemory,
             priObjAttrMemory,
             secObjAttrMemory,
+            priObjAttrReg,
+            secObjAttrReg,
             priObjAttrTable,
             secObjAttrTable
         )

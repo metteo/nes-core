@@ -41,6 +41,8 @@ public enum Action {
     // region OAM
 
     CLR_SECONDARY_OAM ("CSO", OAM),
+    READ_PRIMARY_OAM  ("RSO", OAM),
+
     EVAL_PRIMARY_OAM  ("EPO", OAM),
 
     // endregion

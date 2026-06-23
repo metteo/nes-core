@@ -138,7 +138,7 @@ public interface PpuRegModule {
     @Provides
     @BoardScope
     @PpuVar(CH)
-    static BooleanRegister provideSpriteSize() {
+    static BooleanRegister provideSpriteSize() { // TODO: consider renaming to tall sprites
         return new BooleanRegister(CH.doc()); // 0: 8x8 pixels; 1: 8x16 pixels
     }
 

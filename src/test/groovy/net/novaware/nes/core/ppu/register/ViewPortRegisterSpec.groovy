@@ -172,9 +172,10 @@ class ViewPortRegisterSpec extends Specification {
         0b00 | 0b0_0000  | 0b000   || 0b00  | 0b0_0000   | 0b001    | "basic"
         0b00 | 0b0_0000  | 0b110   || 0b00  | 0b0_0000   | 0b111    | "before fine overflow"
         0b00 | 0b0_0000  | 0b111   || 0b00  | 0b0_0001   | 0b000    | "overflow to coarse"
-        0b00 | 0b1_1111  | 0b110   || 0b00  | 0b1_1111   | 0b111    | "before coarse overflow"
-        0b00 | 0b1_1111  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
-        0b10 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
+        0b00 | 0b1_1101  | 0b110   || 0b00  | 0b1_1101   | 0b111    | "before coarse overflow"
+        0b00 | 0b1_1101  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
+        0b10 | 0b1_1101  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
+        0b00 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow without nt change"
     }
 
     def "should transfer X from T to V"() {

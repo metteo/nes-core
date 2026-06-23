@@ -12,6 +12,7 @@ import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
+import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
@@ -54,6 +55,7 @@ import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
@@ -114,6 +116,7 @@ public class ControlUnit implements Initializable {
     private final Action[] preRenderViewActions;
 
     private final TimingUnit timingUnit;
+    private final BooleanRegister spriteSize;
     private final ViewPortRegister currentViewPort;
     private final ViewPortRegister tempViewPort;
     private final BooleanRegister resetLock;
@@ -125,6 +128,10 @@ public class ControlUnit implements Initializable {
 
     private final ObjAttrMemory priObjAttrMemory;
     private final ObjAttrMemory secObjAttrMemory;
+
+    private final ObjAttrRegister priObjAttrRegister;
+    private final ObjAttrRegister secObjAttrRegister;
+
     private final ObjAttrTable priObjAttrTable;
     private final ObjAttrTable secObjAttrTable;
 
@@ -156,6 +163,7 @@ public class ControlUnit implements Initializable {
         @PpuVar(RS) BooleanPipeline renderSprite,
         @PpuVar(RB) BooleanPipeline renderBackground,
         @PpuVar(S0H) Pin sprite0Hit,
+        @PpuVar(CH) BooleanRegister spriteSize,
         @PpuVar(VX) ViewPortRegister currentViewPort,
         @PpuVar(T)  ViewPortRegister tempViewPort,
 
@@ -165,12 +173,18 @@ public class ControlUnit implements Initializable {
         @PpuVar(CS) ShortRegister spritePatternTable,
         VideoOutRegister videoOut,
         PaletteMemory paletteMemory,
+
         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
+
+        @PpuVar(POA) ObjAttrRegister priObjAttrRegister,
+        @PpuVar(SOA) ObjAttrRegister secObjAttrRegister,
+
         @PpuVar(POA) ObjAttrTable priObjAttrTable,
         @PpuVar(SOA) ObjAttrTable secObjAttrTable
     ) {
         this.timingUnit = timingUnit;
+        this.spriteSize = spriteSize;
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
         this.resetLock = resetLock;
@@ -182,6 +196,9 @@ public class ControlUnit implements Initializable {
 
         this.priObjAttrMemory = priObjAttrMemory;
         this.secObjAttrMemory = secObjAttrMemory;
+        this.priObjAttrRegister = priObjAttrRegister;
+        this.secObjAttrRegister = secObjAttrRegister;
+
         this.priObjAttrTable = priObjAttrTable;
         this.secObjAttrTable = secObjAttrTable;
 
@@ -319,8 +336,9 @@ public class ControlUnit implements Initializable {
         Action[] oamActions = new Action[videoStandard.getPhysicalWidth()];
         Arrays.fill(oamActions, Action.NO_OPERATION);
 
-        for(int x = 1; x <= 64; x++) {
-            oamActions[x] = Action.CLR_SECONDARY_OAM; // TODO: it's reading primary and setting sec = 0xFF
+        for(int x = 1; x <= 64; x+=2) {
+            oamActions[x]     = Action.READ_PRIMARY_OAM;
+            oamActions[x + 1] = Action.CLR_SECONDARY_OAM;
         }
 
         for(int x = 65; x <= 256; x++) {
@@ -497,7 +515,7 @@ public class ControlUnit implements Initializable {
                 @Unsigned byte attr = secObjAttrTable.getAttr();
                 int x = secObjAttrTable.getXAsInt();
 
-                SpriteOutput output = spriteOutputUnits[secObjAttrTable.getRow()]; //secOamIndex];
+                SpriteOutput output = spriteOutputUnits[secObjAttrTable.getRow()];
 
                 // TODO: loading oam attrs & x is not instant, happens in garbage cycles
                 output.hidden = asHidden(attr);
@@ -554,6 +572,9 @@ public class ControlUnit implements Initializable {
     @SuppressWarnings("unused") // data parameter on purpose
     private void unusedNameTable(@Unsigned byte data) {}
 
+    @SuppressWarnings("unused") // data parameter on purpose
+    private void unusedObjAttrByte(@Unsigned byte data) {}
+
     private void extractCurrentAttribute(@Unsigned byte attrTableData) {
         int attrBitsLatch = sint(AttributeTable.getSubAttribute(attrTableData, currentViewPort));
         int attrLoBitLatch = attrBitsLatch & 0b01;
@@ -584,14 +605,32 @@ public class ControlUnit implements Initializable {
 
     // TODO: move to ObjAttrTable
     private int getSpritePatternAddress(int y, int tile, int plane) { // TODO: for 8x8 sprites only for now
-        int half = spritePatternTable.getAsInt();
-        int tileShifted = tile << 4;
-        int planeShifted = plane << 3;
-        int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+        boolean tallSprites = spriteSize.get();
 
-        int spAddr = half | tileShifted | planeShifted | tileRow;
+        if (tallSprites) {
+            // FIXME: not verified yet
+            int tileAndHalf = tile;
 
-        return spAddr;
+            int topOrBot = (y < 8) ? 0b0 : 0b1;
+            int half = (tileAndHalf & 0b1) * 0x1000;
+            int tileOnly = (tileAndHalf & ~0b1) | topOrBot;
+            int tileShifted = tileOnly << 4;
+            int planeShifted = plane << 3;
+            int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+
+            int spAddr = half | tileShifted | planeShifted | tileRow;
+
+            return spAddr;
+        } else {
+            int half = spritePatternTable.getAsInt();
+            int tileShifted = tile << 4;
+            int planeShifted = plane << 3;
+            int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+
+            int spAddr = half | tileShifted | planeShifted | tileRow;
+
+            return spAddr;
+        }
     }
 
     private void executeFlag(Action flag) {
@@ -704,22 +743,28 @@ public class ControlUnit implements Initializable {
 
     private void executeOam(Action oam) {
         switch(oam) {
-            case CLR_SECONDARY_OAM -> {
-                // TODO: should be alternating between pri oam reads and sec oam write with 0xFF
-                // TODO: use OAMADDR register as a base for reading primary oam
-                int dot = dotCounter.getValue();
-                int secOamAddr = (dot - 1) / 2;
-                secObjAttrMemory.write(ubyte(secOamAddr), UBYTE_MAX_VALUE);
+            case READ_PRIMARY_OAM -> {
+                @Unsigned byte data = priObjAttrMemory.read(priObjAttrRegister.get());
+                unusedObjAttrByte(data);
+
+                // TODO: increment offset (OAMADDR is the start)
             }
-            case EVAL_PRIMARY_OAM -> { // FIXME: just get first 8 sprites
+            case CLR_SECONDARY_OAM -> {
+                secObjAttrMemory.write(secObjAttrRegister.get(), UBYTE_MAX_VALUE);
+
+                secObjAttrRegister.increment(1); // 8 rows, 32 cells
+            }
+            case EVAL_PRIMARY_OAM -> {
                 int dot = dotCounter.getValue();
                 if (dot == 65) {
+                    boolean tallSprite = spriteSize.get();
+                    int height = tallSprite ? 16 : 8;
                     int secOamI = 0;
                     // TODO: create "VIEW" action that resets oamaddr and sec oam addr? or not
                     for(int i = 0; i < 0xFF; i+=4) { // TODO: use OAMADDR instead of i
                         int y = sint(priObjAttrMemory.read(ubyte(i)));
                         int futureY = lineCounter.getValue() + 1;
-                        if (y < futureY && futureY <= y+8) {
+                        if (y < futureY && futureY <= y+height) {
                             secObjAttrMemory.write(ubyte(secOamI), ubyte(y));
                             secObjAttrMemory.write(ubyte(secOamI+1), priObjAttrMemory.read(ubyte(i+1)));
                             secObjAttrMemory.write(ubyte(secOamI+2), priObjAttrMemory.read(ubyte(i+2)));

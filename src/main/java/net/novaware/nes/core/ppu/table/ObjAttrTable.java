@@ -54,9 +54,7 @@ public class ObjAttrTable implements Table {
     public void nextRow() {
         verifyCursor();
 
-        int currentAddr = cursor.getAsInt();
-
-        cursor.setAsByte(currentAddr + ENTRY_SIZE);
+        cursor.increment(ENTRY_SIZE);
     }
 
     public int size() {

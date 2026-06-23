@@ -49,4 +49,13 @@ public class ObjAttrRegister extends Register {
     public String toString() {
         return getName() + ": 0x" + Hex.s(get());
     }
+
+    public void increment(int by) {
+        int dataInt = sint(data);
+
+        int incremented = dataInt + by;
+        int masked = incremented & sint(mask);
+
+        data = ubyte(masked);
+    }
 }
