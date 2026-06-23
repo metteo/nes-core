@@ -56,7 +56,7 @@ public class TestApp {
 //        System.out.println(factory.getNameTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
 //        System.out.println(factory.getPaletteMemory().printColors());
-//        System.out.println(factory.getObjAttrMemory().printOam());
+//        System.out.println(factory.getObjAttrTables().print());
 //        }
 
         //System.exit(0); // TODO: notify swing to shut down instead

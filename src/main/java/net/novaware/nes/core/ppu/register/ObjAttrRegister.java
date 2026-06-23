@@ -14,7 +14,7 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
  */
 public class ObjAttrRegister extends Register {
 
-    private @Unsigned byte data;
+    private @Unsigned byte data; // TODO: consider renaming to address?
     private @Unsigned byte mask;
 
     /**

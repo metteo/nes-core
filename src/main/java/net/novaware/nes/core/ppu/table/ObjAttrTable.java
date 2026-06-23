@@ -59,6 +59,10 @@ public class ObjAttrTable implements Table {
         cursor.setAsByte(currentAddr + ENTRY_SIZE);
     }
 
+    public int size() {
+        return memory.getCount();
+    }
+
     public @Unsigned byte getY() {
         verifyCursor();
 

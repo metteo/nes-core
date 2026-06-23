@@ -22,6 +22,7 @@ public class ObjAttrMemory implements Nameable {
         PRIMARY, SECONDARY
     }
 
+    // TODO: memory variant of OA should not be aware of entries/rows, just mem cells with special address range
     public static final int PRIMARY_ENTRY_COUNT = 64;
     public static final int SECONDARY_ENTRY_COUNT = 8; // default
 
