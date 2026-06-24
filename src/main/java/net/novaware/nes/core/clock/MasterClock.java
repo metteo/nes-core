@@ -157,6 +157,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
     public void tick() {
         calculateSecondBudget();
+        int framesToRun = (int)frameBudget.getValue();
 
         long tickStart = System.nanoTime();
 
@@ -169,7 +170,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         long tickDuration = System.nanoTime() - tickStart;
         System.out.println(
-            (int) videoStandard.getRefreshRate() + " Frames time: " + tickDuration + "ns, " +
+                framesToRun + " Frames time: " + tickDuration + "ns, " +
             "Spin time: " + frameSpinTime + "ns"
         );
     }
@@ -217,6 +218,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             run0();
         } catch (Exception e) {
             exceptionHandler.accept(e);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(1);
         }
     }
 

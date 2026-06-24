@@ -135,6 +135,8 @@ public class JDisplay extends JComponent implements ChangeListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        //long start = System.nanoTime();
+
         g.drawString(Bin.s(ubyte(keyState.get())), 0, 10);
 
         Insets insets = getInsets(this.insets);
@@ -156,7 +158,7 @@ public class JDisplay extends JComponent implements ChangeListener {
 
                 int rectX = paddingLeft + (x * pixelWidth);
                 int rectY = paddingTop + (y * pixelHeight);
-                g.fillRect(rectX, rectY, pixelWidth, pixelHeight);
+                g.fillRect(rectX, rectY, pixelWidth, pixelHeight); // FIXME: slow. Paint to a BufferedImage
 
                 // https://en.wikipedia.org/wiki/Moir%C3%A9_pattern
                 if (pixelWidth > 1 && pixelHeight > 1 && drawMask) {
@@ -175,6 +177,9 @@ public class JDisplay extends JComponent implements ChangeListener {
             }
         }
 
+        //long renderTime = System.nanoTime() - start;
+
+        //System.out.println("Frame render time: " + renderTime);
     }
 
     @Override

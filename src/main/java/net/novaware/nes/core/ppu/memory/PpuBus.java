@@ -63,7 +63,10 @@ public class PpuBus implements MemoryBus {
 
     @Override
     public ControlBus.Line access(@Unsigned short address) {
-        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
+        // PPU can just call address bus without full control & data lines
+        assert busOp == BusOp.ADDRESS_ACCESS || // compile out, TODO: consider JCP or Manifold
+                busOp == BusOp.DATA_READ ||
+                busOp == BusOp.DATA_WRITE;
 
         busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;
