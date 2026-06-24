@@ -608,7 +608,7 @@ public class ControlUnit implements Initializable {
         boolean tallSprites = spriteSize.get();
 
         if (tallSprites) {
-            // FIXME: not verified yet
+            // FIXME: not verified yet. Use Dig dug
             int tileAndHalf = tile;
 
             int topOrBot = (y < 8) ? 0b0 : 0b1;

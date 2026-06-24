@@ -12,7 +12,6 @@ import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 @BoardScope
-@SuppressWarnings({"initialization.fields.uninitialized", "return"}) // TODO: remove when fully implemented
 public class PpuBus implements MemoryBus {
 
     // TODO: cart and expansion don't have the pallete indexes and don't hear anything above 0x3F00 (excl.)

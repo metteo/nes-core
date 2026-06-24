@@ -96,6 +96,7 @@ class MasterClockSpec extends Specification {
 
         then:
         assertThat(masterClock.frameBudget.getValue(), closeTo(60.098d, 0.001d))
+        masterClock.frameDuration == 16639356L
     }
 
     def "should run for a second"() {
