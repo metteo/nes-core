@@ -19,7 +19,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 
 // TODO: this could be used for decay? rows of pri and sec oam
 @BoardScope
-public class ObjAttrTables {
+public class ObjAttrTables implements Tables {
 
     private final ObjAttrTable priOam;
     private final ObjAttrTable secOam;

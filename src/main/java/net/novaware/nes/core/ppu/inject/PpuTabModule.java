@@ -10,6 +10,7 @@ import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.NameTable;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
+import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.SegmentRegister;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
@@ -18,12 +19,23 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 
 @Module
 public interface PpuTabModule {
 
     // TODO: decide if table segments should be separate or @IntoCollection
+
+    @Provides
+    @BoardScope
+    @PpuVar(PTS)
+    static PatternTables providePatternTables(
+            @PpuVar(PTS) SegmentRegister segment,
+            @PpuVar(BUS) MemoryBus ppuBus
+    ) {
+        return new PatternTables(PTS.doc(), segment, ppuBus);
+    }
 
     @Provides
     @BoardScope

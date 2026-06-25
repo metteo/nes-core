@@ -57,8 +57,9 @@ public enum PpuVarName {
     SOV ("", "spriteOverflow", "Sprite Overflow"),
     RST ("", "reset", "Reset"),
 
-    PT0 ("", "pattenTable0", "Pattern Table 0 (L)"),
-    PT1 ("", "pattenTable1", "Pattern Table 1 (R)"),
+    PTS ("", "patternTables", "Pattern Tables"),
+    PT0 ("", "patternTable0", "Pattern Table 0 (L)"),
+    PT1 ("", "patternTable1", "Pattern Table 1 (R)"),
 
     NT0 ("", "nameTable0", "Name Table 0"),
     NT1 ("", "nameTable1", "Name Table 1"),

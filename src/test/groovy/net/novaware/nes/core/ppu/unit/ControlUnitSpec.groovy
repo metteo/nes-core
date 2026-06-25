@@ -53,6 +53,8 @@ class ControlUnitSpec extends Specification {
     def priObjAttrTable = PpuTabModule.providePriObjAttrTable(priObjAttrReg, priObjAttrMemory)
     def secObjAttrTable = PpuTabModule.provideSecObjAttrTable(secObjAttrReg, secObjAttrMemory)
 
+    def spriteUnit = new SpriteUnit(scanLineCounter, dotCounter, spriteSize, priObjAttrMemory, secObjAttrMemory)
+
     def "should construct an instance"() {
         when:
         def instance = newCu()
@@ -206,7 +208,8 @@ class ControlUnitSpec extends Specification {
             priObjAttrReg,
             secObjAttrReg,
             priObjAttrTable,
-            secObjAttrTable
+            secObjAttrTable,
+            spriteUnit,
         )
     }
 }

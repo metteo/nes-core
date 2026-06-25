@@ -234,24 +234,6 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
         target.fineY = this.fineY;
     }
 
-    public @Unsigned short getNameTableAddress() { // TODO: move to NameTables
-        // TODO: consider using vram segment register here
-        return ushort(0x2000 | (sint(get()) & 0xFFF));
-    }
-
-    /**
-     * @see <a href="https://www.nesdev.org/wiki/PPU_scrolling#Tile_and_attribute_fetching">Attribute fetching on nesdev.org</a>
-     */
-    public @Unsigned short getAttrTableAddress() { // TODO: move to AttributeTables
-        int base = 0x2000; // TODO: consider using vram segment register here
-        int nt = nameTable << 10;
-        int attr = 0b1111 << 6;
-        int y = (coarseY & 0b11100) << 1;
-        int x = coarseX >> 2;
-        //              10   NN   1111  YYY XXX
-        return ushort(base | nt | attr | y | x );
-    }
-
     @Override
     public String toString() {
         var fX = variant == VX ? "." + fineX : "";

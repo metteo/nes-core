@@ -19,6 +19,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.Kind.PRIMARY;
@@ -88,6 +89,17 @@ public interface PpuMemModule {
     @BoardScope
     @PpuVar(BUS)
     MemoryBus bindPpuBus(PpuBus ppuBus); // FIXME: seems like @BoardScope on PpuBus class doesn't work as it should
+
+    @Provides
+    @BoardScope
+    @PpuVar(PTS)
+    static SegmentRegister providePatternTablesSegment() {
+        SegmentRegister segment = new SegmentRegister(PTS.name());
+        segment.setStart(PATTERN_TABLE_0_START);
+        segment.setEnd(PATTERN_TABLE_1_END);
+
+        return segment;
+    }
 
     @Provides
     @BoardScope

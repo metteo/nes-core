@@ -4,7 +4,7 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Hex;
 
-public abstract class MemBusTable implements Table {
+public abstract class MemBusTable {
 
     protected final String name;
     protected final SegmentRegister segment; // TODO: consider immutable variant
@@ -20,7 +20,6 @@ public abstract class MemBusTable implements Table {
         this.bus = bus;
     }
 
-    @Override
     public String getName() {
         return name;
     }

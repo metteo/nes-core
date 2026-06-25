@@ -46,7 +46,7 @@ public class ObjAttrTable implements Table {
     }
 
     public void setRow(int row) {
-        verifyCursor();
+        verifyCursor(); // FIXME: sometimes throws on setRow(0). should we verify the cursor before or after setting?
 
         cursor.setAsByte(row * ENTRY_SIZE);
     }

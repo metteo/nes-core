@@ -49,14 +49,14 @@ class PatternTableSpec extends Specification {
 
         then:
         art.trim() == """
-            ░▒░░░░░█
-            ▒▒░░░░█░
-            ░▒░░░█░░
-            ░▒░░█░░░
-            ░░░█░▓▓░
-            ░░█░░░░▓
-            ░█░░░░▓░
-            █░░░░▓▓▓
+             ░     █
+            ░░    █ 
+             ░   █  
+             ░  █   
+               █ ▓▓ 
+              █    ▓
+             █    ▓ 
+            █    ▓▓▓
         """.stripIndent(12).trim()
     }
 }

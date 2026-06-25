@@ -30,8 +30,8 @@ public class DefaultDisplayModel implements DisplayModel {
     @Override
     public Color getColor(int y, int x) { // TODO: model should know what is the y, x ranges?
         @Unsigned byte index = pixels.getColor(y, x);
-        int color = paletteData.getColor(index);
-        return new Color(color); // FIXME: lots of objects!
+        Color color = paletteData.getColorObj(index);
+        return color;
     }
 
     protected void fireStateChanged() {

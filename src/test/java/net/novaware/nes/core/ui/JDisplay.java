@@ -135,7 +135,7 @@ public class JDisplay extends JComponent implements ChangeListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        //long start = System.nanoTime();
+//        long start = System.nanoTime();
 
         g.drawString(Bin.s(ubyte(keyState.get())), 0, 10);
 
@@ -177,9 +177,9 @@ public class JDisplay extends JComponent implements ChangeListener {
             }
         }
 
-        //long renderTime = System.nanoTime() - start;
+//        long renderTime = System.nanoTime() - start;
 
-        //System.out.println("Frame render time: " + renderTime);
+//        System.out.println("Frame render time: " + renderTime);
     }
 
     @Override

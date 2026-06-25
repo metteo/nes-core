@@ -2,6 +2,9 @@ package net.novaware.nes.core.ppu.unit;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.awt.*;
+import java.util.stream.IntStream;
+
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -16,7 +19,7 @@ public class PaletteData {
     /**
      * @author gemini: Java NES Palette Colors Array
      */
-    private final int[] COLORS = {
+    private static final int[] COLORS = {
             // Row 0: Grays and dark saturated colors
             0x7C7C7C, 0x0000FC, 0x0000BC, 0x4428BC, 0x940084, 0xA80020, 0xA81000, 0x881400,
             0x503000, 0x007800, 0x006800, 0x005800, 0x004058, 0x000000, 0x000000, 0x000000,
@@ -34,7 +37,19 @@ public class PaletteData {
             0xF8E870, 0xD8F878, 0xB8F8B8, 0xB8F8D8, 0x00FCFC, 0xD8D8D8, 0x000000, 0x000000
     };
 
+    private static final Color[] COLOR_OBJECTS; // FIXME cache for now, but this is AWT in core code
+
+    static {
+        COLOR_OBJECTS = IntStream.of(COLORS)
+                .mapToObj(Color::new)
+                .toArray(Color[]::new);
+    }
+
     public int getColor(@Unsigned byte index) {
         return COLORS[sint(index)];
+    }
+
+    public Color getColorObj(@Unsigned byte index) {
+        return COLOR_OBJECTS[sint(index)];
     }
 }

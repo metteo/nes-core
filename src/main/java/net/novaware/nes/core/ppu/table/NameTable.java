@@ -10,7 +10,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_nametables">Name Tables on nesdev.org</a>
  */
-public class NameTable extends MemBusTable {
+public class NameTable extends MemBusTable implements Table {
 
     private static final int ROW_COUNT = 30;
     private static final int COL_COUNT = 32;

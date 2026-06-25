@@ -48,6 +48,10 @@ public final class IntegerCounter extends Counter {
         value = 0;
     }
 
+    public boolean isZero() {
+        return value == 0;
+    }
+
     public void maybeReset(boolean yes) {
         value = yes ? 0 : value;
     }

@@ -17,7 +17,10 @@ import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
+import net.novaware.nes.core.ppu.table.AttributeTables;
+import net.novaware.nes.core.ppu.table.NameTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
+import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
 import net.novaware.nes.core.register.ByteRegister;
@@ -76,6 +79,7 @@ import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
 import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.FOREGROUND;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipH;
+import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipV;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asHidden;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asPalette;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
@@ -134,6 +138,7 @@ public class ControlUnit implements Initializable {
 
     private final ObjAttrTable priObjAttrTable;
     private final ObjAttrTable secObjAttrTable;
+    private final SpriteUnit spriteUnit;
 
     public ByteRegister nameTableBuffer = new ByteRegister("NT.BUF"); // tile xy
 
@@ -181,7 +186,9 @@ public class ControlUnit implements Initializable {
         @PpuVar(SOA) ObjAttrRegister secObjAttrRegister,
 
         @PpuVar(POA) ObjAttrTable priObjAttrTable,
-        @PpuVar(SOA) ObjAttrTable secObjAttrTable
+        @PpuVar(SOA) ObjAttrTable secObjAttrTable,
+
+        SpriteUnit spriteUnit
     ) {
         this.timingUnit = timingUnit;
         this.spriteSize = spriteSize;
@@ -201,6 +208,7 @@ public class ControlUnit implements Initializable {
 
         this.priObjAttrTable = priObjAttrTable;
         this.secObjAttrTable = secObjAttrTable;
+        this.spriteUnit = spriteUnit;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -444,7 +452,6 @@ public class ControlUnit implements Initializable {
         if (!resetLock.get() && !forceBlank) {
             executeDraw(draw);
             executeShift(shift);
-//            executeShift(dot);
             executeBus(bus);
             executeView(view);
             executeOam(oam);
@@ -463,18 +470,10 @@ public class ControlUnit implements Initializable {
         }
     }
 
-    private void executeShift(int dot) { // NOTE: temp experiment to see how branching is slower
-        if (1 <= dot && dot <=256 || 321 <= dot && dot <= 336) {
-            shiftShiftRegisters();
-        }
-    }
-
-    //private int secOamIndex = 0;
-
     private void executeBus(Action busAction) {
         switch(busAction) {
             case ACCESS_NAME_TABLE_ADDRESS -> {
-                @Unsigned short nameTableAddr = currentViewPort.getNameTableAddress();
+                @Unsigned short nameTableAddr = NameTables.getNameTableAddress(currentViewPort);
                 bus.access(nameTableAddr);
             }
             case READ_NAME_TABLE_DATA      -> {
@@ -482,7 +481,7 @@ public class ControlUnit implements Initializable {
                 nameTableBuffer.set(nameTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
-                @Unsigned short attrTableAddr = currentViewPort.getAttrTableAddress();
+                @Unsigned short attrTableAddr = AttributeTables.getAttrTableAddress(currentViewPort);
                 bus.access(attrTableAddr);
             }
             case READ_ATTR_TABLE_DATA      -> {
@@ -490,7 +489,7 @@ public class ControlUnit implements Initializable {
                 extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
-                int bgLoAddr = getBackgroundPatternAddress(0);
+                int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
                 bus.access(ushort(bgLoAddr));
             }
             case READ_BG_LO_BITS_DATA      -> {
@@ -498,7 +497,7 @@ public class ControlUnit implements Initializable {
                 backgroundBuffer.low(bgLoData);
             }
             case ACCESS_BG_HI_BITS_ADDRESS -> {
-                int bgHiAddr = getBackgroundPatternAddress(1);
+                int bgHiAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 1, currentViewPort.getFineY());
                 bus.access(ushort(bgHiAddr));
             }
             case READ_BG_HI_BITS_DATA      -> {
@@ -522,10 +521,9 @@ public class ControlUnit implements Initializable {
                 output.palette = asPalette(attr);
                 output.countDown.setValue(x);
                 output.xCounter.setValue(7);
-                // TODO: possibly to early, bg shifting already starts on the previous line
                 output.state = SpriteOutput.State.WAITING;
 
-                int spLoAddr = getSpritePatternAddress(y, tile, 0);
+                int spLoAddr = getSpritePatternAddress(y, tile, 0, asFlipV(attr));
 
                 bus.access(ushort(spLoAddr));
             }
@@ -543,8 +541,9 @@ public class ControlUnit implements Initializable {
             case ACCESS_SP_HI_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
                 int tile = secObjAttrTable.getTileAsInt();
+                @Unsigned byte attr = secObjAttrTable.getAttr();
 
-                int spHiAddr = getSpritePatternAddress(y, tile, 1);
+                int spHiAddr = getSpritePatternAddress(y, tile, 1, asFlipV(attr));
                 bus.access(ushort(spHiAddr));
             }
             case READ_SP_HI_BITS_DATA      -> {
@@ -592,42 +591,31 @@ public class ControlUnit implements Initializable {
         attributes.loadPlaneHigh(attributesBuffer.high());
     }
 
-    // TODO: move to pattern table?
-    private int getBackgroundPatternAddress(int plane) {
-        int half = backgroundPatternTable.getAsInt();
-        int tile = nameTableBuffer.getAsInt() << 4;
-        int planeShifted = plane << 3;
-        int tileRow = currentViewPort.getFineY();
-
-        int bgAddr = half | tile | planeShifted | tileRow;
-        return bgAddr;
-    }
-
     // TODO: move to ObjAttrTable
-    private int getSpritePatternAddress(int y, int tile, int plane) { // TODO: for 8x8 sprites only for now
+    private int getSpritePatternAddress(int y, int tile, int plane, boolean flipV) { // TODO: for 8x8 sprites only for now
         boolean tallSprites = spriteSize.get();
 
         if (tallSprites) {
             // FIXME: not verified yet. Use Dig dug
-            int tileAndHalf = tile;
+            int tileAndTable = tile;
 
-            int topOrBot = (y < 8) ? 0b0 : 0b1;
-            int half = (tileAndHalf & 0b1) * 0x1000;
-            int tileOnly = (tileAndHalf & ~0b1) | topOrBot;
-            int tileShifted = tileOnly << 4;
-            int planeShifted = plane << 3;
-            int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+            int table = (tileAndTable & 0b1);
+            int cell = tileAndTable & ~0b1;
 
-            int spAddr = half | tileShifted | planeShifted | tileRow;
+            int tileRow = (lineCounter.getValue() - y) & 0b1111;
+
+            tileRow = flipV ? 15 - tileRow : tileRow;
+
+            int spAddr = PatternTables.getDoubleAddress(table, cell, plane, tileRow);
 
             return spAddr;
         } else {
-            int half = spritePatternTable.getAsInt();
-            int tileShifted = tile << 4;
-            int planeShifted = plane << 3;
-            int tileRow = Math.max(0, lineCounter.getValue() - y); // FIXME: max because eval doesn't check y, remove later
+            int table = spritePatternTable.getAsInt() >> 12;
+            int tileRow = (lineCounter.getValue() - y) & 0b111;
 
-            int spAddr = half | tileShifted | planeShifted | tileRow;
+            tileRow = flipV ? 7 - tileRow : tileRow;
+
+            int spAddr = PatternTables.getSingleAddress(table, tile, plane, tileRow);
 
             return spAddr;
         }
@@ -755,30 +743,7 @@ public class ControlUnit implements Initializable {
                 secObjAttrRegister.increment(1); // 8 rows, 32 cells
             }
             case EVAL_PRIMARY_OAM -> {
-                int dot = dotCounter.getValue();
-                if (dot == 65) {
-                    boolean tallSprite = spriteSize.get();
-                    int height = tallSprite ? 16 : 8;
-                    int secOamI = 0;
-                    // TODO: create "VIEW" action that resets oamaddr and sec oam addr? or not
-                    for(int i = 0; i < 0xFF; i+=4) { // TODO: use OAMADDR instead of i
-                        int y = sint(priObjAttrMemory.read(ubyte(i)));
-                        int futureY = lineCounter.getValue() + 1;
-                        if (y < futureY && futureY <= y+height) {
-                            secObjAttrMemory.write(ubyte(secOamI), ubyte(y));
-                            secObjAttrMemory.write(ubyte(secOamI+1), priObjAttrMemory.read(ubyte(i+1)));
-                            secObjAttrMemory.write(ubyte(secOamI+2), priObjAttrMemory.read(ubyte(i+2)));
-                            secObjAttrMemory.write(ubyte(secOamI+3), priObjAttrMemory.read(ubyte(i+3)));
-
-                            secOamI+=4;
-
-                            if (secOamI >= secObjAttrMemory.getSize()) {
-                                // TODO: set sprite overflow?
-                                break;
-                            }
-                        }
-                    }
-                }
+                spriteUnit.eval();
             }
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected oam action: " + oam);

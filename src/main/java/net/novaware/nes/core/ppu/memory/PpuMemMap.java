@@ -14,7 +14,7 @@ public class PpuMemMap implements MemoryMap {
     // region Cartridge (CPU / DMA and PPU)
 
     public static final @Unsigned short MEMORY_START = ushort(0x0000);
-    public static final @Unsigned short MEMORY_END = ushort(0x3FFF);
+    public static final @Unsigned short MEMORY_END = ushort(0x3FFF); // 14 bits
     public static final int MEMORY_SIZE = sint(MEMORY_END) - sint(MEMORY_START) + 1;
 
     // region CHR-[ROM/RAM]

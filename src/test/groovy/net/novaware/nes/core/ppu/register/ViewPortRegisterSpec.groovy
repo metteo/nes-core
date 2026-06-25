@@ -238,43 +238,6 @@ class ViewPortRegisterSpec extends Specification {
         0b1 | 0b11111 | 0b111
     }
 
-    def "should return name table address"() {
-        given:
-        v.setNameTable(nt)
-        v.setCoarseX(coarseX)
-        v.setCoarseY(coarseY)
-
-        expect:
-        v.getNameTableAddress() == ushort(ntAddr)
-
-        where:
-        nt   | coarseY | coarseX || ntAddr
-        0b00 | 0b00000 | 0b00000 || 0b10_00_00000_00000
-        0b00 | 0b00000 | 0b11111 || 0b10_00_00000_11111
-        0b00 | 0b11111 | 0b00000 || 0b10_00_11111_00000
-        0b11 | 0b00000 | 0b00000 || 0b10_11_00000_00000
-        0b11 | 0b11111 | 0b11111 || 0b10_11_11111_11111 // TODO: seems like attribute table? sus
-    }
-
-    def "should return attr table address"() {
-        given:
-        v.setNameTable(nt)
-        v.setCoarseX(coarseX)
-        v.setCoarseY(coarseY)
-
-
-        expect:
-        v.getAttrTableAddress() == ushort(atAddr)
-
-        where:
-        nt   | coarseY  | coarseX  || atAddr
-        0b00 | 0b000_00 | 0b000_00 || 0b10_00_1111_000_000
-        0b00 | 0b000_00 | 0b111_00 || 0b10_00_1111_000_111
-        0b00 | 0b111_00 | 0b000_00 || 0b10_00_1111_111_000
-        0b11 | 0b000_00 | 0b000_00 || 0b10_11_1111_000_000
-        0b11 | 0b111_00 | 0b111_00 || 0b10_11_1111_111_111
-    }
-
     def "should return provide useful VX toString"() {
         given:
         v.set(ushort(addr))
