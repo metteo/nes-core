@@ -25,6 +25,7 @@ public class SpriteOutput {
     public State state = State.IDLE;
 
     // FIXME: shifting or counting down or state change is wrong. sprites don't show up on first dot column!
+    // FIXME: this method takes a lot of cpu time
     public void maybeShiftPlanes() {
         switch(state) {
             case WAITING -> {

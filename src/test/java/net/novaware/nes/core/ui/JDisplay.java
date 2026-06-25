@@ -2,6 +2,7 @@ package net.novaware.nes.core.ui;
 
 import net.novaware.nes.core.config.BorderRegion;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.ppu.unit.PaletteData;
 import net.novaware.nes.core.util.Bin;
 import net.novaware.nes.core.util.Hex;
 
@@ -154,7 +155,7 @@ public class JDisplay extends JComponent implements ChangeListener {
         for (int y = 0; y < screenHeight; y++) {
             for (int x = 0; x < screenWidth; x++) {
                 Color pixelColor = model.getColor(y, x);
-                g.setColor(pixelColor);
+                g.setColor(pixelColor); // FIXME: massive garbage
 
                 int rectX = paddingLeft + (x * pixelWidth);
                 int rectY = paddingTop + (y * pixelHeight);
@@ -169,7 +170,7 @@ public class JDisplay extends JComponent implements ChangeListener {
 //                    g.setColor(pixelColor.brighter());
 //                    g.drawLine(rectXPlusW, rectY, rectXPlusW, rectYPlusH);
 
-                    g.setColor(pixelColor.darker());
+                    g.setColor(PaletteData.getDarker(pixelColor)); // FIXME: massive garbage
                     g.drawLine(rectX, rectYPlusH, rectXPlusW, rectYPlusH);
 
 
@@ -184,6 +185,6 @@ public class JDisplay extends JComponent implements ChangeListener {
 
     @Override
     public void stateChanged(ChangeEvent e) {
-        repaint();
+        repaint(); // can be called from another thread
     }
 }

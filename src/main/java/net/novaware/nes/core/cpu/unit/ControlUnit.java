@@ -175,8 +175,8 @@ public class ControlUnit implements Unit {
             case ADD_WITH_CARRY       -> alu.addWithCarry(decodedOperand.getData());
             case SUBTRACT_WITH_BORROW -> alu.subtractWithBorrow(decodedOperand.getData());
 
-            case INCREMENT_MEMORY -> readModifyWrite(alu::incrementMemory);
-            case DECREMENT_MEMORY -> readModifyWrite(alu::decrementMemory);
+            case INCREMENT_MEMORY -> readModifyWrite(data -> alu.incrementMemory(data)); // FIXME: get rid of lambdas
+            case DECREMENT_MEMORY -> readModifyWrite(data -> alu.decrementMemory(data)); //  alu is captured and causes garbage
 
             case INCREMENT_X -> alu.incrementX();
             case DECREMENT_X -> alu.decrementX();
@@ -242,11 +242,11 @@ public class ControlUnit implements Unit {
             case TRANSFER_A_TO_Y -> alu.transfer(registers.a(), registers.y());
             case TRANSFER_Y_TO_A -> alu.transfer(registers.y(), registers.a());
 
-            case SHIFT_LEFT  -> readModifyWrite(alu::arithmeticShiftLeft);
-            case SHIFT_RIGHT -> readModifyWrite(alu::logicalShiftRight);
+            case SHIFT_LEFT  -> readModifyWrite(data -> alu.arithmeticShiftLeft(data));
+            case SHIFT_RIGHT -> readModifyWrite(data -> alu.logicalShiftRight(data));
 
-            case ROTATE_LEFT  -> readModifyWrite(alu::rotateLeft);
-            case ROTATE_RIGHT -> readModifyWrite(alu::rotateRight);
+            case ROTATE_LEFT  -> readModifyWrite(data -> alu.rotateLeft(data));
+            case ROTATE_RIGHT -> readModifyWrite(data -> alu.rotateRight(data));
 
             case PUSH_A_TO_SP   -> stackEngine.push(registers.a());
             case PULL_A_FROM_SP -> stackEngine.pull(registers.a());
@@ -257,7 +257,7 @@ public class ControlUnit implements Unit {
             case TRANSFER_SP_TO_X -> alu.transfer(registers.sp(), registers.x());
             case TRANSFER_X_TO_SP -> registers.sp().set(registers.x().get()); // no flag updates
 
-            case DEC_MEM_CMP_A -> { readModifyWrite(alu::decrementMemory); alu.compareA(decodedOperand.getData()); } // FIXME: test illegal
+            case DEC_MEM_CMP_A -> { readModifyWrite(data -> alu.decrementMemory(data)); alu.compareA(decodedOperand.getData()); } // FIXME: test illegal
 
             default -> throw new UnsupportedOperationException("Unsupported instruction: " + instruction.name());
         }

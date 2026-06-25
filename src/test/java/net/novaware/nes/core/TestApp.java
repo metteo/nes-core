@@ -37,10 +37,7 @@ public class TestApp {
 
         final AtomicInteger keyState = new AtomicInteger();
         final DefaultDisplayModel displayModel = new DefaultDisplayModel();
-        board.getDisplayPort().connect(
-            displayMemory ->
-                SwingUtilities.invokeLater(() -> displayModel.setPixels(displayMemory))
-        );
+        board.getDisplayPort().connect(pixels -> displayModel.setPixels(pixels));
         SwingUtilities.invokeLater(()-> TestUI.createAndShowGui(displayModel, keyState));
 
         board.getJoypad1Port().connect(() -> ubyte(keyState.get()));

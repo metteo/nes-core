@@ -3,8 +3,13 @@ package net.novaware.nes.core.ppu.unit;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.awt.*;
+import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -38,11 +43,16 @@ public class PaletteData {
     };
 
     private static final Color[] COLOR_OBJECTS; // FIXME cache for now, but this is AWT in core code
+    private static final Map<Color, Color> COLOR_OBJECTS_DARKER;
 
     static {
         COLOR_OBJECTS = IntStream.of(COLORS)
                 .mapToObj(Color::new)
                 .toArray(Color[]::new);
+
+        COLOR_OBJECTS_DARKER = Stream.of(COLOR_OBJECTS)
+                .distinct()
+                .collect(toMap(identity(), Color::darker));
     }
 
     public int getColor(@Unsigned byte index) {
@@ -51,5 +61,9 @@ public class PaletteData {
 
     public Color getColorObj(@Unsigned byte index) {
         return COLOR_OBJECTS[sint(index)];
+    }
+
+    public static Color getDarker(Color color) {
+        return assertNonNull(COLOR_OBJECTS_DARKER.get(color), "darker color is null");
     }
 }
