@@ -172,9 +172,10 @@ class ViewPortRegisterSpec extends Specification {
         0b00 | 0b0_0000  | 0b000   || 0b00  | 0b0_0000   | 0b001    | "basic"
         0b00 | 0b0_0000  | 0b110   || 0b00  | 0b0_0000   | 0b111    | "before fine overflow"
         0b00 | 0b0_0000  | 0b111   || 0b00  | 0b0_0001   | 0b000    | "overflow to coarse"
-        0b00 | 0b1_1111  | 0b110   || 0b00  | 0b1_1111   | 0b111    | "before coarse overflow"
-        0b00 | 0b1_1111  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
-        0b10 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
+        0b00 | 0b1_1101  | 0b110   || 0b00  | 0b1_1101   | 0b111    | "before coarse overflow"
+        0b00 | 0b1_1101  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
+        0b10 | 0b1_1101  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
+        0b00 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow without nt change"
     }
 
     def "should transfer X from T to V"() {
@@ -235,43 +236,6 @@ class ViewPortRegisterSpec extends Specification {
         0b0 | 0b11111 | 0b000
         0b1 | 0b00000 | 0b000
         0b1 | 0b11111 | 0b111
-    }
-
-    def "should return name table address"() {
-        given:
-        v.setNameTable(nt)
-        v.setCoarseX(coarseX)
-        v.setCoarseY(coarseY)
-
-        expect:
-        v.getNameTableAddress() == ushort(ntAddr)
-
-        where:
-        nt   | coarseY | coarseX || ntAddr
-        0b00 | 0b00000 | 0b00000 || 0b10_00_00000_00000
-        0b00 | 0b00000 | 0b11111 || 0b10_00_00000_11111
-        0b00 | 0b11111 | 0b00000 || 0b10_00_11111_00000
-        0b11 | 0b00000 | 0b00000 || 0b10_11_00000_00000
-        0b11 | 0b11111 | 0b11111 || 0b10_11_11111_11111 // TODO: seems like attribute table? sus
-    }
-
-    def "should return attr table address"() {
-        given:
-        v.setNameTable(nt)
-        v.setCoarseX(coarseX)
-        v.setCoarseY(coarseY)
-
-
-        expect:
-        v.getAttrTableAddress() == ushort(atAddr)
-
-        where:
-        nt   | coarseY  | coarseX  || atAddr
-        0b00 | 0b000_00 | 0b000_00 || 0b10_00_1111_000_000
-        0b00 | 0b000_00 | 0b111_00 || 0b10_00_1111_000_111
-        0b00 | 0b111_00 | 0b000_00 || 0b10_00_1111_111_000
-        0b11 | 0b000_00 | 0b000_00 || 0b10_11_1111_000_000
-        0b11 | 0b111_00 | 0b111_00 || 0b10_11_1111_111_111
     }
 
     def "should return provide useful VX toString"() {

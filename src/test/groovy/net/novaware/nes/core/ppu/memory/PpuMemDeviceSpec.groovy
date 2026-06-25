@@ -16,7 +16,8 @@ import static net.novaware.nes.core.util.UTypes.ushort
 
 class PpuMemDeviceSpec extends Specification {
 
-    def oam = PpuMemModule.provideObjAttrMemory()
+    def priOam = PpuMemModule.providePrimaryObjAttrMemory()
+    def secOam = PpuMemModule.provideSecondaryObjAttrMemory()
     def palette = PpuMemModule.providePaletteMemory()
 
     def currentViewPort = PpuRegModule.provideCurrentViewPort()
@@ -39,7 +40,8 @@ class PpuMemDeviceSpec extends Specification {
     def maskSprite = PpuRegModule.provideMaskSprite()
     def maskBackground = PpuRegModule.provideMaskBackground()
     def greyscale = PpuRegModule.provideGreyscale()
-    def oamAddress = PpuRegModule.provideObjAttrMemoryAddress()
+    def priOamAddress = PpuRegModule.providePrimaryObjAttrAddress()
+    def secOamAddress = PpuRegModule.provideSecondaryObjAttrAddress()
     def resetLock = PpuRegModule.provideResetLock()
 
     def "should construct correctly"() {
@@ -57,7 +59,10 @@ class PpuMemDeviceSpec extends Specification {
         new PpuMemDevice(
             ppuBus,
             palette,
-            oam,
+            priOam,
+            secOam,
+            priOamAddress,
+            secOamAddress,
             currentViewPort,
             temporaryViewPort,
             writeRegister,
@@ -79,7 +84,6 @@ class PpuMemDeviceSpec extends Specification {
             maskBackground,
             greyscale,
 
-            oamAddress,
             resetLock
         )
     }
@@ -287,7 +291,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(ubyte(0x12))
 
         then:
-        oamAddress.getAsInt() == 0x12
+        priOamAddress.getAsInt() == 0x12
     }
 
     def "should read from OAM"() {
@@ -296,14 +300,14 @@ class PpuMemDeviceSpec extends Specification {
         def addr = ubyte(address)
         def val = ubyte(value)
 
-        oam.writePrimary(addr, val)
+        priOam.write(addr, val)
 
         when:
         cpuBus.access(PPU_OAM_ADDRESS_REGISTER).write().data(addr)
         def read = cpuBus.access(PPU_OAM_DATA_REGISTER).read().data()
 
         then:
-        oamAddress.get() == addr // no increment
+        priOamAddress.get() == addr // no increment
         sint(read) == actualVal
 
         where:
@@ -322,9 +326,9 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(PPU_OAM_DATA_REGISTER).write().data(ubyte(0x56))
 
         then:
-        oamAddress.getAsInt() == 0x14 // incremented
-        oam.readPrimary(ubyte(0x12)) == ubyte(0x34 & 0xE3) // attributes unused bits as 0s
-        oam.readPrimary(ubyte(0x13)) == ubyte(0x56)
+        priOamAddress.getAsInt() == 0x14 // incremented
+        priOam.read(ubyte(0x12)) == ubyte(0x34 & 0xE3) // attributes unused bits as 0s
+        priOam.read(ubyte(0x13)) == ubyte(0x56)
     }
 
     def "should update PPU scroll"() {

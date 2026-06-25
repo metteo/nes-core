@@ -24,17 +24,18 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -49,7 +50,7 @@ public class PpuRegFile extends RegisterFile {
 
     // TODO: switch to private + getters when PPU impl is more advanced
     public final IntegerCounter cycleCounter;
-    public final IntegerCounter scanLineCounter;
+    public final IntegerCounter lineCounter;
     public final IntegerCounter dotCounter;
 
     public final PpuStatusRegister status;
@@ -76,15 +77,16 @@ public class PpuRegFile extends RegisterFile {
     public final BooleanRegister maskBackground;
     public final BooleanRegister greyscale;
 
-    public final ByteRegister oamAddress;
+    public final ObjAttrRegister priOamAddress;
+    public final ObjAttrRegister secOamAddress;
 
-    public final BooleanRegister oddFrame;
+    public final BooleanRegister frameToggle;
     public final BooleanRegister resetLock;
 
     @Inject
     public PpuRegFile(
         @PpuVar(CC) IntegerCounter cycleCounter,
-        @PpuVar(SC) IntegerCounter scanLineCounter,
+        @PpuVar(LC) IntegerCounter lineCounter,
         @PpuVar(DC) IntegerCounter dotCounter,
 
         @PpuVar(PS) PpuStatusRegister status,
@@ -110,15 +112,16 @@ public class PpuRegFile extends RegisterFile {
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress,
+        @PpuVar(POA) ObjAttrRegister priOamAddress,
+        @PpuVar(SOA) ObjAttrRegister secOamAddress,
 
-        @PpuVar(OF) BooleanRegister oddFrame,
+        @PpuVar(FT) BooleanRegister frameToggle,
         @PpuVar(RL) BooleanRegister resetLock
     ) {
         super("PPU.REGS");
 
         this.cycleCounter = cycleCounter;
-        this.scanLineCounter = scanLineCounter;
+        this.lineCounter = lineCounter;
         this.dotCounter = dotCounter;
         this.status = status;
 
@@ -132,8 +135,7 @@ public class PpuRegFile extends RegisterFile {
         );
         dataRegisters = List.of(
             this.dataReadBuffer = dataReadBuffer,
-            this.vramAddressIncrement = vramAddressIncrement,
-            this.oamAddress = oamAddress
+            this.vramAddressIncrement = vramAddressIncrement
         );
         booleanRegisters = List.of(
             this.secondWrite = secondWrite,
@@ -151,8 +153,11 @@ public class PpuRegFile extends RegisterFile {
             this.maskBackground = maskBackground,
             this.greyscale = greyscale,
 
-            this.oddFrame = oddFrame
+            this.frameToggle = frameToggle
         );
+
+        this.priOamAddress = priOamAddress;
+        this.secOamAddress = secOamAddress;
 
         this.renderSprite = renderSprite;
         this.renderBackground = renderBackground;

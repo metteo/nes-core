@@ -46,11 +46,12 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public DoubleCounter  frameBudget = new DoubleCounter("CLK.FB"); // frames / sec
     public IntegerCounter frameCounter = new IntegerCounter("CLK.FC"); // frames
     public long           frameDuration; // nanos / frame
+    public long           frameSpinTime; // nanos / frame stat
 
     // TODO: track cpu odd/even or read/write cycle state
     public IntegerCounter cpuClockBudget = new IntegerCounter("CPU.CB"); // per frame
 
-    public final BooleanRegister oddFrame; // TODO: maybe MasterClock should own this instead of ppu?
+    public final BooleanRegister frameToggle; // TODO: maybe MasterClock should own this instead of ppu?
     public DoubleCounter ppuClockBudget = new DoubleCounter("PPU.CB"); // per frame (even / odd)
     public DoubleCounter ppuToCpuCycleBudget = new DoubleCounter("PPU.TODO");
 
@@ -62,7 +63,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     @Inject
     public MasterClock(
         CoreConfig coreConfig, // TODO: maybe use Cart.Config or separate Clock.Config
-        @PpuVar(PpuVarName.OF) BooleanRegister oddFrame,
+        @PpuVar(PpuVarName.FT) BooleanRegister frameToggle,
         @Named("CPU") ClockReceiver cpu,
         @Named("PPU") ClockReceiver ppu,
         @Named("APU") ClockReceiver apu,
@@ -72,7 +73,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     ) {
         this.videoStandard = coreConfig.getVideoStandard();
 
-        this.oddFrame = oddFrame;
+        this.frameToggle = frameToggle;
 
         this.cpu = cpu;
         this.ppu = ppu;
@@ -83,17 +84,23 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         this.videoEncoder = videoEncoder;
     }
 
+    long cpuTime;
+    long ppuTime;
+
     public void runFrame() {
         frameCounter.increment();
         frameBudget.decrement();
 
         while (ppuClockBudget.getValue() >= videoStandard.getPpuDivisor()) { // TODO: calculate it correctly (double with epsilon)
+            //long cpuStart = System.nanoTime(); // FIXME: nanoTime in the every instruction is verrrry slow!
             int cpuCyclesConsumed = cpu.cycle();
             cpuClockBudget.decrementBy(cpuCyclesConsumed * videoStandard.getCpuDivisor());
+            //cpuTime += System.nanoTime() - cpuStart;
 
             double ppuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getPpuDivisor();
             ppuToCpuCycleBudget.setValue(ppuToCpuCycleBudget.getValue() + ppuCyclesBudget);
 
+            //long ppuStart = System.nanoTime();
             while (ppuToCpuCycleBudget.getValue() > 0.9) { // don't delay last cycle due to fraction inequality
                 ppuToCpuCycleBudget.decrement();
                 int ppuCyclesConsumed = ppu.cycle();
@@ -102,6 +109,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
                 int videoEncoderCyclesConsumed = videoEncoder.cycle();
                 assert videoEncoderCyclesConsumed == ppuCyclesConsumed : "video encoder cycles problem!";
             }
+            //ppuTime += System.nanoTime() - ppuStart;
 
             double apuCyclesBudget = (double) cpuCyclesConsumed * videoStandard.getCpuDivisor() / videoStandard.getApuDivisor();
             apuToCpuCycleBudget.setValue(apuToCpuCycleBudget.getValue() + apuCyclesBudget);
@@ -133,6 +141,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             long spinStart = System.nanoTime();
             long targetTime = spinStart + targetSpinDuration;
 
+            // TODO: after optimizing the core, reintroduce sleep / parkNanos back to save on battery life
             while (System.nanoTime() < targetTime) {
                 // TODO: use some of the spin time to move video buffer / apu buffer to external threads safely
                 // TODO: also safely poll the inputs for the next frame
@@ -141,11 +150,14 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
             spinDuration = System.nanoTime() - spinStart;
             long overspin = Math.max(0, spinDuration - targetSpinDuration);
+
+            frameSpinTime += spinDuration;
         }
     }
 
     public void tick() {
         calculateSecondBudget();
+        double framesToRun = frameBudget.getValue();
 
         long tickStart = System.nanoTime();
 
@@ -157,7 +169,14 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         timeCounter.increment();
 
         long tickDuration = System.nanoTime() - tickStart;
-        System.out.println("Frame time: " + tickDuration + "ns");
+        double avgFrameTime = (double) tickDuration / framesToRun; // ns
+        double fps = 1_000_000_000d /* ns */ / avgFrameTime; // TODO: some rising because of fractional accumulation
+
+        System.out.println(
+            (int) framesToRun + " Frames time: " + tickDuration + "ns, " +
+            "Spin time: " + frameSpinTime + "ns " +
+            "FPS: " + String.format("%1$2.3f", fps)
+        );
     }
 
     @Override
@@ -203,6 +222,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
             run0();
         } catch (Exception e) {
             exceptionHandler.accept(e);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -237,14 +259,18 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     void calculateSecondBudget() {
         frameBudget.setValue(frameBudget.getValue() + videoStandard.getRefreshRate());
 
-        frameDuration = 1_000L /* ms */ * 1_000_000L /* ns */ / (long) frameBudget.getValue();
+        frameDuration = (long)(1_000d /* ms */ / frameBudget.getValue() * 1_000_000d /* ns */ );
+        frameSpinTime = 0L;
+
+        cpuTime = 0L;
+        ppuTime = 0L;
     }
 
     void calculateFrameBudget() {
         double masterCycles = videoStandard.getMasterCycles();
         int ppuCycles = (int) (ppuClockBudget.getValue()
             + masterCycles
-            - ((videoStandard.isOddFrameCycleSkip() && oddFrame.get()) ? videoStandard.getPpuDivisor() : 0)
+            - ((videoStandard.isSkipDot() && frameToggle.get()) ? videoStandard.getPpuDivisor() : 0)
         );
 
         ppuClockBudget.setValue(ppuCycles);

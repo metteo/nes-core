@@ -1,6 +1,6 @@
 package net.novaware.nes.core.register;
 
-public class BooleanRegister extends Register {
+public final class BooleanRegister extends Register {
 
     private boolean value;
 
@@ -18,6 +18,10 @@ public class BooleanRegister extends Register {
 
     public void toggle() {
         value = !value;
+    }
+
+    public void maybeToggle(boolean yes) {
+        value = yes ? !value : value;
     }
 
     @Override

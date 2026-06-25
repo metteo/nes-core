@@ -18,10 +18,9 @@ import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
-// TODO: create Palette dictionary or sth with actual colors for displaying
-//       (include emphasis in a way it's possible to compare all combinations
-//       of a single color)
-
+/**
+ * @see net.novaware.nes.core.ppu.unit.PaletteData for actual colors in RGB
+ */
 public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
 
     private final String name;

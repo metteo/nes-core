@@ -15,7 +15,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see <a href="https://www.nesdev.org/wiki/PPU_rendering#Frame_timing_diagram">Timing diagram on nesdev.org</a>
  */
 @BoardScope
-public class ViewPortRegister extends Register {
+public class ViewPortRegister extends Register { // TODO: consider renaming to CameraRegister
 
     public enum Variant { // TODO: consider CURRENT / TEMPORARY values instead
         /**
@@ -161,14 +161,22 @@ public class ViewPortRegister extends Register {
      * "Inc. vert(v)" on the timing diagram
      */
     public void incrementY() {
-        int y = ((nameTable & NAMETABLE_Y_MASK) << 7) | (coarseY << 3) | fineY;
-        y = (y + 1) & 0x1_FF;
+        int oldNameTable = getNameTableY();
 
-        int newNameTable = ((y >> 7) & NAMETABLE_Y_MASK) | (nameTable & NAMETABLE_X_MASK);
-        int newCoarseY = (y >> 3) & COARSE_MASK;
+        int y = (coarseY << 3) | fineY;
+        y = (y + 1) & 0xFF;
+
+        int tempCoarseY = (y >> 3) & COARSE_MASK;
         int newFineY = y & FINE_MASK;
 
-        setNameTable(newNameTable);
+        boolean afterLast = tempCoarseY == 30;
+        boolean beforeFirst = tempCoarseY == 31; // "negative" row
+
+        int newCoarseY = afterLast || beforeFirst ? 0 : tempCoarseY;
+
+        int newNameTable = (oldNameTable + (afterLast ? 1 : 0)) & 0b1;
+
+        setNameTableY(newNameTable);
         setCoarseY(newCoarseY);
         setFineY(newFineY);
     }
@@ -224,24 +232,6 @@ public class ViewPortRegister extends Register {
         target.setNameTableY(this.getNameTableY());
         target.coarseY = this.coarseY;
         target.fineY = this.fineY;
-    }
-
-    public @Unsigned short getNameTableAddress() {
-        // TODO: consider using vram segment register here
-        return ushort(0x2000 | (sint(get()) & 0xFFF));
-    }
-
-    /**
-     * @see <a href="https://www.nesdev.org/wiki/PPU_scrolling#Tile_and_attribute_fetching">Attribute fetching on nesdev.org</a>
-     */
-    public @Unsigned short getAttrTableAddress() {
-        int base = 0x2000; // TODO: consider using vram segment register here
-        int nt = nameTable << 10;
-        int attr = 0b1111 << 6;
-        int y = (coarseY & 0b11100) << 1;
-        int x = coarseX >> 2;
-        //              10   NN   1111  YYY XXX
-        return ushort(base | nt | attr | y | x );
     }
 
     @Override

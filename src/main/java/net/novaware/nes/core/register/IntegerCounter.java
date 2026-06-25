@@ -1,6 +1,6 @@
 package net.novaware.nes.core.register;
 
-public class IntegerCounter extends Counter {
+public final class IntegerCounter extends Counter {
 
     private int value;
 
@@ -46,6 +46,14 @@ public class IntegerCounter extends Counter {
 
     public void reset() {
         value = 0;
+    }
+
+    public boolean isZero() {
+        return value == 0;
+    }
+
+    public void maybeReset(boolean yes) {
+        value = yes ? 0 : value;
     }
 
     public boolean isPositive() {

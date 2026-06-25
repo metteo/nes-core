@@ -11,6 +11,7 @@ import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 
 import static net.novaware.nes.core.cpu.inject.CpuVarName.ACR;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PPU;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_REGISTERS_SIZE;
@@ -20,7 +21,7 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.dma.inject.DmaVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 
 /**
  * CPU Required Dependencies module. Should be provided by the board config.
@@ -41,9 +42,9 @@ public interface CpuDepModule {
     // FIXME: CPU should not have hard dependency on scanline / dot counters
     @Provides
     @BoardScope
-    @PpuVar(SC)
-    static IntegerCounter provideScanLineCounter() {
-        return new IntegerCounter(SC.doc());
+    @PpuVar(LC)
+    static IntegerCounter provideLineCounter() {
+        return new IntegerCounter(LC.doc());
     }
 
     @Provides
@@ -65,5 +66,12 @@ public interface CpuDepModule {
     @CpuVar(ACR)
     static MemoryDevice.WriteOnly provideApuRegs() {
         return new PhysicalMemory("APU.REGS", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE);
+    }
+
+    @Provides
+    @BoardScope
+    @CpuVar(JOY)
+    static MemoryDevice[] provideJoyDevices() {
+        return new MemoryDevice[] {};
     }
 }

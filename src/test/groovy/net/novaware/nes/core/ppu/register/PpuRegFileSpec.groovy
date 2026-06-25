@@ -31,15 +31,16 @@ class PpuRegFileSpec extends Specification {
         registers.maskBackground.getName() == "PPU.MASK.m"
         registers.greyscale.getName() == "PPU.MASK.G"
 
-        registers.oddFrame.getName() == "PPU.OF"
+        registers.frameToggle.getName() == "PPU.FT"
     }
 
     def "all data registers are initialized and reachable"() {
         expect:
-        registers.dataRegisters.size() == 3
+        registers.dataRegisters.size() == 2
         registers.dataReadBuffer.getName() == "PPU.DATA.R"
         registers.vramAddressIncrement.getName() == "PPU.CTRL.I"
-        registers.oamAddress.getName() == "PPU.OAM"
+        registers.priOamAddress.getName() == "PPU.OAM.PRI"
+        registers.secOamAddress.getName() == "PPU.OAM.SEC"
     }
 
     def "all address registers are initialized and reachable"() {

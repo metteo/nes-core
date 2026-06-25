@@ -4,6 +4,9 @@ import java.util.List;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/Cycle_reference_chart">Cycle reference chart on nesdev.org</a>
+ * TODO: separate tv system from color
+ * https://en.wikipedia.org/wiki/CCIR_System_B
+ * https://en.wikipedia.org/wiki/CCIR_System_M
  */
 public enum VideoStandard { // TODO: include post render scanline (241, NTSC black, PAL backdrop) and border region
 
@@ -30,16 +33,16 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
     private final int cpuDivisor;
     private final int ppuDivisor;
     private final int physicalHeight; // vertical, scan lines per frame
-    private final boolean oddFrameCycleSkip;
+    private final boolean skipDot;
 
     private static final List<VideoStandard> instances = List.of(values());
 
-    VideoStandard(double masterClock, int cpuDiv, int ppuDiv, int physicalHeight, boolean oddFrameCycleSkip) {
+    VideoStandard(double masterClock, int cpuDiv, int ppuDiv, int physicalHeight, boolean skipDot) {
         this.masterClock = masterClock;
         this.cpuDivisor = cpuDiv;
         this.ppuDivisor = ppuDiv;
         this.physicalHeight = physicalHeight;
-        this.oddFrameCycleSkip = oddFrameCycleSkip;
+        this.skipDot = skipDot;
     }
 
     public double getMasterClock() { // Hz
@@ -70,8 +73,11 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
         return masterClock / ppuDivisor;
     }
 
-    public boolean isOddFrameCycleSkip() {
-        return oddFrameCycleSkip;
+    /**
+     * Should PPU skip last dot of every other frame
+     */
+    public boolean isSkipDot() {
+        return skipDot;
     }
 
     public double getRefreshRate() {

@@ -3,9 +3,12 @@ package net.novaware.nes.core.ppu.inject;
 public enum PpuVarName {
 
     // region Basic Registers
-    CC ("", "cycleCounter",    "Cycle Counter"),
-    SC ("", "scanLineCounter", "Scan Line Counter"),
-    DC ("", "dotCounter",      "Dot Counter"),
+    CC ("", "cycleCounter", "Cycle Counter"),
+
+    FC ("", "frameCounter", "Frame Counter"),
+    FT ("", "frameToggle", "Frame Toggle"),
+    LC ("", "lineCounter",  "Line Counter"),
+    DC ("", "dotCounter",   "Dot Counter"),
 
     PS ("STATUS", "ppuStatus",       "PPU Status"),
     HB ("",       "horizontalBlank", "Horizontal Blank"),
@@ -34,7 +37,6 @@ public enum PpuVarName {
 
     GS ("MASK.G", "", "Greyscale Mode"),
 
-    OF ("", "oddFrame", "Odd Frame"),
     RL ("", "resetLock", "Reset Lock"), // TODO: rename to init frame / phase / register lock?
 
     // endregion
@@ -45,15 +47,19 @@ public enum PpuVarName {
     PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
-    OAM ("", "oam", "Object Attribute Memory"),
+
+    //OAM ("", "oam", "Object Attribute Memory"),
+    POA ("OAM.PRI", "priObjAttr", "Primary OAM"),
+    SOA ("OAM.SEC", "secObjAttr", "Secondary OAM"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),
     SOV ("", "spriteOverflow", "Sprite Overflow"),
     RST ("", "reset", "Reset"),
 
-    PT0 ("", "pattenTable0", "Pattern Table 0 (L)"),
-    PT1 ("", "pattenTable1", "Pattern Table 1 (R)"),
+    PTS ("", "patternTables", "Pattern Tables"),
+    PT0 ("", "patternTable0", "Pattern Table 0 (L)"),
+    PT1 ("", "patternTable1", "Pattern Table 1 (R)"),
 
     NT0 ("", "nameTable0", "Name Table 0"),
     NT1 ("", "nameTable1", "Name Table 1"),

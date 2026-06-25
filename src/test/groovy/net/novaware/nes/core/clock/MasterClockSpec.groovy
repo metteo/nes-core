@@ -20,7 +20,7 @@ class MasterClockSpec extends Specification {
             .setVideoStandard(VideoStandard.NTSC)
             .build()
 
-    def oddFrame = PpuRegModule.provideOddFrame()
+    def frameToggle = PpuRegModule.provideFrameToggle()
 
     def random = new Random()
 
@@ -63,14 +63,14 @@ class MasterClockSpec extends Specification {
     def executor = ClockModule.provideClockExecutor()
 
     private MasterClock newMasterClock() {
-        new MasterClock(coreConfig, oddFrame, cpu, ppu, apu, dma, executor, videoEncoder)
+        new MasterClock(coreConfig, frameToggle, cpu, ppu, apu, dma, executor, videoEncoder)
     }
 
     def "should calculate cycles budget for a frame"() {
         given:
         def masterClock = newMasterClock()
 
-        oddFrame.set(oddFrameVal)
+        frameToggle.set(oddFrameVal)
 
         when:
         masterClock.calculateFrameBudget()
@@ -96,6 +96,7 @@ class MasterClockSpec extends Specification {
 
         then:
         assertThat(masterClock.frameBudget.getValue(), closeTo(60.098d, 0.001d))
+        masterClock.frameDuration == 16639356L
     }
 
     def "should run for a second"() {

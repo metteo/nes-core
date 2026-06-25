@@ -9,6 +9,7 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.OpenLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.register.BooleanPipeline;
@@ -43,11 +44,12 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.W;
@@ -68,7 +70,11 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
     private final MemoryBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
     private final PaletteMemory palette;
-    private final ObjAttrMemory oam;
+
+    private final ObjAttrMemory priObjAttrMemory;
+    private final ObjAttrMemory secObjAttrMemory;
+    private final ObjAttrRegister priOamAddress;
+    private final ObjAttrRegister secOamAddress;
 
     private final ViewPortRegister currentViewPort;
     private final ViewPortRegister tempViewPort;
@@ -95,8 +101,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
     private final BooleanRegister resetLock;
 
-    private final ByteRegister oamAddressLatch;
-
     private final Handler emptyHandler = new EmptyHandler();
     private Handler[] readHandlers = new Handler[8];
     private Handler[] writeHandlers = new Handler[8];
@@ -112,7 +116,11 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     public PpuMemDevice( // TODO: inject the segment register with start / end to allow no cpu usage
         @PpuVar(BUS) MemoryBus ppuBus,
         PaletteMemory palette,
-        @PpuVar(OAM) ObjAttrMemory oam,
+
+         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
+         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
+        @PpuVar(POA) ObjAttrRegister priOamAddress,
+        @PpuVar(SOA) ObjAttrRegister secOamAddress,
 
         @PpuVar(VX) ViewPortRegister currentViewPort,
         @PpuVar(T) ViewPortRegister tempViewPort,
@@ -138,13 +146,15 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         @PpuVar(MB) BooleanRegister maskBackground,
         @PpuVar(GS) BooleanRegister greyscale,
 
-        @PpuVar(OAM) ByteRegister oamAddress,
-
         @PpuVar(RL) BooleanRegister resetLock
     ) {
         this.ppuBus = ppuBus;
         this.palette = palette;
-        this.oam = oam;
+
+        this.priObjAttrMemory = priObjAttrMemory;
+        this.secObjAttrMemory = secObjAttrMemory;
+        this.priOamAddress = priOamAddress;
+        this.secOamAddress = secOamAddress;
 
         this.currentViewPort = currentViewPort;
         this.tempViewPort = tempViewPort;
@@ -169,7 +179,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
         this.maskBackground = maskBackground;
         this.greyscale = greyscale;
         this.resetLock = resetLock;
-        this.oamAddressLatch = oamAddress;
 
         for (int i = 0; i < readHandlers.length; i++) {
             readHandlers[i] = emptyHandler;
@@ -342,7 +351,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
         @Override
         public void onWrite() {
-            oamAddressLatch.set(dataLine.data());
+            priOamAddress.set(dataLine.data());
         }
     }
 
@@ -350,20 +359,20 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
         @Override
         public void onRead() {
-            @Unsigned byte oamAddr = oamAddressLatch.get();
-            @Unsigned byte oamData = oam.readPrimary(oamAddr);
+            @Unsigned byte oamAddr = priOamAddress.get();
+            @Unsigned byte oamData = priObjAttrMemory.read(oamAddr);
 
             dataLine.data(oamData);
         }
 
         @Override
         public void onWrite() {
-            @Unsigned byte oamAddr = oamAddressLatch.get();
+            @Unsigned byte oamAddr = priOamAddress.get();
             @Unsigned byte oamData = dataLine.data();
 
-            oam.writePrimary(oamAddr, oamData);
+            priObjAttrMemory.write(oamAddr, oamData);
 
-            oamAddressLatch.setAsByte(sint(oamAddr) + 1);
+            priOamAddress.increment(1);
         }
     }
 

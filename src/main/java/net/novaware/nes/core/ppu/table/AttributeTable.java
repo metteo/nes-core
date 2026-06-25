@@ -14,7 +14,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_attribute_tables">Attribute Tables on nesdev.org</a>
  */
-public class AttributeTable extends Table {
+public class AttributeTable extends MemBusTable implements Table {
 
     public static final int ROW_COUNT = 8;
     public static final int COL_COUNT = 8;

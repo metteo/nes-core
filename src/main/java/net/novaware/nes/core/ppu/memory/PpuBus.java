@@ -11,8 +11,9 @@ import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.UTypes.sint;
+
 @BoardScope
-@SuppressWarnings({"initialization.fields.uninitialized", "return"}) // TODO: remove when fully implemented
 public class PpuBus implements MemoryBus {
 
     // TODO: cart and expansion don't have the pallete indexes and don't hear anything above 0x3F00 (excl.)
@@ -64,7 +65,11 @@ public class PpuBus implements MemoryBus {
 
     @Override
     public ControlBus.Line access(@Unsigned short address) {
-        assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
+        assert sint(address) < PpuMemMap.MEMORY_SIZE : "ppu address bus is 14 bits";
+        // PPU can just call address bus without full control & data lines
+        assert busOp == BusOp.ADDRESS_ACCESS || // compile out, TODO: consider JCP or Manifold
+                busOp == BusOp.DATA_READ ||
+                busOp == BusOp.DATA_WRITE;
 
         busOp = BusOp.ADDRESS_ACCESS;
         addressLatch = address;

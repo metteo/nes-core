@@ -1,5 +1,6 @@
 package net.novaware.nes.core.cpu
 
+import net.novaware.nes.core.cpu.inject.CpuRegModule
 import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.unit.*
 import net.novaware.nes.core.pin.Pin
@@ -31,14 +32,13 @@ class CpuSpec extends Specification {
     Pin sov = Mock()
 
     Pin rdyPin = Mock()
-    BooleanRegister rdyReg = Mock()
+    BooleanRegister rdyReg = CpuRegModule.provideRdyRegister()
 
     Pin resPin = Mock()
-    BooleanRegister resReg = Mock()
+    BooleanRegister resReg = CpuRegModule.provideResRegister()
 
-
-    IntegerCounter cc = new IntegerCounter("CPU.CC")
-    IntegerCounter ic = new IntegerCounter("CPU.IC")
+    IntegerCounter cc = CpuRegModule.provideCpuCycleCounter()
+    IntegerCounter ic = CpuRegModule.provideInstructionCycle()
 
     Cpu instance = new Cpu(
         registers,

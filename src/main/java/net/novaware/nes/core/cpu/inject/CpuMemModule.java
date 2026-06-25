@@ -7,12 +7,9 @@ import net.novaware.nes.core.apu.memory.ApuMemDevice;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.dma.memory.DmaMemDevice;
-import net.novaware.nes.core.io.register.IoRegFile;
-import net.novaware.nes.core.memory.ByteRegisterMemory;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
-import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
@@ -21,7 +18,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.IRQ;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.JOY;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.NMI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.OS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
@@ -31,8 +27,6 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.ZP;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_END;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_SIZE;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.APU_TEST_REGISTERS_START;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_END;
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.IO_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.IRQ_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.NMI_VECTOR;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.OAM_SEGMENT_END;
@@ -71,17 +65,6 @@ public interface CpuMemModule {
     @BoardScope
     @CpuVar(CpuVarName.APU)
     MemoryDevice.ReadWrite bindApuStatus(ApuMemDevice apuMemDevice);
-
-    @Provides
-    @BoardScope
-    @CpuVar(JOY)
-    static MemoryDevice.ReadWrite provideJoy(IoRegFile joyRegFile) {
-        return new ByteRegisterMemory( // FIXME: replace with a proper device separating reads and writes
-                "JOY_REGS",
-                IO_REGISTERS_START, IO_REGISTERS_END,
-                new ByteRegister[]{ joyRegFile.getJoy1Data(), joyRegFile.getJoy2Data() }
-        );
-    }
 
     @Provides
     @BoardScope

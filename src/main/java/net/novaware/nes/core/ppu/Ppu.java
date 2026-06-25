@@ -23,18 +23,22 @@ import net.novaware.nes.core.util.uml.Used;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.S0H;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 /**
- * TODO: Stub PPU features: https://forums.nesdev.org/viewtopic.php?p=300322#p300322
- * TODO: create a separate stub ppu class that can be switched with real one?
+ * Picture Processing Unit
+ *
+ * 2C02 / 2C07 (NTSC / PAL)
+ *
+ * @see <a href="https://www.nesdev.org/wiki/PPU">PPU on nesdev.org</a>
  */
 @BoardScope
 public class Ppu implements ClockReceiver {
@@ -57,7 +61,8 @@ public class Ppu implements ClockReceiver {
     private final PatternTable patternMemory1;
 
     private final PaletteMemory paletteMemory;
-    private final ObjAttrMemory objAttrMemory;
+    private final ObjAttrMemory priObjAttrMemory;
+    private final ObjAttrMemory secObjAttrMemory;
 
     private final VideoOutRegister videoOut;
     private final ControlUnit controlUnit;
@@ -75,7 +80,8 @@ public class Ppu implements ClockReceiver {
         @PpuVar(PT0) PatternTable patternTable0,
         @PpuVar(PT1) PatternTable patternTable1,
         PaletteMemory paletteMemory,
-        @PpuVar(OAM) ObjAttrMemory objAttrMemory,
+        @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
+        @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
         VideoOutRegister videoOut,
         ControlUnit controlUnit
     ) {
@@ -90,7 +96,9 @@ public class Ppu implements ClockReceiver {
         this.patternMemory0 = patternTable0;
         this.patternMemory1 = patternTable1;
         this.paletteMemory = paletteMemory;
-        this.objAttrMemory = objAttrMemory;
+
+        this.priObjAttrMemory = priObjAttrMemory;
+        this.secObjAttrMemory = secObjAttrMemory;
 
         this.videoOut = videoOut;
         this.controlUnit = controlUnit;
@@ -104,14 +112,15 @@ public class Ppu implements ClockReceiver {
         regs.status.setSpriteZeroHit(false); // 0
         regs.status.setSpriteOverflow(true); // often set
 
-        regs.oamAddress.set(UBYTE_0);
+        regs.priOamAddress.set(UBYTE_0);
+        regs.secOamAddress.set(UBYTE_0);
         regs.secondWrite.set(false);
 
         regs.tempViewPort.set(USHORT_0);
         regs.currentViewPort.set(USHORT_0);
         regs.dataReadBuffer.set(UBYTE_0);
 
-        regs.oddFrame.set(false);
+        regs.frameToggle.set(false);
         regs.resetLock.set(true);
 
         regs.cycleCounter.reset();
@@ -130,7 +139,7 @@ public class Ppu implements ClockReceiver {
         regs.currentViewPort.set(USHORT_0);
         regs.dataReadBuffer.set(UBYTE_0);
 
-        regs.oddFrame.set(false);
+        regs.frameToggle.set(false);
         regs.resetLock.set(true);
 
         // TODO: read on what ppu does during these first 21 cycles (nothing, warmup?)
@@ -138,7 +147,7 @@ public class Ppu implements ClockReceiver {
 
         regs.cycleCounter.setValue(cycles);
         regs.dotCounter.setValue(cycles);
-        regs.scanLineCounter.reset();
+        regs.lineCounter.reset();
 
         return cycles;
     }

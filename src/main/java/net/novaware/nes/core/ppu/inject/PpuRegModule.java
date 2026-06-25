@@ -3,6 +3,7 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
+import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
@@ -25,18 +26,20 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DR;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.EG;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ER;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.GS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.MS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OF;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RST;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.SC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VOUT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
@@ -57,9 +60,16 @@ public interface PpuRegModule {
 
     @Provides
     @BoardScope
-    @PpuVar(SC)
-    static IntegerCounter provideScanLineCounter() {
-        return new IntegerCounter(SC.doc());
+    @PpuVar(FC)
+    static IntegerCounter provideFrameCounter() { // TODO: consider long or uint
+        return new IntegerCounter(FC.doc());
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(LC)
+    static IntegerCounter provideLineCounter() {
+        return new IntegerCounter(LC.doc());
     }
 
     @Provides
@@ -128,7 +138,7 @@ public interface PpuRegModule {
     @Provides
     @BoardScope
     @PpuVar(CH)
-    static BooleanRegister provideSpriteSize() {
+    static BooleanRegister provideSpriteSize() { // TODO: consider renaming to tall sprites
         return new BooleanRegister(CH.doc()); // 0: 8x8 pixels; 1: 8x16 pixels
     }
 
@@ -211,16 +221,23 @@ public interface PpuRegModule {
 
     @Provides
     @BoardScope
-    @PpuVar(OAM)
-    static ByteRegister provideObjAttrMemoryAddress() {
-        return new ByteRegister(OAM.doc());
+    @PpuVar(POA)
+    static ObjAttrRegister providePrimaryObjAttrAddress() {
+        return new ObjAttrRegister(POA.doc(), 0x100); // TODO: find a nice place for this constant, PpuOamMap?
     }
 
     @Provides
     @BoardScope
-    @PpuVar(OF)
-    static BooleanRegister provideOddFrame() {
-        return new BooleanRegister(OF.doc());
+    @PpuVar(SOA)
+    static ObjAttrRegister provideSecondaryObjAttrAddress() {
+        return new ObjAttrRegister(SOA.doc(), 0x20); // TODO: should be configurable in sync with sec oam size
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(FT)
+    static BooleanRegister provideFrameToggle() {
+        return new BooleanRegister(FT.doc());
     }
 
     /**

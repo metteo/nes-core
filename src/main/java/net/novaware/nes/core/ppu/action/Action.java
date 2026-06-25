@@ -1,10 +1,12 @@
 package net.novaware.nes.core.ppu.action;
 
+import java.util.stream.Stream;
+
 import static net.novaware.nes.core.ppu.action.ActionCategory.BUS;
 import static net.novaware.nes.core.ppu.action.ActionCategory.DRAW;
+import static net.novaware.nes.core.ppu.action.ActionCategory.FLAG;
 import static net.novaware.nes.core.ppu.action.ActionCategory.MISC;
 import static net.novaware.nes.core.ppu.action.ActionCategory.OAM;
-import static net.novaware.nes.core.ppu.action.ActionCategory.FLAG;
 import static net.novaware.nes.core.ppu.action.ActionCategory.VIEW;
 
 /**
@@ -20,18 +22,13 @@ public enum Action {
     ACCESS_ATTR_TABLE_ADDRESS  ("ATA", BUS),
     READ_ATTR_TABLE_DATA       ("ATD", BUS),
 
-    // TODO: dot 0 skipped on even frames
-    // TODO: dot 0 of every scanline except see above
     ACCESS_BG_LO_BITS_ADDRESS  ("BLA", BUS),
     READ_BG_LO_BITS_DATA       ("BLD", BUS),
 
     ACCESS_BG_HI_BITS_ADDRESS  ("BHA", BUS),
     READ_BG_HI_BITS_DATA       ("BHD", BUS),
 
-    UNUSED_NAME_TABLE_ADDRESS  ("NAU", BUS),
-    UNUSED_NAME_TABLE_DATA     ("NDU", BUS),
-                                    // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
-    IGNORED_NAME_TABLE_ADDRESS ("NAI", BUS),
+    UNUSED_NAME_TABLE_DATA     ("NDU", BUS), // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
     IGNORED_NAME_TABLE_DATA    ("NDI", BUS),
 
     ACCESS_SP_LO_BITS_ADDRESS  ("SLA", BUS),
@@ -44,13 +41,15 @@ public enum Action {
     // region OAM
 
     CLR_SECONDARY_OAM ("CSO", OAM),
+    READ_PRIMARY_OAM  ("RSO", OAM),
+
     EVAL_PRIMARY_OAM  ("EPO", OAM),
 
     // endregion
     // region Draw
 
     RENDER ("RDR", DRAW),
-    CLEAR ("CLR", DRAW),
+    CLEAR  ("CLR", DRAW),
 
     // endregion
     // region View
@@ -64,16 +63,17 @@ public enum Action {
     // endregion
     // region Flag
 
-    SET_VBLANK      ("SEV", FLAG),
-    SET_HBLANK      ("SEH", FLAG),
-    CLR_HBLANK      ("CLH", FLAG),
-    CLR_STATUS      ("CLS", FLAG),
+    SET_VBLANK ("SEV", FLAG),
+    SET_HBLANK ("SEH", FLAG),
+    CLR_HBLANK ("CLH", FLAG),
+    CLR_STATUS ("CLS", FLAG),
 
     // endregion
     // region Misc
 
+    SHIFT ("ASL", MISC),
+
     NO_OPERATION ("NOP", MISC),
-    JUMP_IF_ODD ("JIO", MISC),
 
     // endregion
 
@@ -89,4 +89,8 @@ public enum Action {
 
     public String getMnemonic() { return mnemonic; }
     public ActionCategory getCategory() { return category; }
+
+    public static Stream<Action> stream() {
+        return Stream.of(values());
+    }
 }

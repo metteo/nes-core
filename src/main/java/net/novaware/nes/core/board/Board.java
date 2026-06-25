@@ -13,8 +13,10 @@ import net.novaware.nes.core.dma.Dma;
 import net.novaware.nes.core.port.CartridgePort;
 import net.novaware.nes.core.port.DebugPort;
 import net.novaware.nes.core.port.DisplayPort;
+import net.novaware.nes.core.port.JoypadPort;
 import net.novaware.nes.core.port.internal.DebugPortImpl;
 import net.novaware.nes.core.port.internal.DisplayPortImpl;
+import net.novaware.nes.core.port.internal.JoypadPortImpl;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.video.VideoEncoder;
@@ -64,6 +66,9 @@ public class Board {
     private final DisplayPort displayPort;
 
     @Owned
+    private final JoypadPortImpl joypad1Port;
+
+    @Owned
     private final ClockGenerator clockGenerator;
 
     // TODO: include here RAM,
@@ -78,6 +83,7 @@ public class Board {
         final CartridgePort cartridgePort,
         final DebugPortImpl debugPort,
         final DisplayPortImpl displayPort,
+        final JoypadPortImpl joypad1Port,
         final ClockGenerator clockGenerator
     ) {
         this.cpu = cpu;
@@ -89,6 +95,7 @@ public class Board {
         this.cartridgePort = cartridgePort;
         this.debugPort = debugPort;
         this.displayPort = displayPort;
+        this.joypad1Port = joypad1Port;
         this.clockGenerator = clockGenerator;
     }
 
@@ -137,5 +144,9 @@ public class Board {
 
     public DisplayPort getDisplayPort() {
         return displayPort;
+    }
+
+    public JoypadPort getJoypad1Port(){
+        return joypad1Port;
     }
 }

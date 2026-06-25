@@ -1,5 +1,6 @@
 package net.novaware.nes.core.cpu.memory
 
+import net.novaware.nes.core.memory.MemoryDevice
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.memory.RecordingDevice
 import net.novaware.nes.core.register.IntegerCounter
@@ -18,7 +19,7 @@ class CpuBusSpec extends Specification {
     def apuChannelRegs = new PhysicalMemory("ACR", APU_REGISTERS_START, APU_REGISTERS_END, APU_REGISTERS_SIZE)
     def dma = new PhysicalMemory("DMA", OAM_DMA_REGISTER, OAM_DMA_REGISTER, 1)
     def apuStatus = new PhysicalMemory("APU_STATUS", APU_STATUS_REGISTER, APU_STATUS_REGISTER, 1)
-    def joy = new PhysicalMemory("JOY", IO_REGISTERS_START, IO_REGISTERS_END, IO_REGISTERS_SIZE)
+    MemoryDevice[] joy = [new PhysicalMemory("JOY", IO_REGISTERS_START, IO_REGISTERS_END, IO_REGISTERS_SIZE)]
     def apuTestMode = new PhysicalMemory("ATM", APU_TEST_REGISTERS_START, APU_TEST_REGISTERS_END, APU_TEST_REGISTERS_SIZE)
     def timer = new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE)
 

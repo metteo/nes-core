@@ -9,20 +9,23 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PpuBus;
-import net.novaware.nes.core.ppu.table.AttributeTable;
-import net.novaware.nes.core.ppu.table.NameTable;
-import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Quantity;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.OAM;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PTS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VRAM;
+import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.Kind.PRIMARY;
+import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.Kind.SECONDARY;
+import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.PRIMARY_ENTRY_COUNT;
+import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.SECONDARY_ENTRY_COUNT;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_END;
@@ -69,15 +72,34 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
-    @PpuVar(OAM)
-    static ObjAttrMemory provideObjAttrMemory() {
-        return new ObjAttrMemory(OAM.doc(), ObjAttrMemory.SECONDARY_ENTRY_COUNT); // TODO: fill in a way all sprites are hidden and off screen on startup? / reset?
+    @PpuVar(POA)
+    static ObjAttrMemory providePrimaryObjAttrMemory() {
+        return new ObjAttrMemory(POA.doc(), PRIMARY, PRIMARY_ENTRY_COUNT);
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(SOA)
+    static ObjAttrMemory provideSecondaryObjAttrMemory() {
+        // TODO: add support for 2x or 4x more sprites in a line to prevent flicker
+        return new ObjAttrMemory(SOA.doc(), SECONDARY, SECONDARY_ENTRY_COUNT);
     }
 
     @Binds
     @BoardScope
     @PpuVar(BUS)
     MemoryBus bindPpuBus(PpuBus ppuBus); // FIXME: seems like @BoardScope on PpuBus class doesn't work as it should
+
+    @Provides
+    @BoardScope
+    @PpuVar(PTS)
+    static SegmentRegister providePatternTablesSegment() {
+        SegmentRegister segment = new SegmentRegister(PTS.name());
+        segment.setStart(PATTERN_TABLE_0_START);
+        segment.setEnd(PATTERN_TABLE_1_END);
+
+        return segment;
+    }
 
     @Provides
     @BoardScope
@@ -121,47 +143,5 @@ public interface PpuMemModule {
         segment.setEnd(ATTRIBUTE_TABLE_0_END);
 
         return segment;
-    }
-
-    // TODO: decide if table segments should be separate or @IntoCollection
-
-    @Provides
-    @BoardScope
-    @PpuVar(PT0)
-    static PatternTable providePatternTable0(
-        @PpuVar(PT0) SegmentRegister segment,
-        @PpuVar(BUS) MemoryBus ppuBus
-    ) {
-        return new PatternTable(PT0.doc(), segment, ppuBus);
-    }
-
-    @Provides
-    @BoardScope
-    @PpuVar(PT1)
-    static PatternTable providePatternTable1(
-        @PpuVar(PT1) SegmentRegister segment,
-        @PpuVar(BUS) MemoryBus ppuBus
-    ) {
-        return new PatternTable(PT1.doc(), segment, ppuBus);
-    }
-
-    @Provides
-    @BoardScope
-    @PpuVar(NT0)
-    static NameTable provideNameTable0(
-        @PpuVar(NT0) SegmentRegister segment,
-        @PpuVar(BUS) MemoryBus ppuBus
-    ) {
-        return new NameTable(NT0.doc(), segment, ppuBus);
-    }
-
-    @Provides
-    @BoardScope
-    @PpuVar(AT0)
-    static AttributeTable provideAttributeTable0(
-            @PpuVar(AT0) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
-    ) {
-        return new AttributeTable(AT0.doc(), segment, ppuBus);
     }
 }

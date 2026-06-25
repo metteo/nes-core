@@ -8,6 +8,9 @@ import java.util.Arrays;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
+/**
+ * Early prototype
+ */
 public class DisplayMemory implements Nameable {
 
     private static final int COLOR_MASK = 0b11_1111;
@@ -15,7 +18,7 @@ public class DisplayMemory implements Nameable {
 
     private final String name;
 
-    private @Unsigned byte[][] frontBuffer;
+    private @Unsigned byte[][] frontBuffer; // FIXME: 2d and sync causes glitching in the top few rows
     private @Unsigned byte[][] backBuffer;
 
     public DisplayMemory(String name, int height, int width) {
