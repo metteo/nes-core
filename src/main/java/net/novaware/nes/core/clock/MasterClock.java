@@ -157,7 +157,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
     public void tick() {
         calculateSecondBudget();
-        int framesToRun = (int)frameBudget.getValue();
+        double framesToRun = frameBudget.getValue();
 
         long tickStart = System.nanoTime();
 
@@ -169,9 +169,13 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         timeCounter.increment();
 
         long tickDuration = System.nanoTime() - tickStart;
+        double avgFrameTime = (double) tickDuration / framesToRun; // ns
+        double fps = 1_000_000_000d /* ns */ / avgFrameTime; // TODO: some rising because of fractional accumulation
+
         System.out.println(
-                framesToRun + " Frames time: " + tickDuration + "ns, " +
-            "Spin time: " + frameSpinTime + "ns"
+            (int) framesToRun + " Frames time: " + tickDuration + "ns, " +
+            "Spin time: " + frameSpinTime + "ns " +
+            "FPS: " + String.format("%1$2.3f", fps)
         );
     }
 

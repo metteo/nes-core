@@ -600,7 +600,7 @@ public class ControlUnit implements Initializable {
             int tileAndTable = tile;
 
             int table = (tileAndTable & 0b1);
-            int cell = tileAndTable & ~0b1;
+            int cell = tileAndTable >> 1;
 
             int tileRow = (lineCounter.getValue() - y) & 0b1111;
 

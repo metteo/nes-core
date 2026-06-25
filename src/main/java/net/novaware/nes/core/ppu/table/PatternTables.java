@@ -61,14 +61,14 @@ public class PatternTables extends MemBusTable implements Tables, Nameable {
     public static int getDoubleAddress(int table, int cell, int plane, int sliver) {
         // soft asserts for performance
         assert 0 <= table && table <= 0b1 : "table out of range";
-        assert 0 <= cell && cell <= 0xFE && ((cell & 0b1) == 0) : "cell out of range";
+        assert 0 <= cell && cell <= 0x7F : "cell out of range";
         assert 0 <= plane && plane <= 0b1 : "plane out of range";
         assert 0 <= sliver && sliver <= 0xF : "sliver out of range";
 
         int half = (sliver & BIT_3) >> 3;
 
         int tableShift = table << 12;
-        int cellShift = cell << 4;
+        int cellShift = cell << 5;
         int halfShift = half << 4;
         int planeShift = plane << 3;
         int sliverMask = sliver & 0b111;
@@ -84,9 +84,8 @@ public class PatternTables extends MemBusTable implements Tables, Nameable {
         assert 0 <= row && row <= 0xF : "row out of range";
         assert 0 <= col && col <= 0x7 : "col out of range";
 
-        int rowShift = row << 4;
-        int colShift = col << 1;
-        int cell = rowShift | colShift;
+        int rowShift = row << 3;
+        int cell = rowShift | col;
 
         return getDoubleAddress(table, cell, plane, sliver);
     }

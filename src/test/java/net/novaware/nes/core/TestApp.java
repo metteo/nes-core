@@ -6,10 +6,8 @@ import net.novaware.nes.core.config.ImmutableCoreConfig;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
-import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ui.DefaultDisplayModel;
 import net.novaware.nes.core.ui.TestUI;
-import net.novaware.nes.core.util.Hex;
 
 import javax.swing.*;
 import java.net.URI;
@@ -52,10 +50,10 @@ public class TestApp {
 //        board.powerOff();
 
 //        while (true) {
-//        Thread.sleep(2_000);
+//        Thread.sleep(5_000);
 
-//        dumpPattern(factory.getPatternTable0());
-//        dumpPattern(factory.getPatternTable1());
+//        factory.getPatternTable0().dump();
+//        factory.getPatternTable1().dump();
 //        System.out.println(factory.getNameTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
 //        System.out.println(factory.getPaletteMemory().printColors());
@@ -63,14 +61,5 @@ public class TestApp {
 //        }
 
         //System.exit(0); // TODO: notify swing to shut down instead
-    }
-
-    // TODO: move to PatternTable
-    static void dumpPattern(PatternTable patternMemory) {
-        for (int i = 0x00; i < 0x100; i++) {
-            String pattern = patternMemory.printPattern(i);
-            System.out.println(Hex.s(ubyte(i)));
-            System.out.println(pattern);
-        }
     }
 }
