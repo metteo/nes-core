@@ -4,6 +4,7 @@ import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.table.PatternTable
+import net.novaware.nes.core.util.PatternPrinter
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
@@ -15,6 +16,9 @@ import static net.novaware.nes.core.util.UTypes.sint
 class PatternTableSpec extends Specification {
 
     def segment = PpuMemModule.providePatternTable0Segment()
+
+    def stringWriter = new StringWriter()
+    def printWriter = new PrintWriter(stringWriter)
 
     // example from https://www.nesdev.org/wiki/PPU_pattern_tables
     static def squareData = [0x41, 0xC2, 0x44, 0x48, 0x10, 0x20, 0x40, 0x80, // lo plane
@@ -78,7 +82,7 @@ class PatternTableSpec extends Specification {
 
     def "should get first #shape pattern from memory"() {
         given:
-        PhysicalMemory patternTable0 = new PhysicalMemory("PT0",
+        def patternTable0 = new PhysicalMemory("PT0",
                 PATTERN_TABLE_0_START, PATTERN_TABLE_0_END, PATTERN_TABLE_0_SIZE)
 
         def bus = new TestBus(patternTable0)
@@ -88,13 +92,16 @@ class PatternTableSpec extends Specification {
             bus.write(start + i, data[i])
         }
 
-        PatternTable patternTable = new PatternTable("PM1", segment, bus)
+        def patternTable = new PatternTable("PM1", segment, bus)
+        def patternPrinter = new PatternPrinter(patternTable, printWriter)
 
         when:
-        def art = patternTable.printPattern(size, 0, 0)
+        patternPrinter.print(size, 0, 0)
+        //patternPrinter.printAll()
+        def art = stringWriter.toString()
 
         then:
-        println art
+        //println art
         art.trim() == chars
 
         where:
@@ -102,6 +109,4 @@ class PatternTableSpec extends Specification {
         SINGLE | squareData || squareChars | "square"
         DOUBLE | tallData   || tallChars   | "tall"
     }
-
-
 }

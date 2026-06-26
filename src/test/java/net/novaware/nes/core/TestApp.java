@@ -54,8 +54,13 @@ public class TestApp {
 //        while (true) {
 //        Thread.sleep(5_000);
 
-//        factory.getPatternTable0().dump();
-//        factory.getPatternTable1().dump();
+//        var stringWriter = new StringWriter();
+//        var printWriter = new PrintWriter(stringWriter);
+
+//        new PatternPrinter(factory.getPatternTable0(), printWriter).printAll();
+//        new PatternPrinter(factory.getPatternTable1(), printWriter).printAll();
+//        System.out.println(stringWriter);
+
 //        System.out.println(factory.getNameTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
 //        System.out.println(factory.getPaletteMemory().printColors());

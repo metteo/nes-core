@@ -6,6 +6,8 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 
+// TODO: move impl out of this project
+// TODO: there should be mxbean interface and MXRec interface
 @BoardScope
 public class NesCoreMXBeanImpl
         extends NotificationBroadcasterSupport

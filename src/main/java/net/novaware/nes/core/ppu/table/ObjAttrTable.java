@@ -13,7 +13,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
 // TODO: do the same with all the tables, move address generating
-public class ObjAttrTable implements Table { // TODO: consider renaming to SpriteTable
+public class ObjAttrTable implements Table { // TODO: consider renaming to SpriteTable (or make it separate to fetch sprites)
 
     private final String name;
     private final ObjAttrRegister cursor;
@@ -112,6 +112,7 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
         return name + " (0:" + memory.getCount() + ")";
     }
 
+    // TODO: move these util methods to ObjAttrTables
     public static boolean asFlipV(@Unsigned byte attr) {
         return (sint(attr) & BIT_7) != 0;
     }

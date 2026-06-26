@@ -15,21 +15,20 @@ public class Pattern {
 
         UNKNOWN(-1, -1),
         ;
-        private final int height;
-        private final int width;
+        private final int lines;
+        private final int dots;
 
-        Size(int height, int width) {
-            this.height = height;
-            this.width = width;
+        Size(int lines, int dots) {
+            this.lines = lines;
+            this.dots = dots;
         }
 
-
-        public int height() {
-            return height;
+        public int lines() {
+            return lines;
         }
 
-        public int width() {
-            return width;
+        public int dots() {
+            return dots;
         }
     }
 }

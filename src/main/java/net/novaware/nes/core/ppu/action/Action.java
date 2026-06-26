@@ -44,6 +44,7 @@ public enum Action {
     READ_PRIMARY_OAM  ("RSO", OAM),
 
     EVAL_PRIMARY_OAM  ("EPO", OAM),
+    // TODO: introduce CLR_EVAL _STATE / _REGISTERS / or sth that runs before actual eval
 
     // endregion
     // region Draw
