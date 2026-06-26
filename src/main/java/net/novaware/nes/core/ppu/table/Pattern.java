@@ -4,12 +4,12 @@ public class Pattern {
 
     public enum Size {
         /**
-         * Square tiles
+         * Square
          */
         SINGLE( 8, 8),
 
         /**
-         * Tall tiles
+         * Tall / big
          */
         DOUBLE(16, 8),
 

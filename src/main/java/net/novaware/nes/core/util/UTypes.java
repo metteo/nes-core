@@ -2,6 +2,7 @@ package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+// TODO: consider value classes to create ubyte, ushort, uint with methods instead of checker @Unsigned
 public class UTypes {
 
     public static final @Unsigned short USHORT_0 = ushort(0x0000);

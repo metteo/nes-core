@@ -104,6 +104,7 @@ public class Board {
         start();
     }
 
+    // TODO: expose reset on the board and in mx bean
     private void start() {
         cpu.res(Signal.LOW); // TODO: refactor into single method?
         ppu.rst(Signal.LOW);

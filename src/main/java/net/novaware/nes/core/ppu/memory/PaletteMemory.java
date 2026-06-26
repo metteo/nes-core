@@ -20,6 +20,8 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 
 /**
  * @see net.novaware.nes.core.ppu.unit.PaletteData for actual colors in RGB
+ *
+ * TODO: move layer/palette/offset logic into table. Keep only memory related stuff here
  */
 public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
 
@@ -175,7 +177,7 @@ public class PaletteMemory implements MemoryDevice.ReadWrite, Nameable {
         return colors.toString();
     }
 
-    public enum Section {
+    public enum Section { // TODO: rename to Layer
         BACKGROUND(0x00), // 0
         FOREGROUND(0x10), // 1 - sprite
         ;

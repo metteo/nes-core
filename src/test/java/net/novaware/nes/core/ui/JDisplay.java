@@ -86,6 +86,7 @@ public class JDisplay extends JComponent implements ChangeListener {
         });
     }
 
+    // TODO: use FFM / Panama for input
     private void registerKeyListener() {
         this.addKeyListener(new KeyAdapter() {
             @Override

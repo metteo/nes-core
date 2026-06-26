@@ -9,6 +9,7 @@ module net.novaware.nes.core {
     requires org.checkerframework.checker.qual;
     requires java.desktop; // TODO: temporary for testing easy6502, move to tests later
     requires java.logging;
+    requires java.management; // TODO: make it a separate add on module
 
     exports net.novaware.nes.core;
     exports net.novaware.nes.core.board;

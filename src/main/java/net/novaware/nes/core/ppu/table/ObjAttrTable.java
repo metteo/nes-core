@@ -13,7 +13,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
 // TODO: do the same with all the tables, move address generating
-public class ObjAttrTable implements Table {
+public class ObjAttrTable implements Table { // TODO: consider renaming to SpriteTable
 
     private final String name;
     private final ObjAttrRegister cursor;
@@ -71,7 +71,7 @@ public class ObjAttrTable implements Table {
         return sint(getY());
     }
 
-    public @Unsigned byte getTile() {
+    public @Unsigned byte getTile() { // TODO: consider getPattern / getPatternRef / getPatternIndex
         verifyCursor();
 
         int address = cursor.getAsInt() + 1;

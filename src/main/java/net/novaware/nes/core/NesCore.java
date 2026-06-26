@@ -16,6 +16,7 @@ import net.novaware.nes.core.file.ReaderMode;
 import net.novaware.nes.core.file.ines.NesFileReader;
 import net.novaware.nes.core.file.ines.NesFileReadingException;
 import net.novaware.nes.core.io.inject.IoModule;
+import net.novaware.nes.core.mx.NesCoreMXBeanImpl;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.inject.PpuModule;
 import net.novaware.nes.core.ppu.inject.PpuVar;
@@ -74,6 +75,7 @@ public abstract class NesCore {
     public abstract @PpuVar(NT0) NameTable getNameTable0();
     public abstract @PpuVar(AT0) AttributeTable getAttributeTable0();
     public abstract ObjAttrTables getObjAttrTables();
+    public abstract NesCoreMXBeanImpl getMXBean();
 
     public Cartridge newCartridge(URI file) { // TODO: improve, for now only for nestest
         NesFileReader.Result result = new NesFileReader().read(file, ReaderMode.LENIENT);
