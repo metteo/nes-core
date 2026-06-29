@@ -268,6 +268,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     void calculateSecondBudget() {
         frameBudget.setValue(frameBudget.getValue() + videoStandard.getRefreshRate());
 
+        // FIXME: use not full second as a base since we shouldn't use full second (60 of 60.098 frames)
         frameDuration = (long)(1_000d /* ms */ / frameBudget.getValue() * 1_000_000d /* ns */ );
         frameSpinTime = 0L;
 

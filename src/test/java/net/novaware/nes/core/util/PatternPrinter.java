@@ -69,8 +69,8 @@ public class PatternPrinter {
     }
 
     private void printLine(Pattern.Size size, int row, int col, int l) {
-        int byteLo = table.getLine(size, row, col, 0, l);
-        int byteHi = table.getLine(size, row, col, 1, l);
+        int byteLo = table.probeLine(size, row, col, 0, l);
+        int byteHi = table.probeLine(size, row, col, 1, l);
 
         for (int d = size.dots() - 1; d >= 0; d--) {
             int mask = 1 << d;

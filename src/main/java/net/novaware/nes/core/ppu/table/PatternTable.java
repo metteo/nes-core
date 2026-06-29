@@ -13,23 +13,33 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  */
 public class PatternTable extends MemBusTable implements Table {
 
-    private DataLine dataLine = new DataLine();
-
     public PatternTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);
     }
 
-    public int getLine(Pattern.Size size, int row, int col, int plane, int lineNum) {
+    private @Unsigned short getAddress(Pattern.Size size, int row, int col, int plane, int lineNum) {
         int baseAddress = sint(segment.getStart());
         int table = baseAddress >> 12; // TODO: doesn't look good
 
-        int lineAddr = PatternTables.getAddress(size, table, row, col, plane, lineNum);
+        int lineAddrInt = PatternTables.getAddress(size, table, row, col, plane, lineNum);
 
-        // TODO: allow switching between main access and probe
-        // TODO: maybe create wrapper MemoryBus that delegates to probe?
-        //@Unsigned byte line = bus.access(ushort(lineAddr)).read().data();
+        return ushort(lineAddrInt);
+    }
 
-        bus.probe(ushort(lineAddr), dataLine);
+    // TODO: lots of params again and again. Cursor approach would make it stateful...
+    public int getLine(Pattern.Size size, int row, int col, int plane, int lineNum) {
+        @Unsigned short lineAddress = getAddress(size, row, col, plane, lineNum);
+        @Unsigned byte line = bus.access(lineAddress).read().data();
+
+        return sint(line);
+    }
+
+    private DataLine dataLine = new DataLine();
+
+    public int probeLine(Pattern.Size size, int row, int col, int plane, int lineNum) {
+        @Unsigned short lineAddress = getAddress(size, row, col, plane, lineNum);
+
+        bus.probe(lineAddress, dataLine);
         @Unsigned byte line = dataLine.cycle();
 
         return sint(line);
