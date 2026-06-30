@@ -16,8 +16,8 @@ public enum Action {
 
     // region Bus
 
-    ACCESS_NAME_TABLE_ADDRESS  ("NTA", BUS),
-    READ_NAME_TABLE_DATA       ("NTD", BUS),
+    ACCESS_LAYOUT_TABLE_ADDRESS("LTA", BUS),
+    READ_LAYOUT_TABLE_DATA     ("LTD", BUS),
 
     ACCESS_ATTR_TABLE_ADDRESS  ("ATA", BUS),
     READ_ATTR_TABLE_DATA       ("ATD", BUS),
@@ -28,8 +28,8 @@ public enum Action {
     ACCESS_BG_HI_BITS_ADDRESS  ("BHA", BUS),
     READ_BG_HI_BITS_DATA       ("BHD", BUS),
 
-    UNUSED_NAME_TABLE_DATA     ("NDU", BUS), // TODO: use unused and ignored NT fetches to do extended sec oam sprite fetching
-    IGNORED_NAME_TABLE_DATA    ("NDI", BUS),
+    UNUSED_LAYOUT_TABLE_DATA   ("LDU", BUS), // TODO: use unused and ignored LT fetches to do extended sec oam sprite fetching
+    IGNORED_LAYOUT_TABLE_DATA  ("LDI", BUS),
 
     ACCESS_SP_LO_BITS_ADDRESS  ("SLA", BUS),
     READ_SP_LO_BITS_DATA       ("SLD", BUS),

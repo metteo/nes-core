@@ -134,11 +134,12 @@ public record NesMeta(
     }
 
     /**
-     * Nametable / Video Memory ... arrangement / mirroring / layout
+     * LayoutTable / Video Memory ... arrangement / mirroring / layout
      * may map into single or four screen depending on the mapper
      *
      * <a href="https://www.nesdev.org/wiki/NES_2.0#Nametable_layout">Nametable layout on nesdev.org</a>
      */
+    // TODO: Find a better name other than just Layout. Maybe TableLayout
     public enum Layout { // FIXME: ScreenLayout? like V, H, 4, 1, D, L, 3V, 3H, 1F
         STANDARD_VERTICAL      (Mirroring.HORIZONTAL, 0b0000),
         STANDARD_HORIZONTAL    (Mirroring.VERTICAL,   0b0001),

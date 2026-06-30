@@ -16,7 +16,7 @@ class NesFileFaker { // TODO: rewrite this class to generate random NesFile (met
          */
         int videoRomSize
         boolean trainerPresent
-        Orientation nametable
+        Orientation layoutTable
         int mapper
     }
 
@@ -46,7 +46,7 @@ class NesFileFaker { // TODO: rewrite this class to generate random NesFile (met
 
         byte mapper = (byte)((params.mapper & 0xF) << 4) // TODO: make these methods for readability?
         byte trainer = params.trainerPresent ? 0b100 : 0b0
-        byte mirroring = params.nametable == Orientation.HORIZONTAL ? 0b1 : 0b0
+        byte mirroring = params.layoutTable == Orientation.HORIZONTAL ? 0b1 : 0b0
         byte flag6 = (byte) (mapper | trainer | mirroring)
 
         // FIXME: move the assembly of the header / file into the header/writer, here keep only generation and NesFile creation

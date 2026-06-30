@@ -11,7 +11,7 @@ class AttributeTablesSpec extends Specification {
 
     def "should return attr table address"() {
         given:
-        v.setNameTable(nt)
+        v.setLayoutTable(lt)
         v.setCoarseX(coarseX)
         v.setCoarseY(coarseY)
 
@@ -20,7 +20,7 @@ class AttributeTablesSpec extends Specification {
         AttributeTables.getAttrTableAddress(v) == ushort(atAddr)
 
         where:
-        nt   | coarseY  | coarseX  || atAddr
+        lt   | coarseY  | coarseX  || atAddr
         0b00 | 0b000_00 | 0b000_00 || 0b10_00_1111_000_000
         0b00 | 0b000_00 | 0b111_00 || 0b10_00_1111_000_111
         0b00 | 0b111_00 | 0b000_00 || 0b10_00_1111_111_000

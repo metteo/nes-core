@@ -4,9 +4,9 @@ import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_END
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_SIZE
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_START
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_END
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_SIZE
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_START
 import static net.novaware.nes.core.util.ProbeUtil.probeDevice
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
@@ -68,8 +68,8 @@ class PhysicalMemorySpec extends Specification {
 
     def "should throw when size is not a power of two"() {
         when:
-        new PhysicalMemory("NT0", NAME_TABLE_0_START, NAME_TABLE_0_END,
-                NAME_TABLE_0_SIZE + 1)
+        new PhysicalMemory("NT0", LAYOUT_TABLE_0_START, LAYOUT_TABLE_0_END,
+                LAYOUT_TABLE_0_SIZE + 1)
 
         then:
         def e = thrown(IllegalArgumentException)

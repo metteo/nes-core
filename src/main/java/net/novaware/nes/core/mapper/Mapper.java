@@ -7,7 +7,7 @@ public interface Mapper {
     // mapping program rom
     // mapping video rom
     // mapping save ram
-    // nametable mirroring
+    // layout table mirroring
     // mapping chr-ram or rom
     // generate interrupts (conditional too)
     // sound generation

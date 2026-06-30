@@ -11,7 +11,7 @@ class NesFileFakerSpec extends Specification {
         def params = new NesFileFaker.Params(
                 version: NesFileFaker.Version.iNES,
                 trainerPresent: false,
-                nametable: NesFileFaker.Orientation.VERTICAL,
+                layoutTable: NesFileFaker.Orientation.VERTICAL,
                 mapper: 0,
                 programRomSize: 1 * 16 * 1024,
                 videoRomSize: 1 * 8 * 1024
@@ -40,7 +40,7 @@ class NesFileFakerSpec extends Specification {
         def params = new NesFileFaker.Params(
                 version: NesFileFaker.Version.iNES,
                 trainerPresent: true,
-                nametable: NesFileFaker.Orientation.HORIZONTAL,
+                layoutTable: NesFileFaker.Orientation.HORIZONTAL,
                 mapper: 12,
                 programRomSize: 2 * 16 * 1024,
                 videoRomSize: 1 * 8 * 1024

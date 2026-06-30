@@ -97,16 +97,16 @@ class ControlUnitSpec extends Specification {
         def counts = countActions(cu.busActions)
 
         then:
-        counts.get(Action.ACCESS_NAME_TABLE_ADDRESS)  == 32 + 2 + 16 + 2 // current + next scan line + (unused / ignored between sprites and last 4 dots)
-        counts.get(Action.READ_NAME_TABLE_DATA)       == 32 + 2
+        counts.get(Action.ACCESS_LAYOUT_TABLE_ADDRESS)== 32 + 2 + 16 + 2 // current + next scan line + (unused / ignored between sprites and last 4 dots)
+        counts.get(Action.READ_LAYOUT_TABLE_DATA)     == 32 + 2
         counts.get(Action.ACCESS_ATTR_TABLE_ADDRESS)  == 32 + 2
         counts.get(Action.READ_ATTR_TABLE_DATA)       == 32 + 2
         counts.get(Action.ACCESS_BG_LO_BITS_ADDRESS)  == 32 + 2 + 1 // dot 0 addr only
         counts.get(Action.READ_BG_LO_BITS_DATA)       == 32 + 2
         counts.get(Action.ACCESS_BG_HI_BITS_ADDRESS)  == 32 + 2
         counts.get(Action.READ_BG_HI_BITS_DATA)       == 32 + 2
-        counts.get(Action.UNUSED_NAME_TABLE_DATA)     ==  8 + 1
-        counts.get(Action.IGNORED_NAME_TABLE_DATA)    ==  8 + 1
+        counts.get(Action.UNUSED_LAYOUT_TABLE_DATA)     ==  8 + 1
+        counts.get(Action.IGNORED_LAYOUT_TABLE_DATA)    ==  8 + 1
         counts.get(Action.ACCESS_SP_LO_BITS_ADDRESS)  ==  8
         counts.get(Action.READ_SP_LO_BITS_DATA)       ==  8
         counts.get(Action.ACCESS_SP_HI_BITS_ADDRESS)  ==  8

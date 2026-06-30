@@ -18,7 +18,7 @@ import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.AttributeTables;
-import net.novaware.nes.core.ppu.table.NameTables;
+import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
 import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.BooleanPipeline;
@@ -37,25 +37,25 @@ import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_ATTR_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_BG_HI_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_BG_LO_BITS_ADDRESS;
-import static net.novaware.nes.core.ppu.action.Action.ACCESS_NAME_TABLE_ADDRESS;
+import static net.novaware.nes.core.ppu.action.Action.ACCESS_LAYOUT_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_HI_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_LO_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.CLR_HBLANK;
-import static net.novaware.nes.core.ppu.action.Action.IGNORED_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.IGNORED_LAYOUT_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_X;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_Y;
 import static net.novaware.nes.core.ppu.action.Action.NO_OPERATION;
 import static net.novaware.nes.core.ppu.action.Action.READ_ATTR_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_BG_HI_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_BG_LO_BITS_DATA;
-import static net.novaware.nes.core.ppu.action.Action.READ_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.READ_LAYOUT_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_HI_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_LO_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.SET_HBLANK;
 import static net.novaware.nes.core.ppu.action.Action.SHIFT;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
-import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.UNUSED_LAYOUT_TABLE_DATA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
@@ -140,7 +140,7 @@ public class ControlUnit implements Initializable {
     private final ObjAttrTable secObjAttrTable;
     private final SpriteUnit spriteUnit;
 
-    public ByteRegister nameTableBuffer = new ByteRegister("NT.BUF"); // tile xy
+    public ByteRegister layoutTableBuffer = new ByteRegister("LT.BUF"); // tile xy
 
     public ShortRegister attributesBuffer = new ShortRegister("AT.BUF");
     public ShortRegister backgroundBuffer = new ShortRegister("BG.BUF");
@@ -292,8 +292,8 @@ public class ControlUnit implements Initializable {
         busActions[0] = ACCESS_BG_LO_BITS_ADDRESS;
 
         for (int x = 1; x <= 256; x+=8) { // current background
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = READ_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = READ_LAYOUT_TABLE_DATA;
 
             busActions[x + 2] = ACCESS_ATTR_TABLE_ADDRESS;
             busActions[x + 3] = READ_ATTR_TABLE_DATA;
@@ -306,10 +306,10 @@ public class ControlUnit implements Initializable {
 
         for (int x = 257; x <= 320; x+=8) { // next sprite (8 / 16 tiles)
             // TODO: unused and ignored should be replaced with SP when extended SOAM
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = UNUSED_NAME_TABLE_DATA;
-            busActions[x + 2] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 3] = IGNORED_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = UNUSED_LAYOUT_TABLE_DATA;
+            busActions[x + 2] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 3] = IGNORED_LAYOUT_TABLE_DATA;
 
             busActions[x + 4] = ACCESS_SP_LO_BITS_ADDRESS;
             busActions[x + 5] = READ_SP_LO_BITS_DATA;
@@ -318,8 +318,8 @@ public class ControlUnit implements Initializable {
         }
 
         for (int x = 321; x <= 336; x+=8) { // next background (tiles 1 & 2)
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = READ_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = READ_LAYOUT_TABLE_DATA;
 
             busActions[x + 2] = ACCESS_ATTR_TABLE_ADDRESS;
             busActions[x + 3] = READ_ATTR_TABLE_DATA;
@@ -331,10 +331,10 @@ public class ControlUnit implements Initializable {
         }
 
         { // unused / ignored next background (tile 3)
-            busActions[337] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[338] = UNUSED_NAME_TABLE_DATA;
-            busActions[339] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[340] = IGNORED_NAME_TABLE_DATA;
+            busActions[337] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[338] = UNUSED_LAYOUT_TABLE_DATA;
+            busActions[339] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[340] = IGNORED_LAYOUT_TABLE_DATA;
         }
 
         return busActions;
@@ -472,13 +472,13 @@ public class ControlUnit implements Initializable {
 
     private void executeBus(Action busAction) {
         switch(busAction) {
-            case ACCESS_NAME_TABLE_ADDRESS -> {
-                @Unsigned short nameTableAddr = NameTables.getNameTableAddress(currentViewPort);
-                bus.access(nameTableAddr);
+            case ACCESS_LAYOUT_TABLE_ADDRESS -> {
+                @Unsigned short layoutTableAddr = LayoutTables.getAddress(currentViewPort);
+                bus.access(layoutTableAddr);
             }
-            case READ_NAME_TABLE_DATA      -> {
-                @Unsigned byte nameTableData = bus.read().data();
-                nameTableBuffer.set(nameTableData);
+            case READ_LAYOUT_TABLE_DATA -> {
+                @Unsigned byte layoutTableData = bus.read().data();
+                layoutTableBuffer.set(layoutTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
                 @Unsigned short attrTableAddr = AttributeTables.getAttrTableAddress(currentViewPort);
@@ -489,7 +489,7 @@ public class ControlUnit implements Initializable {
                 extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
-                int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
+                int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, layoutTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
                 bus.access(ushort(bgLoAddr));
             }
             case READ_BG_LO_BITS_DATA      -> {
@@ -497,7 +497,7 @@ public class ControlUnit implements Initializable {
                 backgroundBuffer.low(bgLoData);
             }
             case ACCESS_BG_HI_BITS_ADDRESS -> {
-                int bgHiAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 1, currentViewPort.getFineY());
+                int bgHiAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, layoutTableBuffer.getAsInt(), 1, currentViewPort.getFineY());
                 bus.access(ushort(bgHiAddr));
             }
             case READ_BG_HI_BITS_DATA      -> {
@@ -505,8 +505,8 @@ public class ControlUnit implements Initializable {
                 backgroundBuffer.high(bgHiData);
             }
 
-            case UNUSED_NAME_TABLE_DATA    -> unusedNameTable(bus.read().data());
-            case IGNORED_NAME_TABLE_DATA   -> ignoredNameTable(bus.read().data());
+            case UNUSED_LAYOUT_TABLE_DATA -> unusedLayoutTable(bus.read().data());
+            case IGNORED_LAYOUT_TABLE_DATA -> ignoredLayoutTable(bus.read().data());
 
             case ACCESS_SP_LO_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
@@ -564,12 +564,12 @@ public class ControlUnit implements Initializable {
         }
     }
 
-    private void ignoredNameTable(@Unsigned byte data) {
-        nameTableBuffer.set(data);
+    private void ignoredLayoutTable(@Unsigned byte data) {
+        layoutTableBuffer.set(data);
     }
 
     @SuppressWarnings("unused") // data parameter on purpose
-    private void unusedNameTable(@Unsigned byte data) {}
+    private void unusedLayoutTable(@Unsigned byte data) {}
 
     @SuppressWarnings("unused") // data parameter on purpose
     private void unusedObjAttrByte(@Unsigned byte data) {}

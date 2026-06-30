@@ -31,8 +31,8 @@ class AttributeTableSpec extends Specification {
     def "should print attribute table bytes"() {
         given:
         def vram = new PhysicalMemory("VRAM",
-                NAME_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
-                NAME_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
+                LAYOUT_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
+                LAYOUT_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
 
         def bus = new TestBus(vram)
 
@@ -62,8 +62,8 @@ class AttributeTableSpec extends Specification {
     def "should print attribute table"() {
         given:
         def vram = new PhysicalMemory("VRAM",
-                NAME_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
-                NAME_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
+                LAYOUT_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
+                LAYOUT_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
 
         def bus = new TestBus(vram)
 
@@ -102,8 +102,8 @@ class AttributeTableSpec extends Specification {
 
     def "should return attribute value"() {
         def vram = new PhysicalMemory("VRAM",
-                NAME_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
-                NAME_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
+                LAYOUT_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
+                LAYOUT_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
 
         def bus = new TestBus(vram)
 
@@ -135,8 +135,8 @@ class AttributeTableSpec extends Specification {
     def "should return sub attribute value"() {
         given:
         def vram = new PhysicalMemory("VRAM",
-                NAME_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
-                NAME_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
+                LAYOUT_TABLE_0_START, ATTRIBUTE_TABLE_0_END,
+                LAYOUT_TABLE_0_SIZE + ATTRIBUTE_TABLE_0_SIZE)
 
         def bus = new TestBus(vram)
 

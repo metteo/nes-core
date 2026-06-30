@@ -61,7 +61,7 @@ public class TestApp {
 //        new PatternPrinter(factory.getPatternTable1(), printWriter).printAll();
 //        System.out.println(stringWriter);
 
-//        System.out.println(factory.getNameTable0().printBackground());
+//        System.out.println(factory.getLayoutTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
 //        System.out.println(factory.getPaletteMemory().printColors());
 //        System.out.println(factory.getObjAttrTables().print());

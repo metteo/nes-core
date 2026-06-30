@@ -12,11 +12,11 @@ public class AttributeTables implements Tables {
      */
     public static @Unsigned short getAttrTableAddress(ViewPortRegister viewPort) {
         int base = 0x2000; // TODO: consider using vram segment register here
-        int nt = viewPort.getNameTable() << 10;
+        int lt = viewPort.getLayoutTable() << 10;
         int attr = 0b1111 << 6;
         int y = (viewPort.getCoarseY() & 0b11100) << 1;
         int x = viewPort.getCoarseX() >> 2;
-        //              10   NN   1111  YYY XXX
-        return ushort(base | nt | attr | y | x );
+        //              10   LL   1111  YYY XXX
+        return ushort(base | lt | attr | y | x );
     }
 }

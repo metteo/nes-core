@@ -34,33 +34,33 @@ public class PpuMemMap implements MemoryMap {
     public static final @Unsigned short VRAM_END = ushort(0x2FFF);
     public static final int VRAM_SIZE = sint(VRAM_END) - sint(VRAM_START) + 1;
 
-    public static final @Unsigned short NAME_TABLE_0_START = VRAM_START;
-    public static final @Unsigned short NAME_TABLE_0_END = ushort(0x23BF);
-    public static final int NAME_TABLE_0_SIZE = sint(NAME_TABLE_0_END) - sint(NAME_TABLE_0_START) + 1;
+    public static final @Unsigned short LAYOUT_TABLE_0_START = VRAM_START;
+    public static final @Unsigned short LAYOUT_TABLE_0_END = ushort(0x23BF);
+    public static final int LAYOUT_TABLE_0_SIZE = sint(LAYOUT_TABLE_0_END) - sint(LAYOUT_TABLE_0_START) + 1;
 
     public static final @Unsigned short ATTRIBUTE_TABLE_0_START = ushort(0x23C0);
     public static final @Unsigned short ATTRIBUTE_TABLE_0_END = ushort(0x23FF);
     public static final int ATTRIBUTE_TABLE_0_SIZE = sint(ATTRIBUTE_TABLE_0_END) - sint(ATTRIBUTE_TABLE_0_START) + 1;
 
-    public static final @Unsigned short NAME_TABLE_1_START = ushort(0x2400);
-    public static final @Unsigned short NAME_TABLE_1_END = ushort(0x27BF);
-    public static final int NAME_TABLE_1_SIZE = sint(NAME_TABLE_1_END) - sint(NAME_TABLE_1_START) + 1;
+    public static final @Unsigned short LAYOUT_TABLE_1_START = ushort(0x2400);
+    public static final @Unsigned short LAYOUT_TABLE_1_END = ushort(0x27BF);
+    public static final int LAYOUT_TABLE_1_SIZE = sint(LAYOUT_TABLE_1_END) - sint(LAYOUT_TABLE_1_START) + 1;
 
     public static final @Unsigned short ATTRIBUTE_TABLE_1_START = ushort(0x27C0);
     public static final @Unsigned short ATTRIBUTE_TABLE_1_END = ushort(0x27FF);
     public static final int ATTRIBUTE_TABLE_1_SIZE = sint(ATTRIBUTE_TABLE_1_END) - sint(ATTRIBUTE_TABLE_1_START) + 1;
 
-    public static final @Unsigned short NAME_TABLE_2_START = ushort(0x2800);
-    public static final @Unsigned short NAME_TABLE_2_END = ushort(0x2BBF);
-    public static final int NAME_TABLE_2_SIZE = sint(NAME_TABLE_2_END) - sint(NAME_TABLE_2_START) + 1;
+    public static final @Unsigned short LAYOUT_TABLE_2_START = ushort(0x2800);
+    public static final @Unsigned short LAYOUT_TABLE_2_END = ushort(0x2BBF);
+    public static final int LAYOUT_TABLE_2_SIZE = sint(LAYOUT_TABLE_2_END) - sint(LAYOUT_TABLE_2_START) + 1;
 
     public static final @Unsigned short ATTRIBUTE_TABLE_2_START = ushort(0x2BC0);
     public static final @Unsigned short ATTRIBUTE_TABLE_2_END = ushort(0x2BFF);
     public static final int ATTRIBUTE_TABLE_2_SIZE = sint(ATTRIBUTE_TABLE_2_END) - sint(ATTRIBUTE_TABLE_2_START) + 1;
 
-    public static final @Unsigned short NAME_TABLE_3_START = ushort(0x2C00);
-    public static final @Unsigned short NAME_TABLE_3_END = ushort(0x2FBF);
-    public static final int NAME_TABLE_3_SIZE = sint(NAME_TABLE_3_END) - sint(NAME_TABLE_3_START) + 1;
+    public static final @Unsigned short LAYOUT_TABLE_3_START = ushort(0x2C00);
+    public static final @Unsigned short LAYOUT_TABLE_3_END = ushort(0x2FBF);
+    public static final int LAYOUT_TABLE_3_SIZE = sint(LAYOUT_TABLE_3_END) - sint(LAYOUT_TABLE_3_START) + 1;
 
     public static final @Unsigned short ATTRIBUTE_TABLE_3_START = ushort(0x2FC0);
     public static final @Unsigned short ATTRIBUTE_TABLE_3_END = VRAM_END;

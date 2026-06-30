@@ -28,19 +28,19 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
         T
     }
 
-    public static final int NAMETABLE_MASK = 0b11;
-    public static final int NAMETABLE_X_MASK = 0b01;
-    public static final int NAMETABLE_Y_MASK = 0b10;
+    public static final int LAYOUT_TABLE_MASK = 0b11;
+    public static final int LAYOUT_TABLE_X_MASK = 0b01;
+    public static final int LAYOUT_TABLE_Y_MASK = 0b10;
 
     public static final int COARSE_MASK = 0b1_1111;
     public static final int FINE_MASK = 0b111;
 
     private final Variant variant;
 
-    // V / T: 0b0yyy_NNYY_YYYX_XXXX
+    // V / T: 0b0yyy_LLYY_YYYX_XXXX
     // X: xxx
 
-    private int nameTable;  // 0-3, 0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00
+    private int layoutTable;  // 0-3, 0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00
     private int coarseY;    // 0-29/30-31
     private int coarseX;    // 0-31
     private int fineY;      // 0-7
@@ -56,11 +56,11 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
         int hiInt = sint(hi);
 
         int fY = (hiInt >> 4) & FINE_MASK;
-        int nt = (hiInt >> 2) & NAMETABLE_MASK;
+        int lt = (hiInt >> 2) & LAYOUT_TABLE_MASK;
         int cY = (hiInt & 0b11) << 3;
 
         this.fineY = fY;
-        this.nameTable = nt;
+        this.layoutTable = lt;
 
         this.coarseY = (coarseY & 0b111) | cY;
     }
@@ -78,9 +78,9 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
     public @Unsigned short get() {
         int cX = coarseX & COARSE_MASK;
         int cY = (coarseY & COARSE_MASK) << 5;
-        int nt = (nameTable & NAMETABLE_MASK) << 10;
+        int lt = (layoutTable & LAYOUT_TABLE_MASK) << 10;
         int fY = (fineY & FINE_MASK) << 12;
-        return ushort(fY | nt | cY | cX);
+        return ushort(fY | lt | cY | cX);
     }
 
     public void set(@Unsigned short address) {
@@ -88,37 +88,37 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
 
         coarseX = addrInt & COARSE_MASK;
         coarseY = (addrInt >> 5) & COARSE_MASK;
-        nameTable = (addrInt >> 10) & NAMETABLE_MASK;
+        layoutTable = (addrInt >> 10) & LAYOUT_TABLE_MASK;
         fineY = (addrInt >> 12) & FINE_MASK;
     }
 
-    public int getNameTable() {
-        return nameTable & NAMETABLE_MASK;
+    public int getLayoutTable() {
+        return layoutTable & LAYOUT_TABLE_MASK;
     }
 
-    public void setNameTable(int nametable) {
-        this.nameTable = nametable & NAMETABLE_MASK;
+    public void setLayoutTable(int layoutTable) {
+        this.layoutTable = layoutTable & LAYOUT_TABLE_MASK;
     }
 
-    public void setNameTableX(int nameTableX) {
-        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (nameTableX & NAMETABLE_X_MASK);
+    public void setLayoutTableX(int layoutTableX) {
+        int newLayoutTable = (layoutTable & LAYOUT_TABLE_Y_MASK) | (layoutTableX & LAYOUT_TABLE_X_MASK);
 
-        setNameTable(newNameTable);
+        setLayoutTable(newLayoutTable);
     }
 
-    public int getNameTableX() {
-        return nameTable & NAMETABLE_X_MASK;
+    public int getLayoutTableX() {
+        return layoutTable & LAYOUT_TABLE_X_MASK;
     }
 
-    public void setNameTableY(int nameTableY) {
-        int newNameTable = (nameTableY << 1 & NAMETABLE_Y_MASK) | (nameTable & NAMETABLE_X_MASK);
+    public void setLayoutTableY(int layoutTableY) {
+        int newLayoutTable = (layoutTableY << 1 & LAYOUT_TABLE_Y_MASK) | (layoutTable & LAYOUT_TABLE_X_MASK);
 
-        setNameTable(newNameTable);
+        setLayoutTable(newLayoutTable);
     }
 
 
-    int getNameTableY() {
-        return nameTable >> 1;
+    int getLayoutTableY() {
+        return layoutTable >> 1;
     }
 
     public int getCoarseY() {
@@ -161,7 +161,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
      * "Inc. vert(v)" on the timing diagram
      */
     public void incrementY() {
-        int oldNameTable = getNameTableY();
+        int oldLayoutTable = getLayoutTableY();
 
         int y = (coarseY << 3) | fineY;
         y = (y + 1) & 0xFF;
@@ -174,9 +174,9 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
 
         int newCoarseY = afterLast || beforeFirst ? 0 : tempCoarseY;
 
-        int newNameTable = (oldNameTable + (afterLast ? 1 : 0)) & 0b1;
+        int newLayoutTable = (oldLayoutTable + (afterLast ? 1 : 0)) & 0b1;
 
-        setNameTableY(newNameTable);
+        setLayoutTableY(newLayoutTable);
         setCoarseY(newCoarseY);
         setFineY(newFineY);
     }
@@ -185,14 +185,14 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
      * "Inc. hori(v)" on the timing diagram
      */
     public void incrementX() {
-        int x = ((nameTable & NAMETABLE_X_MASK) << 5) | (coarseX & COARSE_MASK);
+        int x = ((layoutTable & LAYOUT_TABLE_X_MASK) << 5) | (coarseX & COARSE_MASK);
         x += 1;
 
         int newCoarseX = x & COARSE_MASK;
-        int newNameTable = (nameTable & NAMETABLE_Y_MASK) | (x >> 5) & NAMETABLE_X_MASK;
+        int newLayoutTable = (layoutTable & LAYOUT_TABLE_Y_MASK) | (x >> 5) & LAYOUT_TABLE_X_MASK;
 
         setCoarseX(newCoarseX);
-        setNameTable(newNameTable);
+        setLayoutTable(newLayoutTable);
     }
 
     private void assertTransferFromTtoVX(ViewPortRegister target) {
@@ -207,7 +207,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
 
         target.coarseY   = this.coarseY;
         target.coarseX   = this.coarseX;
-        target.nameTable = this.nameTable;
+        target.layoutTable = this.layoutTable;
         target.fineY     = this.fineY;
         // fineX is not transferred
     }
@@ -218,7 +218,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
     public void transferX(ViewPortRegister target) {
         assertTransferFromTtoVX(target);
 
-        target.setNameTableX(this.getNameTableX());
+        target.setLayoutTableX(this.getLayoutTableX());
         target.coarseX = this.coarseX;
         // fineX is not transferred
     }
@@ -229,7 +229,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
     public void transferY(ViewPortRegister target) {
         assertTransferFromTtoVX(target);
 
-        target.setNameTableY(this.getNameTableY());
+        target.setLayoutTableY(this.getLayoutTableY());
         target.coarseY = this.coarseY;
         target.fineY = this.fineY;
     }
@@ -240,7 +240,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
 
         return getName() +
                 ": 0x" + Hex.s(get()) +
-                "  NT: " + nameTable +
+                "  LT: " + layoutTable +
                 "  Y: " + coarseY + "." + fineY +
                 "  X: " + coarseX + fX;
     }

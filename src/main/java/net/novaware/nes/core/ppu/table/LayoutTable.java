@@ -8,14 +8,18 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
+ * Layout of background patterns
+ * <br>
+ * Nametable / NT in the docs
+ *
  * @see <a href="https://www.nesdev.org/wiki/PPU_nametables">Name Tables on nesdev.org</a>
  */
-public class NameTable extends MemBusTable implements Table { // TODO: rename to LayoutTable everywhere
+public class LayoutTable extends MemBusTable implements Table {
 
     private static final int ROW_COUNT = 30;
     private static final int COL_COUNT = 32;
 
-    public NameTable(String name, SegmentRegister segment, MemoryBus bus) {
+    public LayoutTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);
     }
 

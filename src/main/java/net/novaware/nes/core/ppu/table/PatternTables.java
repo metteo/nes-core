@@ -12,6 +12,8 @@ public class PatternTables extends MemBusTable implements Tables, Nameable {
         super(name, segment, bus);
     }
 
+    // TODO: make instance method for getting / probing a line
+
     public static int getAddress(Pattern.Size size, int table, int cell, int plane, int line) {
         return switch(size) {
             case SINGLE -> getSingleAddress(table, cell, plane, line);
@@ -65,7 +67,7 @@ public class PatternTables extends MemBusTable implements Tables, Nameable {
         assert 0 <= plane && plane <= 0b1 : "plane out of range";
         assert 0 <= line && line <= 0xF : "line out of range";
 
-        int half = (line & BIT_3) >> 3;
+        int half = (line & BIT_3) >> 3; // top or bottom
 
         int tableShift = table << 12;
         int cellShift = cell << 5;

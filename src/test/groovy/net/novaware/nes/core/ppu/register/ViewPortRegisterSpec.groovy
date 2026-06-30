@@ -16,7 +16,7 @@ class ViewPortRegisterSpec extends Specification {
         given:
         v.setCoarseX(coarseX)
         v.setCoarseY(coarseY)
-        v.setNameTable(nt)
+        v.setLayoutTable(lt)
         v.setFineY(fineY)
         v.setFineX(fineX)
 
@@ -30,11 +30,11 @@ class ViewPortRegisterSpec extends Specification {
 
         t.getCoarseX() == coarseX
         t.getCoarseY() == coarseY
-        t.getNameTable() == nt
+        t.getLayoutTable() == lt
         t.getFineY() == fineY
 
         where:
-        assembled             || fineX | fineY | nt   | coarseY | coarseX
+        assembled             || fineX | fineY | lt   | coarseY | coarseX
         0b0000_0000_0000_0000 || 0b000 | 0b000 | 0b00 | 0b00000 | 0b00000
         0b0000_0000_0001_1111 || 0b000 | 0b000 | 0b00 | 0b00000 | 0b11111
         0b0000_0011_1110_0000 || 0b000 | 0b000 | 0b00 | 0b11111 | 0b00000
@@ -71,11 +71,11 @@ class ViewPortRegisterSpec extends Specification {
 
         v.getCoarseX() == coarseX
         v.getCoarseY() == coarseY
-        v.getNameTable() == nt
+        v.getLayoutTable() == lt
         v.getFineY() == fineY
 
         where:
-        hi          | lo          || fineX | fineY | nt   | coarseY | coarseX
+        hi          | lo          || fineX | fineY | lt   | coarseY | coarseX
         0b0000_0000 | 0b0000_0000 || 0b000 | 0b000 | 0b00 | 0b00000 | 0b00000
         0b1000_0000 | 0b0000_0000 || 0b000 | 0b000 | 0b00 | 0b00000 | 0b00000
         0b0000_0000 | 0b0001_1111 || 0b000 | 0b000 | 0b00 | 0b00000 | 0b11111
@@ -86,47 +86,47 @@ class ViewPortRegisterSpec extends Specification {
         0b0111_1111 | 0b1111_1111 || 0b111 | 0b111 | 0b11 | 0b11111 | 0b11111
     }
 
-    def "should get/set name table x component separately"() {
+    def "should get/set layout table x component separately"() {
         given:
-        v.setNameTable(inNameTable)
+        v.setLayoutTable(inLayoutTable)
 
         when:
-        v.setNameTableX(nameTableX)
+        v.setLayoutTableX(layoutTableX)
 
         then:
-        v.getNameTable() == outNameTable
-        v.getNameTableX() == nameTableX
+        v.getLayoutTable() == outLayoutTable
+        v.getLayoutTableX() == layoutTableX
 
         where:
-        inNameTable | nameTableX || outNameTable
-        0b00        | 0b0          || 0b00
-        0b00        | 0b1          || 0b01
-        0b01        | 0b0          || 0b00
-        0b01        | 0b1          || 0b01
+        inLayoutTable | layoutTableX || outLayoutTable
+        0b00          | 0b0          || 0b00
+        0b00          | 0b1          || 0b01
+        0b01          | 0b0          || 0b00
+        0b01          | 0b1          || 0b01
     }
 
-    def "should get/set name table y component separately"() {
+    def "should get/set layout table y component separately"() {
         given:
-        v.setNameTable(inNameTable)
+        v.setLayoutTable(inLayoutTable)
 
         when:
-        v.setNameTableY(inNameTableY)
+        v.setLayoutTableY(inLayoutTableY)
 
         then:
-        v.getNameTable() == outNameTable
-        v.getNameTableY() == outNameTableY
+        v.getLayoutTable() == outLayoutTable
+        v.getLayoutTableY() == outLayoutTableY
 
         where:
-        inNameTable | inNameTableY || outNameTable | outNameTableY
-        0b00        | 0b0          || 0b00         | 0b0
-        0b00        | 0b1          || 0b10         | 0b1
-        0b10        | 0b0          || 0b00         | 0b0
-        0b10        | 0b1          || 0b10         | 0b1
+        inLayoutTable | inLayoutTableY || outLayoutTable | outLayoutTableY
+        0b00          | 0b0            || 0b00           | 0b0
+        0b00          | 0b1            || 0b10           | 0b1
+        0b10          | 0b0            || 0b00           | 0b0
+        0b10          | 0b1            || 0b10           | 0b1
     }
 
     def "should increment x"() {
         given:
-        v.setNameTable(inNt)
+        v.setLayoutTable(inLt)
         v.setFineX(inFineX)
         v.setCoarseX(inCoarseX)
 
@@ -134,7 +134,7 @@ class ViewPortRegisterSpec extends Specification {
         v.incrementX()
 
         then:
-        v.getNameTable() == outNt
+        v.getLayoutTable() == outLt
         v.getFineX() == outFineX
         v.getCoarseX() == outCoarseX
 
@@ -143,16 +143,16 @@ class ViewPortRegisterSpec extends Specification {
         v.getCoarseY() == 0
 
         where:
-         inNt | inFineX | inCoarseX || outNt | outFineX | outCoarseX | comment
+         inLt | inFineX | inCoarseX || outLt | outFineX | outCoarseX | comment
          0b00 | 0b000   | 0b0_0000  || 0b00  | 0b000    | 0b0_0001   | "basic"
-         0b00 | 0b000   | 0b1_1110  || 0b00  | 0b000    | 0b1_1111   | "before overflow to nt"
-         0b00 | 0b000   | 0b1_1111  || 0b01  | 0b000    | 0b0_0000   | "overflow to nt 1"
-         0b01 | 0b000   | 0b1_1111  || 0b00  | 0b000    | 0b0_0000   | "overflow to nt 0"
+         0b00 | 0b000   | 0b1_1110  || 0b00  | 0b000    | 0b1_1111   | "before overflow to lt"
+         0b00 | 0b000   | 0b1_1111  || 0b01  | 0b000    | 0b0_0000   | "overflow to lt 1"
+         0b01 | 0b000   | 0b1_1111  || 0b00  | 0b000    | 0b0_0000   | "overflow to lt 0"
     }
 
     def "should increment y"() {
         given:
-        v.setNameTable(inNt)
+        v.setLayoutTable(inLt)
         v.setCoarseY(inCoarseY)
         v.setFineY(inFineY)
 
@@ -160,7 +160,7 @@ class ViewPortRegisterSpec extends Specification {
         v.incrementY()
 
         then:
-        v.getNameTable() == outNt
+        v.getLayoutTable() == outLt
         v.getCoarseY() == outCoarseY
         v.getFineY() == outFineY
 
@@ -168,19 +168,19 @@ class ViewPortRegisterSpec extends Specification {
         v.getCoarseX() == 0
 
         where:
-        inNt | inCoarseY | inFineY || outNt | outCoarseY | outFineY | comment
+        inLt | inCoarseY | inFineY || outLt | outCoarseY | outFineY | comment
         0b00 | 0b0_0000  | 0b000   || 0b00  | 0b0_0000   | 0b001    | "basic"
         0b00 | 0b0_0000  | 0b110   || 0b00  | 0b0_0000   | 0b111    | "before fine overflow"
         0b00 | 0b0_0000  | 0b111   || 0b00  | 0b0_0001   | 0b000    | "overflow to coarse"
         0b00 | 0b1_1101  | 0b110   || 0b00  | 0b1_1101   | 0b111    | "before coarse overflow"
-        0b00 | 0b1_1101  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to nt 1"
-        0b10 | 0b1_1101  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to nt 0"
-        0b00 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow without nt change"
+        0b00 | 0b1_1101  | 0b111   || 0b10  | 0b0_0000   | 0b000    | "overflow to lt 1"
+        0b10 | 0b1_1101  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow to lt 0"
+        0b00 | 0b1_1111  | 0b111   || 0b00  | 0b0_0000   | 0b000    | "overflow without lt change"
     }
 
     def "should transfer X from T to V"() {
         given:
-        t.setNameTableX(ntX)
+        t.setLayoutTableX(ltX)
         t.setCoarseX(coarseX)
         // t.fineX doesn't exist
 
@@ -188,19 +188,19 @@ class ViewPortRegisterSpec extends Specification {
         t.transferX(v)
 
         then:
-        t.getNameTableX() == ntX
+        t.getLayoutTableX() == ltX
         t.getCoarseX() == coarseX
 
-        v.getNameTableX() == ntX
+        v.getLayoutTableX() == ltX
         v.getCoarseX() == coarseX
 
         v.getFineX() == 0
         v.getFineY() == 0
         v.getCoarseY() == 0
-        v.getNameTableY() == 0
+        v.getLayoutTableY() == 0
 
         where:
-        ntX | coarseX
+        ltX | coarseX
         0b0 | 0b00000
         0b0 | 0b11111
         0b1 | 0b00000
@@ -209,7 +209,7 @@ class ViewPortRegisterSpec extends Specification {
 
     def "should transfer Y from T to V"() {
         given:
-        t.setNameTableY(ntY)
+        t.setLayoutTableY(ltY)
         t.setCoarseY(coarseY)
         t.setFineY(fineY)
 
@@ -217,20 +217,20 @@ class ViewPortRegisterSpec extends Specification {
         t.transferY(v)
 
         then:
-        t.getNameTableY() == ntY
+        t.getLayoutTableY() == ltY
         t.getCoarseY() == coarseY
         t.getFineY() == fineY
 
-        v.getNameTableY() == ntY
+        v.getLayoutTableY() == ltY
         v.getCoarseY() == coarseY
         v.getFineY() == fineY
 
         v.getFineX() == 0
         v.getCoarseX() == 0
-        v.getNameTableX() == 0
+        v.getLayoutTableX() == 0
 
         where:
-        ntY | coarseY | fineY
+        ltY | coarseY | fineY
         0b0 | 0b00000 | 0b000
         0b0 | 0b00000 | 0b111
         0b0 | 0b11111 | 0b000
@@ -248,8 +248,8 @@ class ViewPortRegisterSpec extends Specification {
 
         where:
         addr   | fX  || s
-        0x2345 | 3   || "PPU.VX: 0x2345  NT: 0  Y: 26.2  X: 5.3"
-        0x3FFF | 7   || "PPU.VX: 0x3FFF  NT: 3  Y: 31.3  X: 31.7" // fY goes out of 14 bit range by 1 bit
+        0x2345 | 3   || "PPU.VX: 0x2345  LT: 0  Y: 26.2  X: 5.3"
+        0x3FFF | 7   || "PPU.VX: 0x3FFF  LT: 3  Y: 31.3  X: 31.7" // fY goes out of 14 bit range by 1 bit
     }
 
     def "should return provide useful T toString"() {
@@ -261,7 +261,7 @@ class ViewPortRegisterSpec extends Specification {
 
         where:
         addr   || s
-        0x2345 || "PPU.T: 0x2345  NT: 0  Y: 26.2  X: 5"
-        0x3FFF || "PPU.T: 0x3FFF  NT: 3  Y: 31.3  X: 31" // fY goes out of 14 bit range by 1 bit
+        0x2345 || "PPU.T: 0x2345  LT: 0  Y: 26.2  X: 5"
+        0x3FFF || "PPU.T: 0x3FFF  LT: 3  Y: 31.3  X: 31" // fY goes out of 14 bit range by 1 bit
     }
 }

@@ -38,7 +38,7 @@ class NesFileReaderSpec extends Specification {
                 trainerPresent: false,
                 programRomSize: 3 * 16 * 1024, // bytes
                 videoRomSize: 1 * 8 * 1024, // bytes
-                nametable: NesFileFaker.Orientation.HORIZONTAL,
+                layoutTable: NesFileFaker.Orientation.HORIZONTAL,
                 mapper: 15
         )
 

@@ -284,7 +284,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
             boolean p = (data & 0x40) != 0;
             boolean v = (data & 0x80) != 0;
 
-            tempViewPort.setNameTable(nn);
+            tempViewPort.setLayoutTable(nn);
             vramAddressIncrement.setAsByte(i);
             spritePatternTable.setAsShort(s);
             backgroundPatternTable.setAsShort(b);

@@ -5,21 +5,21 @@ import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ushort
 
-class NameTablesSpec extends Specification {
+class LayoutTablesSpec extends Specification {
 
     def v = PpuRegModule.provideCurrentViewPort()
 
-    def "should return name table address"() {
+    def "should return layout table address"() {
         given:
-        v.setNameTable(nt)
+        v.setLayoutTable(lt)
         v.setCoarseX(coarseX)
         v.setCoarseY(coarseY)
 
         expect:
-        NameTables.getNameTableAddress(v) == ushort(ntAddr)
+        LayoutTables.getAddress(v) == ushort(ltAddr)
 
         where:
-        nt   | coarseY | coarseX || ntAddr
+        lt   | coarseY | coarseX || ltAddr
         0b00 | 0b00000 | 0b00000 || 0b10_00_00000_00000
         0b00 | 0b00000 | 0b11111 || 0b10_00_00000_11111
         0b00 | 0b11111 | 0b00000 || 0b10_00_11111_00000

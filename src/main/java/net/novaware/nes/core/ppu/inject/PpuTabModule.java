@@ -7,7 +7,7 @@ import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
-import net.novaware.nes.core.ppu.table.NameTable;
+import net.novaware.nes.core.ppu.table.LayoutTable;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.table.PatternTables;
@@ -15,7 +15,7 @@ import net.novaware.nes.core.register.SegmentRegister;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
@@ -59,12 +59,12 @@ public interface PpuTabModule {
 
     @Provides
     @BoardScope
-    @PpuVar(NT0)
-    static NameTable provideNameTable0(
-            @PpuVar(NT0) SegmentRegister segment,
+    @PpuVar(LT0)
+    static LayoutTable provideLayoutTable0(
+            @PpuVar(LT0) SegmentRegister segment,
             @PpuVar(BUS) MemoryBus ppuBus
     ) {
-        return new NameTable(NT0.doc(), segment, ppuBus);
+        return new LayoutTable(LT0.doc(), segment, ppuBus);
     }
 
     @Provides
