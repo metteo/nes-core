@@ -8,6 +8,7 @@ import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.LayoutTable;
+import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.table.PatternTables;
@@ -16,6 +17,10 @@ import net.novaware.nes.core.register.SegmentRegister;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT1;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT2;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT3;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
@@ -59,12 +64,52 @@ public interface PpuTabModule {
 
     @Provides
     @BoardScope
+    @PpuVar(LTS)
+    static LayoutTables provideLayoutTables(
+            @PpuVar(LTS) SegmentRegister segment,
+            @PpuVar(BUS) MemoryBus ppuBus
+    ) {
+        return new LayoutTables(LTS.doc(), segment, ppuBus);
+    }
+
+    @Provides
+    @BoardScope
     @PpuVar(LT0)
     static LayoutTable provideLayoutTable0(
             @PpuVar(LT0) SegmentRegister segment,
             @PpuVar(BUS) MemoryBus ppuBus
     ) {
         return new LayoutTable(LT0.doc(), segment, ppuBus);
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(LT1)
+    static LayoutTable provideLayoutTable1(
+            @PpuVar(LT1) SegmentRegister segment,
+            @PpuVar(BUS) MemoryBus ppuBus
+    ) {
+        return new LayoutTable(LT1.doc(), segment, ppuBus);
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(LT2)
+    static LayoutTable provideLayoutTable2(
+            @PpuVar(LT2) SegmentRegister segment,
+            @PpuVar(BUS) MemoryBus ppuBus
+    ) {
+        return new LayoutTable(LT2.doc(), segment, ppuBus);
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(LT3)
+    static LayoutTable provideLayoutTable3(
+            @PpuVar(LT3) SegmentRegister segment,
+            @PpuVar(BUS) MemoryBus ppuBus
+    ) {
+        return new LayoutTable(LT3.doc(), segment, ppuBus);
     }
 
     @Provides

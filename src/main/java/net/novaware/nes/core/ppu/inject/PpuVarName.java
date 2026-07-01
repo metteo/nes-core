@@ -61,11 +61,13 @@ public enum PpuVarName {
     PT0 ("", "patternTable0", "Pattern Table 0 (L)"),
     PT1 ("", "patternTable1", "Pattern Table 1 (R)"),
 
+    LTS("", "layoutTables", "Layout Tables"),
     LT0("", "layoutTable0", "Layout Table 0"),
     LT1("", "layoutTable1", "Layout Table 1"),
     LT2("", "layoutTable2", "Layout Table 2"),
     LT3("", "layoutTable3", "Layout Table 3"),
 
+    ATS ("", "attributeTables", "Attribute Tables"),
     AT0 ("", "attributeTable0", "Attribute Table 0"),
     AT1 ("", "attributeTable1", "Attribute Table 1"),
     AT2 ("", "attributeTable2", "Attribute Table 2"),

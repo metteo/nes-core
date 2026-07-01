@@ -13,18 +13,22 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  */
 public class PatternTable extends MemBusTable implements Table {
 
+    // TODO: create constants for row, col, plane and line count (max values) and use in assertions
+
     public PatternTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);
     }
 
     private @Unsigned short getAddress(Pattern.Size size, int row, int col, int plane, int lineNum) {
         int baseAddress = sint(segment.getStart());
-        int table = baseAddress >> 12; // TODO: doesn't look good
+        int memRow = baseAddress >> 12; // TODO: doesn't look good
 
-        int lineAddrInt = PatternTables.getAddress(size, table, row, col, plane, lineNum);
+        int lineAddrInt = PatternTables.getAddress(size, memRow, row, col, plane, lineNum);
 
         return ushort(lineAddrInt);
     }
+
+    // TODO: get method that accepts a short register and fills both hi and lo plane
 
     // TODO: lots of params again and again. Cursor approach would make it stateful...
     public int getLine(Pattern.Size size, int row, int col, int plane, int lineNum) {
@@ -34,13 +38,13 @@ public class PatternTable extends MemBusTable implements Table {
         return sint(line);
     }
 
-    private DataLine dataLine = new DataLine();
+    private DataLine probeLine = new DataLine();
 
     public int probeLine(Pattern.Size size, int row, int col, int plane, int lineNum) {
         @Unsigned short lineAddress = getAddress(size, row, col, plane, lineNum);
 
-        bus.probe(lineAddress, dataLine);
-        @Unsigned byte line = dataLine.cycle();
+        bus.probe(lineAddress, probeLine);
+        @Unsigned byte line = probeLine.cycle();
 
         return sint(line);
     }

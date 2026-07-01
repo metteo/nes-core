@@ -80,7 +80,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
         int cY = (coarseY & COARSE_MASK) << 5;
         int lt = (layoutTable & LAYOUT_TABLE_MASK) << 10;
         int fY = (fineY & FINE_MASK) << 12;
-        return ushort(fY | lt | cY | cX);
+        return ushort(fY | lt | cY | cX); // TODO: & MEMORY_END to limit to 14 bits
     }
 
     public void set(@Unsigned short address) {
@@ -117,7 +117,7 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
     }
 
 
-    int getLayoutTableY() {
+    public int getLayoutTableY() {
         return layoutTable >> 1;
     }
 

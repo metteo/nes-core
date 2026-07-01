@@ -1,8 +1,8 @@
 package net.novaware.nes.core.ppu.table;
 
+import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.SegmentRegister;
-import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.ushort;
@@ -12,34 +12,48 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * <br>
  * Nametable / NT in the docs
  *
- * @see <a href="https://www.nesdev.org/wiki/PPU_nametables">Name Tables on nesdev.org</a>
+ * @see <a href="https://www.nesdev.org/wiki/PPU_nametables">Nametables on nesdev.org</a>
  */
 public class LayoutTable extends MemBusTable implements Table {
 
-    private static final int ROW_COUNT = 30;
-    private static final int COL_COUNT = 32;
+    public static final int ROW_COUNT = 30;
+    public static final int COL_COUNT = 32;
 
     public LayoutTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);
     }
 
-    public String printBackground() {
-        StringBuilder background = new StringBuilder();
+    public int getAddress(int row, int col) {
+        int baseAddress = segment.getStartAsInt();
+        // TODO: make a LayoutTables.getAddress overload that accepts base address
+        int offset = baseAddress & (0b11 << 12);
+        int memCell = (baseAddress & (0b11 << 10)) >> 10; // FIXME: those shifts look ugly
 
-        for (int y = 0; y < ROW_COUNT; y++) {
-            for (int x = 0; x < COL_COUNT; x++) {
-                background.append(Hex.s(getBackground(y, x))).append(" ");
-            }
-            background.append("\n");
-        }
-
-        return background.toString();
+        return LayoutTables.getAddress(offset, memCell, row, col);
     }
 
-    public @Unsigned byte getBackground(int y, int x) {
-        int start = segment.getStartAsInt();
-        int address = start + (COL_COUNT * y) + x;
+    /**
+     * @return cell within PatternTable
+     */
+    public @Unsigned byte getPattern(int row, int col) {
+        int address = getAddress(row, col);
 
-        return bus.access(ushort(address)).read().data();
+        @Unsigned byte cell = bus.access(ushort(address)).read().data();
+
+        return cell;
+    }
+
+    private DataLine probeLine = new DataLine();
+
+    /**
+     * @return cell within PatternTable
+     */
+    public @Unsigned byte probePattern(int row, int col) {
+        int address = getAddress(row, col);
+
+        bus.probe(ushort(address), probeLine);
+        @Unsigned byte cell = probeLine.cycle();
+
+        return cell;
     }
 }
