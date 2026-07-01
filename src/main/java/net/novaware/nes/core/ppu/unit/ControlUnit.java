@@ -16,7 +16,6 @@ import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
-import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.AttributeTables;
 import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
@@ -481,7 +480,7 @@ public class ControlUnit implements Initializable {
                 layoutTableBuffer.set(layoutTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
-                @Unsigned short attrTableAddr = AttributeTables.getAttrTableAddress(currentViewPort);
+                @Unsigned short attrTableAddr = AttributeTables.getAddress(currentViewPort);
                 bus.access(attrTableAddr);
             }
             case READ_ATTR_TABLE_DATA      -> {
@@ -489,6 +488,7 @@ public class ControlUnit implements Initializable {
                 extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
+                // TODO: create dedicated instance method for this and use case (and hi bits)
                 int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, layoutTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
                 bus.access(ushort(bgLoAddr));
             }
@@ -575,7 +575,7 @@ public class ControlUnit implements Initializable {
     private void unusedObjAttrByte(@Unsigned byte data) {}
 
     private void extractCurrentAttribute(@Unsigned byte attrTableData) {
-        int attrBitsLatch = sint(AttributeTable.getSubAttribute(attrTableData, currentViewPort));
+        int attrBitsLatch = sint(AttributeTables.subAttribute(attrTableData, currentViewPort));
         int attrLoBitLatch = attrBitsLatch & 0b01;
         int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
 

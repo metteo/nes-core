@@ -25,7 +25,7 @@ public class LayoutTable extends MemBusTable implements Table {
 
     public int getAddress(int row, int col) {
         int baseAddress = segment.getStartAsInt();
-        // TODO: make a LayoutTables.getAddress overload that accepts base address
+        // TODO: make a LayoutTables.getAddress overload that accepts segmentStart
         int offset = baseAddress & (0b11 << 12);
         int memCell = (baseAddress & (0b11 << 10)) >> 10; // FIXME: those shifts look ugly
 
@@ -39,7 +39,6 @@ public class LayoutTable extends MemBusTable implements Table {
         int address = getAddress(row, col);
 
         @Unsigned byte cell = bus.access(ushort(address)).read().data();
-
         return cell;
     }
 

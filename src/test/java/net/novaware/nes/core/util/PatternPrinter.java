@@ -6,6 +6,7 @@ import net.novaware.nes.core.ppu.table.PatternTable;
 import java.io.PrintWriter;
 
 import static net.novaware.nes.core.ppu.table.Pattern.Size.SINGLE;
+import static net.novaware.nes.core.util.Blocks.toChar;
 
 /**
  * @see <a href="https://en.wikipedia.org/wiki/Box-drawing_characters">Box drawing</a>
@@ -84,17 +85,6 @@ public class PatternPrinter {
             writer.print(c);
             writer.print(c);
         }
-    }
-
-    private char toChar(int dot) {
-        char c = switch(dot) {
-            case 0b11 -> '█';
-            case 0b10 -> '▓';
-            case 0b01 -> '░';
-            case 0b00 -> ' ';
-            default   -> '▒'; // error
-        };
-        return c;
     }
 
     private void printTopBorder(Pattern.Size size, int cols) {

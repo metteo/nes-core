@@ -62,4 +62,9 @@ public class LayoutTables extends MemBusTable implements Tables {
 
         return address;
     }
+
+    public static int getAddress(int segment, int row, int col) {
+        // TODO: implement
+        return 0;
+    }
 }

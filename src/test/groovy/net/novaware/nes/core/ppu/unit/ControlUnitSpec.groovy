@@ -59,7 +59,7 @@ class ControlUnitSpec extends Specification {
         when:
         def instance = newCu()
 
-        println instance.printActions()
+        //println instance.printActions()
 
         then:
         instance != null
