@@ -223,8 +223,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     @Override
     public void onAttach(DataBus.Line dataLine) { // TODO: THIS IS CPU D0..7 pins on ppu (3 bits)
         this.dataLine = dataLine;
-
-        palette.onAttach(dataLine);
     }
 
     @Override
@@ -251,8 +249,6 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
     @Override
     public void onDetach() {
         dataLine = new OpenLine();
-
-        palette.onDetach();
     }
 
     public interface Handler {
@@ -436,8 +432,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
                 dataReadBuffer.set(data);
             } else {
                 // TODO: this is more complex: https://www.nesdev.org/wiki/PPU_registers#Reading_palette_RAM
-                palette.onAccess(ppuAddress);
-                palette.onRead();
+                @Unsigned byte colorAddr = ubyte((sint(ppuAddress) & PaletteMemory.MASK));
+                @Unsigned byte colorRef = palette.read(colorAddr);
+                dataLine.data(colorRef);
             }
         }
 
@@ -451,8 +448,9 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
                 ppuBus.access(ppuAddress).write().data(data);
 
             } else {
-                palette.onAccess(ppuAddress);
-                palette.onWrite();
+                @Unsigned byte colorAddr = ubyte((sint(ppuAddress) & PaletteMemory.MASK));
+                @Unsigned byte colorRef = dataLine.data();
+                palette.write(colorAddr, colorRef);
             }
 
             int nextPpuAddress = sint(ppuAddress) + vramAddressIncrement.getAsInt();

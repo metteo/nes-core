@@ -32,9 +32,6 @@ import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_START;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_MIRROR_END;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_SIZE;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_0_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_1_END;
@@ -65,12 +62,7 @@ public interface PpuMemModule {
     @Provides
     @BoardScope
     static PaletteMemory providePaletteMemory() {
-        return new PaletteMemory(
-            PAL.doc(),
-            PALETTE_RAM_START,
-            PALETTE_RAM_MIRROR_END,
-            PALETTE_RAM_SIZE
-        );
+        return new PaletteMemory(PAL.doc());
     }
 
     @Provides

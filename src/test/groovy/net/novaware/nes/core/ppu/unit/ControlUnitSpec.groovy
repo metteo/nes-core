@@ -44,6 +44,7 @@ class ControlUnitSpec extends Specification {
     def spritePatternTable = PpuRegModule.provideSpritePatternTable()
     def videoOut = PpuRegModule.provideVideoOutRegister()
     def paletteMemory = PpuMemModule.providePaletteMemory()
+    def paletteTable = PpuTabModule.providePaletteTable(paletteMemory)
     def priObjAttrMemory = PpuMemModule.providePrimaryObjAttrMemory()
     def secObjAttrMemory = PpuMemModule.provideSecondaryObjAttrMemory()
 
@@ -208,6 +209,7 @@ class ControlUnitSpec extends Specification {
             spritePatternTable,
             videoOut,
             paletteMemory,
+            paletteTable,
             priObjAttrMemory,
             secObjAttrMemory,
             priObjAttrReg,

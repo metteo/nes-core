@@ -5,12 +5,14 @@ import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
+import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.AttributeTables;
 import net.novaware.nes.core.ppu.table.LayoutTable;
 import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
+import net.novaware.nes.core.ppu.table.PaletteTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.SegmentRegister;
@@ -23,6 +25,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.LT1;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT2;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT3;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
@@ -152,5 +155,11 @@ public interface PpuTabModule {
             @PpuVar(SOA) ObjAttrMemory memory
     ) {
         return new ObjAttrTable(SOA.doc(), cursor, memory);
+    }
+
+    @Provides
+    @BoardScope
+    static PaletteTable providePaletteTable(PaletteMemory paletteMemory) {
+        return new PaletteTable(PAL.doc(), paletteMemory);
     }
 }

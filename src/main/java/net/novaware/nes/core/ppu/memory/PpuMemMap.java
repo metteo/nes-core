@@ -9,7 +9,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 /**
  * @see <a href="https://www.nesdev.org/wiki/PPU_memory_map">PPU Memory Map on nesdev.org</a>
  */
-public class PpuMemMap implements MemoryMap {
+public class PpuMemMap implements MemoryMap { // TODO: make it an interface to get rid of psf
 
     // region Cartridge (CPU / DMA and PPU)
 
@@ -19,7 +19,7 @@ public class PpuMemMap implements MemoryMap {
 
     // region CHR-[ROM/RAM]
 
-    // TODO: PATTERN_TABLES start,end,size
+    // TODO: PATTERN_TABLES start,end,size or maybe call it VDAT for VideoData
 
     public static final @Unsigned short PATTERN_TABLE_0_START = ushort(0x0000);
     public static final @Unsigned short PATTERN_TABLE_0_END = ushort(0x0FFF);

@@ -28,7 +28,7 @@ public class PatternTable extends MemBusTable implements Table {
         return ushort(lineAddrInt);
     }
 
-    // TODO: get method that accepts a short register and fills both hi and lo plane
+    // TODO: get method that accepts a short register and fills both hi and lo plane?
 
     // TODO: lots of params again and again. Cursor approach would make it stateful...
     public int getLine(Pattern.Size size, int row, int col, int plane, int lineNum) {

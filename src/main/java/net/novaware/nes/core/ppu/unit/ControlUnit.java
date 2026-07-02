@@ -10,7 +10,6 @@ import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
-import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
@@ -19,6 +18,8 @@ import net.novaware.nes.core.ppu.register.ViewPortRegister;
 import net.novaware.nes.core.ppu.table.AttributeTables;
 import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
+import net.novaware.nes.core.ppu.table.PaletteTable;
+import net.novaware.nes.core.ppu.table.PaletteTable.Layer;
 import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -77,12 +78,12 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
-import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
-import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.FOREGROUND;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipH;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipV;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asHidden;
 import static net.novaware.nes.core.ppu.table.ObjAttrTable.asPalette;
+import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.BACKGROUND;
+import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.FOREGROUND;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -129,7 +130,9 @@ public class ControlUnit implements Initializable {
     private final ShortRegister backgroundPatternTable;
     private final ShortRegister spritePatternTable;
     private final VideoOutRegister videoOut;
+
     private final PaletteMemory paletteMemory;
+    private final PaletteTable paletteTable;
 
     private final ObjAttrMemory priObjAttrMemory;
     private final ObjAttrMemory secObjAttrMemory;
@@ -180,7 +183,9 @@ public class ControlUnit implements Initializable {
         @PpuVar(CB) ShortRegister backgroundPatternTable,
         @PpuVar(CS) ShortRegister spritePatternTable,
         VideoOutRegister videoOut,
+
         PaletteMemory paletteMemory,
+        PaletteTable paletteTable,
 
         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
@@ -206,7 +211,9 @@ public class ControlUnit implements Initializable {
         this.backgroundPatternTable = backgroundPatternTable;
         this.spritePatternTable = spritePatternTable;
         this.videoOut = videoOut;
+
         this.paletteMemory = paletteMemory;
+        this.paletteTable = paletteTable;
 
         this.priObjAttrMemory = priObjAttrMemory;
         this.secObjAttrMemory = secObjAttrMemory;
@@ -662,8 +669,9 @@ public class ControlUnit implements Initializable {
             }
             case CLEAR -> {
                 // TODO: on pal border region is always black
-                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 1, 1); // TODO: for debugging, should be 0, 0);
-                videoOut.set(-1, -1, backdrop);
+                // TODO: border region may have different colors during force blank if v is pointing to palette
+                @Unsigned byte backdrop = paletteTable.getColorRef(BACKGROUND, 1, 1); //paletteMemory.read(UBYTE_0);
+                videoOut.set(-1, -1, backdrop); // FIXME: PPU is rendering the border region during passive area cycles
             }
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected draw action: " + draw);
@@ -674,17 +682,17 @@ public class ControlUnit implements Initializable {
         final int fineX = currentViewPort.getFineX();
 
         // Backdrop
-        Section section = BACKGROUND;
+        Layer layer = BACKGROUND;
         int palette = 0;
         int offset = 0;
                                                          // Bits
-        Section sectionBg = BACKGROUND;                  // 4
+        Layer layerBg = BACKGROUND;                  // 4
         int paletteBg = sint(attributes.getBits(fineX)); // 3-2
         int offsetBg  = sint(background.getBits(fineX)); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        Section sectionSp = FOREGROUND;
+        Layer layerSp = FOREGROUND;
         int paletteSp = 0;
         int offsetSp = 0;
         boolean hiddenSp = false;
@@ -706,32 +714,32 @@ public class ControlUnit implements Initializable {
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {
-                section = sectionSp;
+                layer = layerSp;
                 palette = paletteSp;
                 offset = offsetSp;
             } // else backdrop (default)
         } else {
             if (offsetSp == 0) {
-                section = sectionBg;
+                layer = layerBg;
                 palette = paletteBg;
                 offset = offsetBg;
             } else {
                 if (hiddenSp) {
-                    section = sectionBg;
+                    layer = layerBg;
                     palette = paletteBg;
                     offset = offsetBg;
                 } else {
-                    section = sectionSp;
+                    layer = layerSp;
                     palette = paletteSp;
                     offset = offsetSp;
                 }
             }
         }
 
-        @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
+        @Unsigned byte colorRef = paletteTable.getColorRef(layer, palette, offset);
 
         // TODO: too early to output, do priority, ext in / out muxing
-        videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, color);
+        videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, colorRef);
     }
 
     private void shiftShiftRegisters() {
