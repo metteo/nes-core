@@ -4,12 +4,12 @@ import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.test.TestBus
-import net.novaware.nes.core.util.LayoutPrinter
 import spock.lang.Specification
 
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.ubyte
 
+// TODO: create a base Spec for testing Table/s
 class LayoutTableSpec extends Specification {
 
     def layoutAttrTable0 = new PhysicalMemory("LAT0",
@@ -61,10 +61,10 @@ class LayoutTableSpec extends Specification {
         def printer = new LayoutPrinter(layoutTable, printWriter)
 
         expect:
-        layoutTable.getPattern( 0,  0) == ubyte(0xAA)
-        layoutTable.getPattern( 0, 31) == ubyte(0xBB)
-        layoutTable.getPattern(29,  0) == ubyte(0xCC)
-        layoutTable.getPattern(29, 31) == ubyte(0xDD)
+        layoutTable.getPatternRef( 0,  0) == ubyte(0xAA)
+        layoutTable.getPatternRef( 0, 31) == ubyte(0xBB)
+        layoutTable.getPatternRef(29,  0) == ubyte(0xCC)
+        layoutTable.getPatternRef(29, 31) == ubyte(0xDD)
 
         // printer.printAll(); println stringWriter.toString()
     }

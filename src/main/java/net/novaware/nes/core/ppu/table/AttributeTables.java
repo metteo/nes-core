@@ -28,8 +28,8 @@ public class AttributeTables extends MemBusTable implements Tables {
         super(name, segment, bus);
     }
 
-    public static @Unsigned short getAddress(ViewPortRegister viewPort) {
-        int offset = 0x2000; // TODO: consider using vram segment register here
+    public @Unsigned short getAddress(ViewPortRegister viewPort) {
+        int offset = segment.getStartAsInt();
         int memCell = viewPort.getLayoutTable();
         int row = viewPort.getCoarseY() >> 2;
         int col = viewPort.getCoarseX() >> 2;
@@ -37,6 +37,16 @@ public class AttributeTables extends MemBusTable implements Tables {
         int address = getAddress(offset, memCell, row, col);
         return ushort(address);
     }
+
+    // TODO: test when there is a base Spec for Table/s
+    public @Unsigned byte getAttribute(int memRow, int memCol, int row, int col) {
+        int address = getAddress(segment.getStartAsInt(), memRow, memCol, row, col);
+        @Unsigned byte data = bus.access(ushort(address)).read().data();
+
+        return data;
+    }
+
+    // region Static methods
 
     public static int getAddress(int offset, int memRow, int memCol, int row, int col) {
         assert 0 <= memRow && memRow < MEM_ROW_COUNT : "memRow out of range";
@@ -74,6 +84,10 @@ public class AttributeTables extends MemBusTable implements Tables {
         return address;
     }
 
+    /**
+     * @param attribute 4 palettes in a byte
+     * @return single palette for specified quadrant
+     */
     public static @Unsigned byte subAttribute(@Unsigned byte attribute, ViewPortRegister viewPort) {
         int subRow = (viewPort.getCoarseY() & BIT_1) >> 1;
         int subCol = (viewPort.getCoarseX() & BIT_1) >> 1;
@@ -91,6 +105,8 @@ public class AttributeTables extends MemBusTable implements Tables {
         int subAttribute = (attribute & mask) >> shift;
         return subAttribute;
     }
+
+    // endregion
 
     /* package */ static int subShift(int subRow, int subCol) {
         assert 0 <= subRow && subRow <= 1 : "subRow out of bounds";

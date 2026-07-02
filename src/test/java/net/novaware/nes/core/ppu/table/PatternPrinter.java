@@ -1,7 +1,4 @@
-package net.novaware.nes.core.util;
-
-import net.novaware.nes.core.ppu.table.Pattern;
-import net.novaware.nes.core.ppu.table.PatternTable;
+package net.novaware.nes.core.ppu.table;
 
 import java.io.PrintWriter;
 

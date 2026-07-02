@@ -24,8 +24,8 @@ public class LayoutTables extends MemBusTable implements Tables {
         super(name, segment, bus);
     }
 
-    public static @Unsigned short getAddress(ViewPortRegister viewPort) {
-        int offset = 0x2000; // TODO: consider using vram segment register here
+    public @Unsigned short getAddress(ViewPortRegister viewPort) {
+        int offset = segment.getStartAsInt();
 
         int address = getAddress(
             offset,
@@ -36,6 +36,8 @@ public class LayoutTables extends MemBusTable implements Tables {
 
         return ushort(address);
     }
+
+    // TODO: instance method getPatternRef(memRow, memCol, row, col)
 
     public static int getAddress(int offset, int memRow, int memCol, int row, int col) {
         assert 0 <= memRow && memRow < MEM_ROW_COUNT : "memRow out of range";

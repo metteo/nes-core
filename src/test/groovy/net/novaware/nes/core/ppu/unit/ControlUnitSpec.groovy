@@ -55,6 +55,9 @@ class ControlUnitSpec extends Specification {
 
     def spriteUnit = new SpriteUnit(scanLineCounter, dotCounter, spriteSize, priObjAttrMemory, secObjAttrMemory)
 
+    def layoutTable = PpuTabModule.provideLayoutTables(PpuMemModule.provideLayoutTablesSegment(), bus)
+    def attrTable = PpuTabModule.provideAttributeTables(PpuMemModule.provideAttributeTablesSegment(), bus)
+
     def "should construct an instance"() {
         when:
         def instance = newCu()
@@ -179,7 +182,9 @@ class ControlUnitSpec extends Specification {
                 renderSprite, renderBackground)
     }
 
+
     ControlUnit newCu(VideoStandard vs) {
+        // FIXME: this number of params is getting out of hand
         new ControlUnit(
             config.videoStandard(vs).build(),
             newTimingUnit(vs),
@@ -210,6 +215,8 @@ class ControlUnitSpec extends Specification {
             priObjAttrTable,
             secObjAttrTable,
             spriteUnit,
+            layoutTable,
+            attrTable
         )
     }
 }

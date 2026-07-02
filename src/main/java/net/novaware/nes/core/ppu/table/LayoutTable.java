@@ -35,11 +35,11 @@ public class LayoutTable extends MemBusTable implements Table {
     /**
      * @return cell within PatternTable
      */
-    public @Unsigned byte getPattern(int row, int col) {
+    public @Unsigned byte getPatternRef(int row, int col) {
         int address = getAddress(row, col);
 
-        @Unsigned byte cell = bus.access(ushort(address)).read().data();
-        return cell;
+        @Unsigned byte patternRef = bus.access(ushort(address)).read().data();
+        return patternRef;
     }
 
     private DataLine probeLine = new DataLine();
@@ -47,12 +47,12 @@ public class LayoutTable extends MemBusTable implements Table {
     /**
      * @return cell within PatternTable
      */
-    public @Unsigned byte probePattern(int row, int col) {
+    public @Unsigned byte probePatternRef(int row, int col) {
         int address = getAddress(row, col);
 
         bus.probe(ushort(address), probeLine);
-        @Unsigned byte cell = probeLine.cycle();
+        @Unsigned byte patternRef = probeLine.cycle();
 
-        return cell;
+        return patternRef;
     }
 }

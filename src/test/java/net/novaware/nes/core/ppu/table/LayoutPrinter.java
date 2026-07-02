@@ -1,6 +1,6 @@
-package net.novaware.nes.core.util;
+package net.novaware.nes.core.ppu.table;
 
-import net.novaware.nes.core.ppu.table.LayoutTable;
+import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.io.PrintWriter;
@@ -30,7 +30,7 @@ public class LayoutPrinter {
     }
 
     public void print(int row, int col) {
-        @Unsigned byte pattern = layoutTable.probePattern(row, col);
+        @Unsigned byte pattern = layoutTable.probePatternRef(row, col);
         writer.print(Hex.s(pattern));
     }
 }

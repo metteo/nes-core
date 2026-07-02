@@ -19,6 +19,8 @@ public class PpuMemMap implements MemoryMap {
 
     // region CHR-[ROM/RAM]
 
+    // TODO: PATTERN_TABLES start,end,size
+
     public static final @Unsigned short PATTERN_TABLE_0_START = ushort(0x0000);
     public static final @Unsigned short PATTERN_TABLE_0_END = ushort(0x0FFF);
     public static final int PATTERN_TABLE_0_SIZE = sint(PATTERN_TABLE_0_END) - sint(PATTERN_TABLE_0_START) + 1;

@@ -2,6 +2,8 @@ package net.novaware.nes.core.ppu.table;
 
 public class Pattern {
 
+    // TODO: create a mutable, lockable holder for the whole pattern
+
     public enum Size {
         /**
          * Square

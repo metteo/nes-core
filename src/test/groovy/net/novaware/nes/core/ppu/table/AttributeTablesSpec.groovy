@@ -1,26 +1,30 @@
 package net.novaware.nes.core.ppu.table
 
+import net.novaware.nes.core.memory.MemoryBus
+import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import net.novaware.nes.core.ppu.register.ViewPortRegister
 import spock.lang.Specification
 
-import static net.novaware.nes.core.util.UTypes.sint
-import static net.novaware.nes.core.util.UTypes.ubyte
-import static net.novaware.nes.core.util.UTypes.ushort
+import static net.novaware.nes.core.util.UTypes.*
 
 class AttributeTablesSpec extends Specification {
 
     def v = PpuRegModule.provideCurrentViewPort()
+    def segment = PpuMemModule.provideAttributeTablesSegment()
+    MemoryBus bus = Mock()
 
-    def "should return attr table address"() {
+    def "should return attribute table address (using view port)"() {
         given:
+        def tables = new AttributeTables("ATS", segment, bus)
+
         v.setLayoutTable(lt)
         v.setCoarseX(coarseX)
         v.setCoarseY(coarseY)
 
 
         expect:
-        AttributeTables.getAddress(v) == ushort(atAddr)
+        tables.getAddress(v) == ushort(atAddr)
 
         where:
         lt   | coarseY  | coarseX  || atAddr
@@ -32,9 +36,9 @@ class AttributeTablesSpec extends Specification {
         0b11 | 0b111_00 | 0b111_00 || 0b10_11_1111_111_111
     }
 
-    def "should return attribute address"() {
+    def "should return attribute address (using indexes)"() {
         given:
-        int offset = 0x2000 // TODO: maybe should be from segment register
+        int offset = 0x2000
 
         expect:
         AttributeTables.getAddress(offset, memRow, memCol, row, col) == addr

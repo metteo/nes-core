@@ -21,15 +21,12 @@ public class AttributeTable extends MemBusTable implements Table {
         super(name, segment, bus);
     }
 
-    public @Unsigned short getAddress(int row, int col) {
-        int address = AttributeTables.getAddress(segment.getStartAsInt(), row, col);
-
-        return ushort(address);
-    }
-
+    /**
+     * @return 4 palettes in a byte
+     */
     public @Unsigned byte getAttribute(int row, int col) {
-        @Unsigned short address = getAddress(row, col);
-        @Unsigned byte data = bus.access(address).read().data();
+        int address = AttributeTables.getAddress(segment.getStartAsInt(), row, col);
+        @Unsigned byte data = bus.access(ushort(address)).read().data();
 
         return data;
     }

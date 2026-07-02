@@ -4,7 +4,7 @@ import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.table.PatternTable
-import net.novaware.nes.core.util.PatternPrinter
+import net.novaware.nes.core.ppu.table.PatternPrinter
 import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 

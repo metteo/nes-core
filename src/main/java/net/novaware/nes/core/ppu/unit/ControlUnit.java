@@ -55,6 +55,7 @@ import static net.novaware.nes.core.ppu.action.Action.SHIFT;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
 import static net.novaware.nes.core.ppu.action.Action.UNUSED_LAYOUT_TABLE_DATA;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
@@ -64,6 +65,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
@@ -138,6 +140,8 @@ public class ControlUnit implements Initializable {
     private final ObjAttrTable priObjAttrTable;
     private final ObjAttrTable secObjAttrTable;
     private final SpriteUnit spriteUnit;
+    private final LayoutTables layoutTables;
+    private final AttributeTables attributeTables;
 
     public ByteRegister layoutTableBuffer = new ByteRegister("LT.BUF"); // tile xy
 
@@ -187,7 +191,11 @@ public class ControlUnit implements Initializable {
         @PpuVar(POA) ObjAttrTable priObjAttrTable,
         @PpuVar(SOA) ObjAttrTable secObjAttrTable,
 
-        SpriteUnit spriteUnit
+        SpriteUnit spriteUnit,
+
+        @PpuVar(LTS) LayoutTables layoutTables,
+        @PpuVar(ATS) AttributeTables attributeTables
+
     ) {
         this.timingUnit = timingUnit;
         this.spriteSize = spriteSize;
@@ -208,6 +216,8 @@ public class ControlUnit implements Initializable {
         this.priObjAttrTable = priObjAttrTable;
         this.secObjAttrTable = secObjAttrTable;
         this.spriteUnit = spriteUnit;
+        this.layoutTables = layoutTables;
+        this.attributeTables = attributeTables;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -472,7 +482,7 @@ public class ControlUnit implements Initializable {
     private void executeBus(Action busAction) {
         switch(busAction) {
             case ACCESS_LAYOUT_TABLE_ADDRESS -> {
-                @Unsigned short layoutTableAddr = LayoutTables.getAddress(currentViewPort);
+                @Unsigned short layoutTableAddr = layoutTables.getAddress(currentViewPort);
                 bus.access(layoutTableAddr);
             }
             case READ_LAYOUT_TABLE_DATA -> {
@@ -480,7 +490,7 @@ public class ControlUnit implements Initializable {
                 layoutTableBuffer.set(layoutTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
-                @Unsigned short attrTableAddr = AttributeTables.getAddress(currentViewPort);
+                @Unsigned short attrTableAddr = attributeTables.getAddress(currentViewPort);
                 bus.access(attrTableAddr);
             }
             case READ_ATTR_TABLE_DATA      -> {
