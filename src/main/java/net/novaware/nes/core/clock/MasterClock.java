@@ -140,6 +140,11 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         long workDuration = System.nanoTime() - workStart;                      // TODO: replace all System.nanoTime with TimeSource injected dependency
         long targetSpinDuration = Math.max(0, frameDuration - workDuration);
+
+        spinWait(targetSpinDuration);
+    }
+
+    private void spinWait(long targetSpinDuration) {
         long spinDuration = 0;
 
         if (targetSpinDuration > 0) {
