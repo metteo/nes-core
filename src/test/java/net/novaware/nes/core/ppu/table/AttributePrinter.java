@@ -5,11 +5,10 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.io.PrintWriter;
 
+import static net.novaware.nes.core.ppu.table.Attribute.SUBCOL_COUNT;
+import static net.novaware.nes.core.ppu.table.Attribute.SUBROW_COUNT;
 import static net.novaware.nes.core.ppu.table.AttributeTable.COL_COUNT;
 import static net.novaware.nes.core.ppu.table.AttributeTable.ROW_COUNT;
-import static net.novaware.nes.core.ppu.table.AttributeTable.SUBCOL_COUNT;
-import static net.novaware.nes.core.ppu.table.AttributeTable.SUBROW_COUNT;
-import static net.novaware.nes.core.ppu.table.AttributeTables.subAttribute;
 import static net.novaware.nes.core.util.Blocks.toChar;
 import static net.novaware.nes.core.util.UTypes.sint;
 
@@ -27,7 +26,7 @@ public class AttributePrinter {
         for(int row = 0; row < ROW_COUNT; row++) {
             for(int subRow = 0; subRow < SUBROW_COUNT; subRow++) {
                 for (int col = 0; col < COL_COUNT; col++) {
-                    byte attribute = table.getAttribute(row, col);
+                    byte attribute = table.getAttribute(row, col); // TODO: use probe instead
                     for(int subCol = 0; subCol < SUBCOL_COUNT; subCol++) {
                         printSub(attribute, subRow, subCol);
                     }
@@ -50,7 +49,7 @@ public class AttributePrinter {
     }
 
     private void printSub(byte attribute, int subRow, int subCol) {
-        int subAttr = subAttribute(sint(attribute), subRow, subCol);
+        int subAttr = Attribute.asPalette(sint(attribute), subRow, subCol);
 
         char c = toChar(subAttr);
         writer.print(c);

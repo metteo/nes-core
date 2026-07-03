@@ -14,15 +14,12 @@ public class AttributeTable extends MemBusTable implements Table {
     public static final int ROW_COUNT = 8;
     public static final int COL_COUNT = 8;
 
-    public static final int SUBROW_COUNT = 2;
-    public static final int SUBCOL_COUNT = 2;
-
     public AttributeTable(String name, SegmentRegister segment, MemoryBus bus) {
         super(name, segment, bus);
     }
 
     /**
-     * @return 4 palettes in a byte
+     * @return 4 palette rows in a byte
      */
     public @Unsigned byte getAttribute(int row, int col) {
         int address = AttributeTables.getAddress(segment.getStartAsInt(), row, col);
@@ -30,4 +27,6 @@ public class AttributeTable extends MemBusTable implements Table {
 
         return data;
     }
+
+    // TODO: probeAttribute for printer
 }

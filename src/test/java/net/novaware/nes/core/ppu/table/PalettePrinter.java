@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.table;
 
-import net.novaware.nes.core.ppu.table.PaletteTable.Layer;
+import net.novaware.nes.core.ppu.table.Palette.Layer;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -20,7 +20,7 @@ public class PalettePrinter {
         Layer[] layers = Layer.values();
 
         for (Layer layer : layers) {
-            writer.print(layer.name());
+            writer.printf("%-10s", layer.name());
             writer.print("\t");
 
             for (int p = 0; p < 4; p++) {

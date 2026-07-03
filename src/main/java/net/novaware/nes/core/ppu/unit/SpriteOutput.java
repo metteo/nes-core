@@ -12,6 +12,8 @@ public class SpriteOutput {
         IDLE
     }
 
+    // TODO: maybe have 2 shifters for cases when the sprite hangs off the right side and should wrap into left side
+    // but only with horizontal mirroring like Mario Bros or Ice Climber, Wrecking Crew
     public ByteShifter shifter = new ByteShifter("SPOU?");
 
     public @Unsigned byte palette;

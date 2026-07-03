@@ -22,7 +22,7 @@ public enum Action {
     ACCESS_ATTR_TABLE_ADDRESS  ("ATA", BUS),
     READ_ATTR_TABLE_DATA       ("ATD", BUS),
 
-    ACCESS_BG_LO_BITS_ADDRESS  ("BLA", BUS),
+    ACCESS_BG_LO_BITS_ADDRESS  ("BLA", BUS), // TODO: consider renaming to pattern lo and pattern hi and share with sprite
     READ_BG_LO_BITS_DATA       ("BLD", BUS),
 
     ACCESS_BG_HI_BITS_ADDRESS  ("BHA", BUS),

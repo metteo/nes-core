@@ -15,11 +15,12 @@ import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
+import net.novaware.nes.core.ppu.table.Attribute;
 import net.novaware.nes.core.ppu.table.AttributeTables;
 import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
+import net.novaware.nes.core.ppu.table.Palette.Layer;
 import net.novaware.nes.core.ppu.table.PaletteTable;
-import net.novaware.nes.core.ppu.table.PaletteTable.Layer;
 import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -78,12 +79,12 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipH;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipV;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asHidden;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asPalette;
-import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.BACKGROUND;
-import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.FOREGROUND;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipH;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipV;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asHidden;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asPalette;
+import static net.novaware.nes.core.ppu.table.Palette.Layer.BACKGROUND;
+import static net.novaware.nes.core.ppu.table.Palette.Layer.SPRITE;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -592,7 +593,7 @@ public class ControlUnit implements Initializable {
     private void unusedObjAttrByte(@Unsigned byte data) {}
 
     private void extractCurrentAttribute(@Unsigned byte attrTableData) {
-        int attrBitsLatch = sint(AttributeTables.subAttribute(attrTableData, currentViewPort));
+        int attrBitsLatch = sint(Attribute.asPalette(attrTableData, currentViewPort));
         int attrLoBitLatch = attrBitsLatch & 0b01;
         int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
 
@@ -686,13 +687,13 @@ public class ControlUnit implements Initializable {
         int palette = 0;
         int offset = 0;
                                                          // Bits
-        Layer layerBg = BACKGROUND;                  // 4
+        Layer layerBg = BACKGROUND;                      // 4
         int paletteBg = sint(attributes.getBits(fineX)); // 3-2
         int offsetBg  = sint(background.getBits(fineX)); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        Layer layerSp = FOREGROUND;
+        Layer layerSp = SPRITE;
         int paletteSp = 0;
         int offsetSp = 0;
         boolean hiddenSp = false;

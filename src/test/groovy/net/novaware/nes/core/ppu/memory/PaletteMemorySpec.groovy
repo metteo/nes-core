@@ -3,6 +3,7 @@ package net.novaware.nes.core.ppu.memory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import spock.lang.Specification
 
+import static net.novaware.nes.core.util.UTypes.UBYTE_0
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class PaletteMemorySpec extends Specification {
@@ -46,6 +47,9 @@ class PaletteMemorySpec extends Specification {
 
         then:
         palette.getName() == "PALETTE"
+        palette.toString() == "PALETTE (00:1F)"
+        palette.getStartAddress() == UBYTE_0
+        palette.getEndAddress() == ubyte(0x1F)
 
         palette.read(ubyte(0x1C)) == ubyte(0x8)
         palette.read(ubyte(0x22)) == ubyte(0x10)

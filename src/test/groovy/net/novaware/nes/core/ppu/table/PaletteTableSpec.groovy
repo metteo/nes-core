@@ -3,35 +3,47 @@ package net.novaware.nes.core.ppu.table
 import net.novaware.nes.core.ppu.memory.PaletteMemory
 import spock.lang.Specification
 
-import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.BACKGROUND
-import static net.novaware.nes.core.ppu.table.PaletteTable.Layer.FOREGROUND
+import static net.novaware.nes.core.ppu.table.Palette.Layer.BACKGROUND
+import static net.novaware.nes.core.ppu.table.Palette.Layer.SPRITE
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class PaletteTableSpec extends Specification {
 
+    def "should construct an instance"() {
+        given:
+        PaletteMemory memory = Mock()
+
+        when:
+        def instance = new PaletteTable("test", memory)
+
+        then:
+        instance.getName() == "test"
+        instance.toString() == "test (2:4:4)"
+    }
+
     def "should decode correct color parameters"() {
         expect:
-        PaletteTable.getAddress(layer, palette, offset) == ubyte(address)
+        PaletteTable.getAddress(layer, row, col) == ubyte(address)
 
         where:
-        layer      | palette | offset || address
-        BACKGROUND | 0       | 0      || 0x0
-        BACKGROUND | 1       | 0      || 0x4
-        BACKGROUND | 2       | 0      || 0x8
-        BACKGROUND | 3       | 0      || 0xC
+        layer      | row | col || address
+        BACKGROUND | 0   | 0   || 0x0
+        BACKGROUND | 1   | 0   || 0x4
+        BACKGROUND | 2   | 0   || 0x8
+        BACKGROUND | 3   | 0   || 0xC
 
-        FOREGROUND | 0       | 0      || 0x10 // memory is handling shared transparent color
-        FOREGROUND | 1       | 0      || 0x14
-        FOREGROUND | 2       | 0      || 0x18
-        FOREGROUND | 3       | 0      || 0x1C
+        SPRITE     | 0   | 0   || 0x10 // memory handles sharing col=0 between layers
+        SPRITE     | 1   | 0   || 0x14
+        SPRITE     | 2   | 0   || 0x18
+        SPRITE     | 3   | 0   || 0x1C
 
-        BACKGROUND | 0       | 1      || 0x01
-        BACKGROUND | 1       | 2      || 0x06
-        BACKGROUND | 3       | 3      || 0x0F
+        BACKGROUND | 0   | 1   || 0x01
+        BACKGROUND | 1   | 2   || 0x06
+        BACKGROUND | 3   | 3   || 0x0F
 
-        FOREGROUND | 0       | 1      || 0x11
-        FOREGROUND | 2       | 2      || 0x1A
-        FOREGROUND | 3       | 3      || 0x1F
+        SPRITE     | 0   | 1   || 0x11
+        SPRITE     | 2   | 2   || 0x1A
+        SPRITE     | 3   | 3   || 0x1F
     }
 
     def "should print all palette colors"() {
@@ -59,10 +71,10 @@ class PaletteTableSpec extends Specification {
 
         then:
         colorArt.trim() == """
-            BACKGROUND\t3F 2E 2D 2C \t3B 2A 29 28 \t37 26 25 24 \t33 22 21 20 \t
-            FOREGROUND\t3F 3E 3D 3C \t3B 3A 39 38 \t37 36 35 34 \t33 32 31 30 \t
-        """.stripIndent(12).trim()
+            |BACKGROUND\t3F 2E 2D 2C \t3B 2A 29 28 \t37 26 25 24 \t33 22 21 20 \t
+            |SPRITE    \t3F 3E 3D 3C \t3B 3A 39 38 \t37 36 35 34 \t33 32 31 30 \t
+        """.stripMargin().trim()
 
-        //println colorArt
+        println colorArt
     }
 }

@@ -7,11 +7,6 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.ppu.table.AttributeTable.COL_COUNT;
 import static net.novaware.nes.core.ppu.table.AttributeTable.ROW_COUNT;
-import static net.novaware.nes.core.ppu.table.AttributeTable.SUBCOL_COUNT;
-import static net.novaware.nes.core.ppu.table.AttributeTable.SUBROW_COUNT;
-import static net.novaware.nes.core.util.Masks.BIT_1;
-import static net.novaware.nes.core.util.UTypes.sint;
-import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
@@ -82,43 +77,5 @@ public class AttributeTables extends MemBusTable implements Tables {
 
         int address = segment | rowShift | col;
         return address;
-    }
-
-    /**
-     * @param attribute 4 palettes in a byte
-     * @return single palette for specified quadrant
-     */
-    public static @Unsigned byte subAttribute(@Unsigned byte attribute, ViewPortRegister viewPort) {
-        int subRow = (viewPort.getCoarseY() & BIT_1) >> 1;
-        int subCol = (viewPort.getCoarseX() & BIT_1) >> 1;
-
-        return ubyte(subAttribute(sint(attribute), subRow, subCol));
-    }
-
-    public static int subAttribute(int attribute, int subRow, int subCol) {
-        assert 0 <= subRow && subRow < SUBROW_COUNT : "subRow out of bounds";
-        assert 0 <= subCol && subCol < SUBCOL_COUNT : "subCol out of bounds";
-
-        int shift = subShift(subRow, subCol);
-        int mask = 0b11 << shift;
-
-        int subAttribute = (attribute & mask) >> shift;
-        return subAttribute;
-    }
-
-    // endregion
-
-    /* package */ static int subShift(int subRow, int subCol) {
-        assert 0 <= subRow && subRow <= 1 : "subRow out of bounds";
-        assert 0 <= subCol && subCol <= 1 : "subCol out of bounds";
-
-        return subCol * 2 + subRow * 4;
-    }
-
-    /* package */ static int subMask(int subRow, int subCol) {
-        assert 0 <= subRow && subRow <= 1 : "subRow out of bounds";
-        assert 0 <= subCol && subCol <= 1 : "subCol out of bounds";
-
-        return 0b11 << subShift(subRow, subCol);
     }
 }

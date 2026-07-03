@@ -9,6 +9,7 @@ import java.util.List;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.ppu.unit.PaletteData.COLOR_TRANSPARENT;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -43,16 +44,24 @@ public class PaletteMemory implements Nameable {
         return name;
     }
 
+    public @Unsigned byte getStartAddress() {
+        return UBYTE_0;
+    }
+
+    public @Unsigned byte getEndAddress() {
+        return ubyte(MASK);
+    }
+
     /* package */ int toPosition(@Unsigned byte address) {
         int position = sint(address) & MASK;
 
         int layer = position & 0x10;
-        int palette = position & 0b1100;
-        int offset  =  position & 0b0011;
+        int row = position & 0b1100;
+        int col  =  position & 0b0011;
 
-        int adjLayer = offset == 0 ? 0 : layer;
+        int adjLayer = col == 0 ? 0 : layer;
 
-        int adjPosition = adjLayer | palette | offset;
+        int adjPosition = adjLayer | row | col;
 
         return adjPosition;
     }
@@ -70,6 +79,6 @@ public class PaletteMemory implements Nameable {
 
     @Override
     public String toString() {
-        return name + " (" + Hex.s(0) + ":" + Hex.s(MASK) + ")";
+        return name + " (" + Hex.s(getStartAddress()) + ":" + Hex.s(getEndAddress()) + ")";
     }
 }
