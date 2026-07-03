@@ -8,6 +8,17 @@ import static net.novaware.nes.core.util.UTypes.ushort
 
 class BinSpec extends Specification {
 
+    def "should print binary representation of nibble" () {
+        expect:
+        actual == s(input, 4)
+
+        where:
+        input  || actual
+        0b1001 || "0b1001"
+        0b0001 || "0b0001"
+        0b0000 || "0b0000"
+    }
+
     def "should print binary representation of byte" () {
         expect:
         actual == s(ubyte(input))

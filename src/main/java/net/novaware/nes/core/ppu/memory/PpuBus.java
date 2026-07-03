@@ -13,6 +13,9 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.sint;
 
+/**
+ * Internal PPU Bus which allows access to Cartridge, Expansion and Internal VRAM (through Cartridge)
+ */
 @BoardScope
 public class PpuBus implements MemoryBus {
 

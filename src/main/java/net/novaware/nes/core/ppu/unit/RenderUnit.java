@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.unit;
 
-import net.novaware.nes.core.ppu.register.ExtRegister;
+import net.novaware.nes.core.ppu.memory.ExtBus;
 import org.jspecify.annotations.Nullable;
 
 public class RenderUnit {
@@ -11,8 +11,4 @@ public class RenderUnit {
     private byte attribute;
 
     private @Nullable SpriteOutput spriteOutput0; // -8 / 16
-
-    // ext input / output
-    private ExtRegister ext = new ExtRegister();
-
 }

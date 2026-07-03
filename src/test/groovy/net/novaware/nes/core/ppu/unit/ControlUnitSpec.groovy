@@ -7,6 +7,7 @@ import net.novaware.nes.core.ppu.inject.PpuDepModule
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import net.novaware.nes.core.ppu.inject.PpuTabModule
+import net.novaware.nes.core.ppu.memory.ExtBus
 import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
@@ -58,6 +59,9 @@ class ControlUnitSpec extends Specification {
 
     def layoutTable = PpuTabModule.provideLayoutTables(PpuMemModule.provideLayoutTablesSegment(), bus)
     def attrTable = PpuTabModule.provideAttributeTables(PpuMemModule.provideAttributeTablesSegment(), bus)
+
+    def extBus = new ExtBus()
+    def masterSlaveSelect = PpuRegModule.provideMasterSlaveSelect()
 
     def "should construct an instance"() {
         when:
@@ -218,7 +222,9 @@ class ControlUnitSpec extends Specification {
             secObjAttrTable,
             spriteUnit,
             layoutTable,
-            attrTable
+            attrTable,
+            extBus,
+            masterSlaveSelect
         )
     }
 }

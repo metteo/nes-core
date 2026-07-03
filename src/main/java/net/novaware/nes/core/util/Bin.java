@@ -16,9 +16,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 public class Bin {
 
     public static String s(@Unsigned byte b) {
-        @SuppressWarnings("signedness") // it's an ubyte, no need to worry about sign of int
-        String binary = Integer.toBinaryString(sint(b));
-        String padded = String.format("%8s", binary).replace(' ', '0');
+        String padded = toBinaryString(sint(b), 8);
 
         return "0b" + insertNibbleSeparator(padded);
     }
@@ -44,12 +42,20 @@ public class Bin {
     }
 
     public static String s(@Unsigned short s) {
-        @SuppressWarnings("signedness") // it's an ubyte, no need to worry about sign of int
-        String binary = Integer.toBinaryString(sint(s));
-        String padded = String.format("%16s", binary).replace(' ', '0');
+        String padded = toBinaryString(sint(s), 16);
 
         return "0b" + insertNibbleSeparators(padded);
     }
 
+    @SuppressWarnings("signedness")
+    private static String toBinaryString(int i, int padding) {
+        String binary = Integer.toBinaryString(i);
+        @SuppressWarnings("format.string") // NOTE: not a compile time constant. Consider FormatString from checker
+        String padded = String.format("%" + padding + "s", binary).replace(' ', '0');
+        return padded;
+    }
 
+    public static String s(int i, int padding) {
+        return "0b" + toBinaryString(i, padding);
+    }
 }

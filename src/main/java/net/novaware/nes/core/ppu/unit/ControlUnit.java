@@ -8,6 +8,7 @@ import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.ExtBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.memory.PpuBus;
@@ -61,6 +62,7 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
@@ -146,6 +148,8 @@ public class ControlUnit implements Initializable {
     private final SpriteUnit spriteUnit;
     private final LayoutTables layoutTables;
     private final AttributeTables attributeTables;
+    private final ExtBus extBus;
+    private final BooleanRegister masterSlaveSelect;
 
     public ByteRegister layoutTableBuffer = new ByteRegister("LT.BUF"); // tile xy
 
@@ -200,7 +204,11 @@ public class ControlUnit implements Initializable {
         SpriteUnit spriteUnit,
 
         @PpuVar(LTS) LayoutTables layoutTables,
-        @PpuVar(ATS) AttributeTables attributeTables
+        @PpuVar(ATS) AttributeTables attributeTables,
+
+        ExtBus extBus,
+
+        @PpuVar(CP) BooleanRegister masterSlaveSelect
 
     ) {
         this.timingUnit = timingUnit;
@@ -226,6 +234,8 @@ public class ControlUnit implements Initializable {
         this.spriteUnit = spriteUnit;
         this.layoutTables = layoutTables;
         this.attributeTables = attributeTables;
+        this.extBus = extBus;
+        this.masterSlaveSelect = masterSlaveSelect;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -687,13 +697,11 @@ public class ControlUnit implements Initializable {
         int palette = 0;
         int offset = 0;
                                                          // Bits
-        Layer layerBg = BACKGROUND;                      // 4
         int paletteBg = sint(attributes.getBits(fineX)); // 3-2
         int offsetBg  = sint(background.getBits(fineX)); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        Layer layerSp = SPRITE;
         int paletteSp = 0;
         int offsetSp = 0;
         boolean hiddenSp = false;
@@ -715,26 +723,39 @@ public class ControlUnit implements Initializable {
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {
-                layer = layerSp;
+                layer = SPRITE;
                 palette = paletteSp;
                 offset = offsetSp;
             } // else backdrop (default)
         } else {
             if (offsetSp == 0) {
-                layer = layerBg;
                 palette = paletteBg;
                 offset = offsetBg;
             } else {
                 if (hiddenSp) {
-                    layer = layerBg;
                     palette = paletteBg;
                     offset = offsetBg;
                 } else {
-                    layer = layerSp;
+                    layer = SPRITE;
                     palette = paletteSp;
                     offset = offsetSp;
                 }
             }
+        }
+
+        boolean slave = masterSlaveSelect.get();
+
+        if (slave) {
+            int paletteShift = palette << 2;
+
+            int extInt = paletteShift | offset;
+            extBus.write(ubyte(extInt));
+
+        } else if (offset == 0) { // master
+            int extInt = sint(extBus.read());
+            // layer = BG, always 0 from EXT
+            palette = (extInt & 0b1100) >> 2;
+            offset = extInt & 0b11;
         }
 
         @Unsigned byte colorRef = paletteTable.getColorRef(layer, palette, offset);
