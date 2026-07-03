@@ -47,9 +47,9 @@ public class VideoEncoder implements ClockReceiver {
         int screenX = borderRegion.getLeft() + x;
 
         if (y < 0 && x < 0) {
-            displayMemory.setColor(videoOut.getColorIndex());
+            displayMemory.setColor(videoOut.getColorRef());
         } else {
-            displayMemory.setColor(screenY, screenX, videoOut.getColorIndex());
+            displayMemory.setColor(screenY, screenX, videoOut.getColorRef());
         }
 
         // TODO: figure out a better way to notify about swap

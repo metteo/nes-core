@@ -7,6 +7,7 @@ import net.novaware.nes.core.ppu.inject.PpuDepModule
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import net.novaware.nes.core.ppu.inject.PpuTabModule
+import net.novaware.nes.core.ppu.memory.ExtBus
 import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
@@ -44,6 +45,7 @@ class ControlUnitSpec extends Specification {
     def spritePatternTable = PpuRegModule.provideSpritePatternTable()
     def videoOut = PpuRegModule.provideVideoOutRegister()
     def paletteMemory = PpuMemModule.providePaletteMemory()
+    def paletteTable = PpuTabModule.providePaletteTable(paletteMemory)
     def priObjAttrMemory = PpuMemModule.providePrimaryObjAttrMemory()
     def secObjAttrMemory = PpuMemModule.provideSecondaryObjAttrMemory()
 
@@ -55,11 +57,17 @@ class ControlUnitSpec extends Specification {
 
     def spriteUnit = new SpriteUnit(scanLineCounter, dotCounter, spriteSize, priObjAttrMemory, secObjAttrMemory)
 
+    def layoutTable = PpuTabModule.provideLayoutTables(PpuMemModule.provideLayoutTablesSegment(), bus)
+    def attrTable = PpuTabModule.provideAttributeTables(PpuMemModule.provideAttributeTablesSegment(), bus)
+
+    def extBus = new ExtBus()
+    def masterSlaveSelect = PpuRegModule.provideMasterSlaveSelect()
+
     def "should construct an instance"() {
         when:
         def instance = newCu()
 
-        println instance.printActions()
+        //println instance.printActions()
 
         then:
         instance != null
@@ -97,16 +105,16 @@ class ControlUnitSpec extends Specification {
         def counts = countActions(cu.busActions)
 
         then:
-        counts.get(Action.ACCESS_NAME_TABLE_ADDRESS)  == 32 + 2 + 16 + 2 // current + next scan line + (unused / ignored between sprites and last 4 dots)
-        counts.get(Action.READ_NAME_TABLE_DATA)       == 32 + 2
+        counts.get(Action.ACCESS_LAYOUT_TABLE_ADDRESS)== 32 + 2 + 16 + 2 // current + next scan line + (unused / ignored between sprites and last 4 dots)
+        counts.get(Action.READ_LAYOUT_TABLE_DATA)     == 32 + 2
         counts.get(Action.ACCESS_ATTR_TABLE_ADDRESS)  == 32 + 2
         counts.get(Action.READ_ATTR_TABLE_DATA)       == 32 + 2
         counts.get(Action.ACCESS_BG_LO_BITS_ADDRESS)  == 32 + 2 + 1 // dot 0 addr only
         counts.get(Action.READ_BG_LO_BITS_DATA)       == 32 + 2
         counts.get(Action.ACCESS_BG_HI_BITS_ADDRESS)  == 32 + 2
         counts.get(Action.READ_BG_HI_BITS_DATA)       == 32 + 2
-        counts.get(Action.UNUSED_NAME_TABLE_DATA)     ==  8 + 1
-        counts.get(Action.IGNORED_NAME_TABLE_DATA)    ==  8 + 1
+        counts.get(Action.UNUSED_LAYOUT_TABLE_DATA)     ==  8 + 1
+        counts.get(Action.IGNORED_LAYOUT_TABLE_DATA)    ==  8 + 1
         counts.get(Action.ACCESS_SP_LO_BITS_ADDRESS)  ==  8
         counts.get(Action.READ_SP_LO_BITS_DATA)       ==  8
         counts.get(Action.ACCESS_SP_HI_BITS_ADDRESS)  ==  8
@@ -179,7 +187,9 @@ class ControlUnitSpec extends Specification {
                 renderSprite, renderBackground)
     }
 
+
     ControlUnit newCu(VideoStandard vs) {
+        // FIXME: this number of params is getting out of hand
         new ControlUnit(
             config.videoStandard(vs).build(),
             newTimingUnit(vs),
@@ -203,6 +213,7 @@ class ControlUnitSpec extends Specification {
             spritePatternTable,
             videoOut,
             paletteMemory,
+            paletteTable,
             priObjAttrMemory,
             secObjAttrMemory,
             priObjAttrReg,
@@ -210,6 +221,10 @@ class ControlUnitSpec extends Specification {
             priObjAttrTable,
             secObjAttrTable,
             spriteUnit,
+            layoutTable,
+            attrTable,
+            extBus,
+            masterSlaveSelect
         )
     }
 }

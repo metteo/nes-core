@@ -12,6 +12,8 @@ public class SpriteOutput {
         IDLE
     }
 
+    // TODO: maybe have 2 shifters for cases when the sprite hangs off the right side and should wrap into left side
+    // but only with horizontal mirroring like Mario Bros or Ice Climber, Wrecking Crew
     public ByteShifter shifter = new ByteShifter("SPOU?");
 
     public @Unsigned byte palette;
@@ -25,6 +27,7 @@ public class SpriteOutput {
     public State state = State.IDLE;
 
     // FIXME: shifting or counting down or state change is wrong. sprites don't show up on first dot column!
+    // FIXME: this method takes a lot of cpu time
     public void maybeShiftPlanes() {
         switch(state) {
             case WAITING -> {

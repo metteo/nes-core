@@ -18,6 +18,7 @@ public class DisplayMemory implements Nameable {
 
     private final String name;
 
+    // TODO: 2d arrays are array of arrays, slow
     private @Unsigned byte[][] frontBuffer; // FIXME: 2d and sync causes glitching in the top few rows
     private @Unsigned byte[][] backBuffer;
 

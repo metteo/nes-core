@@ -44,13 +44,14 @@ public enum PpuVarName {
     VRAM ("", "videoMemory", "Video RAM"),
     VOUT ("", "videoOut", "Video OUT"),
 
-    PAL ("", "paletteMemory", "Palette RAM"),
     BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
 
     //OAM ("", "oam", "Object Attribute Memory"),
     POA ("OAM.PRI", "priObjAttr", "Primary OAM"),
     SOA ("OAM.SEC", "secObjAttr", "Secondary OAM"),
+
+    PAL ("", "palette", "Palette"),
 
     VBI ("INT", "vbi", "Vertical Blank INTerrupt"),
     S0H ("", "sprite0Hit", "Sprite 0 Hit"),
@@ -61,11 +62,13 @@ public enum PpuVarName {
     PT0 ("", "patternTable0", "Pattern Table 0 (L)"),
     PT1 ("", "patternTable1", "Pattern Table 1 (R)"),
 
-    NT0 ("", "nameTable0", "Name Table 0"),
-    NT1 ("", "nameTable1", "Name Table 1"),
-    NT2 ("", "nameTable2", "Name Table 2"),
-    NT3 ("", "nameTable3", "Name Table 3"),
+    LTS("", "layoutTables", "Layout Tables"),
+    LT0("", "layoutTable0", "Layout Table 0"),
+    LT1("", "layoutTable1", "Layout Table 1"),
+    LT2("", "layoutTable2", "Layout Table 2"),
+    LT3("", "layoutTable3", "Layout Table 3"),
 
+    ATS ("", "attributeTables", "Attribute Tables"),
     AT0 ("", "attributeTable0", "Attribute Table 0"),
     AT1 ("", "attributeTable1", "Attribute Table 1"),
     AT2 ("", "attributeTable2", "Attribute Table 2"),

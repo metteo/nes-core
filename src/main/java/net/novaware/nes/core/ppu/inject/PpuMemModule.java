@@ -13,8 +13,10 @@ import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Quantity;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
@@ -28,15 +30,13 @@ import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.PRIMARY_ENTRY_COUNT
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.SECONDARY_ENTRY_COUNT;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.ATTRIBUTE_TABLE_0_START;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_END;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.NAME_TABLE_0_START;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_MIRROR_END;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_SIZE;
-import static net.novaware.nes.core.ppu.memory.PpuMemMap.PALETTE_RAM_START;
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_END;
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.LAYOUT_TABLE_0_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_0_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_0_START;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_1_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.PATTERN_TABLE_1_START;
+import static net.novaware.nes.core.ppu.memory.PpuMemMap.VRAM_END;
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.VRAM_START;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_1KB;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
@@ -62,12 +62,7 @@ public interface PpuMemModule {
     @Provides
     @BoardScope
     static PaletteMemory providePaletteMemory() {
-        return new PaletteMemory(
-            PAL.doc(),
-            PALETTE_RAM_START,
-            PALETTE_RAM_MIRROR_END,
-            PALETTE_RAM_SIZE
-        );
+        return new PaletteMemory(PAL.doc());
     }
 
     @Provides
@@ -103,6 +98,28 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
+    @PpuVar(LTS)
+    static SegmentRegister provideLayoutTablesSegment() {
+        SegmentRegister segment = new SegmentRegister(LTS.name());
+        segment.setStart(VRAM_START);
+        segment.setEnd(VRAM_END);
+
+        return segment;
+    }
+
+    @Provides
+    @BoardScope
+    @PpuVar(ATS)
+    static SegmentRegister provideAttributeTablesSegment() {
+        SegmentRegister segment = new SegmentRegister(ATS.name());
+        segment.setStart(VRAM_START);
+        segment.setEnd(VRAM_END);
+
+        return segment;
+    }
+
+    @Provides
+    @BoardScope
     @PpuVar(PT0)
     static SegmentRegister providePatternTable0Segment() {
         SegmentRegister segment = new SegmentRegister(PT0.name());
@@ -125,11 +142,11 @@ public interface PpuMemModule {
 
     @Provides
     @BoardScope
-    @PpuVar(NT0)
-    static SegmentRegister provideNameTable0Segment() {
-        SegmentRegister segment = new SegmentRegister(NT0.name());
-        segment.setStart(NAME_TABLE_0_START);
-        segment.setEnd(NAME_TABLE_0_END);
+    @PpuVar(LT0)
+    static SegmentRegister provideLayoutTable0Segment() {
+        SegmentRegister segment = new SegmentRegister(LT0.name());
+        segment.setStart(LAYOUT_TABLE_0_START);
+        segment.setEnd(LAYOUT_TABLE_0_END);
 
         return segment;
     }

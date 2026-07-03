@@ -10,16 +10,16 @@ public class VideoOutRegister extends Register {
 
     private int y;
     private int x;
-    private @Unsigned byte colorIndex;
+    private @Unsigned byte colorRef;
 
     public VideoOutRegister(String name) {
         super(name);
     }
 
-    public void set(int y, int x, @Unsigned byte colorIndex) {
+    public void set(int y, int x, @Unsigned byte colorRef) {
         this.y = y;
         this.x = x;
-        this.colorIndex = colorIndex;
+        this.colorRef = colorRef;
     }
 
     public int getY() {
@@ -30,7 +30,7 @@ public class VideoOutRegister extends Register {
         return x;
     }
 
-    public @Unsigned byte getColorIndex() {
-        return colorIndex;
+    public @Unsigned byte getColorRef() {
+        return colorRef;
     }
 }

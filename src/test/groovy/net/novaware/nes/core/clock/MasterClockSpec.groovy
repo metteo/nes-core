@@ -5,6 +5,7 @@ import net.novaware.nes.core.config.ImmutableCoreConfig
 import net.novaware.nes.core.config.Platform
 import net.novaware.nes.core.config.Region
 import net.novaware.nes.core.config.VideoStandard
+import net.novaware.nes.core.mx.NesCoreRecorder
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import spock.lang.Specification
 
@@ -61,9 +62,10 @@ class MasterClockSpec extends Specification {
     }
 
     def executor = ClockModule.provideClockExecutor()
+    def mxBean = Mock(NesCoreRecorder)
 
     private MasterClock newMasterClock() {
-        new MasterClock(coreConfig, frameToggle, cpu, ppu, apu, dma, executor, videoEncoder)
+        new MasterClock(coreConfig, frameToggle, cpu, ppu, apu, dma, executor, videoEncoder, mxBean)
     }
 
     def "should calculate cycles budget for a frame"() {

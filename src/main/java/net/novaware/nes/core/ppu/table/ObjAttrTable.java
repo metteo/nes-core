@@ -6,14 +6,11 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
 import static net.novaware.nes.core.util.Asserts.assertState;
-import static net.novaware.nes.core.util.Masks.BIT_5;
-import static net.novaware.nes.core.util.Masks.BIT_6;
-import static net.novaware.nes.core.util.Masks.BIT_7;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
 // TODO: do the same with all the tables, move address generating
-public class ObjAttrTable implements Table {
+public class ObjAttrTable implements Table { // TODO: consider renaming to SpriteTable (or make it separate to fetch sprites)
 
     private final String name;
     private final ObjAttrRegister cursor;
@@ -71,7 +68,7 @@ public class ObjAttrTable implements Table {
         return sint(getY());
     }
 
-    public @Unsigned byte getTile() {
+    public @Unsigned byte getTile() { // TODO: consider getPattern / getPatternRef / getPatternIndex
         verifyCursor();
 
         int address = cursor.getAsInt() + 1;
@@ -112,23 +109,4 @@ public class ObjAttrTable implements Table {
         return name + " (0:" + memory.getCount() + ")";
     }
 
-    public static boolean asFlipV(@Unsigned byte attr) {
-        return (sint(attr) & BIT_7) != 0;
-    }
-
-    public static boolean asFlipH(@Unsigned byte attr) {
-        return (sint(attr) & BIT_6) != 0;
-    }
-
-    public static boolean asHidden(@Unsigned byte attr) {
-        return (sint(attr) & BIT_5) != 0;
-    }
-
-    public static @Unsigned byte asUnused(@Unsigned byte attr) {
-        return ubyte(sint(attr) >> 2 & 0b111);
-    }
-
-    public static @Unsigned byte asPalette(@Unsigned byte attr) {
-        return ubyte(sint(attr) & 0b11);
-    }
 }

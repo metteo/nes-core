@@ -24,7 +24,7 @@ public class PpuCtrlRegister {
     public final ShortRegister backgroundPatternTable;
     public final ShortRegister spritePatternTable;
     public final ByteRegister vramAddressIncrement;
-    public final ViewPortRegister tempViewPort; // only NT part
+    public final ViewPortRegister tempViewPort; // only LT part
 
     @Inject
     public PpuCtrlRegister(

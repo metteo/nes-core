@@ -50,6 +50,8 @@ public class JoypadPortImpl implements JoypadPort {
         joyStrobe.set(newStrobe);
 
         if (oldStrobe && !newStrobe) { // TODO: should be continuous, not once at the falling edge
+            // TODO: MasterClock is compressing time of execution but inputs & sound are real time
+            //  decompress strobe time (by counting cycles) and/or do latching (but when to unlatch?)
             @Unsigned byte state = plug.getState();
             joy1Data.set(state);
         }

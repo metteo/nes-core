@@ -160,7 +160,7 @@ class PpuMemDeviceSpec extends Specification {
 
         def value = ubyte(0x08)
 
-        palette.setColor(PaletteMemory.Section.BACKGROUND, 0, 0, value)
+        palette.write(UBYTE_0, value)
 
         when:
         cpuBus.access(ushort(0x2006)).write().data(ubyte(0x3F))
@@ -192,7 +192,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(ushort(0x2007 + mirror)).write().data(value)
 
         then:
-        palette.getColor(PaletteMemory.Section.BACKGROUND, 0, 0) == value
+        palette.read(UBYTE_0) == value
 
         where:
         mirror << [0, 8 , 0x1FF8, 0x1FF0]
@@ -231,7 +231,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(PPU_CONTROL_REGISTER).write().data(ubyte(bits))
 
         then:
-        temporaryViewPort.nameTable == nn
+        temporaryViewPort.layoutTable == nn
         vramAddressIncrement.getAsInt() == i
         spritePatternTable.getAsInt() == s
         backgroundPatternTable.getAsInt() == b
@@ -346,8 +346,8 @@ class PpuMemDeviceSpec extends Specification {
         temporaryViewPort.getCoarseY() == coarseY
         temporaryViewPort.getFineY() == fineY
 
-        temporaryViewPort.getNameTable() == 0
-        currentViewPort.getNameTable() == 0
+        temporaryViewPort.getLayoutTable() == 0
+        currentViewPort.getLayoutTable() == 0
 
         where:
         xScroll     | yScroll     || coarseX | fineX | coarseY | fineY

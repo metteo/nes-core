@@ -11,6 +11,8 @@ import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.clock.MasterClock;
 import net.novaware.nes.core.cpu.Cpu;
 import net.novaware.nes.core.dma.Dma;
+import net.novaware.nes.core.mx.NesCoreMXBeanImpl;
+import net.novaware.nes.core.mx.NesCoreRecorder;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.video.VideoEncoder;
 
@@ -55,4 +57,8 @@ public interface ClockModule {
     @BoardScope
     @Named("VE")
     ClockReceiver bindVideoEncoder(VideoEncoder ve);
+
+    @Binds
+    @BoardScope
+    NesCoreRecorder bindNesCoreRecorder(NesCoreMXBeanImpl mxBean);
 }

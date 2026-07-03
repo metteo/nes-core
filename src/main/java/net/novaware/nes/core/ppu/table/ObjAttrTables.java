@@ -10,11 +10,11 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipH;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipV;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asHidden;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asPalette;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asUnused;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipH;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipV;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asHidden;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asPalette;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asUnused;
 import static net.novaware.nes.core.util.UTypes.sint;
 
 // TODO: this could be used for decay? rows of pri and sec oam
@@ -34,7 +34,7 @@ public class ObjAttrTables implements Tables {
         this.secOam = new ObjAttrTable("", new ObjAttrRegister("", secOam.getSize()), secOam);
     }
 
-
+    // TODO: Move to ObjAttrPrinter
     public String print() {
         StringBuilder sb = new StringBuilder();
         sb.append("Primary:\n");
@@ -55,6 +55,7 @@ public class ObjAttrTables implements Tables {
         return sb.toString();
     }
 
+    // TODO: Move to ObjAttrPrinter
     static String printRow(ObjAttrTable table) {
         StringBuilder sb = new StringBuilder();
 

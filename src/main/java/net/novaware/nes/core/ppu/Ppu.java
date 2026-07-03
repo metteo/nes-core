@@ -13,7 +13,7 @@ import net.novaware.nes.core.ppu.memory.PaletteMemory;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
-import net.novaware.nes.core.ppu.table.NameTable;
+import net.novaware.nes.core.ppu.table.LayoutTable;
 import net.novaware.nes.core.ppu.table.PatternTable;
 import net.novaware.nes.core.ppu.unit.ControlUnit;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -22,7 +22,7 @@ import net.novaware.nes.core.util.uml.Used;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.NT0;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT1;
@@ -54,7 +54,7 @@ public class Ppu implements ClockReceiver {
 
     private final PpuRegFile regs;
 
-    private final NameTable nameTable0;
+    private final LayoutTable layoutTable0;
     private final AttributeTable attributeTable0;
 
     private final PatternTable patternMemory0;
@@ -75,7 +75,7 @@ public class Ppu implements ClockReceiver {
         @PpuVar(RST) Pin rstPin,
         @PpuVar(RST) BooleanRegister rstReg,
         PpuRegFile regs,
-        @PpuVar(NT0) NameTable nameTable0,
+        @PpuVar(LT0) LayoutTable layoutTable0,
         @PpuVar(AT0) AttributeTable attributeTable0,
         @PpuVar(PT0) PatternTable patternTable0,
         @PpuVar(PT1) PatternTable patternTable1,
@@ -91,7 +91,7 @@ public class Ppu implements ClockReceiver {
         this.rstPin = rstPin;
         this.rstReg = rstReg;
         this.regs = regs;
-        this.nameTable0 = nameTable0;
+        this.layoutTable0 = layoutTable0;
         this.attributeTable0 = attributeTable0;
         this.patternMemory0 = patternTable0;
         this.patternMemory1 = patternTable1;

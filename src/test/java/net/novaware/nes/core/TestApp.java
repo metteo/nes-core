@@ -6,6 +6,7 @@ import net.novaware.nes.core.config.ImmutableCoreConfig;
 import net.novaware.nes.core.config.Platform;
 import net.novaware.nes.core.config.Region;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.mx.NesCoreMXUtil;
 import net.novaware.nes.core.ui.DefaultDisplayModel;
 import net.novaware.nes.core.ui.TestUI;
 
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class TestApp {
-    static void main(String... args) throws InterruptedException {
+    static void main(String... args) throws Exception {
         CoreConfig config = ImmutableCoreConfig.builder()
                 .setRecordCpuBus(false)
                 .setRegion(Region.USA)
@@ -29,6 +30,9 @@ public class TestApp {
         Cartridge testRom = factory.newCartridge(nestest);
 
         var board = factory.newBoard();
+
+        NesCoreMXUtil.register(factory.getMXBean());
+
         board.getCartridgePort().connect(testRom);
         board.getDebugPort().connect(e -> {
             e.printStackTrace();
@@ -37,10 +41,8 @@ public class TestApp {
 
         final AtomicInteger keyState = new AtomicInteger();
         final DefaultDisplayModel displayModel = new DefaultDisplayModel();
-        board.getDisplayPort().connect(
-            displayMemory ->
-                SwingUtilities.invokeLater(() -> displayModel.setPixels(displayMemory))
-        );
+        board.getDisplayPort().connect(pixels -> displayModel.setPixels(pixels));
+        // FIXME: swing generates lots of garbage
         SwingUtilities.invokeLater(()-> TestUI.createAndShowGui(displayModel, keyState));
 
         board.getJoypad1Port().connect(() -> ubyte(keyState.get()));
@@ -52,9 +54,14 @@ public class TestApp {
 //        while (true) {
 //        Thread.sleep(5_000);
 
-//        factory.getPatternTable0().dump();
-//        factory.getPatternTable1().dump();
-//        System.out.println(factory.getNameTable0().printBackground());
+//        var stringWriter = new StringWriter();
+//        var printWriter = new PrintWriter(stringWriter);
+
+//        new PatternPrinter(factory.getPatternTable0(), printWriter).printAll();
+//        new PatternPrinter(factory.getPatternTable1(), printWriter).printAll();
+//        System.out.println(stringWriter);
+
+//        System.out.println(factory.getLayoutTable0().printBackground());
 //        System.out.println(factory.getAttributeTable0().printAttributeBits(false));
 //        System.out.println(factory.getPaletteMemory().printColors());
 //        System.out.println(factory.getObjAttrTables().print());

@@ -85,6 +85,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
     }
 
     private void run0() {
+        // FIXME: this is not the way. Lots of garbage byte[]. Create a FlightRecorder
         StringBuilder log = new StringBuilder();
 
         log.append(Hex.s(prefetchAddress.get()));

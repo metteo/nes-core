@@ -8,18 +8,20 @@ import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.action.Action;
 import net.novaware.nes.core.ppu.action.ScanLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
+import net.novaware.nes.core.ppu.memory.ExtBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
-import net.novaware.nes.core.ppu.memory.PaletteMemory.Section;
 import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.register.PpuStatusRegister;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.register.ViewPortRegister;
-import net.novaware.nes.core.ppu.table.AttributeTable;
+import net.novaware.nes.core.ppu.table.Attribute;
 import net.novaware.nes.core.ppu.table.AttributeTables;
-import net.novaware.nes.core.ppu.table.NameTables;
+import net.novaware.nes.core.ppu.table.LayoutTables;
 import net.novaware.nes.core.ppu.table.ObjAttrTable;
+import net.novaware.nes.core.ppu.table.Palette.Layer;
+import net.novaware.nes.core.ppu.table.PaletteTable;
 import net.novaware.nes.core.ppu.table.PatternTables;
 import net.novaware.nes.core.register.BooleanPipeline;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -37,34 +39,37 @@ import static net.novaware.nes.core.cpu.signal.Signal.LOW;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_ATTR_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_BG_HI_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_BG_LO_BITS_ADDRESS;
-import static net.novaware.nes.core.ppu.action.Action.ACCESS_NAME_TABLE_ADDRESS;
+import static net.novaware.nes.core.ppu.action.Action.ACCESS_LAYOUT_TABLE_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_HI_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.ACCESS_SP_LO_BITS_ADDRESS;
 import static net.novaware.nes.core.ppu.action.Action.CLR_HBLANK;
-import static net.novaware.nes.core.ppu.action.Action.IGNORED_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.IGNORED_LAYOUT_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_X;
 import static net.novaware.nes.core.ppu.action.Action.INCREMENT_Y;
 import static net.novaware.nes.core.ppu.action.Action.NO_OPERATION;
 import static net.novaware.nes.core.ppu.action.Action.READ_ATTR_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_BG_HI_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_BG_LO_BITS_DATA;
-import static net.novaware.nes.core.ppu.action.Action.READ_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.READ_LAYOUT_TABLE_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_HI_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.READ_SP_LO_BITS_DATA;
 import static net.novaware.nes.core.ppu.action.Action.SET_HBLANK;
 import static net.novaware.nes.core.ppu.action.Action.SHIFT;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TX_TO_X;
 import static net.novaware.nes.core.ppu.action.Action.TRANSFER_TY_TO_Y;
-import static net.novaware.nes.core.ppu.action.Action.UNUSED_NAME_TABLE_DATA;
+import static net.novaware.nes.core.ppu.action.Action.UNUSED_LAYOUT_TABLE_DATA;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.CP;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CV;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.DC;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.FT;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.HB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LC;
+import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.RB;
@@ -76,12 +81,12 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
-import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.BACKGROUND;
-import static net.novaware.nes.core.ppu.memory.PaletteMemory.Section.FOREGROUND;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipH;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asFlipV;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asHidden;
-import static net.novaware.nes.core.ppu.table.ObjAttrTable.asPalette;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipH;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipV;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asHidden;
+import static net.novaware.nes.core.ppu.table.ObjAttr.asPalette;
+import static net.novaware.nes.core.ppu.table.Palette.Layer.BACKGROUND;
+import static net.novaware.nes.core.ppu.table.Palette.Layer.SPRITE;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -128,7 +133,9 @@ public class ControlUnit implements Initializable {
     private final ShortRegister backgroundPatternTable;
     private final ShortRegister spritePatternTable;
     private final VideoOutRegister videoOut;
+
     private final PaletteMemory paletteMemory;
+    private final PaletteTable paletteTable;
 
     private final ObjAttrMemory priObjAttrMemory;
     private final ObjAttrMemory secObjAttrMemory;
@@ -139,8 +146,12 @@ public class ControlUnit implements Initializable {
     private final ObjAttrTable priObjAttrTable;
     private final ObjAttrTable secObjAttrTable;
     private final SpriteUnit spriteUnit;
+    private final LayoutTables layoutTables;
+    private final AttributeTables attributeTables;
+    private final ExtBus extBus;
+    private final BooleanRegister masterSlaveSelect;
 
-    public ByteRegister nameTableBuffer = new ByteRegister("NT.BUF"); // tile xy
+    public ByteRegister layoutTableBuffer = new ByteRegister("LT.BUF"); // tile xy
 
     public ShortRegister attributesBuffer = new ShortRegister("AT.BUF");
     public ShortRegister backgroundBuffer = new ShortRegister("BG.BUF");
@@ -177,7 +188,9 @@ public class ControlUnit implements Initializable {
         @PpuVar(CB) ShortRegister backgroundPatternTable,
         @PpuVar(CS) ShortRegister spritePatternTable,
         VideoOutRegister videoOut,
+
         PaletteMemory paletteMemory,
+        PaletteTable paletteTable,
 
         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
@@ -188,7 +201,15 @@ public class ControlUnit implements Initializable {
         @PpuVar(POA) ObjAttrTable priObjAttrTable,
         @PpuVar(SOA) ObjAttrTable secObjAttrTable,
 
-        SpriteUnit spriteUnit
+        SpriteUnit spriteUnit,
+
+        @PpuVar(LTS) LayoutTables layoutTables,
+        @PpuVar(ATS) AttributeTables attributeTables,
+
+        ExtBus extBus,
+
+        @PpuVar(CP) BooleanRegister masterSlaveSelect
+
     ) {
         this.timingUnit = timingUnit;
         this.spriteSize = spriteSize;
@@ -199,7 +220,9 @@ public class ControlUnit implements Initializable {
         this.backgroundPatternTable = backgroundPatternTable;
         this.spritePatternTable = spritePatternTable;
         this.videoOut = videoOut;
+
         this.paletteMemory = paletteMemory;
+        this.paletteTable = paletteTable;
 
         this.priObjAttrMemory = priObjAttrMemory;
         this.secObjAttrMemory = secObjAttrMemory;
@@ -209,6 +232,10 @@ public class ControlUnit implements Initializable {
         this.priObjAttrTable = priObjAttrTable;
         this.secObjAttrTable = secObjAttrTable;
         this.spriteUnit = spriteUnit;
+        this.layoutTables = layoutTables;
+        this.attributeTables = attributeTables;
+        this.extBus = extBus;
+        this.masterSlaveSelect = masterSlaveSelect;
 
         final VideoStandard vs = config.getVideoStandard();
 
@@ -292,8 +319,8 @@ public class ControlUnit implements Initializable {
         busActions[0] = ACCESS_BG_LO_BITS_ADDRESS;
 
         for (int x = 1; x <= 256; x+=8) { // current background
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = READ_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = READ_LAYOUT_TABLE_DATA;
 
             busActions[x + 2] = ACCESS_ATTR_TABLE_ADDRESS;
             busActions[x + 3] = READ_ATTR_TABLE_DATA;
@@ -306,10 +333,10 @@ public class ControlUnit implements Initializable {
 
         for (int x = 257; x <= 320; x+=8) { // next sprite (8 / 16 tiles)
             // TODO: unused and ignored should be replaced with SP when extended SOAM
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = UNUSED_NAME_TABLE_DATA;
-            busActions[x + 2] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 3] = IGNORED_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = UNUSED_LAYOUT_TABLE_DATA;
+            busActions[x + 2] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 3] = IGNORED_LAYOUT_TABLE_DATA;
 
             busActions[x + 4] = ACCESS_SP_LO_BITS_ADDRESS;
             busActions[x + 5] = READ_SP_LO_BITS_DATA;
@@ -318,8 +345,8 @@ public class ControlUnit implements Initializable {
         }
 
         for (int x = 321; x <= 336; x+=8) { // next background (tiles 1 & 2)
-            busActions[x    ] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[x + 1] = READ_NAME_TABLE_DATA;
+            busActions[x    ] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[x + 1] = READ_LAYOUT_TABLE_DATA;
 
             busActions[x + 2] = ACCESS_ATTR_TABLE_ADDRESS;
             busActions[x + 3] = READ_ATTR_TABLE_DATA;
@@ -331,10 +358,10 @@ public class ControlUnit implements Initializable {
         }
 
         { // unused / ignored next background (tile 3)
-            busActions[337] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[338] = UNUSED_NAME_TABLE_DATA;
-            busActions[339] = ACCESS_NAME_TABLE_ADDRESS;
-            busActions[340] = IGNORED_NAME_TABLE_DATA;
+            busActions[337] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[338] = UNUSED_LAYOUT_TABLE_DATA;
+            busActions[339] = ACCESS_LAYOUT_TABLE_ADDRESS;
+            busActions[340] = IGNORED_LAYOUT_TABLE_DATA;
         }
 
         return busActions;
@@ -472,16 +499,16 @@ public class ControlUnit implements Initializable {
 
     private void executeBus(Action busAction) {
         switch(busAction) {
-            case ACCESS_NAME_TABLE_ADDRESS -> {
-                @Unsigned short nameTableAddr = NameTables.getNameTableAddress(currentViewPort);
-                bus.access(nameTableAddr);
+            case ACCESS_LAYOUT_TABLE_ADDRESS -> {
+                @Unsigned short layoutTableAddr = layoutTables.getAddress(currentViewPort);
+                bus.access(layoutTableAddr);
             }
-            case READ_NAME_TABLE_DATA      -> {
-                @Unsigned byte nameTableData = bus.read().data();
-                nameTableBuffer.set(nameTableData);
+            case READ_LAYOUT_TABLE_DATA -> {
+                @Unsigned byte layoutTableData = bus.read().data();
+                layoutTableBuffer.set(layoutTableData);
             }
             case ACCESS_ATTR_TABLE_ADDRESS -> {
-                @Unsigned short attrTableAddr = AttributeTables.getAttrTableAddress(currentViewPort);
+                @Unsigned short attrTableAddr = attributeTables.getAddress(currentViewPort);
                 bus.access(attrTableAddr);
             }
             case READ_ATTR_TABLE_DATA      -> {
@@ -489,7 +516,8 @@ public class ControlUnit implements Initializable {
                 extractCurrentAttribute(attrTableData);
             }
             case ACCESS_BG_LO_BITS_ADDRESS -> {
-                int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
+                // TODO: create dedicated instance method for this and use case (and hi bits)
+                int bgLoAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, layoutTableBuffer.getAsInt(), 0, currentViewPort.getFineY());
                 bus.access(ushort(bgLoAddr));
             }
             case READ_BG_LO_BITS_DATA      -> {
@@ -497,7 +525,7 @@ public class ControlUnit implements Initializable {
                 backgroundBuffer.low(bgLoData);
             }
             case ACCESS_BG_HI_BITS_ADDRESS -> {
-                int bgHiAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, nameTableBuffer.getAsInt(), 1, currentViewPort.getFineY());
+                int bgHiAddr = PatternTables.getSingleAddress(backgroundPatternTable.getAsInt() >> 12, layoutTableBuffer.getAsInt(), 1, currentViewPort.getFineY());
                 bus.access(ushort(bgHiAddr));
             }
             case READ_BG_HI_BITS_DATA      -> {
@@ -505,8 +533,8 @@ public class ControlUnit implements Initializable {
                 backgroundBuffer.high(bgHiData);
             }
 
-            case UNUSED_NAME_TABLE_DATA    -> unusedNameTable(bus.read().data());
-            case IGNORED_NAME_TABLE_DATA   -> ignoredNameTable(bus.read().data());
+            case UNUSED_LAYOUT_TABLE_DATA -> unusedLayoutTable(bus.read().data());
+            case IGNORED_LAYOUT_TABLE_DATA -> ignoredLayoutTable(bus.read().data());
 
             case ACCESS_SP_LO_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
@@ -564,18 +592,18 @@ public class ControlUnit implements Initializable {
         }
     }
 
-    private void ignoredNameTable(@Unsigned byte data) {
-        nameTableBuffer.set(data);
+    private void ignoredLayoutTable(@Unsigned byte data) {
+        layoutTableBuffer.set(data);
     }
 
     @SuppressWarnings("unused") // data parameter on purpose
-    private void unusedNameTable(@Unsigned byte data) {}
+    private void unusedLayoutTable(@Unsigned byte data) {}
 
     @SuppressWarnings("unused") // data parameter on purpose
     private void unusedObjAttrByte(@Unsigned byte data) {}
 
     private void extractCurrentAttribute(@Unsigned byte attrTableData) {
-        int attrBitsLatch = sint(AttributeTable.getSubAttribute(attrTableData, currentViewPort));
+        int attrBitsLatch = sint(Attribute.asPalette(attrTableData, currentViewPort));
         int attrLoBitLatch = attrBitsLatch & 0b01;
         int attrHiBitLatch = (attrBitsLatch & 0b10) >> 1;
 
@@ -652,8 +680,9 @@ public class ControlUnit implements Initializable {
             }
             case CLEAR -> {
                 // TODO: on pal border region is always black
-                @Unsigned byte backdrop = paletteMemory.getColor(BACKGROUND, 1, 1); // TODO: for debugging, should be 0, 0);
-                videoOut.set(-1, -1, backdrop);
+                // TODO: border region may have different colors during force blank if v is pointing to palette
+                @Unsigned byte backdrop = paletteTable.getColorRef(BACKGROUND, 1, 1); //paletteMemory.read(UBYTE_0);
+                videoOut.set(-1, -1, backdrop); // FIXME: PPU is rendering the border region during passive area cycles
             }
             case NO_OPERATION -> {}
             default -> throw new IllegalStateException("Unexpected draw action: " + draw);
@@ -664,17 +693,15 @@ public class ControlUnit implements Initializable {
         final int fineX = currentViewPort.getFineX();
 
         // Backdrop
-        Section section = BACKGROUND;
+        Layer layer = BACKGROUND;
         int palette = 0;
         int offset = 0;
                                                          // Bits
-        Section sectionBg = BACKGROUND;                  // 4
         int paletteBg = sint(attributes.getBits(fineX)); // 3-2
         int offsetBg  = sint(background.getBits(fineX)); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        Section sectionSp = FOREGROUND;
         int paletteSp = 0;
         int offsetSp = 0;
         boolean hiddenSp = false;
@@ -696,32 +723,45 @@ public class ControlUnit implements Initializable {
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {
-                section = sectionSp;
+                layer = SPRITE;
                 palette = paletteSp;
                 offset = offsetSp;
             } // else backdrop (default)
         } else {
             if (offsetSp == 0) {
-                section = sectionBg;
                 palette = paletteBg;
                 offset = offsetBg;
             } else {
                 if (hiddenSp) {
-                    section = sectionBg;
                     palette = paletteBg;
                     offset = offsetBg;
                 } else {
-                    section = sectionSp;
+                    layer = SPRITE;
                     palette = paletteSp;
                     offset = offsetSp;
                 }
             }
         }
 
-        @Unsigned byte color = paletteMemory.getColor(section, palette, offset);
+        boolean slave = masterSlaveSelect.get();
+
+        if (slave) {
+            int paletteShift = palette << 2;
+
+            int extInt = paletteShift | offset;
+            extBus.write(ubyte(extInt));
+
+        } else if (offset == 0) { // master
+            int extInt = sint(extBus.read());
+            // layer = BG, always 0 from EXT
+            palette = (extInt & 0b1100) >> 2;
+            offset = extInt & 0b11;
+        }
+
+        @Unsigned byte colorRef = paletteTable.getColorRef(layer, palette, offset);
 
         // TODO: too early to output, do priority, ext in / out muxing
-        videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, color);
+        videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, colorRef);
     }
 
     private void shiftShiftRegisters() {

@@ -5,6 +5,7 @@ import jakarta.inject.Named;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.config.CoreConfig;
 import net.novaware.nes.core.config.VideoStandard;
+import net.novaware.nes.core.mx.NesCoreRecorder;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.inject.PpuVarName;
 import net.novaware.nes.core.register.BooleanRegister;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
 // frame time / power reserve
 // percentages of work time cpu / ppu / apu / dma
 // sampling into a table to for graphs
+// consider virtual threads for running truly in parallel
 
 @BoardScope
 public class MasterClock implements ClockGenerator, Runnable { // TODO: this is a prototype, needs major testing and refactor
@@ -31,6 +33,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public ClockReceiver dma;
 
     public ClockReceiver videoEncoder;
+    private final NesCoreRecorder mxBean;
 
     public final VideoStandard videoStandard;
 
@@ -69,7 +72,8 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         @Named("APU") ClockReceiver apu,
         @Named("DMA") ClockReceiver dma,
         @Named("CLK") ExecutorService clockExecutor,
-        @Named("VE") ClockReceiver videoEncoder
+        @Named("VE") ClockReceiver videoEncoder,
+        NesCoreRecorder mxBean
     ) {
         this.videoStandard = coreConfig.getVideoStandard();
 
@@ -82,6 +86,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         this.executor = clockExecutor;
         this.videoEncoder = videoEncoder;
+        this.mxBean = mxBean;
     }
 
     long cpuTime;
@@ -135,6 +140,11 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         long workDuration = System.nanoTime() - workStart;                      // TODO: replace all System.nanoTime with TimeSource injected dependency
         long targetSpinDuration = Math.max(0, frameDuration - workDuration);
+
+        spinWait(targetSpinDuration);
+    }
+
+    private void spinWait(long targetSpinDuration) {
         long spinDuration = 0;
 
         if (targetSpinDuration > 0) {
@@ -172,11 +182,15 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         double avgFrameTime = (double) tickDuration / framesToRun; // ns
         double fps = 1_000_000_000d /* ns */ / avgFrameTime; // TODO: some rising because of fractional accumulation
 
-        System.out.println(
-            (int) framesToRun + " Frames time: " + tickDuration + "ns, " +
-            "Spin time: " + frameSpinTime + "ns " +
-            "FPS: " + String.format("%1$2.3f", fps)
-        );
+        // FIXME: causes lots of byte[] allocations, create FlightRecorder which puts interesting values into ring buffer
+        //  and dumps them when needed (manual dump, crash dump)
+//        System.out.println(
+//            (int) framesToRun + " Frames time: " + tickDuration + "ns, " +
+//            "Spin time: " + frameSpinTime + "ns " +
+//            "FPS: " + String.format("%1$2.3f", fps)
+//        );
+
+        mxBean.setAttributes(tickDuration, frameSpinTime, fps);
     }
 
     @Override
@@ -259,6 +273,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     void calculateSecondBudget() {
         frameBudget.setValue(frameBudget.getValue() + videoStandard.getRefreshRate());
 
+        // FIXME: use not full second as a base since we shouldn't use full second (60 of 60.098 frames)
         frameDuration = (long)(1_000d /* ms */ / frameBudget.getValue() * 1_000_000d /* ns */ );
         frameSpinTime = 0L;
 
