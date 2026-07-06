@@ -146,13 +146,13 @@ public class ViewPortRegister extends Register { // TODO: consider renaming to C
     }
 
     public int getFineX() {
-        assertState(variant != Variant.T, "T variant doesn't have fineX component");
+        assert variant != Variant.T : "T variant doesn't have fineX component";
 
         return fineX & FINE_MASK;
     }
 
     public void setFineX(int fineX) {
-        assertState(variant != Variant.T, "T variant doesn't have fineX component");
+        assert variant != Variant.T : "T variant doesn't have fineX component";
 
         this.fineX = fineX & FINE_MASK;
     }

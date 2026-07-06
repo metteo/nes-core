@@ -3,7 +3,6 @@ package net.novaware.nes.core.ppu.memory;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BusOp;
-import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -67,7 +66,7 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
-    public ControlBus.Line access(@Unsigned short address) {
+    public PpuBus access(@Unsigned short address) {
         assert sint(address) < PpuMemMap.MEMORY_SIZE : "ppu address bus is 14 bits";
         // PPU can just call address bus without full control & data lines
         assert busOp == BusOp.ADDRESS_ACCESS || // compile out, TODO: consider JCP or Manifold
@@ -87,7 +86,7 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
-    public DataBus.Read read() {
+    public PpuBus read() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
         busOp = BusOp.CONTROL_READ;
@@ -96,7 +95,7 @@ public class PpuBus implements MemoryBus {
     }
 
     @Override
-    public DataBus.Write write() {
+    public PpuBus write() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
         busOp = BusOp.CONTROL_WRITE;

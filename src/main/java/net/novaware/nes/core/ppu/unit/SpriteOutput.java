@@ -1,9 +1,9 @@
 package net.novaware.nes.core.ppu.unit;
 
 import net.novaware.nes.core.register.ByteShifter;
-import net.novaware.nes.core.register.IntegerCounter;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+// TODO: refactor this into a branchless impl, without using external refs like integer counter or ByteShifter
 public class SpriteOutput {
 
     enum State {
@@ -20,32 +20,27 @@ public class SpriteOutput {
 
     public boolean hidden;
 
-    public IntegerCounter countDown = new IntegerCounter("SPOU?cd"); // [0, x] waiting
+    public int countDown; // [0, x] waiting
 
-    public IntegerCounter xCounter = new IntegerCounter("SPOU?x");
+    public int xCounter;
 
-    public State state = State.IDLE;
+    public boolean active;
 
-    // FIXME: shifting or counting down or state change is wrong. sprites don't show up on first dot column!
+
     // FIXME: this method takes a lot of cpu time
     public void maybeShiftPlanes() {
-        switch(state) {
-            case WAITING -> {
-                if (countDown.isPositive()) {
-                    countDown.decrement();
-                } else {
-                    state = State.DRAWING;
-                }
-            }
-            case DRAWING -> {
-                if(xCounter.isPositive()) {
-                    xCounter.decrement();
-                    shifter.shiftPlanes();
-                } else {
-                    state = State.IDLE;
-                }
-            }
-            case IDLE -> {}
+        if (countDown > 0) {
+            countDown--;
+            return;
         }
+
+        if (xCounter > 0) {
+            xCounter--;
+            shifter.shiftPlanes();
+        }
+    }
+
+    public boolean shouldDraw() {
+        return active & countDown == 0 && xCounter > 0;
     }
 }

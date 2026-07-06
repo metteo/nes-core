@@ -5,7 +5,6 @@ import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
-import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -32,8 +31,8 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
     }
 
     private void verifyCursor() {
-        // TODO: consider assert keyword or configurable assert (through compile time constant)
-        assertState((cursor.getAsInt() & 0b11) == 0, "misaligned table access");
+        // TODO: assert keyword or configurable assert (through compile time constant)
+        assert (cursor.getAsInt() & 0b11) == 0 : "misaligned table access";
     }
 
     public int getRow() {

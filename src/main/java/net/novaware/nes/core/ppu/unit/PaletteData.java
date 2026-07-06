@@ -1,6 +1,7 @@
 package net.novaware.nes.core.ppu.unit;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
+import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static net.novaware.nes.core.util.Asserts.assertNonNull;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -64,6 +64,11 @@ public class PaletteData {
     }
 
     public static Color getDarker(Color color) {
-        return assertNonNull(COLOR_OBJECTS_DARKER.get(color), "darker color is null");
+        @SuppressWarnings("assignment")
+        @NonNull Color darker = COLOR_OBJECTS_DARKER.get(color);
+
+        assert darker != null : "darker color is null";
+
+        return darker;
     }
 }

@@ -3,7 +3,6 @@ package net.novaware.nes.core.cpu.memory;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.BusOp;
-import net.novaware.nes.core.memory.ControlBus;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
 import net.novaware.nes.core.memory.MemoryBus;
@@ -111,7 +110,7 @@ public class CpuBus implements MemoryBus {
     }
 
     @Override
-    public ControlBus.Line access(@Unsigned short address) {
+    public CpuBus access(@Unsigned short address) {
         assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
 
         busOp = BusOp.ADDRESS_ACCESS;
@@ -128,7 +127,7 @@ public class CpuBus implements MemoryBus {
     }
 
     @Override
-    public DataBus.Read read() {
+    public CpuBus read() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
         busOp = BusOp.CONTROL_READ;
@@ -137,7 +136,7 @@ public class CpuBus implements MemoryBus {
     }
 
     @Override
-    public DataBus.Write write() {
+    public CpuBus write() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
         busOp = BusOp.CONTROL_WRITE;

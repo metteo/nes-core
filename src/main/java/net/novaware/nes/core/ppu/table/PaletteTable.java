@@ -36,7 +36,7 @@ public class PaletteTable implements Table {
     }
 
     public @Unsigned byte getColorRef(Layer layer, int row, int col) {
-        assertNonNull(layer, "layer must not be null");
+        assert layer != null : "layer must not be null";
 
         @Unsigned byte address = getAddress(layer, row, col);
 

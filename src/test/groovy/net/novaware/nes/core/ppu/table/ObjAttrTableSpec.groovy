@@ -88,7 +88,7 @@ class ObjAttrTableSpec extends Specification {
         secTable.getRow()
 
         then:
-        def e = thrown(IllegalStateException)
+        def e = thrown(AssertionError)
         e.message == "misaligned table access"
     }
 

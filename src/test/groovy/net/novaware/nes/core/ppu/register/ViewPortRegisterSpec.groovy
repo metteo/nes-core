@@ -52,7 +52,7 @@ class ViewPortRegisterSpec extends Specification {
         }
 
         then:
-        def e = thrown(IllegalStateException)
+        def e = thrown(AssertionError)
         e.getMessage() == "T variant doesn't have fineX component"
 
         where:

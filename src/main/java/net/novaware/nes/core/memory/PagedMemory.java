@@ -136,12 +136,28 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     @Override
     public void onRead() {
+        // NOTE: de-invokeinterface for performance, attempt
+        if (readPageLatch instanceof PhysicalMemory pm) {
+            pm.onAccess(addressLatch);
+            pm.onRead();
+
+            return;
+        }
+
         readPageLatch.onAccess(addressLatch);
         readPageLatch.onRead();
     }
 
     @Override
     public void onWrite() {
+        // NOTE: de-invokeinterface for performance, attempt
+        if (writePageLatch instanceof PhysicalMemory pm) {
+            pm.onAccess(addressLatch);
+            pm.onWrite();
+
+            return;
+        }
+
         writePageLatch.onAccess(addressLatch);
         writePageLatch.onWrite();
     }

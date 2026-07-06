@@ -87,6 +87,7 @@ import static net.novaware.nes.core.ppu.table.ObjAttr.asHidden;
 import static net.novaware.nes.core.ppu.table.ObjAttr.asPalette;
 import static net.novaware.nes.core.ppu.table.Palette.Layer.BACKGROUND;
 import static net.novaware.nes.core.ppu.table.Palette.Layer.SPRITE;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -543,13 +544,13 @@ public class ControlUnit implements Initializable {
                 int x = secObjAttrTable.getXAsInt();
 
                 SpriteOutput output = spriteOutputUnits[secObjAttrTable.getRow()];
+                output.active = y < 241; // TODO: temporary. count sprites found in eval. all other should have transparent pixels in the shifter
 
                 // TODO: loading oam attrs & x is not instant, happens in garbage cycles
                 output.hidden = asHidden(attr);
                 output.palette = asPalette(attr);
-                output.countDown.setValue(x);
-                output.xCounter.setValue(7);
-                output.state = SpriteOutput.State.WAITING;
+                output.countDown = x;
+                output.xCounter = 8; // 8 because 1-8 is drawing, 0 is idle
 
                 int spLoAddr = getSpritePatternAddress(y, tile, 0, asFlipV(attr));
 
@@ -694,24 +695,24 @@ public class ControlUnit implements Initializable {
 
         // Backdrop
         Layer layer = BACKGROUND;
-        int palette = 0;
-        int offset = 0;
+        @Unsigned byte palette = 0;
+        @Unsigned byte offset = 0;
                                                          // Bits
-        int paletteBg = sint(attributes.getBits(fineX)); // 3-2
-        int offsetBg  = sint(background.getBits(fineX)); // 1-0
+        @Unsigned byte paletteBg = attributes.getBits(fineX); // 3-2
+        @Unsigned byte offsetBg  = background.getBits(fineX); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        int paletteSp = 0;
-        int offsetSp = 0;
+        @Unsigned byte paletteSp = 0;
+        @Unsigned byte offsetSp = 0;
         boolean hiddenSp = false;
 
         for(int i = 0; i < spriteOutputUnits.length; i++) { // TODO: go backwards and the last non transparent pixel wins?
             SpriteOutput spriteOutput = spriteOutputUnits[i];
 
-            if (spriteOutput.state == SpriteOutput.State.DRAWING) {
-                int paletteSp2 = sint(spriteOutput.palette);
-                int offsetSp2 = sint(spriteOutput.shifter.getBits(0));
+            if (spriteOutput.shouldDraw()) {
+                @Unsigned byte paletteSp2 = spriteOutput.palette;
+                @Unsigned byte offsetSp2 = spriteOutput.shifter.getBits(0);
 
                 if (offsetSp == 0 && offsetSp2 != 0) {
                     paletteSp = paletteSp2;
@@ -745,20 +746,23 @@ public class ControlUnit implements Initializable {
 
         boolean slave = masterSlaveSelect.get();
 
-        if (slave) {
-            int paletteShift = palette << 2;
+        int paletteInt = palette & UBYTE_MASK;
+        int offsetInt = offset & UBYTE_MASK;
 
-            int extInt = paletteShift | offset;
+        if (slave) {
+            int paletteShift = paletteInt << 2;
+
+            int extInt = paletteShift | offsetInt;
             extBus.write(ubyte(extInt));
 
-        } else if (offset == 0) { // master
-            int extInt = sint(extBus.read());
+        } else if (offsetInt == 0) { // master
+            int extInt = extBus.read() & UBYTE_MASK;
             // layer = BG, always 0 from EXT
-            palette = (extInt & 0b1100) >> 2;
-            offset = extInt & 0b11;
+            paletteInt = (extInt & 0b1100) >> 2;
+            offsetInt = extInt & 0b11;
         }
 
-        @Unsigned byte colorRef = paletteTable.getColorRef(layer, palette, offset);
+        @Unsigned byte colorRef = paletteTable.getColorRef(layer, paletteInt, offsetInt);
 
         // TODO: too early to output, do priority, ext in / out muxing
         videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, colorRef);
