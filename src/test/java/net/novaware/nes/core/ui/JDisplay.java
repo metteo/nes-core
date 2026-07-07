@@ -14,6 +14,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntBinaryOperator;
 
@@ -49,6 +51,10 @@ public class JDisplay extends JComponent implements ChangeListener {
 
     private boolean drawMask = true;
 
+    // TODO: use dataBuffer to insert colors
+    private BufferedImage bufferedImage;
+    private final DataBufferInt dataBuffer;
+
     public JDisplay(DisplayModel model, AtomicInteger keyState) {
         this.model = model;
         this.keyState = keyState;
@@ -65,6 +71,9 @@ public class JDisplay extends JComponent implements ChangeListener {
         // TODO: adjust to the model instead
         screenHeight = borderRegion.getTop() + videoStandard.getActiveHeight() + borderRegion.getBottom();
         screenWidth = borderRegion.getLeft() + videoStandard.getActiveWidth() + borderRegion.getRight();
+
+        bufferedImage = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
+        dataBuffer = (DataBufferInt) bufferedImage.getData().getDataBuffer();
     }
 
     private void registerMouseClicked(DisplayModel model) {

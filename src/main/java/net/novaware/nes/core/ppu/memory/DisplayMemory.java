@@ -13,13 +13,14 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
  */
 public class DisplayMemory implements Nameable {
 
-    private static final int COLOR_MASK = 0b11_1111;
-    private static final int META_MASK = 0b1100_0000;
+    private static final int VALUE_MASK = 0b11_0000;
+    private static final int HUE_MASK   = 0b11_1111;
+    private static final int COLOR_MASK = VALUE_MASK | HUE_MASK;
+    private static final int META_MASK  = 0b1100_0000;
 
     private final String name;
     private final int height;
     private final int width;
-
 
     private @Unsigned byte[] frontBuffer;
     private @Unsigned byte[] backBuffer;
@@ -33,17 +34,15 @@ public class DisplayMemory implements Nameable {
         backBuffer = new @Unsigned byte[height * width];
     }
 
-    // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex/transparency? etc
-    // if 4 bits is not enough or to slow just use secondary array of the same size but other type.
+    // TODO: structure: 0bMMCC_CCCC where CC_CCCC is color from palette and MM is metadata like layer/zindex/transparency? etc
+    // if 2 bits is not enough or to slow just use secondary array of the same size but other type.
     // maybe link back to oam for individual sprite / sprite group
 
     // TODO: layers: (gemini: NES PPU Pixel layers)
-    //  - backdrop (with border region)
-    //  - hidden sprites
-    //  - background
-    //  - visible sprites
-    //  - mask/clip (left 8 pixels)
-    //  - overscan / bezel (ui side, ppu not involved)
+    //  - backdrop (with border region) 0b00
+    //  - hidden sprites                0b01
+    //  - background                    0b10
+    //  - visible sprites               0b11
 
     // TODO: allow multiple instances for handoff between threads
 
