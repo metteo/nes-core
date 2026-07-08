@@ -28,7 +28,8 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.TMR;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
-public class CpuBus implements MemoryBus {
+public class CpuBus implements MemoryBus { // TODO: use concrete classes inside. Also should be a single final class
+    // TODO: maybe use switch primitive pattern with address comparison
 
     @Used
     private final IntegerCounter cycleCounter;

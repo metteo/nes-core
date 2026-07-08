@@ -169,7 +169,7 @@ public class JDisplay extends JComponent implements ChangeListener {
 
                 int rectX = paddingLeft + (x * pixelWidth);
                 int rectY = paddingTop + (y * pixelHeight);
-                g.fillRect(rectX, rectY, pixelWidth, pixelHeight); // FIXME: slow. Paint to a BufferedImage
+                g.fillRect(rectX, rectY, pixelWidth, pixelHeight); // FIXME: slow. Set ints in BufferedImage
 
                 // https://en.wikipedia.org/wiki/Moir%C3%A9_pattern
                 if (pixelWidth > 1 && pixelHeight > 1 && drawMask) {
