@@ -1,7 +1,8 @@
 package net.novaware.nes.core.file.ines
 
-import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
+
+import java.nio.ByteBuffer
 
 import static net.novaware.nes.core.file.NesMeta.System.*
 import static net.novaware.nes.core.file.NesMeta.VideoStandard.*
@@ -197,7 +198,7 @@ class ModernHeaderBufferSpec extends Specification {
     }
 
     static def headerBuffer() {
-        def buffer = UByteBuffer.allocate(NesHeader.SIZE)
+        def buffer = NesHeader.allocate()
         new ModernHeaderBuffer(buffer)
     }
 }

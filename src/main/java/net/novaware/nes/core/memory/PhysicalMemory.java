@@ -102,8 +102,6 @@ public final class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrit
     @Override
     public void onAccess(@Unsigned short address) {
         position = toPosition(address);
-
-        buffer.position(position);
     }
 
     @Override

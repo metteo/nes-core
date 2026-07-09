@@ -5,7 +5,6 @@ import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesHash;
 import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.file.ReaderMode;
-import net.novaware.nes.core.util.UByteBuffer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -73,7 +72,7 @@ public class NesFileReader extends NesFileHandler {
         var inputBuffer = readInputStream(origin, inputStream);
 
         final var headerSize = NesHeader.SIZE;
-        var headerBuffer = UByteBuffer.of(inputBuffer.slice(0, headerSize));
+        var headerBuffer = inputBuffer.slice(0, headerSize);
 
         var headerScanner = new NesHeaderScanner();
         var headerScanResult = headerScanner.scan(headerBuffer);

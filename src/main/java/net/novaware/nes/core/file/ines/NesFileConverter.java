@@ -2,7 +2,6 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesFile;
 import net.novaware.nes.core.file.NesMeta;
-import net.novaware.nes.core.util.UByteBuffer;
 
 import java.nio.ByteBuffer;
 
@@ -21,7 +20,7 @@ public class NesFileConverter {
         NesMeta meta = nesFile.meta();
 
         // TODO: writer should use data.header instead. Converter will update / create header from Meta
-        UByteBuffer header = new NesHeaderWriter()
+        ByteBuffer header = new NesHeaderWriter()
                 .write(meta, new NesHeaderWriter.Params(params.version, params.includeInfo)).header();
 
 

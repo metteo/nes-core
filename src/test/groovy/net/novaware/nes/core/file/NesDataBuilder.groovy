@@ -1,9 +1,8 @@
 package net.novaware.nes.core.file
 
-
 import net.novaware.nes.core.file.ines.NesHeader
 import net.novaware.nes.core.test.TestDataBuilder
-import net.novaware.nes.core.util.UByteBuffer
+import net.novaware.nes.core.util.Buffers
 
 import java.nio.ByteBuffer
 
@@ -15,12 +14,12 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     private static Random random = new Random()
 
-    private UByteBuffer header;
-    private ByteBuffer trainer;
-    private ByteBuffer program;
-    private ByteBuffer video;
-    private ByteBuffer misc;
-    private ByteBuffer footer;
+    private ByteBuffer header
+    private ByteBuffer trainer
+    private ByteBuffer program
+    private ByteBuffer video
+    private ByteBuffer misc
+    private ByteBuffer footer
 
     // TODO: add methods that fake the data, possibly replacing NesFileFaker all together
     //       or one combo method that accepts Meta and takes sizing from it.
@@ -28,8 +27,8 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
     private static ByteBuffer emptyBuffer() { return allocate(0).order(LITTLE_ENDIAN) }
 
     private static ByteBuffer randomBuffer(int size) {
-        byte[] buffer = new byte[size];
-        random.nextBytes(buffer); // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
+        byte[] buffer = new byte[size]
+        random.nextBytes(buffer) // TODO: use watermarking e.g. 0b0101_0101 (0x55), 0b10101010 (0xAA), (index % 256)
         return ByteBuffer.wrap(buffer).order(LITTLE_ENDIAN)
     }
 
@@ -38,7 +37,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
     }
 
     static NesDataBuilder emptyData() {
-        return new NesDataBuilder().header(UByteBuffer.empty())
+        return new NesDataBuilder().header(emptyBuffer())
                 .trainer(emptyBuffer())
                 .program(emptyBuffer())
                 .video(emptyBuffer())
@@ -58,7 +57,7 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
         NesMeta meta = metaBuilder.build()
         boolean playChoice10 = meta.system() == NesMeta.System.PLAY_CHOICE_10
 
-        return new NesDataBuilder().header(UByteBuffer.allocate(NesHeader.SIZE))
+        return new NesDataBuilder().header(NesHeader.allocate())
                 .trainer(randomBuffer(meta.trainer().toBytes()))
                 .program(randomBuffer(meta.programData().toBytes()))
                 .video(randomBuffer(meta.videoData().size().toBytes()))
@@ -68,42 +67,42 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
 
     static NesDataBuilder watermarkedData() {
         return nesData()
-                .header(NesHeader.allocate().fill(ubyte(0xAA)))
-                .trainer(UByteBuffer.allocate(512).fill(ubyte(0x88)).unwrap())
-                .program(UByteBuffer.allocate(16 * 1024).fill(ubyte(0x55)).unwrap())
-                .video(UByteBuffer.allocate(8 * 1024).fill(ubyte(0x88)).unwrap())
-                .misc(UByteBuffer.allocate(8 * 1024 + 2 * 16).fill(ubyte(0xCC)).unwrap())
-                .footer(UByteBuffer.allocate(127).fill(ubyte(0xF0)).unwrap())
+                .header(Buffers.fill(NesHeader.allocate(), ubyte(0xAA)))
+                .trainer(Buffers.fill(allocate(512), ubyte(0x88)))
+                .program(Buffers.fill(allocate(16 * 1024), ubyte(0x55)))
+                .video(Buffers.fill(allocate(8 * 1024), ubyte(0x88)))
+                .misc(Buffers.fill(allocate(8 * 1024 + 2 * 16), ubyte(0xCC)))
+                .footer(Buffers.fill(allocate(127), ubyte(0xF0)))
     }
 
-    NesDataBuilder header(UByteBuffer header) {
-        this.header = header;
-        return this;
+    NesDataBuilder header(ByteBuffer header) {
+        this.header = header
+        return this
     }
 
     NesDataBuilder trainer(ByteBuffer trainer) {
-        this.trainer = trainer;
-        return this;
+        this.trainer = trainer
+        return this
     }
 
     NesDataBuilder program(ByteBuffer program) {
-        this.program = program;
-        return this;
+        this.program = program
+        return this
     }
 
     NesDataBuilder video(ByteBuffer video) {
-        this.video = video;
-        return this;
+        this.video = video
+        return this
     }
 
     NesDataBuilder misc(ByteBuffer misc) {
-        this.misc = misc;
-        return this;
+        this.misc = misc
+        return this
     }
 
     NesDataBuilder footer(ByteBuffer footer) {
-        this.footer = footer;
-        return this;
+        this.footer = footer
+        return this
     }
 
     NesData build() {
@@ -114,6 +113,6 @@ class NesDataBuilder implements TestDataBuilder<NesData> {
                 .video(video)
                 .misc(misc)
                 .footer(footer)
-                .build();
+                .build()
     }
 }

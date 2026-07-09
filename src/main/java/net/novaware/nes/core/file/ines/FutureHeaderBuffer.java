@@ -1,7 +1,8 @@
 package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
+
+import java.nio.ByteBuffer;
 
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -84,7 +85,7 @@ public class FutureHeaderBuffer extends BaseHeaderBuffer {
 
     // endregion
 
-    public FutureHeaderBuffer(UByteBuffer header) {
+    public FutureHeaderBuffer(ByteBuffer header) {
         super(header);
     }
 }

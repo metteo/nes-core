@@ -30,6 +30,7 @@ public final class UTypes {
         return b & UBYTE_MASK;
     }
 
+    @SuppressWarnings("cast.unsafe")
     public static @Unsigned short ushort(int i) {
         return (@Unsigned short) i;
     }
@@ -38,10 +39,12 @@ public final class UTypes {
         return (@Unsigned short) (b & UBYTE_MASK);
     }
 
+    @SuppressWarnings("cast.unsafe")
     public static @Unsigned byte ubyte(int i) {
         return (@Unsigned byte) i;
     }
 
+    @SuppressWarnings("cast.unsafe")
     public static @Unsigned byte ubyte(short s) {
         return (@Unsigned byte) s;
     }

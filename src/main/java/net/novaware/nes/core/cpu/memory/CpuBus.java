@@ -30,6 +30,7 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 
 public class CpuBus implements MemoryBus { // TODO: use concrete classes inside. Also should be a single final class
     // TODO: maybe use switch primitive pattern with address comparison
+    // TODO: use classpath / module path / spi to plug a different cpu bus into cpu. just like slf4j changes implementations
 
     @Used
     private final IntegerCounter cycleCounter;

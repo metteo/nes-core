@@ -29,6 +29,7 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     private final Quantity bankSize;
     private final int bankBytes; // NOTE: prevents bankSize.toBytes() on hot path
 
+    // FIXME: arrays of arrays
     private UByteBuffer[] physicalBanks;  // data
     private UByteBuffer[] virtualBanks;   // refs
 
@@ -154,8 +155,6 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
 
         assert bankIndex == bankIndex2 : "shift produced wrong value";
         assert bankAddress == bankAddress2 : "mask produced wrong value";
-
-        virtualBanks[bankIndex].position(bankAddress);
     }
 
     public @Unsigned byte readByte() {

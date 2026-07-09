@@ -1,21 +1,20 @@
 package net.novaware.nes.core.util;
 
-import org.checkerframework.checker.index.qual.LTEqLengthOf;
-import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.Objects;
 
-import static net.novaware.nes.core.util.Asserts.assertArgument;
-import static net.novaware.nes.core.util.UTypes.UBYTE_0;
-
+/**
+ * Lightweight version of {@link ByteBuffer} without:
+ *  - virtual calls (Heap vs Direct)
+ *  - index checks apart from assert keyword
+ *
+ * Useful in hot path
+ */
 public class UByteBuffer {
-
-    private static final boolean ASSERT = true;
 
     private final ByteBuffer buffer;
 
@@ -36,10 +35,6 @@ public class UByteBuffer {
         return allocate(0);
     }
 
-    public ByteBuffer unwrap() {
-        return buffer;
-    }
-
     @SuppressWarnings("signedness")
     public @Unsigned byte get() {
         return buffer.get();
@@ -58,41 +53,9 @@ public class UByteBuffer {
         return get(index) & 0xFF;
     }
 
-    /**
-     * @see ByteBuffer#get(byte[])
-     */
-    @SuppressWarnings("signedness")
-    public UByteBuffer get(@Unsigned byte[] dst) {
-        buffer.get(dst);
-        return this;
-    }
-
-    /**
-     * @see ByteBuffer#get(int, byte[])
-     */
     @SuppressWarnings("signedness")
     public UByteBuffer get(int index, @Unsigned byte[] dst) {
         buffer.get(index, dst);
-        return this;
-    }
-
-    @SuppressWarnings("signedness")
-    public UByteBuffer put(@Unsigned byte b) {
-        buffer.put(b);
-        return this;
-    }
-
-    @SuppressWarnings("signedness")
-    public UByteBuffer put(@Unsigned byte[] bs) {
-        buffer.put(bs);
-        return this;
-    }
-
-    @SuppressWarnings("signedness")
-    public UByteBuffer putAsByte(int i) {
-        if (ASSERT) { assertUByteRange(i); }
-
-        put((byte) i);
         return this;
     }
 
@@ -104,28 +67,13 @@ public class UByteBuffer {
 
     @SuppressWarnings("signedness")
     public UByteBuffer putAsByte(int index, int i) {
-        if (ASSERT) { assertUByteRange(i); }
-
         buffer.put(index, (byte) i);
         return this;
-    }
-
-    private void assertUByteRange(int i) {
-        assertArgument(0 <= i && i < 256, "i must fit into ubyte");
     }
 
     @SuppressWarnings("signedness")
     public UByteBuffer put(int index, @Unsigned byte[] src) {
         buffer.put(index, src);
-        return this;
-    }
-
-    public int position() {
-        return buffer.position();
-    }
-
-    public UByteBuffer position(int newPosition) {
-        buffer.position(newPosition);
         return this;
     }
 
@@ -149,54 +97,20 @@ public class UByteBuffer {
         return this;
     }
 
-    @SuppressWarnings("signedness")
-    public UByteBuffer zeroOut() {
-        clear();
-
-        // FIXME: will not work for slices and read only buffers
-        if (buffer.hasArray()) {
-            // High-speed zeroing for HeapByteBuffers
-
-            byte[] array = buffer.array();
-            int fromIndex = validateIndex(buffer.arrayOffset(), array);
-            int toIndex = validateIndex(buffer.arrayOffset() + buffer.capacity(), array);
-
-            Arrays.fill(array, fromIndex, toIndex, UBYTE_0);
-        } else {
-            // Fallback for DirectByteBuffers
-            while (buffer.hasRemaining()) {
-                put(UBYTE_0);
-            }
-            clear(); // Reset position again after the fill loop
-        }
-
-        return this;
-    }
-
     public UByteBuffer fill(@Unsigned byte b) {
         return fill(() -> b);
     }
 
+    @SuppressWarnings("signedness")
     public UByteBuffer fill(UByteSupplier supplier) {
         clear();
 
         while (buffer.hasRemaining()) {
-            put(supplier.getAsUByte());
+            buffer.put(supplier.getAsUByte());
         }
 
         clear();
         return this;
-    }
-
-    private
-    @NonNegative
-    @LTEqLengthOf("#2")
-    int validateIndex(int index, byte[] array) {
-        if (index < 0 || index > array.length) {
-            throw new IndexOutOfBoundsException("Index out of range: " + index + ", allowed [0, " + (array.length - 1) + "]");
-        }
-
-        return index;
     }
 
     @Override

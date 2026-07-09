@@ -75,6 +75,6 @@ class PaletteTableSpec extends Specification {
             |SPRITE    \t3F 3E 3D 3C \t3B 3A 39 38 \t37 36 35 34 \t33 32 31 30 \t
         """.stripMargin().trim()
 
-        println colorArt
+        //println colorArt
     }
 }

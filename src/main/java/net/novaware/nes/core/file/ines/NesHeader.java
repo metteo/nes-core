@@ -1,7 +1,6 @@
 package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.util.UByteBuffer;
-
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public final class NesHeader {
@@ -12,8 +11,8 @@ public final class NesHeader {
 
     public static final int SIZE = 16; // bytes
 
-    public static UByteBuffer allocate() {
-        return UByteBuffer.allocate(SIZE)
+    public static ByteBuffer allocate() {
+        return ByteBuffer.allocate(SIZE)
                 .order(ByteOrder.LITTLE_ENDIAN);
     }
 }

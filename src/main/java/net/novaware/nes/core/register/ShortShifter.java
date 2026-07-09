@@ -5,6 +5,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.util.UTypes.USHORT_MASK;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
 /**
@@ -60,7 +61,7 @@ public class ShortShifter extends Register {
 
         int bits = (hiBit << 1) | loBit;
 
-        return (@Unsigned byte) bits;
+        return ubyte(bits);
     }
 
     @Override
