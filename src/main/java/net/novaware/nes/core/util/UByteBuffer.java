@@ -1,132 +1,92 @@
 package net.novaware.nes.core.util;
 
 import org.checkerframework.checker.signedness.qual.Unsigned;
-import org.jspecify.annotations.Nullable;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Objects;
+
+import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
 
 /**
  * Lightweight version of {@link ByteBuffer} without:
  *  - virtual calls (Heap vs Direct)
  *  - index checks apart from assert keyword
+ *  - ordering
  *
  * Useful in hot path
  */
 public class UByteBuffer {
 
-    private final ByteBuffer buffer;
+    private final @Unsigned byte[] buffer;
 
-    private UByteBuffer(ByteBuffer buffer) {
-        this.buffer = buffer;
+    private UByteBuffer(int capacity) {
+        this.buffer = new @Unsigned byte[capacity];
     }
 
+    @SuppressWarnings("signedness")
     public static UByteBuffer of(ByteBuffer buffer) {
-        return new UByteBuffer(buffer);
+        var ubb = new UByteBuffer(buffer.capacity());
+        buffer.get(ubb.buffer);
+
+        return ubb;
     }
 
     public static UByteBuffer allocate(int capacity) {
-        ByteBuffer buffer = ByteBuffer.allocate(capacity);
-        return of(buffer);
+        return new UByteBuffer(capacity);
     }
 
     public static UByteBuffer empty() {
         return allocate(0);
     }
 
-    @SuppressWarnings("signedness")
-    public @Unsigned byte get() {
-        return buffer.get();
-    }
-
-    public int getAsInt() {
-        return get() & 0xFF;
-    }
-
-    @SuppressWarnings("signedness")
     public @Unsigned byte get(int index) {
-        return buffer.get(index);
+        return buffer[index];
     }
 
     public int getAsInt(int index) {
-        return get(index) & 0xFF;
+        return buffer[index] & UBYTE_MASK;
     }
 
-    @SuppressWarnings("signedness")
-    public UByteBuffer get(int index, @Unsigned byte[] dst) {
-        buffer.get(index, dst);
-        return this;
+//    public UByteBuffer get(int index, @Unsigned byte[] dst) {
+//        buffer.get(index, dst);
+//        return this;
+//    }
+
+    public void put(int index, @Unsigned byte b) {
+        buffer[index] = b;
     }
 
-    @SuppressWarnings("signedness")
-    public UByteBuffer put(int index, @Unsigned byte b) {
-        buffer.put(index, b);
-        return this;
+    @SuppressWarnings("cast.unsafe")
+    public void putAsByte(int index, int i) {
+        buffer[index] = (@Unsigned byte) i;
     }
 
-    @SuppressWarnings("signedness")
-    public UByteBuffer putAsByte(int index, int i) {
-        buffer.put(index, (byte) i);
-        return this;
-    }
 
-    @SuppressWarnings("signedness")
     public UByteBuffer put(int index, @Unsigned byte[] src) {
-        buffer.put(index, src);
-        return this;
-    }
+        // FIXME: assert on params
 
-    public UByteBuffer rewind() {
-        buffer.rewind();
-        return this;
-    }
+        System.arraycopy(src, 0, buffer, index, src.length);
 
-    public UByteBuffer order(ByteOrder order) {
-        buffer.order(order);
         return this;
-
     }
 
     public int capacity() {
-        return buffer.capacity();
-    }
-
-    public UByteBuffer clear() {
-        buffer.clear();
-        return this;
+        return buffer.length;
     }
 
     public UByteBuffer fill(@Unsigned byte b) {
         return fill(() -> b);
     }
 
-    @SuppressWarnings("signedness")
     public UByteBuffer fill(UByteSupplier supplier) {
-        clear();
-
-        while (buffer.hasRemaining()) {
-            buffer.put(supplier.getAsUByte());
+        for (int i = 0; i < buffer.length; i++) {
+            buffer[i] = supplier.getAsUByte();
         }
 
-        clear();
         return this;
     }
 
     @Override
-    public int hashCode() {
-        return buffer.hashCode();
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-        if (o == null || getClass() != o.getClass()) { return false; }
-        UByteBuffer that = (UByteBuffer) o;
-        return Objects.equals(buffer, that.buffer);
-    }
-
-    @Override
     public String toString() {
-        return buffer.toString();
+        return "UByteBuffer[" + buffer.length + "]";
     }
 }

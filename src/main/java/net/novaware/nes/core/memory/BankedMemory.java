@@ -74,7 +74,6 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     public BankedMemory allocatePhysicalBanks(UByteSupplier filler) {
         for (int i = 0; i < this.physicalBanks.length; i++) {
             this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes())
-                    .order(LITTLE_ENDIAN)
                     .fill(filler);
         }
 

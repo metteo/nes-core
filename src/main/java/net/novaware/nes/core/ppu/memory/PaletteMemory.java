@@ -7,7 +7,6 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.List;
 
-import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static net.novaware.nes.core.ppu.unit.PaletteData.COLOR_TRANSPARENT;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.sint;
@@ -31,7 +30,6 @@ public class PaletteMemory implements Nameable {
         final @Unsigned byte black = ubyte(0x0F);
 
         buffer = UByteBuffer.allocate(SIZE)
-                .order(LITTLE_ENDIAN)
                 .fill(black);
 
         // Poison mirrored, unreachable slots

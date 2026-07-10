@@ -9,7 +9,7 @@ class UByteBufferSpec extends Specification {
         def instance = UByteBuffer.allocate(1)
 
         then:
-        instance.toString() == "java.nio.HeapByteBuffer[pos=0 lim=1 cap=1]"
+        instance.toString() == "UByteBuffer[1]"
         instance.capacity() == 1
     }
 
