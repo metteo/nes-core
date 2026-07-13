@@ -6,13 +6,13 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 public final class UTypes {
 
     public static final @Unsigned short USHORT_0 = 0;
-    public static final @Unsigned byte UBYTE_0 = 0;
+    public static final @Unsigned byte  UBYTE_0  = 0;
 
     public static final int USHORT_MASK = 0xFFFF; // FIXME: use in very hot code
-    public static final int UBYTE_MASK = 0xFF; // FIXME: use in very hot code
+    public static final int UBYTE_MASK  = 0xFF;   // FIXME: use in very hot code
 
     public static final @Unsigned short USHORT_MAX_VALUE = (@Unsigned short) USHORT_MASK;
-    public static final @Unsigned byte UBYTE_MAX_VALUE = (@Unsigned byte) UBYTE_MASK;
+    public static final @Unsigned byte  UBYTE_MAX_VALUE  = (@Unsigned byte)  UBYTE_MASK;
 
     /**
      * Convert unsigned short to signed int (regular int)
