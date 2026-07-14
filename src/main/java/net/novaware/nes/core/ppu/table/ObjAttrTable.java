@@ -67,7 +67,7 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
         return sint(getY());
     }
 
-    public @Unsigned byte getTile() { // TODO: consider getPattern / getPatternRef / getPatternIndex
+    public @Unsigned byte getPatternRef() {
         verifyCursor();
 
         int address = cursor.getAsInt() + 1;
@@ -75,8 +75,8 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
         return memory.read(ubyte(address));
     }
 
-    public int getTileAsInt() {
-        return sint(getTile());
+    public int getPatternRefAsInt() {
+        return sint(getPatternRef());
     }
 
     public @Unsigned byte getAttr() {

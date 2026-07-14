@@ -61,7 +61,7 @@ public class ObjAttrTables implements Tables {
 
         sb.append("y: 0x").append(Hex.s(table.getY())).append(", ");
         sb.append("x: 0x").append(Hex.s(table.getX())).append(", ");
-        sb.append("tile: 0x").append(Hex.s(table.getTile())).append(", ");
+        sb.append("patternRef: 0x").append(Hex.s(table.getPatternRef())).append(", ");
         @Unsigned byte attr = table.getAttr();
         sb.append("palette: ").append(sint(asPalette(attr))).append(", ");
         sb.append("flipV: ").append(asFlipV(attr)).append(", ");

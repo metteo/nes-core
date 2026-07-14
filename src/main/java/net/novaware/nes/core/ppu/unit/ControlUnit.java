@@ -163,6 +163,8 @@ public class ControlUnit implements Initializable {
 
     public SpriteOutput[] spriteOutputUnits;
 
+    public SpriteOutput spriteOutputUnit;
+
     @Inject
     public ControlUnit(
         CoreConfig config,
@@ -267,6 +269,8 @@ public class ControlUnit implements Initializable {
         for(int i = 0; i < spriteOutputUnits.length; i++) {
             spriteOutputUnits[i] = new SpriteOutput();
         }
+
+        spriteOutputUnit = new SpriteOutput();
     }
 
     @Override
@@ -539,18 +543,25 @@ public class ControlUnit implements Initializable {
 
             case ACCESS_SP_LO_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
-                int tile = secObjAttrTable.getTileAsInt();
+                int tile = secObjAttrTable.getPatternRefAsInt();
                 @Unsigned byte attr = secObjAttrTable.getAttr();
                 int x = secObjAttrTable.getXAsInt();
 
                 SpriteOutput output = spriteOutputUnits[secObjAttrTable.getRow()];
-                output.active = y < 241; // TODO: temporary. count sprites found in eval. all other should have transparent pixels in the shifter
+                boolean isActive = y < 241; // TODO: temporary. count sprites found in eval. all other should have transparent pixels in the shifter
+                output.active = isActive;
 
                 // TODO: loading oam attrs & x is not instant, happens in garbage cycles
                 output.hidden = asHidden(attr);
                 output.palette = asPalette(attr);
                 output.countDown = x;
                 output.xCounter = 8; // 8 because 1-8 is drawing, 0 is idle
+
+                if (isActive) {
+                    // TODO: combine these as loadAttribute?
+                    spriteOutputUnit.loadPalette(x, asPalette(attr));
+                    spriteOutputUnit.loadPriority(x, ubyte(asHidden(attr) ? 1 : 0));
+                }
 
                 int spLoAddr = getSpritePatternAddress(y, tile, 0, asFlipV(attr));
 
@@ -566,10 +577,13 @@ public class ControlUnit implements Initializable {
                 }
 
                 spriteOutputUnits[secObjAttrTable.getRow()].shifter.loadPlaneLow(spLoData);
+                if (secObjAttrTable.getYAsInt() < 241) {
+                    spriteOutputUnit.loadPatternLo(secObjAttrTable.getXAsInt(), spLoData);
+                }
             }
             case ACCESS_SP_HI_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
-                int tile = secObjAttrTable.getTileAsInt();
+                int tile = secObjAttrTable.getPatternRefAsInt();
                 @Unsigned byte attr = secObjAttrTable.getAttr();
 
                 int spHiAddr = getSpritePatternAddress(y, tile, 1, asFlipV(attr));
@@ -584,6 +598,10 @@ public class ControlUnit implements Initializable {
                 }
 
                 spriteOutputUnits[secObjAttrTable.getRow()].shifter.loadPlaneHigh(spHiData);
+
+                if (secObjAttrTable.getYAsInt() < 241) {
+                    spriteOutputUnit.loadPatternHi(secObjAttrTable.getXAsInt(), spHiData);
+                }
 
                 //secOamIndex++;
                 secObjAttrTable.nextRow();
@@ -652,7 +670,10 @@ public class ControlUnit implements Initializable {
 
     private void executeFlag(Action flag) {
         switch(flag) {
-            case SET_HBLANK -> hBlank.set(true);
+            case SET_HBLANK -> {
+                hBlank.set(true);
+                spriteOutputUnit.clear();
+            }
             case CLR_HBLANK -> hBlank.set(false);
             case SET_VBLANK -> setVBlank(true);
             case CLR_STATUS -> clearStatus();
@@ -721,6 +742,11 @@ public class ControlUnit implements Initializable {
                 }
             }
         }
+
+//        int spX = dotCounter.getValue() - 1;
+//        paletteSp = spriteOutputUnit.getPalette(spX);
+//        offsetSp = spriteOutputUnit.getPattern(spX);
+//        hiddenSp = sint(spriteOutputUnit.getPriority(spX)) == 1;
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {

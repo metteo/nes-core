@@ -52,7 +52,7 @@ class ObjAttrTableSpec extends Specification {
 
         expect:
         primary.getY() == ubyte(0xAA)
-        primary.getTile() == ubyte(0xBB)
+        primary.getPatternRef() == ubyte(0xBB)
         primary.getAttr() == ubyte(0xCC & ~0b11100) // 3 bits of primary oam are disabled
         primary.getX() == ubyte(0xDD)
     }
@@ -104,11 +104,11 @@ class ObjAttrTableSpec extends Specification {
         oat[byteField] == ubyte(data)
 
         where:
-        address | data || row | byteField | comment
-        0x00    | 0xAB || 0   | "y"       | "1st byte"
-        0x01    | 0xCD || 0   | "tile"    | "2nd byte"
-        0x03    | 0xEF || 0   | "x"       | "4th byte"
-        0x1F    | 0xFF || 7   | "x"       | "last byte"
+        address | data || row | byteField   | comment
+        0x00    | 0xAB || 0   | "y"         | "1st byte"
+        0x01    | 0xCD || 0   | "patternRef"| "2nd byte"
+        0x03    | 0xEF || 0   | "x"         | "4th byte"
+        0x1F    | 0xFF || 7   | "x"         | "last byte"
     }
 
     def "should write using PPU Secondary OAM addressing (byte 2)"() {
