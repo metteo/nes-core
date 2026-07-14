@@ -123,8 +123,8 @@ public class EasyBoard {
     }
 
     public void preload(@Unsigned byte[] data) {
-        UByteBuffer buffer = UByteBuffer.allocate(CARTRIDGE_SIZE);
-        buffer.put(0, data);
+        UByteBuffer buffer = UByteBuffer.allocate(CARTRIDGE_SIZE)
+                .fill(0, data);
 
         PhysicalMemory rom = new PhysicalMemory("ROM", CARTRIDGE_START, CARTRIDGE_END, buffer);
 

@@ -3,7 +3,9 @@ package net.novaware.nes.core.util;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
+import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
 
 /**
@@ -16,16 +18,22 @@ import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
  */
 public class UByteBuffer {
 
+    public static final String MESSAGE_OUT_OF_BOUNDS = "index out of bounds";
+
+    private final int capacity;
     private final @Unsigned byte[] buffer;
 
     private UByteBuffer(int capacity) {
+        assertArgument(0 <= capacity, "capacity must be non-negative");
+
+        this.capacity = capacity;
         this.buffer = new @Unsigned byte[capacity];
     }
 
     @SuppressWarnings("signedness")
     public static UByteBuffer of(ByteBuffer buffer) {
         var ubb = new UByteBuffer(buffer.capacity());
-        buffer.get(ubb.buffer);
+        buffer.get(0, ubb.buffer);
 
         return ubb;
     }
@@ -39,54 +47,63 @@ public class UByteBuffer {
     }
 
     public @Unsigned byte get(int index) {
+        assert isWithinBounds(index) : MESSAGE_OUT_OF_BOUNDS;
+
         return buffer[index];
     }
 
+    private boolean isWithinBounds(int index) {
+        return 0 <= index && index <= capacity;
+    }
+
     public int getAsInt(int index) {
+        assert isWithinBounds(index) : MESSAGE_OUT_OF_BOUNDS;
+
         return buffer[index] & UBYTE_MASK;
     }
 
-//    public UByteBuffer get(int index, @Unsigned byte[] dst) {
-//        buffer.get(index, dst);
-//        return this;
-//    }
-
     public void put(int index, @Unsigned byte b) {
+        assert isWithinBounds(index) : MESSAGE_OUT_OF_BOUNDS;
+
         buffer[index] = b;
     }
 
-    @SuppressWarnings("cast.unsafe")
+    @SuppressWarnings("signedness")
     public void putAsByte(int index, int i) {
-        buffer[index] = (@Unsigned byte) i;
+        assert isWithinBounds(index) : MESSAGE_OUT_OF_BOUNDS;
+
+        buffer[index] = (byte) i;
     }
 
+    public int capacity() {
+        return capacity;
+    }
 
-    public UByteBuffer put(int index, @Unsigned byte[] src) {
-        // FIXME: assert on params
-
-        System.arraycopy(src, 0, buffer, index, src.length);
+    @SuppressWarnings("signedness")
+    public UByteBuffer fill(@Unsigned byte b) {
+        Arrays.fill(buffer, b);
 
         return this;
     }
 
-    public int capacity() {
-        return buffer.length;
-    }
-
-    public UByteBuffer fill(@Unsigned byte b) {
-        return fill(() -> b);
-    }
-
     public UByteBuffer fill(UByteSupplier supplier) {
-        for (int i = 0; i < buffer.length; i++) {
+        for (int i = 0; i < capacity; i++) {
             buffer[i] = supplier.getAsUByte();
         }
 
         return this;
     }
 
+    public UByteBuffer fill(int index, @Unsigned byte[] src) {
+        assert isWithinBounds(index) : MESSAGE_OUT_OF_BOUNDS;
+
+        System.arraycopy(src, 0, buffer, index, src.length);
+
+        return this;
+    }
+
     @Override
     public String toString() {
-        return "UByteBuffer[" + buffer.length + "]";
+        return "UByteBuffer[cap=" + capacity + "]";
     }
 }
