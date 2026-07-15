@@ -38,7 +38,7 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
     public int getRow() {
         verifyCursor();
 
-        return cursor.getAsInt() / ENTRY_SIZE;
+        return cursor.getAsInt() / ENTRY_SIZE; // TODO: this could be shift >> 2 (2 bits are 0-3)
     }
 
     public void setRow(int row) {

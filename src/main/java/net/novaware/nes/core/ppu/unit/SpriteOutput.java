@@ -1,176 +1,117 @@
 package net.novaware.nes.core.ppu.unit;
 
-import net.novaware.nes.core.ppu.table.LayoutTable;
-import net.novaware.nes.core.register.ByteShifter;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import java.util.Arrays;
 
+import static net.novaware.nes.core.config.VideoStandard.ACTIVE_WIDTH;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
-// TODO: refactor this into a branchless impl, without using external refs like integer counter or ByteShifter
-// TODO: consider data oriented. One instance having arrays for fields where every index is a separate unit
-// TODO: consider packing multiple sprites bits into a byte. 2 sparse arrays of 256 bytes could contain a full line of 8 sprites
+// TODO: refactor this into a branchless impl,
 //  no shifting, no counters. just extract the first non 0 bits for muxing
-//  having more than 2x or 4x amount of output units would require short/int, or additional output units, to be decided
 public class SpriteOutput {
 
-    public static final int COL_COUNT = LayoutTable.COL_COUNT; // TODO: unify this constant and move somewhere
+    private static final int MASK_PATTERN  = 0b0000_0011;
+    private static final int MASK_PALETTE  = 0b0000_1100;
+    private static final int MASK_HIDDEN   = 0b0001_0000;
+    private static final int MASK_SPRITE_0 = 0b0010_0000;
+    private static final int MASK_OVERFLOW = 0b0100_0000; // over 8 sprite limit
+    private static final int MASK_DIRTY    = 0b1000_0000; // already has some sprite
 
-    private final @Unsigned byte[] patternHi;
-    private final @Unsigned byte[] patternLo;
+    private final @Unsigned byte[] dots;
 
-    private final @Unsigned byte[] paletteHi;
-    private final @Unsigned byte[] paletteLo;
+    // TODO: have staging area for assembling sprite data, loop through 8 bit slots only on commit
+    // TODO: staging area here or as a separate object / register?
+    public int x2;
+    public @Unsigned byte patternLo2;
+    public @Unsigned byte patternHi2;
+    public int palette2;
+    public boolean hidden2;
+    public int number2;
 
-    private final @Unsigned byte[] priority;
+    // TODO: reading api should cache dot and allow fast access to attributes and pal/pat
 
     public SpriteOutput() {
-        patternHi = new byte[COL_COUNT];
-        patternLo = new byte[COL_COUNT];
-
-        paletteHi = new byte[COL_COUNT];
-        paletteLo = new byte[COL_COUNT];
-
-        priority = new byte[COL_COUNT];
+        dots = new byte[ACTIVE_WIDTH];
     }
 
-    // TODO: handle cases when the sprite hangs off the right side and should wrap into left side
-    // but only with horizontal mirroring like Mario Bros or Ice Climber, Wrecking Crew
-    public static void loadByte(@Unsigned byte[] dest, int x, int val) { // FIXME: overrides previous loads, sprite priority is reversed
-        int coarseX = (x >> 3) & 0b11111;
-        int fineX = x & 0b111;
+    public void loadLine(
+        // TODO: consider making these a reusable object
+        @Unsigned byte x,
+        @Unsigned byte patternHi,
+        @Unsigned byte patternLo,
+        int palette,
+        boolean hidden,
+        int number
+    ) {
+        int intX = sint(x);
+        int patHi = sint(patternHi);
+        int patLo = sint(patternLo);
 
-        if (fineX == 0) {
-            dest[coarseX] = ubyte(val);
-        } else { // split
-            int fineXMask = (0xFF << (8 - fineX)) & 0xFF; // right input
-            int remainXMask = (~fineXMask) & 0xFF;        // left  input
+        int pal = (palette & 0b11) << 2;
+        int hid = hidden ? MASK_HIDDEN : 0;
+        int sov = number > 0x7 ? MASK_OVERFLOW : 0;
+        int s0 = number == 0 ? MASK_SPRITE_0 : 0;
 
-            int leftPriInt = remainXMask & val >> fineX;
-            int rightPriInt = fineXMask & val << (8 - fineX);
+        int partialDot = MASK_DIRTY | sov | s0 | hid | pal;
 
-            int leftIndex = coarseX;
-            int rightIndex = (coarseX + 1) & (COL_COUNT - 1); // wrapping should be optional
+        for (int bit = 0, index, shift; bit < 8; ++bit) {
+            // TODO: handle cases when the sprite hangs off the right side and should wrap into left side
+            // but only with horizontal mirroring like Mario Bros or Ice Climber, Wrecking Crew
+            index = (intX + bit) & 0xFF; // TODO: make wrapping of sprites configurable, default to clipping
 
-            int leftByte = sint(dest[leftIndex]);
-            int rightByte = sint(dest[rightIndex]);
+            @Unsigned byte prevDot = dots[index];
+            if (isDirty(prevDot)) {
+                continue;
+            }
 
-            int newLeftByte = (fineXMask & leftByte) | leftPriInt;
-            int newRightByte = rightPriInt | (remainXMask & rightByte);
+            shift = 7 - bit;
+            int patHiBit = (patHi >> shift) & 0b1;
+            int patLoBit = (patLo >> shift) & 0b1;
+            int pattern = patHiBit << 1 | patLoBit;
 
-            dest[leftIndex] = ubyte(newLeftByte);
-            dest[rightIndex] = ubyte(newRightByte);
+            int newDot = partialDot | pattern;
+            int finalDot = pattern != 0 ? newDot : 0;
+
+            dots[index] = ubyte(finalDot);
         }
-    }
-
-    private static int getBit(@Unsigned byte[] src, int coarseX, int fineX) {
-        int fineXShift = 7 - fineX;
-
-        int line = sint(src[coarseX]);
-        int bit = (line & (1 << fineXShift)) >> fineXShift;
-
-        return bit & 0b1;
-    }
-
-    public void loadPriority(int x, @Unsigned byte priority) {
-        int priInt = sint(priority) * 0xFF;
-
-        loadByte(this.priority, x, priInt);
-    }
-
-    public void loadPalette(int x, @Unsigned byte palette) {
-        int palInt = sint(palette);
-
-        int paletteHi = ((palInt & 0b10) >> 1) * 0xFF;
-        int paletteLo =  (palInt & 0b01)       * 0xFF;
-
-        loadByte(this.paletteHi, x, paletteHi);
-        loadByte(this.paletteLo, x, paletteLo);
-    }
-
-    public void loadPatternHi(int x, @Unsigned byte patternHi) {
-        loadByte(this.patternHi, x, sint(patternHi));
-    }
-
-    public void loadPatternLo(int x, @Unsigned byte patternLo) {
-        loadByte(this.patternLo, x, sint(patternLo));
-    }
-
-    public @Unsigned byte getPattern(int x) {
-        int coarseX = (x >> 3) & 0b11111;
-        int fineX = x & 0b111;
-
-        int bitHi = getBit(patternHi, coarseX, fineX) << 1;
-        int bitLo = getBit(patternLo, coarseX, fineX);
-
-        return ubyte(bitHi | bitLo);
-    }
-
-    public @Unsigned byte getPalette(int x) {
-        assert 0 <= x && x <= 0xFF : "x out of bounds";
-        int coarseX = (x >> 3) & 0b11111;
-        int fineX = x & 0b111;
-
-        int bitHi = getBit(paletteHi, coarseX, fineX) << 1;
-        int bitLo = getBit(paletteLo, coarseX, fineX);
-
-        return ubyte(bitHi | bitLo);
-    }
-
-    public @Unsigned byte getPriority(int x) {
-        int coarseX = (x >> 3) & 0b11111;
-        int fineX = x & 0b111;
-
-        int bit = getBit(priority, coarseX, fineX);
-
-        return ubyte(bit);
     }
 
     public void clear() {
-        Arrays.fill(patternHi, UBYTE_0);
-        Arrays.fill(patternLo, UBYTE_0);
-
-        Arrays.fill(paletteHi, UBYTE_0);
-        Arrays.fill(paletteLo, UBYTE_0);
-
-        Arrays.fill(priority, UBYTE_0);
+        Arrays.fill(dots, UBYTE_0);
     }
 
-
-    // region old stuff for removal
-
-    public ByteShifter shifter = new ByteShifter("SPOU?");
-
-    public @Unsigned byte palette;
-
-    public boolean hidden;
-
-    public int countDown; // [0, x] waiting
-
-    public int xCounter;
-
-    public boolean active;
-
-
-    // FIXME: this method takes a lot of cpu time
-    public void maybeShiftPlanes() {
-        if (countDown > 0) {
-            countDown--;
-            return;
-        }
-
-        if (xCounter > 0) {
-            xCounter--;
-            shifter.shiftPlanes();
-        }
+    public void commit() {
+        loadLine(ubyte(x2), patternHi2, patternLo2, palette2, hidden2, number2);
     }
 
-    public boolean shouldDraw() {
-        return active & countDown == 0 && xCounter > 0;
+    public @Unsigned byte getDot(@Unsigned byte x) {
+        return dots[sint(x)];
     }
 
-    // endregion
+    public static @Unsigned byte asPattern(@Unsigned byte dot) {
+        return ubyte(sint(dot) & MASK_PATTERN);
+    }
+
+    public static @Unsigned byte asPalette(@Unsigned byte dot) {
+        return ubyte((sint(dot) & MASK_PALETTE) >> 2);
+    }
+
+    public static boolean isHidden(@Unsigned byte dot) {
+        return (sint(dot) & MASK_HIDDEN) != 0;
+    }
+
+    public static boolean isSprite0(@Unsigned byte dot) {
+        return (sint(dot) & MASK_SPRITE_0) != 0;
+    }
+
+    public static boolean isOverflow(@Unsigned byte dot) {
+        return (sint(dot) & MASK_OVERFLOW) != 0;
+    }
+
+    public static boolean isDirty(@Unsigned byte dot) {
+        return (sint(dot) & MASK_DIRTY) != 0;
+    }
 }

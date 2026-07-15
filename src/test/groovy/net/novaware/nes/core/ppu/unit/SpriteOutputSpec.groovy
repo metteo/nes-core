@@ -1,7 +1,9 @@
 package net.novaware.nes.core.ppu.unit
 
+import net.novaware.nes.core.util.Bin
 import spock.lang.Specification
 
+import static net.novaware.nes.core.util.UTypes.UBYTE_0
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class SpriteOutputSpec extends Specification {
@@ -14,84 +16,48 @@ class SpriteOutputSpec extends Specification {
         instance != null
     }
 
-    def "should load priority at correct x location (aligned)"() {
+    def "should load sprite into fresh unit"() {
         given:
         def spriteOutput = new SpriteOutput()
 
-        Arrays.fill(spriteOutput.priority, ubyte(0b1010_1010)) // watermark
-
         when:
-        spriteOutput.loadPriority(x, ubyte(priority))
+        def beforeLoad = spriteOutput.getDot(ubyte(xOut))
+        spriteOutput.loadLine(ubyte(xIn), ubyte(patternHi), ubyte(patternLo), pal, hid, num)
+        def afterLoad = spriteOutput.getDot(ubyte(xOut))
 
         then:
-        spriteOutput.priority[index] == ubyte(value)
+        beforeLoad == UBYTE_0
+        Bin.s(afterLoad) == Bin.s(ubyte(result))
 
         where:
-          x | priority || index | value
-          0 | 0        || 0     | 0b0000_0000
-          0 | 1        || 0     | 0b1111_1111
-        128 | 0        || 16    | 0b0000_0000
-        128 | 1        || 16    | 0b1111_1111
-        248 | 0        || 31    | 0b0000_0000
-        248 | 1        || 31    | 0b1111_1111
-    }
+        xIn | patternHi   | patternLo   | pal  | hid   | num || xOut | result      | comment
+        0   | 0b0000_0000 | 0b0000_0000 | 0    | false | 1   || 0    | 0b0000_0000 | "x=0, not dirty"
+        0   | 0b0000_0000 | 0b1000_0000 | 0    | false | 1   || 0    | 0b1000_0001 | "x=0, patLo 7"
+        0   | 0b1000_0000 | 0b0000_0000 | 0    | false | 1   || 0    | 0b1000_0010 | "x=0, patHi 7"
+        0   | 0b1000_0000 | 0b0000_0000 | 0b11 | false | 1   || 0    | 0b1000_1110 | "x=0, pal with patHi"
+        0   | 0b0000_0000 | 0b1000_0000 | 0b11 | false | 1   || 0    | 0b1000_1101 | "x=0, pal with patLo"
+        0   | 0b1000_0000 | 0b0000_0000 | 0    | true  | 1   || 0    | 0b1001_0010 | "x=0, hid with patHi"
+        0   | 0b0000_0000 | 0b1000_0000 | 0    | true  | 1   || 0    | 0b1001_0001 | "x=0, hid with patLo"
+        0   | 0b1000_0000 | 0b0000_0000 | 0    | false | 0   || 0    | 0b1010_0010 | "x=0, s0  with patHi"
+        0   | 0b0000_0000 | 0b1000_0000 | 0    | false | 0   || 0    | 0b1010_0001 | "x=0, s0  with patLo"
+        0   | 0b1000_0000 | 0b0000_0000 | 0    | false | 8   || 0    | 0b1100_0010 | "x=0, sov with patHi"
+        0   | 0b0000_0000 | 0b1000_0000 | 0    | false | 8   || 0    | 0b1100_0001 | "x=0, sov with patLo"
 
-    def "should load priority at correct x location (split)"() {
-        given:
-        def spriteOutput = new SpriteOutput()
+        0   | 0b0100_0000 | 0b0000_0000 | 0    | false | 1   || 1    | 0b1000_0010 | "x=1, dirty"
+        0   | 0b0000_0000 | 0b0000_0001 | 0    | false | 1   || 7    | 0b1000_0001 | "x=7, dirty"
+        0   | 0b0100_0000 | 0b0000_0000 | 0b11 | false | 1   || 1    | 0b1000_1110 | "x=1, pal"
+        0   | 0b0000_0000 | 0b0000_0001 | 0b11 | false | 1   || 7    | 0b1000_1101 | "x=7, pal"
+        0   | 0b0100_0000 | 0b0000_0000 | 0    | true  | 1   || 1    | 0b1001_0010 | "x=1, hid"
+        0   | 0b0000_0000 | 0b0000_0001 | 0    | true  | 1   || 7    | 0b1001_0001 | "x=7, hid"
+        0   | 0b0100_0000 | 0b0000_0000 | 0    | false | 0   || 1    | 0b1010_0010 | "x=1, s0"
+        0   | 0b0000_0000 | 0b0000_0001 | 0    | false | 0   || 7    | 0b1010_0001 | "x=7, s0"
+        0   | 0b0100_0000 | 0b0000_0000 | 0    | false | 9   || 1    | 0b1100_0010 | "x=1, sov"
+        0   | 0b0000_0000 | 0b0000_0001 | 0    | false | 9   || 7    | 0b1100_0001 | "x=7, sov"
 
-        Arrays.fill(spriteOutput.priority, ubyte(fill))
+        0   | 0b0000_0000 | 0b0000_0001 | 0    | false | 1   || 7    | 0b1000_0001 | "x=7, patLo 0"
+        0   | 0b0000_0001 | 0b0000_0000 | 0    | false | 1   || 7    | 0b1000_0010 | "x=7, patHi 0"
 
-        when:
-        spriteOutput.loadPriority(x, ubyte(priority))
-
-        then:
-        spriteOutput.priority[leftIdx] == ubyte(leftVal)
-        spriteOutput.priority[rightIdx] == ubyte(rightVal)
-
-        where:
-        fill | x      | priority || leftIdx | leftVal     | rightIdx | rightVal    | comment
-        0xFF | 1      | 0        || 0       | 0b1_0000000 | 1        | 0b0_1111111 | ""
-        0x00 | 1      | 1        || 0       | 0b0_1111111 | 1        | 0b1_0000000 | ""
-
-        0xFF | 2      | 0        || 0       | 0b11_000000 | 1        | 0b00_111111 | ""
-        0x00 | 2      | 1        || 0       | 0b00_111111 | 1        | 0b11_000000 | ""
-
-        0xFF | 3      | 0        || 0       | 0b111_00000 | 1        | 0b000_11111 | ""
-        0x00 | 3      | 1        || 0       | 0b000_11111 | 1        | 0b111_00000 | ""
-
-        0xFF | 7      | 0        || 0       | 0b1111111_0 | 1        | 0b0000000_1 | ""
-        0x00 | 7      | 1        || 0       | 0b0000000_1 | 1        | 0b1111111_0 | ""
-
-        0xFF |  1*8+3 | 0        || 1       | 0b111_00000 | 2        | 0b000_11111 | "cX=1,2"
-        0x00 |  1*8+3 | 1        || 1       | 0b000_11111 | 2        | 0b111_00000 | "cX=1,2"
-
-        0xFF | 30*8+3 | 0        || 30      | 0b111_00000 | 31       | 0b000_11111 | "cX=30,31"
-        0x00 | 30*8+3 | 1        || 30      | 0b000_11111 | 31       | 0b111_00000 | "cX=30,31"
-    }
-
-    def "should get correct pattern bits"() {
-        def spriteOutput = new SpriteOutput()
-
-        spriteOutput.loadPatternHi(inX, ubyte(patternHi))
-        spriteOutput.loadPatternLo(inX, ubyte(patternLo))
-
-        when:
-        def pattern = spriteOutput.getPattern(outX)
-
-        then:
-        pattern == ubyte(outPattern)
-
-        where:
-        inX | patternHi   | patternLo   || outX | outPattern
-        0   | 0b0_1111111 | 0b0_1111111 || 0    | 0b00
-        0   | 0b1_0000000 | 0b0_0000000 || 0    | 0b10
-        0   | 0b0_0000000 | 0b1_0000000 || 0    | 0b01
-        0   | 0b1_0000000 | 0b1_0000000 || 0    | 0b11
-
-        3   | 0b0_1111111 | 0b0_1111111 || 3    | 0b00
-        3   | 0b1_0000000 | 0b0_0000000 || 3    | 0b10
-        3   | 0b0_0000000 | 0b1_0000000 || 3    | 0b01
-        3   | 0b1_0000000 | 0b1_0000000 || 3    | 0b11
+        248 | 0b0000_0000 | 0b0000_0001 | 0    | false | 1   || 255  | 0b1000_0001 | "x=255, patLo 0, last dot, last bit"
+        255 | 0b0000_0000 | 0b0000_0001 | 0    | false | 1   || 6    | 0b1000_0001 | "x=255, patLo 0, wrap"
     }
 }
