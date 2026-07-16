@@ -18,7 +18,7 @@ public class SpriteOutput {
     private static final int MASK_HIDDEN   = 0b0001_0000;
     private static final int MASK_SPRITE_0 = 0b0010_0000;
     private static final int MASK_OVERFLOW = 0b0100_0000; // over 8 sprite limit
-    private static final int MASK_DIRTY    = 0b1000_0000; // already has some sprite
+    private static final int MASK_DIRTY    = 0b1000_0000; // already has some sprite data (also transparent)
 
     private final @Unsigned byte[] dots;
 
@@ -63,7 +63,7 @@ public class SpriteOutput {
             index = (intX + bit) & 0xFF; // TODO: make wrapping of sprites configurable, default to clipping
 
             @Unsigned byte prevDot = dots[index];
-            if (isDirty(prevDot)) {
+            if (isDirty(prevDot) && isOpaque(prevDot)) {
                 continue;
             }
 
@@ -73,9 +73,8 @@ public class SpriteOutput {
             int pattern = patHiBit << 1 | patLoBit;
 
             int newDot = partialDot | pattern;
-            int finalDot = pattern != 0 ? newDot : 0;
 
-            dots[index] = ubyte(finalDot);
+            dots[index] = ubyte(newDot);
         }
     }
 
@@ -93,6 +92,14 @@ public class SpriteOutput {
 
     public static @Unsigned byte asPattern(@Unsigned byte dot) {
         return ubyte(sint(dot) & MASK_PATTERN);
+    }
+
+    public static boolean isTransparent(@Unsigned byte dot) {
+        return (sint(dot) & MASK_PATTERN) == 0;
+    }
+
+    public static boolean isOpaque(@Unsigned byte dot) {
+        return (sint(dot) & MASK_PATTERN) != 0;
     }
 
     public static @Unsigned byte asPalette(@Unsigned byte dot) {

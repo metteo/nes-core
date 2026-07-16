@@ -9,9 +9,6 @@ import net.novaware.nes.core.mx.NesCoreRecorder
 import net.novaware.nes.core.ppu.inject.PpuRegModule
 import spock.lang.Specification
 
-import static org.hamcrest.MatcherAssert.assertThat
-import static org.hamcrest.Matchers.closeTo
-
 class MasterClockSpec extends Specification {
 
     def coreConfig = ImmutableCoreConfig.builder()
@@ -97,7 +94,7 @@ class MasterClockSpec extends Specification {
         masterClock.calculateSecondBudget()
 
         then:
-        assertThat(masterClock.frameBudget.getValue(), closeTo(60.098d, 0.001d))
+        masterClock.frameBudget.getValue() == 60
         masterClock.frameDuration == 16639356L
     }
 

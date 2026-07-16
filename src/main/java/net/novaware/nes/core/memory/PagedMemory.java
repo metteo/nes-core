@@ -136,30 +136,48 @@ public class PagedMemory implements MemoryDevice.ReadWrite, Nameable {
 
     @Override
     public void onRead() {
-        // NOTE: de-invokeinterface for performance, attempt
-        if (readPageLatch instanceof PhysicalMemory pm) {
-            pm.onAccess(addressLatch);
-            pm.onRead();
-
-            return;
+        // NOTE: de-invokeinterface for performance
+        switch(readPageLatch) {
+            case PhysicalMemory pm -> {
+                pm.onAccess(addressLatch);
+                pm.onRead();
+            }
+            case BankedMemory bm -> {
+                bm.onAccess(addressLatch);
+                bm.onRead();
+            }
+            case MemoryPage mp -> {
+                mp.onAccess(addressLatch);
+                mp.onRead();
+            }
+            default -> {
+                readPageLatch.onAccess(addressLatch);
+                readPageLatch.onRead();
+            }
         }
-
-        readPageLatch.onAccess(addressLatch);
-        readPageLatch.onRead();
     }
 
     @Override
     public void onWrite() {
-        // NOTE: de-invokeinterface for performance, attempt
-        if (writePageLatch instanceof PhysicalMemory pm) {
-            pm.onAccess(addressLatch);
-            pm.onWrite();
-
-            return;
+        // NOTE: de-invokeinterface for performance
+        switch(writePageLatch) {
+            case PhysicalMemory pm -> {
+                pm.onAccess(addressLatch);
+                pm.onWrite();
+            }
+            case BankedMemory bm -> {
+                bm.onAccess(addressLatch);
+                bm.onWrite();
+            }
+            case MemoryPage mp -> {
+                mp.onAccess(addressLatch);
+                mp.onWrite();
+            }
+            default -> {
+                writePageLatch.onAccess(addressLatch);
+                writePageLatch.onWrite();
+            }
         }
-
-        writePageLatch.onAccess(addressLatch);
-        writePageLatch.onWrite();
     }
 
     @Override

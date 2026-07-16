@@ -707,6 +707,7 @@ public class ControlUnit implements Initializable {
         @Unsigned byte paletteSp = 0;
         @Unsigned byte offsetSp = 0;
         boolean hiddenSp = false;
+        boolean sprite0;
 
         int spX = dotCounter.getValue() - 1;
 
@@ -714,6 +715,7 @@ public class ControlUnit implements Initializable {
         paletteSp = SpriteOutput.asPalette(dotSp);
         offsetSp = SpriteOutput.asPattern(dotSp);
         hiddenSp = SpriteOutput.isHidden(dotSp);
+        sprite0 = SpriteOutput.isSprite0(dotSp);
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {
@@ -726,6 +728,10 @@ public class ControlUnit implements Initializable {
                 palette = paletteBg;
                 offset = offsetBg;
             } else {
+                if (sprite0) { // FIXME: just an attempt, needs verification
+                    status.setSpriteZeroHit(true);
+                }
+
                 if (hiddenSp) {
                     palette = paletteBg;
                     offset = offsetBg;

@@ -31,7 +31,7 @@ class SpriteOutputSpec extends Specification {
 
         where:
         xIn | patternHi   | patternLo   | pal  | hid   | num || xOut | result      | comment
-        0   | 0b0000_0000 | 0b0000_0000 | 0    | false | 1   || 0    | 0b0000_0000 | "x=0, not dirty"
+        0   | 0b0000_0000 | 0b0000_0000 | 0    | false | 1   || 0    | 0b1000_0000 | "x=0, dirty"
         0   | 0b0000_0000 | 0b1000_0000 | 0    | false | 1   || 0    | 0b1000_0001 | "x=0, patLo 7"
         0   | 0b1000_0000 | 0b0000_0000 | 0    | false | 1   || 0    | 0b1000_0010 | "x=0, patHi 7"
         0   | 0b1000_0000 | 0b0000_0000 | 0b11 | false | 1   || 0    | 0b1000_1110 | "x=0, pal with patHi"

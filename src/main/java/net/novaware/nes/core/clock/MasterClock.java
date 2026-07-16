@@ -46,10 +46,11 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     public IntegerCounter timeBudget = new IntegerCounter("CLK.TB"); // secs
     public IntegerCounter timeCounter = new IntegerCounter("CLK.TC"); // secs
 
-    public DoubleCounter  frameBudget = new DoubleCounter("CLK.FB"); // frames / sec
+    public IntegerCounter frameBudget = new IntegerCounter("CLK.FB"); // frames / sec
     public IntegerCounter frameCounter = new IntegerCounter("CLK.FC"); // frames
     public long           frameDuration; // nanos / frame
     public long           frameSpinTime; // nanos / frame stat
+    public final boolean  frameLimiter = true;
 
     // TODO: track cpu odd/even or read/write cycle state
     public IntegerCounter cpuClockBudget = new IntegerCounter("CPU.CB"); // per frame
@@ -141,7 +142,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
         long workDuration = System.nanoTime() - workStart;                      // TODO: replace all System.nanoTime with TimeSource injected dependency
         long targetSpinDuration = Math.max(0, frameDuration - workDuration);
 
-        spinWait(targetSpinDuration);
+        if (frameLimiter) {
+            spinWait(targetSpinDuration);
+        }
     }
 
     private void spinWait(long targetSpinDuration) {
@@ -167,11 +170,11 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
     public void tick() {
         calculateSecondBudget();
-        double framesToRun = frameBudget.getValue();
+        int framesToRun = frameBudget.getValue();
 
         long tickStart = System.nanoTime();
 
-        while (frameBudget.getValue() > 1) {
+        while (frameBudget.getValue() > 0) {
             calculateFrameBudget();
             runAndMeasureFrame();
         }
@@ -180,7 +183,7 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
 
         long tickDuration = System.nanoTime() - tickStart;
         double avgFrameTime = (double) tickDuration / framesToRun; // ns
-        double fps = 1_000_000_000d /* ns */ / avgFrameTime; // TODO: some rising because of fractional accumulation
+        double fps = 1_000_000_000d /* ns */ / avgFrameTime;
 
         // FIXME: causes lots of byte[] allocations, create FlightRecorder which puts interesting values into ring buffer
         //  and dumps them when needed (manual dump, crash dump)
@@ -271,10 +274,9 @@ public class MasterClock implements ClockGenerator, Runnable { // TODO: this is 
     }
 
     void calculateSecondBudget() {
-        frameBudget.setValue(frameBudget.getValue() + videoStandard.getRefreshRate());
+        frameBudget.setValue((int) videoStandard.getRefreshRate());
 
-        // FIXME: use not full second as a base since we shouldn't use full second (60 of 60.098 frames)
-        frameDuration = (long)(1_000d /* ms */ / frameBudget.getValue() * 1_000_000d /* ns */ );
+        frameDuration = (long)(1_000d /* ms */ / videoStandard.getRefreshRate() * 1_000_000d /* ns */ );
         frameSpinTime = 0L;
 
         cpuTime = 0L;
