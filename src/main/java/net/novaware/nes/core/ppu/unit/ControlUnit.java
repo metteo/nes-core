@@ -96,7 +96,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see gemini: micro-action log
  */
 @BoardScope
-public class ControlUnit implements Initializable {
+public class ControlUnit implements Initializable { // FIXME: separate from Cpu ControlUnit, maybe ActionUnit?
 
     private final VideoStandard videoStandard;
 
@@ -163,7 +163,7 @@ public class ControlUnit implements Initializable {
     public SpriteOutput spriteOutputUnit;
 
     @Inject
-    public ControlUnit(
+    public ControlUnit( // FIXME: this number of params is getting out of hand
         CoreConfig config,
         TimingUnit timingUnit,
         @PpuVar(CC) IntegerCounter cycleCounter,

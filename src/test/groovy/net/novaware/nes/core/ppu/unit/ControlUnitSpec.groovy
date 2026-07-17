@@ -1,14 +1,9 @@
 package net.novaware.nes.core.ppu.unit
 
+import net.novaware.nes.core.TestNesCore
 import net.novaware.nes.core.config.VideoStandard
 import net.novaware.nes.core.ppu.action.Action
 import net.novaware.nes.core.ppu.action.ScanLine
-import net.novaware.nes.core.ppu.inject.PpuDepModule
-import net.novaware.nes.core.ppu.inject.PpuMemModule
-import net.novaware.nes.core.ppu.inject.PpuRegModule
-import net.novaware.nes.core.ppu.inject.PpuTabModule
-import net.novaware.nes.core.ppu.memory.ExtBus
-import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
 import java.util.function.Function
@@ -17,51 +12,11 @@ import java.util.stream.Stream
 import static java.util.stream.Collectors.counting
 import static java.util.stream.Collectors.groupingBy
 import static net.novaware.nes.core.config.CoreConfigBuilder.ntsc
+import static net.novaware.nes.core.config.CoreConfigBuilder.pal
 import static net.novaware.nes.core.config.VideoStandard.NTSC
 import static net.novaware.nes.core.config.VideoStandard.PAL
 
 class ControlUnitSpec extends Specification {
-
-    def config = ntsc()
-    def cycleCounter = PpuRegModule.provideCycleCounter()
-    def scanLineCounter = PpuRegModule.provideLineCounter()
-    def dotCounter = PpuRegModule.provideDotCounter()
-    def frameToggle = PpuRegModule.provideFrameToggle()
-    def frameCounter = PpuRegModule.provideFrameCounter()
-
-    def status = PpuRegModule.provideStatus()
-    def hBlank = PpuRegModule.provideHorizontalBlank()
-    def vBlankInterruptEnabled = PpuRegModule.provideVBlankInterruptEnabled()
-    def vBlankInterrupt = PpuDepModule.provideVBlankInterruptPin(PpuDepModule.provideVBlankInterruptReg())
-    def renderSprite = PpuRegModule.provideRenderSprite()
-    def renderBackground = PpuRegModule.provideRenderBackground()
-    def sprite0Hit = PpuDepModule.provideSprite0HitPin(PpuDepModule.provideSprite0HitReg())
-    def spriteSize = PpuRegModule.provideSpriteSize()
-    def currentViewPort = PpuRegModule.provideCurrentViewPort()
-    def tempViewPort = PpuRegModule.provideTempViewPort()
-    def resetLock = PpuRegModule.provideResetLock()
-    def bus = new PpuBus()
-    def backgroundPatternTable = PpuRegModule.provideBackgroundPatternTable()
-    def spritePatternTable = PpuRegModule.provideSpritePatternTable()
-    def videoOut = PpuRegModule.provideVideoOutRegister()
-    def paletteMemory = PpuMemModule.providePaletteMemory()
-    def paletteTable = PpuTabModule.providePaletteTable(paletteMemory)
-    def priObjAttrMemory = PpuMemModule.providePrimaryObjAttrMemory()
-    def secObjAttrMemory = PpuMemModule.provideSecondaryObjAttrMemory()
-
-    def priObjAttrReg = PpuRegModule.providePrimaryObjAttrAddress()
-    def secObjAttrReg = PpuRegModule.provideSecondaryObjAttrAddress()
-
-    def priObjAttrTable = PpuTabModule.providePriObjAttrTable(priObjAttrReg, priObjAttrMemory)
-    def secObjAttrTable = PpuTabModule.provideSecObjAttrTable(secObjAttrReg, secObjAttrMemory)
-
-    def spriteUnit = new SpriteUnit(scanLineCounter, dotCounter, spriteSize, priObjAttrMemory, secObjAttrMemory)
-
-    def layoutTable = PpuTabModule.provideLayoutTables(PpuMemModule.provideLayoutTablesSegment(), bus)
-    def attrTable = PpuTabModule.provideAttributeTables(PpuMemModule.provideAttributeTablesSegment(), bus)
-
-    def extBus = new ExtBus()
-    def masterSlaveSelect = PpuRegModule.provideMasterSlaveSelect()
 
     def "should construct an instance"() {
         when:
@@ -182,49 +137,14 @@ class ControlUnitSpec extends Specification {
         newCu(NTSC)
     }
 
-    TimingUnit newTimingUnit(VideoStandard vs) {
-        new TimingUnit(config.videoStandard(vs).build(), frameCounter, frameToggle, scanLineCounter, dotCounter,
-                renderSprite, renderBackground)
-    }
-
-
     ControlUnit newCu(VideoStandard vs) {
-        // FIXME: this number of params is getting out of hand
-        new ControlUnit(
-            config.videoStandard(vs).build(),
-            newTimingUnit(vs),
-            cycleCounter,
-            scanLineCounter,
-            dotCounter,
-            frameToggle,
-            status,
-            hBlank,
-            vBlankInterruptEnabled,
-            vBlankInterrupt,
-            renderSprite,
-            renderBackground,
-            sprite0Hit,
-            spriteSize,
-            currentViewPort,
-            tempViewPort,
-            resetLock,
-            bus,
-            backgroundPatternTable,
-            spritePatternTable,
-            videoOut,
-            paletteMemory,
-            paletteTable,
-            priObjAttrMemory,
-            secObjAttrMemory,
-            priObjAttrReg,
-            secObjAttrReg,
-            priObjAttrTable,
-            secObjAttrTable,
-            spriteUnit,
-            layoutTable,
-            attrTable,
-            extBus,
-            masterSlaveSelect
-        )
+        def coreConfg = switch(vs) {
+            case NTSC -> ntsc().build()
+            case PAL -> pal().build()
+        }
+
+        def factory = TestNesCore.newTestNesCore(coreConfg)
+
+        return factory.newPpuControlUnit()
     }
 }
