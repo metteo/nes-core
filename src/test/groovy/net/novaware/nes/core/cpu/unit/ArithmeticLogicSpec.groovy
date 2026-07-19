@@ -14,10 +14,10 @@ class ArithmeticLogicSpec extends RegsAndRamBaseSpec {
 
     def "should bitwise or"() {
         given:
-        regs a: aIn, do: operand
+        regs a: aIn
 
         when:
-        alu.bitwiseOr()
+        alu.bitwiseOr(ubyte(operand))
 
         then:
         expectRegs a: aOut, z: zero, n: neg as boolean
