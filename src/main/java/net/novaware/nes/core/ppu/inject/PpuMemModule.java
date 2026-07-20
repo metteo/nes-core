@@ -1,20 +1,16 @@
 package net.novaware.nes.core.ppu.inject;
 
-import dagger.Binds;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BankedMemory;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
-import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Quantity;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LTS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PAL;
@@ -79,11 +75,6 @@ public interface PpuMemModule {
         // TODO: add support for 2x or 4x more sprites in a line to prevent flicker
         return new ObjAttrMemory(SOA.doc(), SECONDARY, SECONDARY_ENTRY_COUNT);
     }
-
-    @Binds
-    @BoardScope
-    @PpuVar(BUS)
-    MemoryBus bindPpuBus(PpuBus ppuBus); // FIXME: seems like @BoardScope on PpuBus class doesn't work as it should
 
     @Provides
     @BoardScope

@@ -1,13 +1,13 @@
 package net.novaware.nes.core.ppu.table
 
-import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
-import net.novaware.nes.core.test.TestBus
+import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
 import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 // TODO: create a base Spec for testing Table/s
 class LayoutTableSpec extends Specification {
@@ -22,7 +22,7 @@ class LayoutTableSpec extends Specification {
 
     def "should construct an instance"() {
         given:
-        MemoryBus bus = Mock()
+        PpuBus bus = Mock()
 
         when:
         def instance = new LayoutTable("test", segment, bus)
@@ -34,7 +34,7 @@ class LayoutTableSpec extends Specification {
 
     def "should properly construct layout table address"() {
         given:
-        MemoryBus bus = Mock()
+        PpuBus bus = Mock()
         def table = new LayoutTable("test", segment, bus)
 
         expect:
@@ -50,12 +50,13 @@ class LayoutTableSpec extends Specification {
 
     def "should properly read layout table corners"() {
         given:
-        def bus = new TestBus(layoutAttrTable0)
+        def bus = new PpuBus()
+        bus.attachCartridge(layoutAttrTable0)
 
-        bus.write(0x2000, 0xAA)
-        bus.write(0x201F, 0xBB)
-        bus.write(0x23A0, 0xCC)
-        bus.write(0x23BF, 0xDD)
+        bus.access(ushort(0x2000)).write().data(ubyte(0xAA))
+        bus.access(ushort(0x201F)).write().data(ubyte(0xBB))
+        bus.access(ushort(0x23A0)).write().data(ubyte(0xCC))
+        bus.access(ushort(0x23BF)).write().data(ubyte(0xDD))
 
         LayoutTable layoutTable = new LayoutTable("LT0", segment, bus)
         def printer = new LayoutPrinter(layoutTable, printWriter)

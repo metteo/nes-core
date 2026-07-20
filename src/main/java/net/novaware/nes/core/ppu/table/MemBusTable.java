@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.table;
 
-import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Hex;
 
@@ -8,12 +8,12 @@ public abstract class MemBusTable {
 
     protected final String name;
     protected final SegmentRegister segment; // TODO: consider immutable variant
-    protected final MemoryBus bus;
+    protected final PpuBus bus;
 
     protected MemBusTable(
         String name,
         SegmentRegister segment,
-        MemoryBus bus
+        PpuBus bus
     ) {
         this.name = name;
         this.segment = segment;

@@ -1,11 +1,11 @@
 package net.novaware.nes.core.cpu.memory;
 
 import jakarta.inject.Inject;
+import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.MemoryPage;
 import net.novaware.nes.core.memory.PagedMemory;
@@ -28,7 +28,8 @@ import static net.novaware.nes.core.cpu.inject.CpuVarName.RAM;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.TMR;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
-public class CpuBus implements MemoryBus { // TODO: use concrete classes inside. Also should be a single final class
+@BoardScope
+public class CpuBus { // TODO: use concrete classes inside. Also should be a single final class
     // TODO: maybe use switch primitive pattern with address comparison
     // TODO: use classpath / module path / spi to plug a different cpu bus into cpu. just like slf4j changes implementations
 
@@ -82,36 +83,30 @@ public class CpuBus implements MemoryBus { // TODO: use concrete classes inside.
         internal.onAttach(dataLine);
     }
 
-    @Override
     public BusOp currentOp() {
         return busOp;
     }
 
-    @Override
     public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
         this.cartridge = cartridge;
         this.cartridge.onAttach(dataLine);
     }
 
-    @Override
     public void detachCartridge() {
         cartridge.onDetach();
         cartridge = new MemoryDevice.Empty();
     }
 
-    @Override
     public void attachExpansion(MemoryDevice.ReadWrite expansion) {
         this.expansion = expansion;
         this.expansion.onAttach(dataLine);
     }
 
-    @Override
     public void detachExpansion() {
         expansion.onDetach();
         expansion = new MemoryDevice.Empty();
     }
 
-    @Override
     public CpuBus access(@Unsigned short address) {
         assert busOp == BusOp.DATA_READ || busOp == BusOp.DATA_WRITE; // compile out, TODO: consider JCP or Manifold
 
@@ -128,7 +123,6 @@ public class CpuBus implements MemoryBus { // TODO: use concrete classes inside.
         return this;
     }
 
-    @Override
     public CpuBus read() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
@@ -137,7 +131,6 @@ public class CpuBus implements MemoryBus { // TODO: use concrete classes inside.
         return this;
     }
 
-    @Override
     public CpuBus write() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
@@ -146,14 +139,12 @@ public class CpuBus implements MemoryBus { // TODO: use concrete classes inside.
         return this;
     }
 
-    @Override
     public void probe(@Unsigned short address, DataBus.Line dataLine) {
         internal.probe(address, dataLine);
         cartridge.probe(address, dataLine);
         expansion.probe(address, dataLine);
     }
 
-    @Override
     public @Unsigned byte data() {
         assert busOp == BusOp.CONTROL_READ; // compile out
 
@@ -166,7 +157,6 @@ public class CpuBus implements MemoryBus { // TODO: use concrete classes inside.
         return dataLine.cycle(); // CPU reading the line
     }
 
-    @Override
     public void data(@Unsigned byte data) {
         assert busOp == BusOp.CONTROL_WRITE; // compile out
 

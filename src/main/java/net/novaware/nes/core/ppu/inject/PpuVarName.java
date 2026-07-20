@@ -44,7 +44,6 @@ public enum PpuVarName {
     VRAM ("", "videoMemory", "Video RAM"),
     VOUT ("", "videoOut", "Video OUT"),
 
-    BUS ("", "memoryBus", "Memory Bus"),
     DMA ("", "dma", "Direct Memory Access"),
 
     //OAM ("", "oam", "Object Attribute Memory"),

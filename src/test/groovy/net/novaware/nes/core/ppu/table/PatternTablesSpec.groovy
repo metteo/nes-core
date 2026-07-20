@@ -2,7 +2,7 @@ package net.novaware.nes.core.ppu.table
 
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
-import net.novaware.nes.core.test.TestBus
+import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
@@ -16,7 +16,13 @@ class PatternTablesSpec extends Specification {
     def memory = new PhysicalMemory("PTS", PATTERN_TABLE_0_START, PATTERN_TABLE_1_END,
             PATTERN_TABLE_0_SIZE + PATTERN_TABLE_1_SIZE)
 
-    def ppuBus = new TestBus(memory)
+    def ppuBus = newPpuBus()
+
+    def newPpuBus() {
+        def b = new PpuBus()
+        b.attachCartridge(memory)
+        b
+    }
 
     def "should construct an instance"() {
         when:

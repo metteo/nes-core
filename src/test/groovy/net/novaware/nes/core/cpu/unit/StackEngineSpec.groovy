@@ -1,8 +1,8 @@
 package net.novaware.nes.core.cpu.unit
 
+import net.novaware.nes.core.cpu.memory.CpuBus
 import net.novaware.nes.core.cpu.register.CpuRegFile
 import net.novaware.nes.core.cpu.register.Status
-import net.novaware.nes.core.memory.MemoryBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.TestNesCore.newTestNesCore
@@ -13,7 +13,7 @@ class StackEngineSpec extends Specification {
 
     def factory = newTestNesCore()
     CpuRegFile regs = factory.newCpuRegisters()
-    MemoryBus bus = factory.newCpuBus()
+    CpuBus bus = factory.newCpuBus()
     StackEngine engine = factory.newStackEngine()
 
     def "should push accumulator on the stack"() {

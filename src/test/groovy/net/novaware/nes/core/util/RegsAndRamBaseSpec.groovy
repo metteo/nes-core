@@ -22,7 +22,7 @@ class RegsAndRamBaseSpec extends Specification {
     CpuRegFile registers = factory.newCpuRegisters()
     CpuInsFile insRegs = factory.newExtRegisters()
 
-    CpuBus bus = factory.newCpuBus() as CpuBus
+    CpuBus bus = factory.newCpuBus()
 
     Cartridge cart = Cartridge.of(NesFileBuilder.marioBros().build())
 

@@ -5,7 +5,6 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.memory.CpuBusBridge;
 import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.memory.DataBus;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.OpenLine;
 import net.novaware.nes.core.ppu.inject.PpuVar;
@@ -30,7 +29,6 @@ import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_MIRROR_EN
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_REGISTERS_START;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_SCROLL_REGISTER;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_STATUS_REGISTER;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CB;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CH;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.CI;
@@ -68,7 +66,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 @BoardScope
 public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBridge {
 
-    private final MemoryBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
+    private final PpuBus ppuBus; // TODO: probably shouldn't have direct access, instead through ppu?
     private final PaletteMemory palette;
 
     private final ObjAttrMemory priObjAttrMemory;
@@ -114,11 +112,11 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
     @Inject
     public PpuMemDevice( // TODO: inject the segment register with start / end to allow no cpu usage
-        @PpuVar(BUS) MemoryBus ppuBus,
+        PpuBus ppuBus,
         PaletteMemory palette,
 
-         @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
-         @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
+        @PpuVar(POA) ObjAttrMemory priObjAttrMemory,
+        @PpuVar(SOA) ObjAttrMemory secObjAttrMemory,
         @PpuVar(POA) ObjAttrRegister priOamAddress,
         @PpuVar(SOA) ObjAttrRegister secOamAddress,
 

@@ -14,7 +14,7 @@ import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 import static net.novaware.nes.core.util.UTypes.ushort
 
-class PpuMemDeviceSpec extends Specification {
+class PpuMemDeviceSpec extends Specification { // TODO: use dagger to construct an instance
 
     def priOam = PpuMemModule.providePrimaryObjAttrMemory()
     def secOam = PpuMemModule.provideSecondaryObjAttrMemory()
@@ -46,7 +46,7 @@ class PpuMemDeviceSpec extends Specification {
 
     def "should construct correctly"() {
         given:
-        MemoryBus ppuBus = Mock()
+        PpuBus ppuBus = Mock()
         def ppuMemDevice = newPpuMemDev(ppuBus)
 
         expect:
@@ -55,7 +55,7 @@ class PpuMemDeviceSpec extends Specification {
         ppuMemDevice.getEndAddress() == PPU_REGISTERS_MIRROR_END
     }
 
-    private PpuMemDevice newPpuMemDev(MemoryBus ppuBus) {
+    private PpuMemDevice newPpuMemDev(PpuBus ppuBus) {
         new PpuMemDevice(
             ppuBus,
             palette,
@@ -89,12 +89,12 @@ class PpuMemDeviceSpec extends Specification {
     }
 
     private MemoryBus newCpuBus() {
-        MemoryBus ppuBus = Mock()
+        PpuBus ppuBus = Mock()
         def ppuMemDevice = newPpuMemDev(ppuBus)
         new TestBus(ppuMemDevice)
     }
 
-    TestBus newPpuBus() {
+    PpuBus newPpuBus() {
         PhysicalMemory ppuMem = new PhysicalMemory(
                 "PPU",
                 PpuMemMap.MEMORY_START,
@@ -102,13 +102,15 @@ class PpuMemDeviceSpec extends Specification {
                 PpuMemMap.MEMORY_SIZE
         )
 
-        new TestBus(ppuMem)
+        def bus = new PpuBus()
+        bus.attachCartridge(ppuMem)
+        bus
     }
 
     def "should redirect reads to PPU bus"() {
         given:
         def ppuBus = newPpuBus()
-        ppuBus.write(0x2000, 0x34)
+        ppuBus.access(ushort(0x2000)).write().data(ubyte(0x34))
 
         def ppuMemDevice = newPpuMemDev(ppuBus)
         def cpuBus = new TestBus(ppuMemDevice)
@@ -145,7 +147,7 @@ class PpuMemDeviceSpec extends Specification {
         cpuBus.access(ushort(0x2007 + mirror)).write().data(value)
 
         then:
-        ppuBus.read(0x2000) == value
+        ppuBus.access(ushort(0x2000)).read().data() == ubyte(value)
 
         where:
         mirror << [0, 8 , 0x1FF8, 0x1FF0]

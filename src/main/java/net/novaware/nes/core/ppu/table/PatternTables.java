@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.table;
 
-import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.util.Nameable;
 
@@ -10,7 +10,7 @@ public class PatternTables extends MemBusTable implements Tables, Nameable {
 
     public static final int MEM_ROW_COUNT = 2;
 
-    public PatternTables(String name, SegmentRegister segment, MemoryBus bus) {
+    public PatternTables(String name, SegmentRegister segment, PpuBus bus) {
         super(name, segment, bus);
     }
 

@@ -5,7 +5,6 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.memory.BusOp;
 import net.novaware.nes.core.memory.DataBus;
 import net.novaware.nes.core.memory.DataLine;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -16,7 +15,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
  * Internal PPU Bus which allows access to Cartridge, Expansion and Internal VRAM (through Cartridge)
  */
 @BoardScope
-public class PpuBus implements MemoryBus {
+public class PpuBus {
 
     // TODO: cart and expansion don't have the pallete indexes and don't hear anything above 0x3F00 (excl.)
     @Used
@@ -36,36 +35,30 @@ public class PpuBus implements MemoryBus {
 
     }
 
-    @Override
     public BusOp currentOp() {
         return busOp;
     }
 
-    @Override
     public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
         this.cartridge = cartridge;
         this.cartridge.onAttach(dataLine);
     }
 
-    @Override
     public void detachCartridge() {
         cartridge.onDetach();
         cartridge = new MemoryDevice.Empty();
     }
 
-    @Override
     public void attachExpansion(MemoryDevice.ReadWrite expansion) {
         this.expansion = expansion;
         this.expansion.onAttach(dataLine);
     }
 
-    @Override
     public void detachExpansion() {
         expansion.onDetach();
         expansion = new MemoryDevice.Empty();
     }
 
-    @Override
     public PpuBus access(@Unsigned short address) {
         assert sint(address) < PpuMemMap.MEMORY_SIZE : "ppu address bus is 14 bits";
         // PPU can just call address bus without full control & data lines
@@ -85,7 +78,6 @@ public class PpuBus implements MemoryBus {
         return this;
     }
 
-    @Override
     public PpuBus read() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
@@ -94,7 +86,6 @@ public class PpuBus implements MemoryBus {
         return this;
     }
 
-    @Override
     public PpuBus write() {
         assert busOp == BusOp.ADDRESS_ACCESS; // compile out
 
@@ -103,13 +94,11 @@ public class PpuBus implements MemoryBus {
         return this;
     }
 
-    @Override
     public void probe(@Unsigned short address, DataBus.Line dataLine) {
         cartridge.probe(address, dataLine);
         expansion.probe(address, dataLine);
     }
 
-    @Override
     public @Unsigned byte data() {
         assert busOp == BusOp.CONTROL_READ; // compile out
 
@@ -121,7 +110,6 @@ public class PpuBus implements MemoryBus {
         return dataLine.cycle(); // PPU reading the line
     }
 
-    @Override
     public void data(@Unsigned byte data) {
         assert busOp == BusOp.CONTROL_WRITE; // compile out
 

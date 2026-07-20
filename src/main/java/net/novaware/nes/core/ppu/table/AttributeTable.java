@@ -1,6 +1,6 @@
 package net.novaware.nes.core.ppu.table;
 
-import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -14,7 +14,7 @@ public class AttributeTable extends MemBusTable implements Table {
     public static final int ROW_COUNT = 8;
     public static final int COL_COUNT = 8;
 
-    public AttributeTable(String name, SegmentRegister segment, MemoryBus bus) {
+    public AttributeTable(String name, SegmentRegister segment, PpuBus bus) {
         super(name, segment, bus);
     }
 

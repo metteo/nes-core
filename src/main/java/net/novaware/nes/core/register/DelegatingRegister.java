@@ -1,19 +1,16 @@
 package net.novaware.nes.core.register;
 
-import net.novaware.nes.core.memory.BusOp;
-import net.novaware.nes.core.memory.ControlBus;
-import net.novaware.nes.core.memory.DataBus;
-import net.novaware.nes.core.memory.MemoryBus;
-import net.novaware.nes.core.memory.MemoryDevice;
+import net.novaware.nes.core.cpu.memory.CpuBus;
 import org.checkerframework.checker.signedness.qual.Unsigned;
+import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 import static net.novaware.nes.core.util.UTypes.USHORT_0;
 
 public class DelegatingRegister extends Register {
 
     private final ByteRegister nullByteRegister = new ByteRegister("NULL");
-    private final MemoryBus nullMemoryBus = new EmptyMemoryBus();
 
     private final EmptyDelegate emptyDelegate = new EmptyDelegate();
     private final ByteDelegate byteDelegate = new ByteDelegate();
@@ -25,7 +22,7 @@ public class DelegatingRegister extends Register {
     private @Unsigned short address;
 
     private DataRegister dataRegister = nullByteRegister;
-    private MemoryBus memoryBus = nullMemoryBus; // TODO: maybe replace with MMU?
+    private @Nullable CpuBus cpuBus; // TODO: maybe replace with MMU?
     private Delegate delegate = emptyDelegate;
 
     public DelegatingRegister(String name) {
@@ -40,7 +37,6 @@ public class DelegatingRegister extends Register {
         address = USHORT_0;
 
         dataRegister = nullByteRegister;
-        memoryBus = nullMemoryBus;
 
         delegate = emptyDelegate;
     }
@@ -72,10 +68,10 @@ public class DelegatingRegister extends Register {
         this.delegate = byteRegisterDelegate;
     }
 
-    public void configureMemory(MemoryBus memoryBus, @Unsigned short address) {
+    public void configureMemory(CpuBus cpuBus, @Unsigned short address) {
         reset();
 
-        this.memoryBus = memoryBus;
+        this.cpuBus = cpuBus;
         this.address = address;
         this.delegate = memoryDelegate;
     }
@@ -168,74 +164,22 @@ public class DelegatingRegister extends Register {
         }
     }
 
-    static class EmptyMemoryBus implements MemoryBus {
-
-        @Override
-        public BusOp currentOp() {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public void probe(@Unsigned short address, DataBus.Line dataLine) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public ControlBus.Line access(@Unsigned short address) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public DataBus.Read read() {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public DataBus.Write write() {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public @Unsigned byte data() {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public void data(@Unsigned byte data) {
-            throw new IllegalStateException("Empty memory bus called");
-        }
-
-        @Override
-        public void attachCartridge(MemoryDevice.ReadWrite cartridge) {
-            throw new UnsupportedOperationException("not implemented!");
-        }
-
-        @Override
-        public void detachCartridge() {
-            throw new UnsupportedOperationException("not implemented!");
-        }
-
-        @Override
-        public void attachExpansion(MemoryDevice.ReadWrite expansion) {
-            throw new UnsupportedOperationException("not implemented!");
-        }
-
-        @Override
-        public void detachExpansion() {
-            throw new UnsupportedOperationException("not implemented!");
-        }
-    }
-
     class MemoryDelegate extends EmptyDelegate {
 
         @Override
+        @SuppressWarnings("argument") // @Nullable cpuBus
         public @Unsigned byte getData() {
-            return memoryBus.access(address).read().data();
+            requireNonNull(cpuBus);
+
+            return cpuBus.access(address).read().data();
         }
 
         @Override
+        @SuppressWarnings("argument") // @Nullable cpuBus
         public void setData(@Unsigned byte data) {
-            memoryBus.access(address).write().data(data);
+            requireNonNull(cpuBus);
+
+            cpuBus.access(address).write().data(data);
         }
 
         @Override

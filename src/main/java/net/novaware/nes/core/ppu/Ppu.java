@@ -5,11 +5,11 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.config.VideoStandard;
 import net.novaware.nes.core.cpu.signal.Signal;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.pin.Pin;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.ppu.register.VideoOutRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
@@ -21,7 +21,6 @@ import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.POA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.PT0;
@@ -45,7 +44,7 @@ public class Ppu implements ClockReceiver {
 
     private final VideoStandard videoStandard = VideoStandard.NTSC;
 
-    private final MemoryBus bus;
+    private final PpuBus bus;
 
     @Used  private final Pin vBlankInterrupt;
     @Used  private final Pin sprite0Hit;
@@ -69,7 +68,7 @@ public class Ppu implements ClockReceiver {
 
     @Inject
     public Ppu(
-        @PpuVar(BUS) MemoryBus bus,
+        PpuBus bus,
         @PpuVar(VBI) Pin vBlankInterrupt,
         @PpuVar(S0H) Pin sprite0Hit,
         @PpuVar(RST) Pin rstPin,

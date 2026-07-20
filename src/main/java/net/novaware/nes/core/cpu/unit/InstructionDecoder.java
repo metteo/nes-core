@@ -6,20 +6,19 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.Instruction;
 import net.novaware.nes.core.cpu.instruction.InstructionRegistry;
+import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
+import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
@@ -43,7 +42,7 @@ public class InstructionDecoder implements Unit {
     @Used private final IntegerCounter cycleCounter;
     @Used private final IntegerCounter instructionCycle;
 
-    @Used private final MemoryBus memoryBus;
+    @Used private final CpuBus cpuBus;
     @Used private final AddressGen addressGen;
 
     @Inject
@@ -58,7 +57,7 @@ public class InstructionDecoder implements Unit {
 
         @CpuVar(CC) IntegerCounter cycleCounter,
         @CpuVar(IC) IntegerCounter instructionCycle,
-        @CpuVar(BUS) MemoryBus memoryBus,
+        CpuBus cpuBus,
         AddressGen addressGen
     ) {
         this.registers = registers;
@@ -70,7 +69,7 @@ public class InstructionDecoder implements Unit {
 
         this.cycleCounter = cycleCounter;
         this.instructionCycle = instructionCycle;
-        this.memoryBus = memoryBus;
+        this.cpuBus = cpuBus;
         this.addressGen = addressGen;
     }
 
@@ -126,28 +125,28 @@ public class InstructionDecoder implements Unit {
         cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
         instructionCycle.maybeIncrement(pageChange); // TODO: this should be a bus read from address without a zero page wrap (oops)
 
-        decodedOperand.configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
     private void decodeZeroPageIndexed_Y_IndirectWrite(@Unsigned short operand) {
         int address = sint(addressGen.fetchAddressPageWrap(operand)); // stay within zero page
         int yVal = registers.y().getAsInt();
 
-        memoryBus.access(ushort(address)).read().data(); // sum cycle
+        cpuBus.access(ushort(address)).read().data(); // sum cycle
         int result = address + yVal;
 
-        decodedOperand.configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
     private void decodeZeroPageIndexed_X_Indirect(@Unsigned short operand) {
         int address = sint(operand);
         int xVal = registers.x().getAsInt();
 
-        memoryBus.access(operand).read().data(); // sum cycle
+        cpuBus.access(operand).read().data(); // sum cycle
         int indirectAddress = (address + xVal) & 0xFF; // stay within zero page
 
         @Unsigned short result = addressGen.fetchAddressPageWrap(ushort(indirectAddress));
-        decodedOperand.configureMemory(memoryBus, result);
+        decodedOperand.configureMemory(cpuBus, result);
     }
 
     private void decodeAbsoluteIndexedRead(DataRegister indexRegister, @Unsigned short operand) {
@@ -159,25 +158,25 @@ public class InstructionDecoder implements Unit {
         cycleCounter.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
         instructionCycle.maybeIncrement(pageChange); // TODO: this should be a bus read from address without page change
 
-        decodedOperand.configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
     private void decodeAbsoluteIndexedWrite(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        memoryBus.access(operand).read().data(); // sum cycle
+        cpuBus.access(operand).read().data(); // sum cycle
         int result = indexVal + sint(operand);
 
-        decodedOperand.configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
     private void decodeZeroPageIndexed(DataRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
-        memoryBus.access(operand).read().data(); // sum cycle
+        cpuBus.access(operand).read().data(); // sum cycle
         int result = (sint(operand) + indexVal) & 0xFF;
 
-        decodedOperand.configureMemory(memoryBus, ushort(result));
+        decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
     private void decodeRelative(@Unsigned short operand) {
@@ -190,15 +189,15 @@ public class InstructionDecoder implements Unit {
 
     private void decodeAbsoluteIndirect(@Unsigned short operand) {
         @Unsigned short address = addressGen.fetchAddressPageWrap(operand); // stay within the page
-        decodedOperand.configureMemory(memoryBus, address);
+        decodedOperand.configureMemory(cpuBus, address);
     }
 
     private void decodeAbsolute(@Unsigned short operand) {
-        decodedOperand.configureMemory(memoryBus, operand);
+        decodedOperand.configureMemory(cpuBus, operand);
     }
 
     private void decodeZeroPage(@Unsigned short operand) {
-        decodedOperand.configureMemory(memoryBus, operand);
+        decodedOperand.configureMemory(cpuBus, operand);
     }
 
     private void decodeAccumulator() {

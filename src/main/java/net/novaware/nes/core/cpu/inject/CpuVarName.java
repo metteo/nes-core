@@ -54,8 +54,6 @@ public enum CpuVarName {
 
     // endregion
 
-    BUS("", "memoryBus", "Memory Bus"),
-
     // region Signals
 
     IRQ ("", "interruptRequest", "Interrupt Request"),

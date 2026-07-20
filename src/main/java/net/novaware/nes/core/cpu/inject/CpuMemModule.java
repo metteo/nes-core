@@ -5,15 +5,12 @@ import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.apu.memory.ApuMemDevice;
 import net.novaware.nes.core.board.inject.BoardScope;
-import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.dma.memory.DmaMemDevice;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.memory.MemoryDevice;
 import net.novaware.nes.core.memory.PhysicalMemory;
 import net.novaware.nes.core.register.SegmentRegister;
 import net.novaware.nes.core.register.ShortRegister;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DMA;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DS;
@@ -79,11 +76,6 @@ public interface CpuMemModule {
     static MemoryDevice.ReadWrite provideTimerRegs() { // TODO: change into proper device
         return new PhysicalMemory("TMR", TIMER_REGISTERS_START, TIMER_REGISTERS_END, TIMER_REGISTERS_SIZE);
     }
-
-    @Binds
-    @BoardScope
-    @CpuVar(BUS)
-    MemoryBus bindMemoryBus(CpuBus cpuBus);
 
     @Provides
     @BoardScope

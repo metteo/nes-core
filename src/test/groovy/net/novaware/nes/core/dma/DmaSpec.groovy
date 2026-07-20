@@ -1,16 +1,14 @@
 package net.novaware.nes.core.dma
 
+import net.novaware.nes.core.TestNesCore
 import net.novaware.nes.core.cpu.Cpu
 import net.novaware.nes.core.cpu.signal.Signal
 import net.novaware.nes.core.dma.inject.DmaRegModule
 import net.novaware.nes.core.memory.BusOp
-import net.novaware.nes.core.memory.PhysicalMemory
-import net.novaware.nes.core.test.TestBus
 import spock.lang.Specification
 
-import static net.novaware.nes.core.cpu.memory.CpuMemMap.*
+import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_OAM_ADDRESS_REGISTER
 import static net.novaware.nes.core.dma.Dma.State.*
-import static net.novaware.nes.core.util.UTypes.sint
 import static net.novaware.nes.core.util.UTypes.ubyte
 
 class DmaSpec extends Specification {
@@ -20,8 +18,7 @@ class DmaSpec extends Specification {
     dagger.Lazy<Cpu> lazyCpu = Mock()
     def cpu = Mock(Cpu)
 
-    def memory = new PhysicalMemory("MEM", MEMORY_START, MEMORY_END, MEMORY_SIZE)
-    def cpuBus = new TestBus(memory)
+    def cpuBus = TestNesCore.newTestNesCore().newCpuBus()
 
     def "should construct an instance"() {
         when:
@@ -57,7 +54,7 @@ class DmaSpec extends Specification {
         def dma = newDma()
         dma.state = HALT
         oamDma.set(ubyte(0x20))
-        cpuBus.currentOp(BusOp.DATA_WRITE)
+        cpuBus.busOp = BusOp.DATA_WRITE
 
         when:
         def consumed = dma.cycle()
@@ -67,7 +64,7 @@ class DmaSpec extends Specification {
         dma.state == ALIGN
         1 * lazyCpu.get() >> cpu
         1 * cpu.rdy(Signal.LOW)
-        cpuBus.currentOp(BusOp.DATA_READ)
+        cpuBus.busOp == BusOp.DATA_READ
     }
 
     def "should read when halted aligned with bus"() {
@@ -75,7 +72,7 @@ class DmaSpec extends Specification {
         def dma = newDma()
         dma.state = HALT
         oamDma.set(ubyte(0x20))
-        cpuBus.currentOp(BusOp.DATA_READ)
+        cpuBus.busOp = BusOp.DATA_READ
 
         when:
         def consumed = dma.cycle()
@@ -85,8 +82,8 @@ class DmaSpec extends Specification {
         dma.state == READ
         1 * lazyCpu.get() >> cpu
         1 * cpu.rdy(Signal.LOW)
-        cpuBus.currentOp(BusOp.DATA_WRITE)
-        cpuBus.read(sint(PPU_OAM_ADDRESS_REGISTER)) == ubyte(0x00)
+        cpuBus.busOp == BusOp.DATA_WRITE
+        cpuBus.access(PPU_OAM_ADDRESS_REGISTER).read().data() == ubyte(0x00)
     }
 
     // TODO: ALIGN state

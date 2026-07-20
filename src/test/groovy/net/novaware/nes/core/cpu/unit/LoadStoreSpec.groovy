@@ -1,8 +1,8 @@
 package net.novaware.nes.core.cpu.unit
 
 import net.novaware.nes.core.TestNesCore
+import net.novaware.nes.core.cpu.memory.CpuBus
 import net.novaware.nes.core.cpu.register.CpuRegFile
-import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.register.DelegatingRegister
 import spock.lang.Specification
 
@@ -13,7 +13,7 @@ class LoadStoreSpec extends Specification {
 
     def factory = TestNesCore.newTestNesCore()
     CpuRegFile regs = factory.newCpuRegisters()
-    MemoryBus bus = factory.newCpuBus()
+    CpuBus bus = factory.newCpuBus()
     LoadStore loadStore = factory.newLoadStore()
     DelegatingRegister decodedOperand = factory.newDecodedOperand()
 

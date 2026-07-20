@@ -1,7 +1,7 @@
 package net.novaware.nes.core.ppu.table;
 
 import net.novaware.nes.core.memory.DataLine;
-import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -15,7 +15,7 @@ public class PatternTable extends MemBusTable implements Table {
 
     // TODO: create constants for row, col, plane and line count (max values) and use in assertions
 
-    public PatternTable(String name, SegmentRegister segment, MemoryBus bus) {
+    public PatternTable(String name, SegmentRegister segment, PpuBus bus) {
         super(name, segment, bus);
     }
 

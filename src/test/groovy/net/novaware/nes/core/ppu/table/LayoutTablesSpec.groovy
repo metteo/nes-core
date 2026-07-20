@@ -1,8 +1,9 @@
 package net.novaware.nes.core.ppu.table
 
-import net.novaware.nes.core.memory.MemoryBus
+
 import net.novaware.nes.core.ppu.inject.PpuMemModule
 import net.novaware.nes.core.ppu.inject.PpuRegModule
+import net.novaware.nes.core.ppu.memory.PpuBus
 import spock.lang.Specification
 
 import static net.novaware.nes.core.util.UTypes.ushort
@@ -11,7 +12,7 @@ class LayoutTablesSpec extends Specification {
 
     def v = PpuRegModule.provideCurrentViewPort()
     def segment = PpuMemModule.provideLayoutTablesSegment()
-    MemoryBus bus = Mock()
+    PpuBus bus = Mock()
 
     def "should return layout table address (using view port)"() {
         given:

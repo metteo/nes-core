@@ -5,18 +5,16 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.clock.ClockReceiver;
 import net.novaware.nes.core.cpu.Cpu;
-import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.cpu.memory.CpuMemMap;
 import net.novaware.nes.core.cpu.signal.Signal;
 import net.novaware.nes.core.dma.inject.DmaVar;
 import net.novaware.nes.core.memory.BusOp;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.util.uml.Owned;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.memory.CpuMemMap.PPU_OAM_ADDRESS_REGISTER;
 import static net.novaware.nes.core.dma.Dma.State.ALIGN;
 import static net.novaware.nes.core.dma.Dma.State.HALT;
@@ -73,13 +71,13 @@ public class Dma implements ClockReceiver { // TODO: remember about DMC DMA whic
     private final Lazy<Cpu> cpu; // top level chip so lazy injected to prevent stack overflow during construction
 
     @Used
-    private final MemoryBus cpuBus;
+    private final CpuBus cpuBus;
 
     @Inject
     public Dma(
             @DmaVar(OAM) ByteRegister oamDma,
             Lazy<Cpu> cpu,
-            @CpuVar(BUS) MemoryBus cpuBus
+            CpuBus cpuBus
     ) {
         this.oamDma = oamDma;
         this.cpu = cpu;

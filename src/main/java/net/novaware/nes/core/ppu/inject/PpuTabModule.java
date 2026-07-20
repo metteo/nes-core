@@ -3,9 +3,9 @@ package net.novaware.nes.core.ppu.inject;
 import dagger.Module;
 import dagger.Provides;
 import net.novaware.nes.core.board.inject.BoardScope;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.memory.ObjAttrMemory;
 import net.novaware.nes.core.ppu.memory.PaletteMemory;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import net.novaware.nes.core.ppu.table.AttributeTable;
 import net.novaware.nes.core.ppu.table.AttributeTables;
@@ -19,7 +19,6 @@ import net.novaware.nes.core.register.SegmentRegister;
 
 import static net.novaware.nes.core.ppu.inject.PpuVarName.AT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.ATS;
-import static net.novaware.nes.core.ppu.inject.PpuVarName.BUS;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT0;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT1;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.LT2;
@@ -42,7 +41,7 @@ public interface PpuTabModule {
     @PpuVar(PTS)
     static PatternTables providePatternTables(
             @PpuVar(PTS) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new PatternTables(PTS.doc(), segment, ppuBus);
     }
@@ -52,7 +51,7 @@ public interface PpuTabModule {
     @PpuVar(PT0)
     static PatternTable providePatternTable0(
             @PpuVar(PT0) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new PatternTable(PT0.doc(), segment, ppuBus);
     }
@@ -62,7 +61,7 @@ public interface PpuTabModule {
     @PpuVar(PT1)
     static PatternTable providePatternTable1(
             @PpuVar(PT1) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new PatternTable(PT1.doc(), segment, ppuBus);
     }
@@ -72,7 +71,7 @@ public interface PpuTabModule {
     @PpuVar(LTS)
     static LayoutTables provideLayoutTables(
             @PpuVar(LTS) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new LayoutTables(LTS.doc(), segment, ppuBus);
     }
@@ -82,7 +81,7 @@ public interface PpuTabModule {
     @PpuVar(LT0)
     static LayoutTable provideLayoutTable0(
             @PpuVar(LT0) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new LayoutTable(LT0.doc(), segment, ppuBus);
     }
@@ -92,7 +91,7 @@ public interface PpuTabModule {
     @PpuVar(LT1)
     static LayoutTable provideLayoutTable1(
             @PpuVar(LT1) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new LayoutTable(LT1.doc(), segment, ppuBus);
     }
@@ -102,7 +101,7 @@ public interface PpuTabModule {
     @PpuVar(LT2)
     static LayoutTable provideLayoutTable2(
             @PpuVar(LT2) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new LayoutTable(LT2.doc(), segment, ppuBus);
     }
@@ -112,7 +111,7 @@ public interface PpuTabModule {
     @PpuVar(LT3)
     static LayoutTable provideLayoutTable3(
             @PpuVar(LT3) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new LayoutTable(LT3.doc(), segment, ppuBus);
     }
@@ -122,7 +121,7 @@ public interface PpuTabModule {
     @PpuVar(ATS)
     static AttributeTables provideAttributeTables(
             @PpuVar(ATS) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new AttributeTables(ATS.doc(), segment, ppuBus);
     }
@@ -132,7 +131,7 @@ public interface PpuTabModule {
     @PpuVar(AT0)
     static AttributeTable provideAttributeTable0(
             @PpuVar(AT0) SegmentRegister segment,
-            @PpuVar(BUS) MemoryBus ppuBus
+            PpuBus ppuBus
     ) {
         return new AttributeTable(AT0.doc(), segment, ppuBus); // TODO: also 1,2,3
     }

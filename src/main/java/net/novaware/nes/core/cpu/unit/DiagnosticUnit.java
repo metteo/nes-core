@@ -4,10 +4,10 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.instruction.AddressingMode;
 import net.novaware.nes.core.cpu.instruction.InstructionGroup;
+import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.memory.DataLine;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.ppu.inject.PpuVar;
 import net.novaware.nes.core.ppu.inject.PpuVarName;
 import net.novaware.nes.core.register.ByteRegister;
@@ -18,7 +18,6 @@ import net.novaware.nes.core.util.Hex;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CI;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CO;
@@ -42,7 +41,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
     private final CpuRegFile registers;
     private final IntegerCounter cycleCounter;
     private final IntegerCounter instructionCycle;
-    private final MemoryBus cpuBus;
+    private final CpuBus cpuBus;
 
     private final IntegerCounter lineCounter;
     private final IntegerCounter dotCounter;
@@ -62,7 +61,7 @@ public class DiagnosticUnit implements Unit, Runnable { // TODO: extract the who
 
         @CpuVar(CC) IntegerCounter cycleCounter,
         @CpuVar(IC) IntegerCounter instructionCycle,
-        @CpuVar(BUS)MemoryBus cpuBus,
+        CpuBus cpuBus,
 
         @PpuVar(PpuVarName.LC) IntegerCounter lineCounter,
         @PpuVar(PpuVarName.DC) IntegerCounter dotCounter

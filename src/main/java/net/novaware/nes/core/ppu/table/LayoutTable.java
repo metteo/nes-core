@@ -1,7 +1,7 @@
 package net.novaware.nes.core.ppu.table;
 
 import net.novaware.nes.core.memory.DataLine;
-import net.novaware.nes.core.memory.MemoryBus;
+import net.novaware.nes.core.ppu.memory.PpuBus;
 import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -19,7 +19,7 @@ public class LayoutTable extends MemBusTable implements Table {
     public static final int ROW_COUNT = 30;
     public static final int COL_COUNT = 32;
 
-    public LayoutTable(String name, SegmentRegister segment, MemoryBus bus) {
+    public LayoutTable(String name, SegmentRegister segment, PpuBus bus) {
         super(name, segment, bus);
     }
 

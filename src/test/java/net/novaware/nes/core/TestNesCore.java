@@ -16,6 +16,7 @@ import net.novaware.nes.core.cpu.inject.CpuMemModule;
 import net.novaware.nes.core.cpu.inject.CpuModule;
 import net.novaware.nes.core.cpu.inject.CpuRegModule;
 import net.novaware.nes.core.cpu.inject.CpuVar;
+import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.cpu.register.CpuInsFile;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.unit.ArithmeticLogic;
@@ -27,7 +28,6 @@ import net.novaware.nes.core.cpu.unit.MemoryMgmt;
 import net.novaware.nes.core.cpu.unit.StackEngine;
 import net.novaware.nes.core.dma.inject.DmaModule;
 import net.novaware.nes.core.io.inject.IoModule;
-import net.novaware.nes.core.memory.MemoryBus;
 import net.novaware.nes.core.port.internal.PortModule;
 import net.novaware.nes.core.ppu.Ppu;
 import net.novaware.nes.core.ppu.inject.PpuModule;
@@ -35,7 +35,6 @@ import net.novaware.nes.core.ppu.register.PpuRegFile;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 
-import static net.novaware.nes.core.cpu.inject.CpuVarName.BUS;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.CC;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 
@@ -74,8 +73,7 @@ public abstract class TestNesCore { // TODO: consider TestSubjectFactory name
 
     public abstract LoadStore newLoadStore();
 
-    @CpuVar(BUS)
-    public abstract MemoryBus newCpuBus();
+    public abstract CpuBus newCpuBus();
 
     @CpuVar(CC)
     public abstract IntegerCounter getCpuCycleCounter();

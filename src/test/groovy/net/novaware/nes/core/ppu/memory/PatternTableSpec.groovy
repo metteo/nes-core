@@ -1,17 +1,17 @@
 package net.novaware.nes.core.ppu.memory
 
-import net.novaware.nes.core.memory.MemoryBus
 import net.novaware.nes.core.memory.PhysicalMemory
 import net.novaware.nes.core.ppu.inject.PpuMemModule
-import net.novaware.nes.core.ppu.table.PatternTable
 import net.novaware.nes.core.ppu.table.PatternPrinter
-import net.novaware.nes.core.test.TestBus
+import net.novaware.nes.core.ppu.table.PatternTable
 import spock.lang.Specification
 
 import static net.novaware.nes.core.ppu.memory.PpuMemMap.*
 import static net.novaware.nes.core.ppu.table.Pattern.Size.DOUBLE
 import static net.novaware.nes.core.ppu.table.Pattern.Size.SINGLE
 import static net.novaware.nes.core.util.UTypes.sint
+import static net.novaware.nes.core.util.UTypes.ubyte
+import static net.novaware.nes.core.util.UTypes.ushort
 
 class PatternTableSpec extends Specification {
 
@@ -70,7 +70,7 @@ class PatternTableSpec extends Specification {
 
     def "should construct an instance"() {
         given:
-        MemoryBus bus = Mock()
+        PpuBus bus = Mock()
 
         when:
         def instance = new PatternTable("test", segment, bus)
@@ -85,11 +85,12 @@ class PatternTableSpec extends Specification {
         def patternTable0 = new PhysicalMemory("PT0",
                 PATTERN_TABLE_0_START, PATTERN_TABLE_0_END, PATTERN_TABLE_0_SIZE)
 
-        def bus = new TestBus(patternTable0)
+        def bus = new PpuBus()
+        bus.attachCartridge(patternTable0)
 
         def start = sint(PATTERN_TABLE_0_START);
         for (int i = 0; i < data.size(); i++) {
-            bus.write(start + i, data[i])
+            bus.access(ushort(start + i)).write().data(ubyte(data[i]))
         }
 
         def patternTable = new PatternTable("PM1", segment, bus)
