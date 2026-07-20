@@ -293,9 +293,6 @@
                         ${jpms.opens}.dma=ALL-UNNAMED
                         ${jpms.opens}.dma.inject=ALL-UNNAMED
                         ${jpms.opens}.dma.memory=ALL-UNNAMED
-                        ${jpms.opens}.easy=ALL-UNNAMED
-                        ${jpms.opens}.easy.inject=ALL-UNNAMED
-                        ${jpms.opens}.easy.memory=ALL-UNNAMED
                         ${jpms.opens}.file=ALL-UNNAMED
                         ${jpms.opens}.file.ines=ALL-UNNAMED
                         ${jpms.opens}.file.nesy=ALL-UNNAMED
