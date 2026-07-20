@@ -3,10 +3,11 @@ package net.novaware.nes.core.register;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
+import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
+// TODO: this class is a mess. So many UTypes methods used. Optimize
 public final class ShortRegister extends AddressRegister {
 
     /*

@@ -5,7 +5,6 @@ import net.novaware.nes.core.ppu.register.ObjAttrRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
-import static net.novaware.nes.core.util.Asserts.assertState;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -32,14 +31,14 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
     }
 
     private void verifyCursor() {
-        // TODO: consider assert keyword or configurable assert (through compile time constant)
-        assertState((cursor.getAsInt() & 0b11) == 0, "misaligned table access");
+        // TODO: assert keyword or configurable assert (through compile time constant)
+        assert (cursor.getAsInt() & 0b11) == 0 : "misaligned table access";
     }
 
     public int getRow() {
         verifyCursor();
 
-        return cursor.getAsInt() / ENTRY_SIZE;
+        return cursor.getAsInt() / ENTRY_SIZE; // TODO: this could be shift >> 2 (2 bits are 0-3)
     }
 
     public void setRow(int row) {
@@ -68,7 +67,7 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
         return sint(getY());
     }
 
-    public @Unsigned byte getTile() { // TODO: consider getPattern / getPatternRef / getPatternIndex
+    public @Unsigned byte getPatternRef() {
         verifyCursor();
 
         int address = cursor.getAsInt() + 1;
@@ -76,8 +75,8 @@ public class ObjAttrTable implements Table { // TODO: consider renaming to Sprit
         return memory.read(ubyte(address));
     }
 
-    public int getTileAsInt() {
-        return sint(getTile());
+    public int getPatternRefAsInt() {
+        return sint(getPatternRef());
     }
 
     public @Unsigned byte getAttr() {

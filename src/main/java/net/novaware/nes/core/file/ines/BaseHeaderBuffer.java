@@ -1,21 +1,21 @@
 package net.novaware.nes.core.file.ines;
 
-import net.novaware.nes.core.util.UByteBuffer;
+import java.nio.ByteBuffer;
 
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 
 public abstract class BaseHeaderBuffer {
 
-    protected final UByteBuffer header;
+    protected final ByteBuffer header;
 
-    public BaseHeaderBuffer(UByteBuffer header) {
+    public BaseHeaderBuffer(ByteBuffer header) {
         assertArgument(header != null, "header cannot be null");
         assertArgument(header.capacity() == NesHeader.SIZE, () -> "header must be " + NesHeader.SIZE + " bytes");
 
         this.header = header;
     }
 
-    public UByteBuffer unwrap() {
+    public ByteBuffer unwrap() {
         return header;
     }
 }

@@ -80,13 +80,13 @@ import static net.novaware.nes.core.ppu.inject.PpuVarName.SOA;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.T;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VBI;
 import static net.novaware.nes.core.ppu.inject.PpuVarName.VX;
-import static net.novaware.nes.core.ppu.memory.ObjAttrMemory.ENTRY_SIZE;
 import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipH;
 import static net.novaware.nes.core.ppu.table.ObjAttr.asFlipV;
 import static net.novaware.nes.core.ppu.table.ObjAttr.asHidden;
 import static net.novaware.nes.core.ppu.table.ObjAttr.asPalette;
 import static net.novaware.nes.core.ppu.table.Palette.Layer.BACKGROUND;
 import static net.novaware.nes.core.ppu.table.Palette.Layer.SPRITE;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
 import static net.novaware.nes.core.util.UTypes.UBYTE_MAX_VALUE;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
@@ -96,7 +96,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
  * @see gemini: micro-action log
  */
 @BoardScope
-public class ControlUnit implements Initializable {
+public class ControlUnit implements Initializable { // FIXME: separate from Cpu ControlUnit, maybe ActionUnit?
 
     private final VideoStandard videoStandard;
 
@@ -160,10 +160,10 @@ public class ControlUnit implements Initializable {
     public ShortShifter background = new ShortShifter("BG.SFT");
     public ShortShifter attributes = new ShortShifter("AT.SFT");
 
-    public SpriteOutput[] spriteOutputUnits;
+    public SpriteOutput spriteOutputUnit;
 
     @Inject
-    public ControlUnit(
+    public ControlUnit( // FIXME: this number of params is getting out of hand
         CoreConfig config,
         TimingUnit timingUnit,
         @PpuVar(CC) IntegerCounter cycleCounter,
@@ -260,12 +260,7 @@ public class ControlUnit implements Initializable {
         renderingViewActions = initViewActions(vs, false);
         preRenderViewActions = initViewActions(vs, true);
 
-        // TODO: make it nicer, maybe move entry constants to OAT
-        spriteOutputUnits = new SpriteOutput[secObjAttrMemory.getSize() / ENTRY_SIZE];
-
-        for(int i = 0; i < spriteOutputUnits.length; i++) {
-            spriteOutputUnits[i] = new SpriteOutput();
-        }
+        spriteOutputUnit = new SpriteOutput();
     }
 
     @Override
@@ -534,22 +529,27 @@ public class ControlUnit implements Initializable {
             }
 
             case UNUSED_LAYOUT_TABLE_DATA -> unusedLayoutTable(bus.read().data());
-            case IGNORED_LAYOUT_TABLE_DATA -> ignoredLayoutTable(bus.read().data());
+
+            case IGNORED_LAYOUT_TABLE_DATA -> {
+                ignoredLayoutTable(bus.read().data());
+
+                // TODO: read attrs from SecOAM (should be address cycle of this)
+                // TODO: read x coordinate from SecOAM
+            }
 
             case ACCESS_SP_LO_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
-                int tile = secObjAttrTable.getTileAsInt();
+                int tile = secObjAttrTable.getPatternRefAsInt();
                 @Unsigned byte attr = secObjAttrTable.getAttr();
                 int x = secObjAttrTable.getXAsInt();
 
-                SpriteOutput output = spriteOutputUnits[secObjAttrTable.getRow()];
-
-                // TODO: loading oam attrs & x is not instant, happens in garbage cycles
-                output.hidden = asHidden(attr);
-                output.palette = asPalette(attr);
-                output.countDown.setValue(x);
-                output.xCounter.setValue(7);
-                output.state = SpriteOutput.State.WAITING;
+                if (y < 241) { // TODO: temporary. count sprites found in eval. all other should have transparent pixels in the shifter
+                    // TODO: combine these as loadAttribute?
+                    spriteOutputUnit.x2 = x;
+                    spriteOutputUnit.palette2 = sint(asPalette(attr));
+                    spriteOutputUnit.hidden2 = asHidden(attr);
+                    spriteOutputUnit.number2 = secObjAttrTable.getRow();
+                }
 
                 int spLoAddr = getSpritePatternAddress(y, tile, 0, asFlipV(attr));
 
@@ -564,11 +564,13 @@ public class ControlUnit implements Initializable {
                     spLoData = ubyte(Integer.reverse(sint(spLoData))>>24);
                 }
 
-                spriteOutputUnits[secObjAttrTable.getRow()].shifter.loadPlaneLow(spLoData);
+                if (secObjAttrTable.getYAsInt() < 241) {
+                    spriteOutputUnit.patternLo2 = spLoData;
+                }
             }
             case ACCESS_SP_HI_BITS_ADDRESS -> {
                 int y = secObjAttrTable.getYAsInt();
-                int tile = secObjAttrTable.getTileAsInt();
+                int tile = secObjAttrTable.getPatternRefAsInt();
                 @Unsigned byte attr = secObjAttrTable.getAttr();
 
                 int spHiAddr = getSpritePatternAddress(y, tile, 1, asFlipV(attr));
@@ -582,7 +584,10 @@ public class ControlUnit implements Initializable {
                     spHiData = ubyte(Integer.reverse(sint(spHiData))>>24);
                 }
 
-                spriteOutputUnits[secObjAttrTable.getRow()].shifter.loadPlaneHigh(spHiData);
+                if (secObjAttrTable.getYAsInt() < 241) {
+                    spriteOutputUnit.patternHi2 = spHiData;
+                    spriteOutputUnit.commit();
+                }
 
                 //secOamIndex++;
                 secObjAttrTable.nextRow();
@@ -651,7 +656,10 @@ public class ControlUnit implements Initializable {
 
     private void executeFlag(Action flag) {
         switch(flag) {
-            case SET_HBLANK -> hBlank.set(true);
+            case SET_HBLANK -> {
+                hBlank.set(true);
+                spriteOutputUnit.clear();
+            }
             case CLR_HBLANK -> hBlank.set(false);
             case SET_VBLANK -> setVBlank(true);
             case CLR_STATUS -> clearStatus();
@@ -666,12 +674,6 @@ public class ControlUnit implements Initializable {
 
                 // TODO: mux pattern bits with attr bits using fine x
                 selectBgAndAttrBits();
-
-                // NOTE: shifting of sprites happens only during rendering
-                for(int i = 0; i < spriteOutputUnits.length; i++) {
-                    SpriteOutput spriteOutputUnit = spriteOutputUnits[i];
-                    spriteOutputUnit.maybeShiftPlanes();
-                }
 
                 // TODO: push the dot to priority mux
                 // TODO: push previous dot to EXT
@@ -694,32 +696,26 @@ public class ControlUnit implements Initializable {
 
         // Backdrop
         Layer layer = BACKGROUND;
-        int palette = 0;
-        int offset = 0;
+        @Unsigned byte palette = 0;
+        @Unsigned byte offset = 0;
                                                          // Bits
-        int paletteBg = sint(attributes.getBits(fineX)); // 3-2
-        int offsetBg  = sint(background.getBits(fineX)); // 1-0
+        @Unsigned byte paletteBg = attributes.getBits(fineX); // 3-2
+        @Unsigned byte offsetBg  = background.getBits(fineX); // 1-0
 
         // SPRITES PRIORITY MUX
 
-        int paletteSp = 0;
-        int offsetSp = 0;
+        @Unsigned byte paletteSp = 0;
+        @Unsigned byte offsetSp = 0;
         boolean hiddenSp = false;
+        boolean sprite0;
 
-        for(int i = 0; i < spriteOutputUnits.length; i++) { // TODO: go backwards and the last non transparent pixel wins?
-            SpriteOutput spriteOutput = spriteOutputUnits[i];
+        int spX = dotCounter.getValue() - 1;
 
-            if (spriteOutput.state == SpriteOutput.State.DRAWING) {
-                int paletteSp2 = sint(spriteOutput.palette);
-                int offsetSp2 = sint(spriteOutput.shifter.getBits(0));
-
-                if (offsetSp == 0 && offsetSp2 != 0) {
-                    paletteSp = paletteSp2;
-                    offsetSp = offsetSp2;
-                    hiddenSp = spriteOutput.hidden;
-                }
-            }
-        }
+        @Unsigned byte dotSp = spriteOutputUnit.getDot(ubyte(spX));
+        paletteSp = SpriteOutput.asPalette(dotSp);
+        offsetSp = SpriteOutput.asPattern(dotSp);
+        hiddenSp = SpriteOutput.isHidden(dotSp);
+        sprite0 = SpriteOutput.isSprite0(dotSp);
 
         if (offsetBg == 0) {
             if (offsetSp != 0) {
@@ -732,6 +728,10 @@ public class ControlUnit implements Initializable {
                 palette = paletteBg;
                 offset = offsetBg;
             } else {
+                if (sprite0) { // FIXME: just an attempt, needs verification
+                    status.setSpriteZeroHit(true);
+                }
+
                 if (hiddenSp) {
                     palette = paletteBg;
                     offset = offsetBg;
@@ -745,20 +745,23 @@ public class ControlUnit implements Initializable {
 
         boolean slave = masterSlaveSelect.get();
 
-        if (slave) {
-            int paletteShift = palette << 2;
+        int paletteInt = palette & UBYTE_MASK;
+        int offsetInt = offset & UBYTE_MASK;
 
-            int extInt = paletteShift | offset;
+        if (slave) {
+            int paletteShift = paletteInt << 2;
+
+            int extInt = paletteShift | offsetInt;
             extBus.write(ubyte(extInt));
 
-        } else if (offset == 0) { // master
-            int extInt = sint(extBus.read());
+        } else if (offsetInt == 0) { // master
+            int extInt = extBus.read() & UBYTE_MASK;
             // layer = BG, always 0 from EXT
-            palette = (extInt & 0b1100) >> 2;
-            offset = extInt & 0b11;
+            paletteInt = (extInt & 0b1100) >> 2;
+            offsetInt = extInt & 0b11;
         }
 
-        @Unsigned byte colorRef = paletteTable.getColorRef(layer, palette, offset);
+        @Unsigned byte colorRef = paletteTable.getColorRef(layer, paletteInt, offsetInt);
 
         // TODO: too early to output, do priority, ext in / out muxing
         videoOut.set(lineCounter.getValue(), dotCounter.getValue() - 1, colorRef);

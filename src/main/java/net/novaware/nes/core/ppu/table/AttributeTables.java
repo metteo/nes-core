@@ -78,4 +78,6 @@ public class AttributeTables extends MemBusTable implements Tables {
         int address = segment | rowShift | col;
         return address;
     }
+
+    // endregion
 }

@@ -18,8 +18,9 @@ class TestBus implements MemoryBus {
     MemoryDevice.ReadOnly readOnly
     MemoryDevice.WriteOnly writeOnly
 
-    int addressLatch;
+    int addressLatch
     DataLine dataLine = new DataLine()
+    BusOp busOp = BusOp.DATA_READ
 
     TestBus(MemoryDevice.ReadOnly readOnly, MemoryDevice.WriteOnly writeOnly) {
         this.readOnly = readOnly
@@ -64,6 +65,7 @@ class TestBus implements MemoryBus {
 
     @Override
     ControlBus.Line access(@Unsigned short address) {
+        busOp = BusOp.ADDRESS_ACCESS
         addressLatch = sint(address)
 
         return this
@@ -71,27 +73,35 @@ class TestBus implements MemoryBus {
 
     @Override
     DataBus.Read read() {
+        busOp = BusOp.CONTROL_READ
         return this
     }
 
     @Override
     DataBus.Write write() {
+        busOp = BusOp.CONTROL_WRITE
         return this
     }
 
     @Override
     byte data() {
+        busOp = BusOp.DATA_READ
         return ubyte(read(addressLatch))
     }
 
     @Override
     void data(@Unsigned byte data) {
+        busOp = BusOp.DATA_WRITE
         write(addressLatch, sint(data))
+    }
+
+    void currentOp(BusOp busOp) {
+        this.busOp = busOp
     }
 
     @Override
     BusOp currentOp() {
-        throw new UnsupportedOperationException("not implemented")
+        busOp
     }
 
     @Override

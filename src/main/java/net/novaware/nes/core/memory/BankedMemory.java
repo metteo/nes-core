@@ -27,7 +27,9 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     private final String name;
     private final @Unsigned short startAddress;
     private final Quantity bankSize;
+    private final int bankBytes; // NOTE: prevents bankSize.toBytes() on hot path
 
+    // FIXME: arrays of arrays
     private UByteBuffer[] physicalBanks;  // data
     private UByteBuffer[] virtualBanks;   // refs
 
@@ -47,6 +49,7 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         this.name = name;
         this.startAddress = startAddress;
         this.bankSize = bankSize;
+        this.bankBytes = bankSize.toBytes();
 
         virtualBanks = new UByteBuffer[0];
         physicalBanks = new UByteBuffer[0];
@@ -71,7 +74,6 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
     public BankedMemory allocatePhysicalBanks(UByteSupplier filler) {
         for (int i = 0; i < this.physicalBanks.length; i++) {
             this.physicalBanks[i] = UByteBuffer.allocate(bankSize.toBytes())
-                    .order(LITTLE_ENDIAN)
                     .fill(filler);
         }
 
@@ -127,8 +129,8 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
 
         // TODO: refactor this and onAccess to share fast bank index/address resolution
         int virtualAddress = sint(address) - sint(startAddress);
-        int bankIndex = virtualAddress / bankSize.toBytes();
-        int bankAddress = virtualAddress % bankSize.toBytes();
+        int bankIndex = virtualAddress / bankBytes;
+        int bankAddress = virtualAddress % bankBytes;
 
         @Unsigned byte data = virtualBanks[bankIndex].get(bankAddress);
         dataLine.data(data);
@@ -139,21 +141,19 @@ public class BankedMemory implements MemoryDevice.ReadWrite, Nameable {
         int virtualAddress = sint(address) - sint(startAddress);
 
         // TODO: slow in hot code, change to shifting / masking
-        bankIndex = virtualAddress / bankSize.toBytes();
-        bankAddress = virtualAddress % bankSize.toBytes();
+        bankIndex = virtualAddress / bankBytes;
+        bankAddress = virtualAddress % bankBytes;
 
         // Assuming bankSize is a power of two, TODO: don't assume, assert in constructor!
         // TODO: maybe make as fields
-        int shift = Integer.numberOfTrailingZeros(bankSize.toBytes());
-        int mask = bankSize.toBytes() - 1;
+        int shift = Integer.numberOfTrailingZeros(bankBytes);
+        int mask = bankBytes - 1;
 
         int bankIndex2 = virtualAddress >> shift;
         int bankAddress2 = virtualAddress & mask;
 
-        assertArgument(bankIndex == bankIndex2, "shift produced wrong value");
-        assertArgument(bankAddress == bankAddress2, "mask produced wrong value");
-
-        virtualBanks[bankIndex].position(bankAddress);
+        assert bankIndex == bankIndex2 : "shift produced wrong value";
+        assert bankAddress == bankAddress2 : "mask produced wrong value";
     }
 
     public @Unsigned byte readByte() {

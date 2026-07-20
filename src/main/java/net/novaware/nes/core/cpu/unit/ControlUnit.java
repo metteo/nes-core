@@ -221,7 +221,7 @@ public class ControlUnit implements Unit {
             case RETURN_FROM_INTERRUPT -> interrupts.returnFromInterrupt();
 
             case BITWISE_AND -> alu.bitwiseAnd(decodedOperand.getData());
-            case BITWISE_OR -> alu.bitwiseOr();
+            case BITWISE_OR -> alu.bitwiseOr(decodedOperand.getData());
             case BITWISE_XOR -> alu.bitwiseXor(decodedOperand.getData());
             case BIT_TEST -> alu.bitTest(decodedOperand.getData());
 

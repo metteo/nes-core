@@ -13,64 +13,63 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
  */
 public class DisplayMemory implements Nameable {
 
-    private static final int COLOR_MASK = 0b11_1111;
-    private static final int META_MASK = 0b1100_0000;
+    private static final int VALUE_MASK = 0b11_0000;
+    private static final int HUE_MASK   = 0b11_1111;
+    private static final int COLOR_MASK = VALUE_MASK | HUE_MASK;
+    private static final int META_MASK  = 0b1100_0000;
 
     private final String name;
+    private final int height;
+    private final int width;
 
-    // TODO: 2d arrays are array of arrays, slow
-    private @Unsigned byte[][] frontBuffer; // FIXME: 2d and sync causes glitching in the top few rows
-    private @Unsigned byte[][] backBuffer;
+    private @Unsigned byte[] frontBuffer;
+    private @Unsigned byte[] backBuffer;
 
     public DisplayMemory(String name, int height, int width) {
         this.name = name;
+        this.height = height;
+        this.width = width;
 
-        frontBuffer = new @Unsigned byte[height][width];
-        backBuffer = new @Unsigned byte[height][width];
+        frontBuffer = new @Unsigned byte[height * width];
+        backBuffer = new @Unsigned byte[height * width];
     }
 
-    // TODO: structure: 0bMMMM_CCCC where CCCC is color from palette and MMMM is metadata like layer/zindex/transparency? etc
-    // if 4 bits is not enough or to slow just use secondary array of the same size but other type.
+    // TODO: structure: 0bMMCC_CCCC where CC_CCCC is color from palette and MM is metadata like layer/zindex/transparency? etc
+    // if 2 bits is not enough or to slow just use secondary array of the same size but other type.
     // maybe link back to oam for individual sprite / sprite group
 
     // TODO: layers: (gemini: NES PPU Pixel layers)
-    //  - backdrop (with border region)
-    //  - hidden sprites
-    //  - background
-    //  - visible sprites
-    //  - mask/clip (left 8 pixels)
-    //  - overscan / bezel (ui side, ppu not involved)
+    //  - backdrop (with border region) 0b00
+    //  - hidden sprites                0b01
+    //  - background                    0b10
+    //  - visible sprites               0b11
 
     // TODO: allow multiple instances for handoff between threads
 
     public int getHeight() {
-        return frontBuffer.length;
+        return height;
     }
 
     public int getWidth() {
-        assert frontBuffer.length > 0;
-
-        return frontBuffer[0].length;
+        return width;
     }
 
     public @Unsigned byte getColor(int y, int x) { // TODO: probably should be synced
-        assert y < frontBuffer.length; // TODO: consider hard assertions, but verify performance penalty
-        assert 0 < frontBuffer.length & x < frontBuffer[0].length;
+        assert y < height; // TODO: consider hard assertions, but verify performance penalty
+        assert x < width;
 
-        return ubyte(sint(frontBuffer[y][x]) & COLOR_MASK);
+        return ubyte(sint(frontBuffer[y * width + x]) & COLOR_MASK);
     }
 
     public void setColor(int y, int x, @Unsigned byte color) {
-        assert y < backBuffer.length; // TODO: consider hard assertions, but verify performance penalty
-        assert 0 < backBuffer.length && x < backBuffer[0].length;
+        assert y < height; // TODO: consider hard assertions, but verify performance penalty
+        assert x < width;
 
-        backBuffer[y][x] = ubyte(sint(color) & COLOR_MASK);
+        backBuffer[y * width + x] = ubyte(sint(color) & COLOR_MASK);
     }
 
     public void setColor(@Unsigned byte color) {
-        for(int y = 0; y < backBuffer.length; ++y) {
-            Arrays.fill(backBuffer[y], ubyte(sint(color) & COLOR_MASK));
-        }
+        Arrays.fill(backBuffer, ubyte(sint(color) & COLOR_MASK));
     }
 
     public @Unsigned byte getMeta(int y, int x) { // TODO: consider dedicated methods per info like enum with layers
@@ -92,7 +91,7 @@ public class DisplayMemory implements Nameable {
     }
 
     public synchronized void swap() {
-        @Unsigned byte[][] swapped = frontBuffer;
+        @Unsigned byte[] swapped = frontBuffer;
         frontBuffer = backBuffer;
         backBuffer = swapped;
     }

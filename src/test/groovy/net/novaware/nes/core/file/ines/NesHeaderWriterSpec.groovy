@@ -1,8 +1,9 @@
 package net.novaware.nes.core.file.ines
 
 import net.novaware.nes.core.file.ProgramMemoryBuilder
-import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
+
+import java.nio.ByteBuffer
 
 import static net.novaware.nes.core.file.MagicNumber.GAME_NES
 import static net.novaware.nes.core.file.NesMeta.Layout.ALTERNATIVE_HORIZONTAL
@@ -19,17 +20,10 @@ import static net.novaware.nes.core.file.VideoDataBuilder.horizontal
 import static net.novaware.nes.core.file.VideoDataBuilder.videoData
 import static net.novaware.nes.core.file.ines.ArchaicHeaderBuffer.*
 import static net.novaware.nes.core.file.ines.FutureHeaderBuffer.BYTE_11
-import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_10
-import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_7
-import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_8
-import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.BYTE_9
-import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
-import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7
-import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN
-import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_3
-import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_5
-import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_7
+import static net.novaware.nes.core.file.ines.ModernHeaderBuffer.*
+import static net.novaware.nes.core.file.ines.NesFileVersion.*
 import static net.novaware.nes.core.util.Bin.s
+import static net.novaware.nes.core.util.Buffers.getAsInt
 import static net.novaware.nes.core.util.QuantityBuilder.banks16kb
 import static net.novaware.nes.core.util.QuantityBuilder.banks512b
 
@@ -61,8 +55,8 @@ class NesHeaderWriterSpec extends Specification {
 
         getMagic(header) == GAME_NES.numbers()
 
-        header.getAsInt(BYTE_4) == 1
-        header.getAsInt(BYTE_5) == 2
+        getAsInt(header, BYTE_4) == 1
+        getAsInt(header, BYTE_5) == 2
 
         //                        0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
         s(header.get(BYTE_6)) == "0b1001_0101"
@@ -89,8 +83,8 @@ class NesHeaderWriterSpec extends Specification {
 
         getMagic(header) == GAME_NES.numbers()
 
-        header.getAsInt(BYTE_4) == 3
-        header.getAsInt(BYTE_5) == 5
+        getAsInt(header, BYTE_4) == 3
+        getAsInt(header, BYTE_5) == 5
 
         //                        0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
         s(header.get(BYTE_6)) == "0b1001_1010"
@@ -121,8 +115,8 @@ class NesHeaderWriterSpec extends Specification {
 
         getMagic(header) == GAME_NES.numbers()
 
-        header.getAsInt(BYTE_4) == 8
-        header.getAsInt(BYTE_5) == 10
+        getAsInt(header, BYTE_4) == 8
+        getAsInt(header, BYTE_5) == 10
 
         //                        0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
         s(header.get(BYTE_6)) == "0b0110_1001"
@@ -166,8 +160,8 @@ class NesHeaderWriterSpec extends Specification {
         getMagic(header) == GAME_NES.numbers()
 
         with (header) {
-            getAsInt(BYTE_4) == 11
-            getAsInt(BYTE_5) == 13
+            getAsInt(header, BYTE_4) == 11
+            getAsInt(header, BYTE_5) == 13
 
             //                 0bMMMM_atbm - Mapper lo, Alt. mirroring, Trainer, Battery, (m)irroring
             s(get(BYTE_6)) == "0b0110_1001"
@@ -220,8 +214,8 @@ class NesHeaderWriterSpec extends Specification {
         getMagic(header) == GAME_NES.numbers()
 
         with (header) {
-            getAsInt(BYTE_4) == 14
-            getAsInt(BYTE_5) == 15
+            getAsInt(header, BYTE_4) == 14
+            getAsInt(header, BYTE_5) == 15
 
             s(get(BYTE_6)) == "0b0110_1001"
             s(get(BYTE_7)) == "0b1010_0000"
@@ -283,13 +277,13 @@ class NesHeaderWriterSpec extends Specification {
         e.message == "meta must not be null"
     }
 
-    static byte[] getRemainingData(int startByte, UByteBuffer header) {
+    static byte[] getRemainingData(int startByte, ByteBuffer header) {
         def maybeZeroes = new byte[NesHeader.SIZE - startByte]
         header.get(startByte, maybeZeroes)
         maybeZeroes
     }
 
-    static byte[] getMagic(UByteBuffer header) {
+    static byte[] getMagic(ByteBuffer header) {
         def maybeMagic = new byte[4]
         header.get(BYTE_0, maybeMagic)
         maybeMagic

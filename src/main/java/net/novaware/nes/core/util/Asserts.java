@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
  * Collection of assertions for method arguments and object state.
  *
  */
-public final class Asserts {
+public final class Asserts { // TODO: do not use in the hot path, switch to assert keyword
 
     private static final String MESSAGE_NOT_NULL = "message must not be null";
     private static final String MESSAGE_SUPPLIER_NOT_NULL = "message supplier must not be null";

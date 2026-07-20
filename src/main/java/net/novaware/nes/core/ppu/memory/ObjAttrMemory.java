@@ -7,6 +7,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
 import static net.novaware.nes.core.util.Nums.powOfTwo;
 import static net.novaware.nes.core.util.UTypes.UBYTE_0;
+import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -32,7 +33,7 @@ public class ObjAttrMemory implements Nameable {
     private final Kind kind;
 
     private final @Unsigned byte[] buffer;
-    private final @Unsigned byte mask;
+    private final int mask;
 
     public ObjAttrMemory(String name, Kind kind, int count) {
         this.name = name;
@@ -43,7 +44,7 @@ public class ObjAttrMemory implements Nameable {
 
         int size = count * ENTRY_SIZE;
         buffer = new byte[size];
-        mask = ubyte(size - 1);
+        mask = size - 1;
     }
 
     @Override
@@ -66,7 +67,8 @@ public class ObjAttrMemory implements Nameable {
     }
 
     private int getIndex(@Unsigned byte address) {
-        return sint(address) & sint(mask);
+        int addressInt = address & UBYTE_MASK;
+        return addressInt & mask;
     }
 
     public void write(@Unsigned byte address, @Unsigned byte data) {

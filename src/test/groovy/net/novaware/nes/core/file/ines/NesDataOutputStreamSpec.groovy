@@ -1,14 +1,11 @@
 package net.novaware.nes.core.file.ines
 
 import net.novaware.nes.core.util.Hex
-import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
 
 import java.nio.ByteBuffer
 
-import static net.novaware.nes.core.file.NesDataBuilder.emptyData
-import static net.novaware.nes.core.file.NesDataBuilder.nesData
-import static net.novaware.nes.core.file.NesDataBuilder.watermarkedData
+import static net.novaware.nes.core.file.NesDataBuilder.*
 import static net.novaware.nes.core.file.ines.NesDataOutputStream.DEFAULT_TRANSFER_BUFFER_SIZE
 
 class NesDataOutputStreamSpec extends Specification {
@@ -30,7 +27,7 @@ class NesDataOutputStreamSpec extends Specification {
     def "should write single byte sized nes data" () {
         given:
         def data = nesData()
-                .header(UByteBuffer.of(singleByteBuffer(0x01)))
+                .header(singleByteBuffer(0x01))
                 .trainer(singleByteBuffer(0x2))
                 .program(singleByteBuffer(0x4))
                 .video(singleByteBuffer(0x8))

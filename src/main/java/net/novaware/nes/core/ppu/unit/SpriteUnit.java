@@ -57,7 +57,7 @@ public class SpriteUnit {
             int height = tallSprite ? 16 : 8;
             int secOamI = 0;
             // TODO: create "VIEW" action that resets oamaddr and sec oam addr? or not
-            for(int i = 0; i < 0xFF; i+=4) { // TODO: use OAMADDR instead of i
+            for(int i = 0; i <= 0xFF; i+=4) { // TODO: use OAMADDR instead of i
                 int y = sint(priObjAttrMemory.read(ubyte(i)));
                 int futureY = lineCounter.getValue() + 1;
                 if (y < futureY && futureY <= y+height) {

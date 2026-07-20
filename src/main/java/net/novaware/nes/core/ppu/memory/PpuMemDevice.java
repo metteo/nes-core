@@ -318,7 +318,7 @@ public class PpuMemDevice implements MemoryDevice.ReadWrite, Nameable, CpuBusBri
 
             // TODO: calculate exactly based on instruction cycle counter (instead of 3-4)
             renderSprite.setDelayed(rs, 3);
-            renderBackground.setDelayed(rb, 4);
+            renderBackground.setDelayed(rb, 3);
 
             maskSprite.set(ms);
             maskBackground.set(mb);

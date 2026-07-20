@@ -1,8 +1,9 @@
 package net.novaware.nes.core.file.ines
 
 import net.novaware.nes.core.util.Quantity
-import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
+
+import java.nio.ByteBuffer
 
 import static net.novaware.nes.core.file.NesMeta.Kind.PERSISTENT
 import static net.novaware.nes.core.file.NesMeta.Kind.VOLATILE
@@ -12,10 +13,11 @@ import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7
 import static net.novaware.nes.core.util.Quantity.Unit.*
 import static net.novaware.nes.core.util.UTypes.sint
+import static net.novaware.nes.core.util.UTypes.ubyte
 
 class ArchaicHeaderBufferSpec extends Specification {
 
-    UByteBuffer buffer
+    ByteBuffer buffer
     ArchaicHeaderBuffer header
 
     def setup() {

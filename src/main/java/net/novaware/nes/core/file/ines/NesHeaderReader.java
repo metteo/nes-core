@@ -6,13 +6,14 @@ import net.novaware.nes.core.file.NesMeta.Layout;
 import net.novaware.nes.core.file.Problem;
 import net.novaware.nes.core.file.ReaderMode;
 import net.novaware.nes.core.util.Quantity;
-import net.novaware.nes.core.util.UByteBuffer;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static net.novaware.nes.core.file.NesMeta.System.NES;
+import static net.novaware.nes.core.file.ines.FutureHeaderBuffer.BYTE_11;
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.file.ines.NesFileVersion.FUTURE;
@@ -21,6 +22,7 @@ import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_3;
 import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_5;
 import static net.novaware.nes.core.file.ines.NesFileVersion.MODERN_1_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.Buffers.get;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_16KB;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_512B;
 import static net.novaware.nes.core.util.Quantity.Unit.BANK_8KB;
@@ -35,7 +37,7 @@ public class NesHeaderReader extends NesHeaderHandler {
     public record Result(NesMeta meta, List<Problem> problems) {
     }
 
-    public Result read(UByteBuffer header, Params params) {
+    public Result read(ByteBuffer header, Params params) {
         assertArgument(header != null, "header must not be null");
         assertArgument(params != null, "params must not be null");
 
@@ -111,7 +113,7 @@ public class NesHeaderReader extends NesHeaderHandler {
 
 
         @Unsigned byte[] padding = new byte[5]; // TODO: verify 0s for iNES
-        header.get(padding);
+        get(header, BYTE_11, padding);
 
         header.rewind();
 

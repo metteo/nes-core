@@ -37,7 +37,7 @@ public class BooleanPipeline implements Pipeline {
         this.delay = delay;
     }
 
-    public void cycle() {
+    public void cycle() { // TODO: refactor into branchless
         if (delay > 0) {
             delay--;
         }

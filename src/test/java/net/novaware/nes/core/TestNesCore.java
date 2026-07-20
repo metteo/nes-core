@@ -102,6 +102,8 @@ public abstract class TestNesCore { // TODO: consider TestSubjectFactory name
 
     public abstract PpuRegFile newPpuRegisters();
 
+    public abstract net.novaware.nes.core.ppu.unit.ControlUnit newPpuControlUnit();
+
     @Component.Builder
     public static abstract class Builder {
 

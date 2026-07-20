@@ -36,7 +36,7 @@ public class NesDataOutputStream extends FilterOutputStream {
         assertArgument(data != null, "data must not be null");
 
         List<ByteBuffer> buffers = List.of(
-                data.header().unwrap(),
+                data.header(),
                 data.trainer(),
                 data.program(),
                 data.video(),

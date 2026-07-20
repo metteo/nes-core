@@ -3,19 +3,16 @@ package net.novaware.nes.core.cpu.unit;
 import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
-import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DataRegister;
-import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
-import java.util.function.IntBinaryOperator;
-
 import static net.novaware.nes.core.cpu.inject.CpuVarName.A;
-import static net.novaware.nes.core.cpu.inject.CpuVarName.DO;
 import static net.novaware.nes.core.cpu.inject.CpuVarName.PS;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.X;
+import static net.novaware.nes.core.cpu.inject.CpuVarName.Y;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 
@@ -23,27 +20,23 @@ import static net.novaware.nes.core.util.UTypes.ubyte;
 public class ArithmeticLogic implements Unit {
 
     @Used
-    private final CpuRegFile registers; // TODO: replace with direct register access
-
-    @Used
     private final ByteRegister accumulator;
 
-    @Used
-    private final DelegatingRegister operand2; // TODO: rename to operand when 0 args methods done
-
+    private final ByteRegister indexX;
+    private final ByteRegister indexY;
     @Used
     private final StatusRegister status;
 
     @Inject
     public ArithmeticLogic(
-        CpuRegFile registers,
         @CpuVar(A) ByteRegister accumulator,
-        @CpuVar(DO) DelegatingRegister operand,
+        @CpuVar(X) ByteRegister indexX,
+        @CpuVar(Y) ByteRegister indexY,
         @CpuVar(PS) StatusRegister status
     ) {
-        this.registers = registers;
         this.accumulator = accumulator;
-        this.operand2 = operand;
+        this.indexX = indexX;
+        this.indexY = indexY;
         this.status = status;
     }
 
@@ -52,9 +45,9 @@ public class ArithmeticLogic implements Unit {
      * @see <a href="https://6502.org/tutorials/decimal_mode.html">Decimal Mode</a>
      */
     public void addWithCarry(@Unsigned byte data) {
-        int prevCarry = registers.status().getCarry() ? 1 : 0;
+        int prevCarry = status.getCarry() ? 1 : 0;
 
-        int a = registers.a().getAsInt();
+        int a = accumulator.getAsInt();
         int aSign = a >> 7;
 
         int dataVal = sint(data);
@@ -67,18 +60,17 @@ public class ArithmeticLogic implements Unit {
 
         boolean overflow = resultSign != aSign && resultSign != dataSign;
 
-        registers.a().setAsByte(byteResult);
-        registers.status()
-                .setCarry(result > 0xFF)
+        accumulator.setAsByte(byteResult);
+        status.setCarry(result > 0xFF)
                 .setZero(byteResult == 0)
                 .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 
-    public void subtractWithBorrow(@Unsigned byte data) {
-        int prevBorrow = registers.status().getBorrow() ? 1 : 0;
+    void subtractWithBorrow(@Unsigned byte data) {
+        int prevBorrow = status.getBorrow() ? 1 : 0;
 
-        int a = registers.a().getAsInt();
+        int a = accumulator.getAsInt();
         int aSign = a >> 7;
 
         int dataVal = sint(data);
@@ -88,26 +80,25 @@ public class ArithmeticLogic implements Unit {
         int byteResult = result & 0xFF;
 
         int resultSign = byteResult >> 7;
-        registers.a().setAsByte(byteResult);
+        accumulator.setAsByte(byteResult);
 
         boolean overflow = resultSign != aSign && resultSign == dataSign;
 
-        registers.status()
-                .setBorrow(result < 0)
+        status.setBorrow(result < 0)
                 .setZero(byteResult == 0)
                 .setOverflow(overflow)
                 .setNegative(resultSign == 1);
     }
 
-    public @Unsigned byte incrementMemory(@Unsigned byte data) {
+    @Unsigned byte incrementMemory(@Unsigned byte data) {
         return incrementMemory(data, 1);
     }
 
-    public @Unsigned byte decrementMemory(@Unsigned byte data) {
+    @Unsigned byte decrementMemory(@Unsigned byte data) {
         return incrementMemory(data, -1);
     }
 
-    private @Unsigned byte incrementMemory(@Unsigned byte data, int by) {
+    @Unsigned byte incrementMemory(@Unsigned byte data, int by) {
         int dataVal = sint(data);
 
         int result = dataVal + by;
@@ -118,20 +109,20 @@ public class ArithmeticLogic implements Unit {
         return ubyte(result);
     }
 
-    public void incrementX() {
-        incrementRegister(registers.x(), 1);
+    void incrementX() {
+        incrementRegister(indexX, 1);
     }
 
-    public void decrementX() {
-        incrementRegister(registers.x(), -1);
+    void decrementX() {
+        incrementRegister(indexX, -1);
     }
 
-    public void incrementY() {
-        incrementRegister(registers.y(), 1);
+    void incrementY() {
+        incrementRegister(indexY, 1);
     }
 
-    public void decrementY() {
-        incrementRegister(registers.y(), -1);
+    void decrementY() {
+        incrementRegister(indexY, -1);
     }
 
     private void incrementRegister(DataRegister register, int by) {
@@ -143,51 +134,50 @@ public class ArithmeticLogic implements Unit {
         status.maybeZeroOrNegative(result);
     }
 
-    public void bitwiseOp(@Unsigned byte operand, IntBinaryOperator operator) {
-        int result = operator.applyAsInt(accumulator.getAsInt(), sint(operand));
+    void bitwiseAnd(@Unsigned byte operand) {
+        int result = accumulator.getAsInt() & sint(operand);
 
         accumulator.setAsByte(result);
         status.maybeZeroOrNegative(result);
     }
 
-    public void bitwiseAnd(@Unsigned byte operand) {
-        bitwiseOp(operand, (a, b) -> a & b);
+    void bitwiseOr(@Unsigned byte operand) {
+        int result = accumulator.getAsInt() | sint(operand);
+
+        accumulator.setAsByte(result);
+        status.maybeZeroOrNegative(result);
     }
 
-    // TODO: make methods package-private, when CU is here, no 0 arg methods
+    void bitwiseXor(@Unsigned byte operand) {
+        int result = accumulator.getAsInt() ^ sint(operand);
 
-    void bitwiseOr() {
-        bitwiseOp(operand2.getData(), (a, b) -> a | b);
+        accumulator.setAsByte(result);
+        status.maybeZeroOrNegative(result);
     }
 
-    public void bitwiseXor(@Unsigned byte operand) {
-        bitwiseOp(operand, (a, b) -> a ^ b);
-    }
-
-    public void bitTest(@Unsigned byte data) {
-        @Unsigned byte a = registers.a().get();
+    void bitTest(@Unsigned byte data) {
+        @Unsigned byte a = accumulator.get();
 
         int aVal = sint(a);
         int dataVal = sint(data);
 
         int result = aVal & dataVal & 0xFF;
 
-        registers.status()
-                .setZero(result == 0)
+        status.setZero(result == 0)
                 .setOverflow((dataVal & (1 << 6)) != 0)
                 .setNegative((dataVal & (1 << 7)) != 0);
     }
 
-    public void compareA(@Unsigned byte data) {
-        compareRegister(registers.a(), data);
+    void compareA(@Unsigned byte data) {
+        compareRegister(accumulator, data);
     }
 
-    public void compareX(@Unsigned byte data) {
-        compareRegister(registers.x(), data);
+    void compareX(@Unsigned byte data) {
+        compareRegister(indexX, data);
     }
 
-    public void compareY(@Unsigned byte data) {
-        compareRegister(registers.y(), data);
+    void compareY(@Unsigned byte data) {
+        compareRegister(indexY, data);
     }
 
     private void compareRegister(DataRegister register, @Unsigned byte data) {
@@ -198,13 +188,12 @@ public class ArithmeticLogic implements Unit {
 
         int result = regVal - dataVal;
 
-        registers.status()
-                .setBorrow(result < 0)
+        status.setBorrow(result < 0)
                 .maybeZeroOrNegative(result);
     }
 
-    public @Unsigned byte rotateLeft(@Unsigned byte data) {
-        int oldCarry = registers.status().getCarry() ? 1 : 0;
+    @Unsigned byte rotateLeft(@Unsigned byte data) {
+        int oldCarry = status.getCarry() ? 1 : 0;
 
         int dataVal = sint(data);
 
@@ -212,49 +201,45 @@ public class ArithmeticLogic implements Unit {
         boolean newCarry = (result & (1 << 8)) > 0;
         int resultByte = result & 0xFF;
 
-        registers.status()
-                .setCarry(newCarry)
+        status.setCarry(newCarry)
                 .setZero(resultByte == 0)
                 .setNegative((resultByte & (1 << 7)) > 0);
 
         return ubyte(result);
     }
 
-    public @Unsigned byte rotateRight(@Unsigned byte data) {
-        int oldCarry = registers.status().getCarry() ? (1 << 7) : 0;
+    @Unsigned byte rotateRight(@Unsigned byte data) {
+        int oldCarry = status.getCarry() ? (1 << 7) : 0;
         boolean newCarry = (data & 0b1) > 0;
         int newData = (sint(data) >> 1) | oldCarry; // modify // FIXME: consider >> vs >>>
 
-        registers.status()
-                .setCarry(newCarry)
+        status.setCarry(newCarry)
                 .setZero(newData == 0)
                 .setNegative((newData & (1 << 7)) > 0);
 
         return ubyte(newData);
     }
 
-    public @Unsigned byte arithmeticShiftLeft(@Unsigned byte data) {
+    @Unsigned byte arithmeticShiftLeft(@Unsigned byte data) {
         int dataVal = sint(data);
 
         int result = dataVal << 1;
         int resultByte = result & 0xFF;
 
-        registers.status()
-                .setCarry(((result & (1 << 8)) > 0))
+        status.setCarry(((result & (1 << 8)) > 0))
                 .setZero(resultByte == 0)
                 .setNegative((resultByte & (1 << 7)) > 0);
 
         return ubyte(resultByte);
     }
 
-    public @Unsigned byte logicalShiftRight(@Unsigned byte data) {
+    @Unsigned byte logicalShiftRight(@Unsigned byte data) {
         int dataVal = sint(data);
 
         int result = dataVal >> 1;
         int resultByte = result & 0xFF;
 
-        registers.status()
-                .setCarry((dataVal & 0b1) > 0)
+        status.setCarry((dataVal & 0b1) > 0)
                 .setZero(resultByte == 0)
                 .setNegative(false);
 
@@ -264,6 +249,7 @@ public class ArithmeticLogic implements Unit {
     void transfer(DataRegister src, DataRegister dst) {
         @Unsigned byte data = src.get();
         dst.set(data);
+
         status.maybeZeroOrNegative(sint(data));
     }
 }

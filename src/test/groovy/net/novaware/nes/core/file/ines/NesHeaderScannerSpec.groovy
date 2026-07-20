@@ -3,8 +3,9 @@ package net.novaware.nes.core.file.ines
 import net.novaware.nes.core.file.NesMeta
 import net.novaware.nes.core.file.NesMetaBuilder
 import net.novaware.nes.core.file.Problem
-import net.novaware.nes.core.util.UByteBuffer
 import spock.lang.Specification
+
+import java.nio.ByteBuffer
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 import static net.novaware.nes.core.file.MagicNumber.GAME_NES
@@ -67,7 +68,7 @@ class NesHeaderScannerSpec extends Specification {
         version == FUTURE
     }
 
-    static UByteBuffer baseMarioBros() {
+    static ByteBuffer baseMarioBros() {
         def header = headerBuffer()
 
         NesMeta marioBros = NesMetaBuilder.marioBros().build()
@@ -89,14 +90,14 @@ class NesHeaderScannerSpec extends Specification {
         s.getBytes(US_ASCII)
     }
 
-    static def detectVersion(UByteBuffer headerBuffer) {
+    static def detectVersion(ByteBuffer headerBuffer) {
         new NesHeaderScanner().detectVersion(headerBuffer)
     }
 
     // endregion
 
     static def headerBuffer() {
-        UByteBuffer.allocate(NesHeader.SIZE)
+        NesHeader.allocate()
     }
 
     def "should pass with correct magic bytes" () {

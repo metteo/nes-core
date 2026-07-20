@@ -13,7 +13,7 @@ import static net.novaware.nes.core.util.UTypes.sint;
 /**
  * TODO: write a Javadoc about size vs end address
  */
-public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nameable {
+public final class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nameable {
 
     private final String name;
 
@@ -102,8 +102,6 @@ public class PhysicalMemory implements MemoryDevice, MemoryDevice.ReadWrite, Nam
     @Override
     public void onAccess(@Unsigned short address) {
         position = toPosition(address);
-
-        buffer.position(position);
     }
 
     @Override

@@ -18,6 +18,14 @@ class CoreConfigBuilder implements TestDataBuilder<CoreConfig> {
         new CoreConfigBuilder()
     }
 
+    static CoreConfigBuilder pal() {
+        def config = coreConfig()
+        config.region = Region.EUROPE
+        config.videoStandard = VideoStandard.PAL
+
+        config
+    }
+
     static CoreConfigBuilder coreConfig() {
         new CoreConfigBuilder()
     }

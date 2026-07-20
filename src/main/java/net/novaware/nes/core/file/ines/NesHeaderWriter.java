@@ -2,8 +2,9 @@ package net.novaware.nes.core.file.ines;
 
 import net.novaware.nes.core.file.NesMeta;
 import net.novaware.nes.core.file.Problem;
-import net.novaware.nes.core.util.UByteBuffer;
+import net.novaware.nes.core.util.Buffers;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import static net.novaware.nes.core.file.NesMeta.System.EXTENDED;
@@ -12,6 +13,7 @@ import static net.novaware.nes.core.file.NesMeta.System.PLAY_CHOICE_10;
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC;
 import static net.novaware.nes.core.file.ines.NesFileVersion.ARCHAIC_0_7;
 import static net.novaware.nes.core.util.Asserts.assertArgument;
+import static net.novaware.nes.core.util.UTypes.UBYTE_0;
 
 public class NesHeaderWriter extends NesHeaderHandler {
 
@@ -25,7 +27,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
      */
     public record Params(
             NesFileVersion version,
-            UByteBuffer header,
+            ByteBuffer header,
             boolean includeInfo // TODO: think about bitfield or enum instead
     ) {
         public Params(NesFileVersion version, boolean includeInfo) {
@@ -34,7 +36,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
     }
 
     public record Result(
-            UByteBuffer header,
+            ByteBuffer header,
             List<Problem> problems
     ) {
     }
@@ -47,8 +49,7 @@ public class NesHeaderWriter extends NesHeaderHandler {
             // assertArgument(params.version == NesFileVersion.ARCHAIC, "info can be included only in archaic header"); // TODO: move to version specific method and check length
         }
 
-        UByteBuffer header = params.header()
-                .zeroOut();
+        ByteBuffer header = Buffers.fill(params.header(), UBYTE_0);
 
         List<NesFileVersion> versions = params.version.getHistory();
 
