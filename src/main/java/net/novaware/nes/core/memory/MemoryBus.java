@@ -3,6 +3,7 @@ package net.novaware.nes.core.memory;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
 // TODO: split bus interface into performant variant, nice fluent and probe
+// TODO: have Cpu / Ppu as separate variants for monomorphic calls, or final class
 public interface MemoryBus extends AddressBus.Line, ControlBus.Line, DataBus.Line {
 
     void probe(@Unsigned short address, DataBus.Line dataLine);
