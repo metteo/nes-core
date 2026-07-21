@@ -27,7 +27,7 @@ public class IoRegFile extends RegisterFile {
         booleanRegisters = List.of(
             this.joyStrobe = joyStrobe
         );
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             this.joy1Data = joy1Data,
             this.joy2Data = joy2Data
         );

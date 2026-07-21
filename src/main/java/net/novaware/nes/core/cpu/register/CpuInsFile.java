@@ -4,12 +4,10 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.inject.CpuVarName;
 import net.novaware.nes.core.cpu.instruction.Instruction;
-import net.novaware.nes.core.register.AddressRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.RegisterFile;
-import net.novaware.nes.core.register.ShortRegister;
 
 import java.util.List;
 
@@ -19,7 +17,7 @@ import java.util.List;
 public class CpuInsFile extends RegisterFile {
 
     /** @see Instruction#opcode() */
-    private final DataRegister currentInstruction;
+    private final ByteRegister currentInstruction;
     private final ShortRegister currentOperand;
 
     private final InstructionRegister  decodedInstruction;
@@ -35,11 +33,11 @@ public class CpuInsFile extends RegisterFile {
     ) {
         super("CPU.INS");
 
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             this.currentInstruction = currentInstruction
         );
 
-        addressRegisters = List.of(
+        shortRegisters = List.of(
             this.currentOperand = currentOperand
         );
 
@@ -47,21 +45,21 @@ public class CpuInsFile extends RegisterFile {
         this.decodedOperand = decodedOperand;
     }
 
-    public DataRegister getCurrentInstruction() {
+    public ByteRegister getCurrentInstruction() {
         return currentInstruction;
     }
 
     /** @see #getCurrentInstruction() */
-    public DataRegister cir() {
+    public ByteRegister cir() {
         return currentInstruction;
     }
 
-    public AddressRegister getCurrentOperand() {
+    public ShortRegister getCurrentOperand() {
         return currentOperand;
     }
 
     /** @see #getCurrentOperand() */
-    public AddressRegister cor() {
+    public ShortRegister cor() {
         return currentOperand;
     }
 

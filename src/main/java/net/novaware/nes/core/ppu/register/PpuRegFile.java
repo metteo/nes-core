@@ -129,11 +129,11 @@ public class PpuRegFile extends RegisterFile {
         this.tempViewPort = tempViewPort;
         this.resetLock = resetLock;
 
-        addressRegisters = List.of(
+        shortRegisters = List.of(
             this.backgroundPatternTable = backgroundPatternTable,
             this.spritePatternTable = spritePatternTable
         );
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             this.dataReadBuffer = dataReadBuffer,
             this.vramAddressIncrement = vramAddressIncrement
         );

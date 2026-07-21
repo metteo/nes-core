@@ -44,14 +44,14 @@ public class CpuRegFile extends RegisterFile {
     ) {
         super("CPU.REGS");
 
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             this.accumulator = accumulator,
             this.indexX = indexX,
             this.indexY = indexY,
             this.stackPointer = stackPointer
         );
 
-        addressRegisters = List.of(
+        shortRegisters = List.of(
             this.programCounter = programCounter
         );
 

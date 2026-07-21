@@ -3,84 +3,78 @@ package net.novaware.nes.core.register;
 import net.novaware.nes.core.util.Hex;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
+import static net.novaware.nes.core.util.UTypes.UBYTE_MASK;
+import static net.novaware.nes.core.util.UTypes.USHORT_MASK;
 import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-// TODO: this class is a mess. So many UTypes methods used. Optimize
-public final class ShortRegister extends AddressRegister {
+public final class ShortRegister extends Register {
 
     /*
      * Internally we keep 2 bytes because that's how it works in hardware
+     * Using ints to limit casting when assembling full short
      */
-    private @Unsigned byte hi;
-    private @Unsigned byte lo;
+    private int hi;
+    private int lo;
 
     public ShortRegister(String name) {
         super(name);
     }
 
     public @Unsigned short get() {
-        return ushort(getAsInt());
+        return ushort(hi << 8 | lo); // duplicated to limit method calls
     }
 
-    @Override
     public @Unsigned byte high() {
-        return hi;
+        return ubyte(hi);
     }
 
-    @Override
     public @Unsigned byte low() {
-        return lo;
+        return ubyte(lo);
     }
 
     public int getAsInt() {
-        return sint(hi) << 8 | sint(lo);
+        return (hi << 8 | lo) & USHORT_MASK;
     }
 
-    @Override
     public int highAsInt() {
-        return sint(hi);
+        return hi;
     }
 
-    @Override
     public int lowAsInt() {
-        return sint(lo);
+        return lo;
     }
 
     public void set(@Unsigned short address) {
         setAsShort(sint(address));
     }
 
-    @Override
-    public AddressRegister high(@Unsigned byte hi) {
-        this.hi = hi;
+    public ShortRegister high(@Unsigned byte hi) {
+        this.hi = sint(hi);
 
         return this;
     }
 
-    @Override
-    public AddressRegister low(@Unsigned byte lo) {
-        this.lo = lo;
+    public ShortRegister low(@Unsigned byte lo) {
+        this.lo = sint(lo);
 
         return this;
     }
 
     public void setAsShort(int address) {
-        hi = ubyte((address & 0xFF00) >> 8);
-        lo = ubyte(address & 0x00FF);
+        hi = (address & 0xFF00) >> 8;
+        lo =  address & 0x00FF;
     }
 
-    @Override
-    public AddressRegister highAsByte(int hi) {
-        this.hi = ubyte(hi);
+    public ShortRegister highAsByte(int hi) {
+        this.hi = hi & UBYTE_MASK;
 
         return this;
     }
 
-    @Override
-    public AddressRegister lowAsByte(int lo) {
-        this.lo = ubyte(lo);
+    public ShortRegister lowAsByte(int lo) {
+        this.lo = lo & UBYTE_MASK;
 
         return this;
     }

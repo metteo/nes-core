@@ -5,7 +5,6 @@ import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.StatusRegister;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -125,7 +124,7 @@ public class ArithmeticLogic implements Unit {
         incrementRegister(indexY, -1);
     }
 
-    private void incrementRegister(DataRegister register, int by) {
+    private void incrementRegister(ByteRegister register, int by) {
         int val = register.getAsInt();
 
         int result = val + by;
@@ -180,7 +179,7 @@ public class ArithmeticLogic implements Unit {
         compareRegister(indexY, data);
     }
 
-    private void compareRegister(DataRegister register, @Unsigned byte data) {
+    private void compareRegister(ByteRegister register, @Unsigned byte data) {
         @Unsigned byte reg = register.get();
 
         int regVal = sint(reg);
@@ -246,7 +245,7 @@ public class ArithmeticLogic implements Unit {
         return ubyte(resultByte);
     }
 
-    void transfer(DataRegister src, DataRegister dst) {
+    void transfer(ByteRegister src, ByteRegister dst) {
         @Unsigned byte data = src.get();
         dst.set(data);
 

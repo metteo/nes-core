@@ -21,7 +21,7 @@ public class DelegatingRegister extends Register {
     private @Unsigned byte data;
     private @Unsigned short address;
 
-    private DataRegister dataRegister = nullByteRegister;
+    private ByteRegister dataRegister = nullByteRegister;
     private @Nullable CpuBus cpuBus; // TODO: maybe replace with MMU?
     private Delegate delegate = emptyDelegate;
 
@@ -61,7 +61,7 @@ public class DelegatingRegister extends Register {
         return this;
     }
 
-    public void configureDataRegister(DataRegister dataRegister) {
+    public void configureDataRegister(ByteRegister dataRegister) {
         reset();
 
         this.dataRegister = dataRegister;

@@ -10,11 +10,11 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
 
     private final String name;
 
-    protected List<AddressRegister> addressRegisters = List.of();
-    protected List<DataRegister> dataRegisters = List.of();
+    protected List<ShortRegister> shortRegisters = List.of();
+    protected List<ByteRegister> byteRegisters = List.of();
     protected List<BooleanRegister> booleanRegisters = List.of();
     // TODO: add segment registers
-    // TODO: add other registers (boolean, status, EFlags etc)
+    // TODO: add other registers (status, EFlags etc)?
 
     protected RegisterFile(String name) {
         this.name = name;
@@ -24,12 +24,12 @@ public class RegisterFile implements Nameable, Initializable, Resettable {
         return name;
     }
 
-    public List<AddressRegister> getAddressRegisters() {
-        return addressRegisters;
+    public List<ShortRegister> getShortRegisters() {
+        return shortRegisters;
     }
 
-    public List<DataRegister> getDataRegisters() {
-        return dataRegisters;
+    public List<ByteRegister> getByteRegisters() {
+        return byteRegisters;
     }
 
     public List<BooleanRegister> getBooleanRegisters() {

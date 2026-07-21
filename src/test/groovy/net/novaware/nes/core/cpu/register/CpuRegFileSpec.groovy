@@ -12,7 +12,7 @@ class CpuRegFileSpec extends Specification {
 
     def "all data registers are initialized and reachable"() {
         expect:
-        registers.dataRegisters.size() == 4
+        registers.byteRegisters.size() == 4
         registers.a().getName() == "A"
         registers.x().getName() == "X"
         registers.y().getName() == "Y"
@@ -21,7 +21,7 @@ class CpuRegFileSpec extends Specification {
 
     def "all address registers are initialized and reachable"() {
         expect:
-        registers.addressRegisters.size() == 1
+        registers.shortRegisters.size() == 1
         registers.pc().getName() == "PC"
     }
 

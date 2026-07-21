@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 import net.novaware.nes.core.board.inject.BoardScope;
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.StatusRegister;
-import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.util.uml.Used;
 import org.checkerframework.checker.signedness.qual.Unsigned;
@@ -28,7 +28,7 @@ public class LoadStore implements Unit {
         this.decodedOperand = decodedOperand;
     }
 
-    void load(DataRegister register) {
+    void load(ByteRegister register) {
         @Unsigned byte data = decodedOperand.getData();
 
         register.set(data);
@@ -38,7 +38,7 @@ public class LoadStore implements Unit {
         status.maybeZeroOrNegative(dataVal);
     }
 
-    void store(DataRegister register) {
+    void store(ByteRegister register) {
         @Unsigned byte data = register.get();
 
         decodedOperand.setData(data);

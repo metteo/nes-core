@@ -18,12 +18,12 @@ public enum AddressingMode {
     // endregion
     // region Immediate
 
-    IMMEDIATE   ("#BYTE", AddressingCategory.IMMEDIATE, NONE, 1),
+    IMMEDIATE   ("#BYTE", AddressingCategory.IMMEDIATE, NONE, 1), // next byte address
 
     // endregion
     // region Relative
 
-    RELATIVE    ("SBYTE", AddressingCategory.RELATIVE,  NONE, 1),
+    RELATIVE    ("SBYTE", AddressingCategory.RELATIVE,  NONE, 1), // address offset
 
     // endregion
     // region Zero Page

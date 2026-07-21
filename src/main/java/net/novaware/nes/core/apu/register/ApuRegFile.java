@@ -57,7 +57,7 @@ public class ApuRegFile extends RegisterFile {
         // TODO: inject with all the registers from module instead of creating them here
 
         // TODO: initialize fields inside the list to make sure all items are there
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             sq1Vol,     sq1Sweep,    sq1Lo,    sq1Hi,
             sq2Vol,     sq2Sweep,    sq2Lo,    sq2Hi,
             triLinear,  triUnused,   triLo,    triHi,
@@ -65,7 +65,7 @@ public class ApuRegFile extends RegisterFile {
             dmcFreq,    dmcRaw,      dmcStart, dmcLength
         );
 
-        addressRegisters = List.of();
+        shortRegisters = List.of();
     }
 
     public ByteRegister[] getCpuRegisters() {

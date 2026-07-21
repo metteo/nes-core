@@ -36,7 +36,7 @@ class PpuRegFileSpec extends Specification {
 
     def "all data registers are initialized and reachable"() {
         expect:
-        registers.dataRegisters.size() == 2
+        registers.byteRegisters.size() == 2
         registers.dataReadBuffer.getName() == "PPU.DATA.R"
         registers.vramAddressIncrement.getName() == "PPU.CTRL.I"
         registers.priOamAddress.getName() == "PPU.OAM.PRI"
@@ -45,7 +45,7 @@ class PpuRegFileSpec extends Specification {
 
     def "all address registers are initialized and reachable"() {
         expect:
-        registers.addressRegisters.size() == 2
+        registers.shortRegisters.size() == 2
         registers.backgroundPatternTable.getName() == "PPU.CTRL.B"
         registers.spritePatternTable.getName() == "PPU.CTRL.S"
     }

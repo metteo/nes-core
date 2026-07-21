@@ -11,7 +11,7 @@ public final class SegmentRegister extends Register {
 
     // also cover mirrorring case?
 
-    // add methods to get the end and possibly mirroring mask or sth
+    // add methods to get mirroring mask or sth
 
     public SegmentRegister(String name) {
         super(name);

@@ -6,9 +6,9 @@ import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.Status;
 import net.novaware.nes.core.cpu.register.StatusRegister;
-import net.novaware.nes.core.register.AddressRegister;
+import net.novaware.nes.core.register.ShortRegister;
 import net.novaware.nes.core.register.BooleanLatch;
-import net.novaware.nes.core.register.DataRegister;
+import net.novaware.nes.core.register.ByteRegister;
 import net.novaware.nes.core.register.SegmentRegister;
 import org.checkerframework.checker.signedness.qual.Unsigned;
 
@@ -23,7 +23,7 @@ import static net.novaware.nes.core.util.UTypes.ushort;
 public class StackEngine implements Unit {
 
     private final SegmentRegister stackSegment;
-    private final DataRegister stackPointer;
+    private final ByteRegister stackPointer;
     private final StatusRegister status;
     private final BooleanLatch interruptDisabled;
 
@@ -71,11 +71,11 @@ public class StackEngine implements Unit {
         mmu.specifyAnd(address()).readByte();
     }
 
-    void push(DataRegister register) {
+    void push(ByteRegister register) {
         push(register.get());
     }
 
-    void push(AddressRegister register) {
+    void push(ShortRegister register) {
         push(register.high());
         push(register.low());
     }
@@ -106,7 +106,7 @@ public class StackEngine implements Unit {
         return data;
     }
 
-    void pull(DataRegister register) {
+    void pull(ByteRegister register) {
         peek(); // additional cycle to read current sp // TODO: maybe move to increment()
 
         @Unsigned byte data = pull();
@@ -117,7 +117,7 @@ public class StackEngine implements Unit {
         status.maybeZeroOrNegative(dataVal);
     }
 
-    void pull(AddressRegister register) {
+    void pull(ShortRegister register) {
         // order matters, low first
         register.low(pull());
         register.high(pull());

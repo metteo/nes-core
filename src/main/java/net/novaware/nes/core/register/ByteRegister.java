@@ -6,7 +6,7 @@ import org.checkerframework.checker.signedness.qual.Unsigned;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.sint;
 
-public final class ByteRegister extends DataRegister {
+public final class ByteRegister extends Register {
 
     private @Unsigned byte data;
 
@@ -27,7 +27,7 @@ public final class ByteRegister extends DataRegister {
     }
 
     public void setAsByte(int data) {
-        set(ubyte(data));
+        this.data = ubyte(data);
     }
 
     @Override

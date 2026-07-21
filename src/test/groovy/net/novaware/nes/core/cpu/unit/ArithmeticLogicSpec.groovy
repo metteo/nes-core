@@ -1,6 +1,6 @@
 package net.novaware.nes.core.cpu.unit
 
-import net.novaware.nes.core.register.DataRegister
+import net.novaware.nes.core.register.ByteRegister
 import net.novaware.nes.core.util.RegsAndRamBaseSpec
 import spock.lang.Subject
 
@@ -213,7 +213,7 @@ class ArithmeticLogicSpec extends RegsAndRamBaseSpec {
 
     def "should increment index register"() {
         given:
-        DataRegister register = switch(reg) {
+        ByteRegister register = switch(reg) {
             case "x" -> registers.indexX
             case "y" -> registers.indexY
         }

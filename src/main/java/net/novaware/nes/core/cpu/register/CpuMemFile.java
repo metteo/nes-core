@@ -2,9 +2,7 @@ package net.novaware.nes.core.cpu.register;
 
 import net.novaware.nes.core.cpu.inject.CpuVar;
 import net.novaware.nes.core.cpu.inject.CpuVarName;
-import net.novaware.nes.core.register.AddressRegister;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.RegisterFile;
 import net.novaware.nes.core.register.ShortRegister;
 
@@ -24,32 +22,32 @@ public class CpuMemFile extends RegisterFile {
     ) {
         super("CPU.MEMS");
 
-        dataRegisters = List.of(
+        byteRegisters = List.of(
             this.memoryData = memoryData
 
 
         );
 
-        addressRegisters = List.of(
+        shortRegisters = List.of(
             this.memoryAddress = memoryAddress
         );
     }
 
-    public AddressRegister getMemoryAddress() {
+    public ShortRegister getMemoryAddress() {
         return memoryAddress;
     }
 
     /** @see #getMemoryAddress() */
-    public AddressRegister mar() {
+    public ShortRegister mar() {
         return memoryAddress;
     }
 
-    public DataRegister getMemoryData() {
+    public ByteRegister getMemoryData() {
         return memoryData;
     }
 
     /** @see #getMemoryData() */
-    public DataRegister mdr() {
+    public ByteRegister mdr() {
         return memoryData;
     }
 }

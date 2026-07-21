@@ -10,7 +10,6 @@ import net.novaware.nes.core.cpu.memory.CpuBus;
 import net.novaware.nes.core.cpu.register.CpuRegFile;
 import net.novaware.nes.core.cpu.register.InstructionRegister;
 import net.novaware.nes.core.register.ByteRegister;
-import net.novaware.nes.core.register.DataRegister;
 import net.novaware.nes.core.register.DelegatingRegister;
 import net.novaware.nes.core.register.IntegerCounter;
 import net.novaware.nes.core.register.ShortRegister;
@@ -149,7 +148,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(cpuBus, result);
     }
 
-    private void decodeAbsoluteIndexedRead(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedRead(ByteRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         int result = indexVal + sint(operand);
@@ -161,7 +160,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
-    private void decodeAbsoluteIndexedWrite(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeAbsoluteIndexedWrite(ByteRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         cpuBus.access(operand).read().data(); // sum cycle
@@ -170,7 +169,7 @@ public class InstructionDecoder implements Unit {
         decodedOperand.configureMemory(cpuBus, ushort(result));
     }
 
-    private void decodeZeroPageIndexed(DataRegister indexRegister, @Unsigned short operand) {
+    private void decodeZeroPageIndexed(ByteRegister indexRegister, @Unsigned short operand) {
         int indexVal = indexRegister.getAsInt();
 
         cpuBus.access(operand).read().data(); // sum cycle
