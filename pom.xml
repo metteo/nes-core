@@ -10,6 +10,7 @@
 
     <properties>
         <java.version>25</java.version>
+        <toolchain.jdk.version>[25, 26)</toolchain.jdk.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +34,7 @@
         <jspecify.version>1.0.0</jspecify.version>
         <auto-value.version>1.11.0</auto-value.version>
         <checker.version>3.53.0</checker.version>
-        <compiler.version>3.13.0</compiler.version>
+        <compiler.version>3.15.0</compiler.version>
         <resources.version>3.3.1</resources.version>
         <failsafe.version>3.5.4</failsafe.version>
         <jar.version>3.4.1</jar.version>
@@ -132,13 +133,6 @@
             <plugin>
                 <artifactId>maven-toolchains-plugin</artifactId>
                 <version>${toolchains.version}</version>
-                <configuration>
-                    <toolchains>
-                        <jdk>
-                            <version>${java.version}</version>
-                        </jdk>
-                    </toolchains>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
