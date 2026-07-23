@@ -19,7 +19,7 @@ module net.novaware.nes.core {
     exports net.novaware.nes.core.util;
 
     exports net.novaware.nes.core.memory; // TODO: Consider creating a dedicated package for peripherals like MemoryDevice
-    // TODO: should not be exposed
+    // TODO: should not be exposed, unless it's a debug build / diagnostic module
     exports net.novaware.nes.core.clock;
     exports net.novaware.nes.core.cpu.unit;
     exports net.novaware.nes.core.port.internal;

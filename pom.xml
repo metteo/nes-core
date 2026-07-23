@@ -41,10 +41,6 @@
         <modernizer.version>3.2.0</modernizer.version>
         <dagger.version>2.59</dagger.version>
 
-        <jpms.name>net.novaware.nes.core</jpms.name>
-        <jpms.opens>--add-opens ${jpms.name}/${jpms.name}</jpms.opens>
-        <argLine/>
-
         <!-- TODO: consider adding skipUTs, skipITs: https://stackoverflow.com/questions/6612344/prevent-unit-tests-but-allow-integration-tests-in-maven -->
         <!-- TODO: consider separate profile for all IT executions -->
     </properties>
@@ -260,57 +256,6 @@
                         <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
                         <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
                     </statelessTestsetReporter>
-                    <!-- NOTE: required for running single test classes / methods in IJ  -->
-                    <!-- causes: WARNING: Unknown module: net.novaware.nes.core specified to - -add-opens -->
-                    <argLine>
-                        @{argLine}
-                        ${jpms.opens}=ALL-UNNAMED
-                        ${jpms.opens}.apu=ALL-UNNAMED
-                        ${jpms.opens}.apu.inject=ALL-UNNAMED
-                        ${jpms.opens}.apu.memory=ALL-UNNAMED
-                        ${jpms.opens}.apu.register=ALL-UNNAMED
-                        ${jpms.opens}.board=ALL-UNNAMED
-                        ${jpms.opens}.board.inject=ALL-UNNAMED
-                        ${jpms.opens}.cart=ALL-UNNAMED
-                        ${jpms.opens}.cart.internal=ALL-UNNAMED
-                        ${jpms.opens}.clock=ALL-UNNAMED
-                        ${jpms.opens}.clock.inject=ALL-UNNAMED
-                        ${jpms.opens}.config=ALL-UNNAMED
-                        ${jpms.opens}.config.internal=ALL-UNNAMED
-                        ${jpms.opens}.cpu=ALL-UNNAMED
-                        ${jpms.opens}.cpu.instruction=ALL-UNNAMED
-                        ${jpms.opens}.cpu.memory=ALL-UNNAMED
-                        ${jpms.opens}.cpu.register=ALL-UNNAMED
-                        ${jpms.opens}.cpu.signal=ALL-UNNAMED
-                        ${jpms.opens}.cpu.signal.internal=ALL-UNNAMED
-                        ${jpms.opens}.cpu.unit=ALL-UNNAMED
-                        ${jpms.opens}.dma=ALL-UNNAMED
-                        ${jpms.opens}.dma.inject=ALL-UNNAMED
-                        ${jpms.opens}.dma.memory=ALL-UNNAMED
-                        ${jpms.opens}.file=ALL-UNNAMED
-                        ${jpms.opens}.file.ines=ALL-UNNAMED
-                        ${jpms.opens}.file.nesy=ALL-UNNAMED
-                        ${jpms.opens}.file.pasofami=ALL-UNNAMED
-                        ${jpms.opens}.file.unif=ALL-UNNAMED
-                        ${jpms.opens}.mapper=ALL-UNNAMED
-                        ${jpms.opens}.memory=ALL-UNNAMED
-                        ${jpms.opens}.net=ALL-UNNAMED
-                        ${jpms.opens}.pin=ALL-UNNAMED
-                        ${jpms.opens}.pin.internal=ALL-UNNAMED
-                        ${jpms.opens}.port=ALL-UNNAMED
-                        ${jpms.opens}.port.internal=ALL-UNNAMED
-                        ${jpms.opens}.ppu=ALL-UNNAMED
-                        ${jpms.opens}.ppu.action=ALL-UNNAMED
-                        ${jpms.opens}.ppu.inject=ALL-UNNAMED
-                        ${jpms.opens}.ppu.memory=ALL-UNNAMED
-                        ${jpms.opens}.ppu.register=ALL-UNNAMED
-                        ${jpms.opens}.ppu.table=ALL-UNNAMED
-                        ${jpms.opens}.ppu.unit=ALL-UNNAMED
-                        ${jpms.opens}.register=ALL-UNNAMED
-                        ${jpms.opens}.test=ALL-UNNAMED
-                        ${jpms.opens}.util=ALL-UNNAMED
-                        ${jpms.opens}.util.uml=ALL-UNNAMED
-                    </argLine>
                 </configuration>
             </plugin>
             <plugin>

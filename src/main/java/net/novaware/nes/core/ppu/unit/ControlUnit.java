@@ -92,11 +92,8 @@ import static net.novaware.nes.core.util.UTypes.sint;
 import static net.novaware.nes.core.util.UTypes.ubyte;
 import static net.novaware.nes.core.util.UTypes.ushort;
 
-/**
- * @see gemini: micro-action log
- */
 @BoardScope
-public class ControlUnit implements Initializable { // FIXME: separate from Cpu ControlUnit, maybe ActionUnit?
+public class ControlUnit implements Initializable { // FIXME: separate from Cpu ControlUnit, maybe Action/SignalUnit?
 
     private final VideoStandard videoStandard;
 
