@@ -1,5 +1,11 @@
 package net.novaware.nes.core.config;
 
+import net.novaware.nes.core.tv.ColorNtsc;
+import net.novaware.nes.core.tv.ColorPal;
+import net.novaware.nes.core.tv.ColorPalM;
+import net.novaware.nes.core.tv.SystemB;
+import net.novaware.nes.core.tv.SystemM;
+
 import java.util.List;
 
 /**
@@ -10,13 +16,13 @@ import java.util.List;
  */
 public enum VideoStandard { // TODO: include post render scanline (241, NTSC black, PAL backdrop) and border region
 
-    NTSC      (315 * 1_000_000d / 88 * 6, 12, 4, 262, true ),
-    NTSC_DUAL (315 * 1_000_000d / 88 * 6, 12, 4, 262, true ),
-    RGB       (315 * 1_000_000d / 88 * 6, 12, 4, 262, false),
-    PAL       (4_433_618.75 * 6,          16, 5, 312, false),
-    PAL_DUAL  (4_433_618.75 * 6,          16, 5, 312, false),
-    DENDY     (4_433_618.75 * 6,          15, 5, 312, false), // PAL clock, unique CPU div
-    PAL_M     (3_575_611d   * 6,          12, 4, 262, true ), // unique clock, NTSC divs
+    NTSC      (ColorNtsc.SUBCARRIER * 6, 12, 4, SystemM.TOTAL_P_LINES, true ),
+    NTSC_DUAL (ColorNtsc.SUBCARRIER * 6, 12, 4, SystemM.TOTAL_P_LINES, true ),
+    RGB       (ColorNtsc.SUBCARRIER * 6, 12, 4, SystemM.TOTAL_P_LINES, false),
+    PAL       (ColorPal .SUBCARRIER * 6, 16, 5, SystemB.TOTAL_P_LINES, false),
+    PAL_DUAL  (ColorPal .SUBCARRIER * 6, 16, 5, SystemB.TOTAL_P_LINES, false),
+    DENDY     (ColorPal .SUBCARRIER * 6, 15, 5, SystemB.TOTAL_P_LINES, false), // PAL clock, unique CPU div
+    PAL_M     (ColorPalM.SUBCARRIER * 6, 12, 4, SystemM.TOTAL_P_LINES, true ), // unique clock, NTSC divs
 
     UNKNOWN   (-1L, -1, -1, -1, false);
 
