@@ -1,4 +1,6 @@
-package net.novaware.nes.core.config;
+package net.novaware.nes.core.tv;
+
+import net.novaware.nes.core.config.VideoStandard;
 
 import java.util.Map;
 import java.util.function.Function;

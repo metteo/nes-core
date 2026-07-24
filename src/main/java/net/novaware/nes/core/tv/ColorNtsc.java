@@ -1,6 +1,10 @@
 package net.novaware.nes.core.tv;
 
 /**
+ * NTSC M is here
+ * NTSC N is not supported
+ * NTSC 4.43 is not supported
+ *
  * @see <a href="https://en.wikipedia.org/wiki/NTSC">NTSC on wikipedia.org</a>
  */
 public interface ColorNtsc {
@@ -10,16 +14,17 @@ public interface ColorNtsc {
      */
     double RATE_DIVIDER = 1.001;
 
-    double FRAME_RATE = SystemM.FRAME_RATE / RATE_DIVIDER; // Hz
-    double FIELD_RATE = SystemM.FIELD_RATE / RATE_DIVIDER; // Hz
+    double I_FRAME_RATE = SystemM.I_FRAME_RATE / RATE_DIVIDER; // Hz
+    double FIELD_RATE   = SystemM.FIELD_RATE   / RATE_DIVIDER; // Hz
+    double P_FRAME_RATE = FIELD_RATE; // Hz
 
     /**
      * Color
      */
-    double I_LINE_RATE = SystemM.TOTAL_I_LINES * FRAME_RATE;
+    double I_LINE_RATE = SystemM.TOTAL_I_LINES * I_FRAME_RATE; // Hz
 
     /**
-     * 5 x 7 x 9 MHz / (8 x 11)
+     * Also 5 x 7 x 9 MHz / (8 x 11) or 315 / 88
      */
-    double SUBCARRIER = 315.0 * 1_000_000.0 / 88.0; // Hz
+    double SUBCARRIER = 227.5 * I_LINE_RATE; // Hz
 }

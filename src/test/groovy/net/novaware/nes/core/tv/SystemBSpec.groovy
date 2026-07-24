@@ -12,7 +12,6 @@ class SystemBSpec extends Specification {
         SystemB.TOTAL_P_LINES  == 312
         SystemB.BLANK_P_LINES  == 24
         SystemB.ACTIVE_P_LINES == 288
-
-        SystemB.FIELD_RATE     == 50
+        SystemB.P_FRAME_RATE   == 50
     }
 }

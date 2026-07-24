@@ -10,9 +10,6 @@ import java.util.List;
 
 /**
  * @see <a href="https://www.nesdev.org/wiki/Cycle_reference_chart">Cycle reference chart on nesdev.org</a>
- * TODO: separate tv system from color
- * https://en.wikipedia.org/wiki/CCIR_System_B
- * https://en.wikipedia.org/wiki/CCIR_System_M
  */
 public enum VideoStandard { // TODO: include post render scanline (241, NTSC black, PAL backdrop) and border region
 
@@ -28,8 +25,8 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
 
     public static final int PHYSICAL_WIDTH = 341; // horizontal, dots per scan line
 
-    public static final int ACTIVE_WIDTH = 256;  // 32 * 8 horizontal dots  // TODO: maybe use unit checker here
-    public static final int ACTIVE_HEIGHT = 240; // 30 * 8 vertical dots
+    public static final int ACTIVE_WIDTH = 256;                     // 32 * 8 horizontal dots  // TODO: maybe use unit checker here
+    public static final int ACTIVE_HEIGHT = SystemM.ACTIVE_P_LINES; // 30 * 8 vertical dots
 
     public static final int V_BLANK_START = ACTIVE_HEIGHT + 1; // scan line
     public static final int H_BLANK_START = ACTIVE_WIDTH + 1; // dot / cycle

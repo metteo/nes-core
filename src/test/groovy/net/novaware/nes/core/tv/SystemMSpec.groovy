@@ -12,7 +12,6 @@ class SystemMSpec extends Specification {
         SystemM.TOTAL_P_LINES  == 262
         SystemM.BLANK_P_LINES  == 22
         SystemM.ACTIVE_P_LINES == 240
-
-        SystemM.FIELD_RATE     == 60
+        SystemM.P_FRAME_RATE   == 60
     }
 }

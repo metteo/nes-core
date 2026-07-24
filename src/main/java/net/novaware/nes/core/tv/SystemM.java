@@ -6,47 +6,56 @@ package net.novaware.nes.core.tv;
 public interface SystemM {
 
     /**
-     * Interlaced, per frame
+     * Interlaced, per iframe
      */
     int TOTAL_I_LINES = 525;
 
     /**
-     * Interlaced, per frame
+     * Interlaced, per iframe
      */
     int BLANK_I_LINES = 45;
 
     /**
-     * Interlaced, per frame
+     * Interlaced, per iframe
      */
     int ACTIVE_I_LINES = TOTAL_I_LINES - BLANK_I_LINES;
 
     /**
-     * Monochrome
+     * Interlaced, Monochrome
      */
-    int FRAME_RATE = 30; // Hz
+    int I_FRAME_RATE = 30; // Hz
 
-    /**
-     * Monochrome
-     */
-    int I_LINE_RATE = TOTAL_I_LINES * FRAME_RATE; // Hz
-
-    /**
-     * Progressive, per field
-     */
-    int TOTAL_P_LINES = TOTAL_I_LINES / 2; // truncate on purpose
-
-    /**
-     * Progressive, per field
-     */
-    int BLANK_P_LINES = BLANK_I_LINES / 2; // truncate on purpose
-
-    /**
-     * Progressive, per field
-     */
-    int ACTIVE_P_LINES = ACTIVE_I_LINES / 2; // truncate on purpose
+    int FIELDS_PER_FRAME = 2;
 
     /**
      * Monochrome, see {@link ColorNtsc#FIELD_RATE} for color
+     *
+     * @see <a href="https://en.wikipedia.org/wiki/Field_(video)">Field on wikipedia.org</a>
      */
-    int FIELD_RATE = FRAME_RATE * 2; // Hz
+    int FIELD_RATE = I_FRAME_RATE * FIELDS_PER_FRAME; // Hz
+
+    /**
+     * Monochrome
+     */
+    int I_LINE_RATE = TOTAL_I_LINES * I_FRAME_RATE; // Hz
+
+    /**
+     * Progressive, per pframe
+     */
+    int TOTAL_P_LINES = TOTAL_I_LINES / FIELDS_PER_FRAME; // truncate on purpose
+
+    /**
+     * Progressive, per pframe
+     */
+    int BLANK_P_LINES = BLANK_I_LINES / FIELDS_PER_FRAME; // truncate on purpose
+
+    /**
+     * Progressive, per pframe
+     */
+    int ACTIVE_P_LINES = ACTIVE_I_LINES / FIELDS_PER_FRAME; // truncate on purpose
+
+    /**
+     * Progressive
+     */
+    int P_FRAME_RATE = FIELD_RATE;
 }

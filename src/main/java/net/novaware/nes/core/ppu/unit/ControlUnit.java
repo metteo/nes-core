@@ -680,7 +680,7 @@ public class ControlUnit implements Initializable { // FIXME: separate from Cpu 
             case CLEAR -> {
                 // TODO: on pal border region is always black
                 // TODO: border region may have different colors during force blank if v is pointing to palette
-                @Unsigned byte backdrop = paletteTable.getColorRef(BACKGROUND, 1, 1); //paletteMemory.read(UBYTE_0);
+                @Unsigned byte backdrop = paletteTable.getColorRef(BACKGROUND, 0, 0); //paletteMemory.read(UBYTE_0);
                 videoOut.set(-1, -1, backdrop); // FIXME: PPU is rendering the border region during passive area cycles
             }
             case NO_OPERATION -> {}

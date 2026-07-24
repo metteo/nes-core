@@ -12,21 +12,21 @@ public enum SystemTV {
         SystemM.TOTAL_I_LINES,
         SystemM.BLANK_I_LINES,
         SystemM.ACTIVE_I_LINES,
-        SystemM.FRAME_RATE,
+        SystemM.I_FRAME_RATE,
         SystemM.TOTAL_P_LINES,
         SystemM.BLANK_P_LINES,
         SystemM.ACTIVE_P_LINES,
-        SystemM.FIELD_RATE
+        SystemM.P_FRAME_RATE
     ),
     B (
         SystemB.TOTAL_I_LINES,
         SystemB.BLANK_I_LINES,
         SystemB.ACTIVE_I_LINES,
-        SystemB.FRAME_RATE,
+        SystemB.I_FRAME_RATE,
         SystemB.TOTAL_P_LINES,
         SystemB.BLANK_P_LINES,
         SystemB.ACTIVE_P_LINES,
-        SystemB.FIELD_RATE
+        SystemB.P_FRAME_RATE
     ),
     U (-1, -1, -1, -1, -1, -1, -1, -1); // Unknown, known used only letters, A-N
 
@@ -35,30 +35,30 @@ public enum SystemTV {
     private final int totalInterlacedLines;
     private final int blankInterlacedLines;
     private final int activeInterlacedLines;
-    private final int frameRate;
+    private final int interlacedFrameRate;
     private final int totalProgressiveLines;
     private final int blankProgressiveLines;
     private final int activeProgressiveLines;
-    private final int fieldRate;
+    private final int progressiveFrameRate;
 
     SystemTV(
-        int totalInterlacedLines,
-        int blankInterlacedLines,
-        int activeInterlacedLines,
-        int frameRate,
-        int totalProgressiveLines,
-        int blankProgressiveLines,
-        int activeProgressiveLines,
-        int fieldRate
+            int totalInterlacedLines,
+            int blankInterlacedLines,
+            int activeInterlacedLines,
+            int interlacedFrameRate,
+            int totalProgressiveLines,
+            int blankProgressiveLines,
+            int activeProgressiveLines,
+            int fieldRate
     ) {
         this.totalInterlacedLines = totalInterlacedLines;
         this.blankInterlacedLines = blankInterlacedLines;
         this.activeInterlacedLines = activeInterlacedLines;
-        this.frameRate = frameRate;
+        this.interlacedFrameRate = interlacedFrameRate;
         this.totalProgressiveLines = totalProgressiveLines;
         this.blankProgressiveLines = blankProgressiveLines;
         this.activeProgressiveLines = activeProgressiveLines;
-        this.fieldRate = fieldRate;
+        this.progressiveFrameRate = fieldRate;
     }
 
     public int getTotalInterlacedLines() {
@@ -73,8 +73,8 @@ public enum SystemTV {
         return activeInterlacedLines;
     }
 
-    public int getFrameRate() {
-        return frameRate;
+    public int getInterlacedFrameRate() {
+        return interlacedFrameRate;
     }
 
     public int getTotalProgressiveLines() {
@@ -89,8 +89,8 @@ public enum SystemTV {
         return activeProgressiveLines;
     }
 
-    public int getFieldRate() {
-        return fieldRate;
+    public int getProgressiveFrameRate() {
+        return progressiveFrameRate;
     }
 
     @Override
@@ -100,8 +100,8 @@ public enum SystemTV {
 
     public String toText() {
         return this + ": " +
-            getActiveInterlacedLines() + "i" + getFrameRate() + " " +
-            getActiveProgressiveLines() + "p" + getFieldRate();
+            getActiveInterlacedLines() + "i/" + getInterlacedFrameRate() + " " +
+            getActiveProgressiveLines() + "p" + getProgressiveFrameRate();
     }
 
     /**

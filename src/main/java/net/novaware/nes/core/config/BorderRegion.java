@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
-public enum BorderRegion {
+public enum BorderRegion { // TODO: remove. waste of memory and screen space? Maybe make it part of the frontend
     NTSC (VideoStandard.NTSC, 16, 11, 0, 2),
     PAL  (VideoStandard.PAL,   2,  2, 1, 0),
 
