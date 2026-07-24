@@ -6,6 +6,7 @@ import java.util.List;
  * Analog TV systems
  *
  * @see <a href="https://en.wikipedia.org/wiki/Broadcast_television_systems">TV Systems on wikipedia.org</a>
+ * @see <a href="https://web.archive.org/web/20120805204049/http://www.pembers.freeserve.co.uk/World-TV-Standards/index.html">World Analogue TV Standards</a>
  */
 public enum SystemTV {
     M (
@@ -28,6 +29,17 @@ public enum SystemTV {
         SystemB.ACTIVE_P_LINES,
         SystemB.P_FRAME_RATE
     ),
+    N (
+        SystemN.TOTAL_I_LINES,
+        SystemN.BLANK_I_LINES,
+        SystemN.ACTIVE_I_LINES,
+        SystemN.I_FRAME_RATE,
+        SystemN.TOTAL_P_LINES,
+        SystemN.BLANK_P_LINES,
+        SystemN.ACTIVE_P_LINES,
+        SystemN.P_FRAME_RATE
+    ),
+
     U (-1, -1, -1, -1, -1, -1, -1, -1); // Unknown, known used only letters, A-N
 
     private static final List<SystemTV> instances = List.of(values());
@@ -42,14 +54,14 @@ public enum SystemTV {
     private final int progressiveFrameRate;
 
     SystemTV(
-            int totalInterlacedLines,
-            int blankInterlacedLines,
-            int activeInterlacedLines,
-            int interlacedFrameRate,
-            int totalProgressiveLines,
-            int blankProgressiveLines,
-            int activeProgressiveLines,
-            int fieldRate
+        int totalInterlacedLines,
+        int blankInterlacedLines,
+        int activeInterlacedLines,
+        int interlacedFrameRate,
+        int totalProgressiveLines,
+        int blankProgressiveLines,
+        int activeProgressiveLines,
+        int fieldRate
     ) {
         this.totalInterlacedLines = totalInterlacedLines;
         this.blankInterlacedLines = blankInterlacedLines;
@@ -109,7 +121,7 @@ public enum SystemTV {
      */
     static void main() {
         instances.stream()
-                .filter(vs -> vs != U)
+                .filter(s -> s != U)
                 .map(SystemTV::toText)
                 .forEach(s -> System.out.println(s)); // NOTE: lambda will cause checker "Incompatible receiver type"
     }

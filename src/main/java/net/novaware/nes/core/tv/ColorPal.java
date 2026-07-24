@@ -1,9 +1,7 @@
 package net.novaware.nes.core.tv;
 
 /**
- * PAL B/G/H/I/D/K/L is here
- * PAL M in {@link ColorPalM}
- * PAL N is not supported yet.
+ * PAL B/G/H/I/D/K/L used around the World
  *
  * @see <a href="https://en.wikipedia.org/wiki/PAL">PAL on wikipedia.org</a>
  */
@@ -24,7 +22,7 @@ public interface ColorPal {
     double I_LINE_RATE = SystemB.TOTAL_I_LINES * I_FRAME_RATE; // Hz
 
     /**
-     *
+     * Also 1135 / 4 * H + 25
      */
     double SUBCARRIER = 283.75 * I_LINE_RATE + 25; // Hz
 }

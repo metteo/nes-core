@@ -1,9 +1,7 @@
 package net.novaware.nes.core.tv;
 
 /**
- * NTSC M is here
- * NTSC N is not supported
- * NTSC 4.43 is not supported
+ * NTSC (M) used in Americas and Japan
  *
  * @see <a href="https://en.wikipedia.org/wiki/NTSC">NTSC on wikipedia.org</a>
  */
@@ -24,7 +22,7 @@ public interface ColorNtsc {
     double I_LINE_RATE = SystemM.TOTAL_I_LINES * I_FRAME_RATE; // Hz
 
     /**
-     * Also 5 x 7 x 9 MHz / (8 x 11) or 315 / 88
+     * Also 5 x 7 x 9 MHz / (8 x 11) OR 315 / 88 OR 910 / 4 * H
      */
     double SUBCARRIER = 227.5 * I_LINE_RATE; // Hz
 }
