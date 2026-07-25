@@ -45,7 +45,7 @@ public record NesMeta(
         // byte subMapper, // TODO: uncomment when adding NES 2.0 parsing
         boolean busConflicts,
 
-        ProgramMemory programMemory,
+        ProgramMemory programMemory, // TODO: separate into memory and storage
         Quantity trainer,
         Quantity programData,
 
@@ -201,7 +201,7 @@ public record NesMeta(
      * @see <a href="https://www.mariowiki.com/Nintendo_PlayChoice-10">Nintendo PlayChoice-10</a>
      * @see <a href="https://www.nesdev.org/wiki/NES_2.0#Extended_Console_Type">Extended Console</a>
      */
-    public enum System { // FIXME: rename, clashes with java.lang.System
+    public enum System { // FIXME: rename to Console/Type / Platform?, clashes with java.lang.System
 
         NES("NES",                      0b00),
         VS_SYSTEM("VS.System",          0b01), // Vs. games have a coin slot and different palettes.
