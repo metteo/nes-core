@@ -39,8 +39,8 @@ public enum SystemTV {
         SystemN.ACTIVE_P_LINES,
         SystemN.P_FRAME_RATE
     ),
-
-    U (-1, -1, -1, -1, -1, -1, -1, -1); // Unknown, known used only letters, A-N
+    /** Unknown */ // Known used only letters, A-N
+    U (-1, -1, -1, -1, -1, -1, -1, -1);
 
     private static final List<SystemTV> instances = List.of(values());
 
