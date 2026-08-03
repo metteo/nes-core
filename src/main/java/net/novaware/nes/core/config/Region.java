@@ -7,9 +7,12 @@ package net.novaware.nes.core.config;
 public enum Region { // TODO: region of the game or the console?
     USA,
     JAPAN,
-    EUROPE,
+    EUROPE,    // PAL
     CHINA,
-    BRAZIL, // @see VideoStandard#PAL_M
+    BRAZIL,    // PAL M
+    ARGENTINA, // PAL N
+    RUSSIA,    // DENDY
+    POLAND,    // DENDY
     WORLD,
     UNKNOWN
 }

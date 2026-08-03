@@ -1,4 +1,7 @@
 package net.novaware.nes.core.model;
 
-public record PpuModel() {
+public record PpuModel(
+    String name,
+    int divider
+) {
 }

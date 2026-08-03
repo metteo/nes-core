@@ -21,13 +21,6 @@ public enum VideoStandard { // TODO: include post render scanline (241, NTSC bla
     DENDY     (ColorPal .SUBCARRIER * 6, 15, 5, SystemB.TOTAL_P_LINES, false), // PAL clock, unique CPU div
     PAL_M     (ColorPalM.SUBCARRIER * 6, 12, 4, SystemM.TOTAL_P_LINES, true ), // unique clock, NTSC divs
 
-    // TODO: support these as nes console subtypes
-    // NES             - US
-    // Family Computer - Japan
-    // Phantom System  - Brazil
-    // Family Game     - Argentina
-    // Pegasus (Dendy) - Poland
-
     UNKNOWN   (-1L, -1, -1, -1, false);
 
     public static final int PHYSICAL_WIDTH = 341; // horizontal, dots per scan line
